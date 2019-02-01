@@ -6,13 +6,12 @@ import (
 	"countingserver/support"
 	"fmt"
 	"github.com/joho/godotenv"
-	"os"
 )
 
 const logfilename string = "logfile"
 
 func main() {
-	_ = os.Remove(logfilename) // for testing only
+	//_ = os.Remove(logfilename) // for testing only
 	support.SetUpLog(logfilename)
 	defer support.CloseLog()
 	if e := godotenv.Load(); e != nil {

@@ -1,3 +1,10 @@
-2019/02/01 16:02:57 Spaces.saveToFile: enabled space [test]
-2019/02/01 16:02:57 setUpSpaces: found space [test] with gates [12592 12336]
-2019/02/01 16:02:57 StartTCP: listening on 0.0.0.0:3333
+2019/02/01 17:33:26 Spaces.saveToFile: enabled space [door]
+2019/02/01 17:33:26 setUpSpaces: found space [door] with gates [12592 12336]
+2019/02/01 17:33:26 setUpSpaces: found space [window] with gates [12 13 14]
+2019/02/01 17:33:26 Spaces.saveToFile: enabled space [window]
+2019/02/01 17:33:26 StartTCP: listening on 0.0.0.0:3333
+2019/02/01 17:34:08 Spaces.saveToFile: enabled space [door]
+2019/02/01 17:34:08 setUpSpaces: found space [door] with gates [12592 12336]
+2019/02/01 17:34:08 setUpSpaces: found space [window] with gates [12 13 14]
+2019/02/01 17:34:08 Spaces.saveToFile: enabled space [window]
+2019/02/01 17:34:08 StartTCP: listening on 0.0.0.0:3333
