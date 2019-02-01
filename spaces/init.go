@@ -66,7 +66,8 @@ func saveToFile(spn string) {
 		log.Printf("Spaces.saveToFile: enabled space [%v]\n", spn)
 		var resultf *os.File
 		var e error
-		if resultf, e = os.OpenFile(spn+".raw", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
+		fmt.Print("pippo")
+		if resultf, e = os.OpenFile(spn+".rawdata", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
 			log.Fatal(e)
 		}
 		defer func() {
