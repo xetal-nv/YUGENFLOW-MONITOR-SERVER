@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"countingserver/servers"
+	"countingserver/support"
 	"fmt"
 	"github.com/joho/godotenv"
 	"os"
-	"playground/servers"
-	"playground/support"
 )
 
 const logfilename string = "logfile"

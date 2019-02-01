@@ -47,8 +47,9 @@ func SetUp() {
 	}
 
 	// DEBUG
-	fmt.Println(sp)
-	fmt.Println(ag)
+	//fmt.Println(sp)
+	//fmt.Println(ag)
+	//os.Exit(0)
 }
 
 // TODO
@@ -66,7 +67,6 @@ func saveToFile(spn string) {
 		log.Printf("Spaces.saveToFile: enabled space [%v]\n", spn)
 		var resultf *os.File
 		var e error
-		fmt.Print("pippo")
 		if resultf, e = os.OpenFile(spn+".rawdata", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
 			log.Fatal(e)
 		}
