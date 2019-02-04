@@ -1,13 +1,13 @@
 package spaces
 
 import (
+	"countingserver/support"
 	"fmt"
 	"github.com/pkg/errors"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type schan struct {
@@ -99,7 +99,8 @@ func saveToFile(spn string) {
 		log.Printf("Spaces.saveToFile: enabled space [%v]\n", spn)
 		var resultf *os.File
 		var e error
-		if resultf, e = os.OpenFile(spn+".rawdata", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
+		//if resultf, e = os.OpenFile(spn+".csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
+		if resultf, e = os.OpenFile(spn+".csv", os.O_WRONLY|os.O_CREATE, 0644); e != nil { // DEBUG
 			log.Fatal(e)
 		}
 		defer func() {
@@ -114,8 +115,19 @@ func saveToFile(spn string) {
 		}()
 		for {
 			val := <-c
-			if _, e := fmt.Fprintf(resultf, "%v, %v, %v, %v\n", time.Now().UTC().Unix(), val.num, val.val,
-				val.group); e != nil {
+			dt := 0
+			if val.val == 255 {
+				dt = -1
+			}
+			if val.val == 1 {
+				dt = 1
+			}
+			sp := ""
+			for i := 0; i < val.num; i++ {
+				sp += "0,"
+			}
+			//if _, e := fmt.Fprintln(resultf, val.group, ",", support.Timestamp(), sp[1:], dt); e != nil {
+			if _, e := fmt.Fprintln(resultf, support.Timestamp(), sp[1:], dt); e != nil {
 				log.Printf("Spaces.saveToFile: error space %v not valid\n", spn)
 			}
 		}

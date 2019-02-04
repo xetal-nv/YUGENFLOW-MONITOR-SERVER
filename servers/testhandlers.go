@@ -61,7 +61,21 @@ func testHandlerTCPRequest(conn net.Conn) {
 		//	}
 		//	fmt.Printf("counter from %v@%v = %v\n", gnum, ipc, counter)
 		//}
-		//fmt.Println("ECHO from ", conn.RemoteAddr(), " : ", gnum, buf[2])
+
+		// DEBUG
+		//a := 0
+		//if buf[2] == 255 {
+		//	a = -1
+		//}
+		//if buf[2] == 1 {
+		//	a = 1
+		//}
+		//b := ""
+		//for i := 0; i < gnum; i++ {
+		//	b += "0,"
+		//}
+		//fmt.Println(support.Timestamp(), ",", b[2:], a)
+
 		if e := spaces.SendData(gnum, int(buf[2])); e != nil {
 			log.Println(e)
 		}
