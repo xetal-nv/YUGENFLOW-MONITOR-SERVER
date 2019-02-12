@@ -20,7 +20,7 @@ func StartServers() {
 	defer func() {
 		if e := recover(); e != nil {
 			if e != nil {
-				log.Println("StartServers: recovering from ", e)
+				log.Println("servers.StartServers: recovering from", e)
 				// terminating all running servers
 				for _, v := range sdServer {
 					if v != nil {
@@ -37,7 +37,7 @@ func StartServers() {
 	}()
 
 	if e := setup(); e != nil {
-		log.Println("StartServers: server set-up error: ", e)
+		log.Println("servers.StartServers: server set-up error:", e)
 	} else {
 
 		for i := range addServer {
@@ -57,7 +57,7 @@ func StartServers() {
 		case <-c1: // error reported elsewhere, need terminating
 		case <-c2: // user termination
 			<-c2
-			log.Println("StartServers: shutting down")
+			log.Println("servers.StartServers: shutting down")
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// Signal shutdown to active servers

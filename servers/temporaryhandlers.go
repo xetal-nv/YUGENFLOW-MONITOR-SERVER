@@ -8,13 +8,14 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 )
 
 //var counter int
 //var once sync.Once
 
 // test Handler
-func testHTTPfuncHandler(message string) http.Handler {
+func tempHTTPfuncHandler(message string) http.Handler {
 	m := message
 	log.Println("Test Handler: started")
 	if rand.Intn(5) == 2 {
@@ -24,7 +25,7 @@ func testHTTPfuncHandler(message string) http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				if e != nil {
-					log.Println("Test testHTTPfuncHandler: recovering from: ", e)
+					log.Println("Test tempHTTPfuncHandler: recovering from: ", e)
 					//noinspection GoUnhandledErrorResult
 					fmt.Fprintf(w, "Good try :-)")
 				}
@@ -39,7 +40,7 @@ func testHTTPfuncHandler(message string) http.Handler {
 }
 
 // Test handler
-func testHandlerTCPRequest(conn net.Conn) {
+func tempHandlerTCPRequest(conn net.Conn) {
 
 	//once.Do(func() { counter = 0 })
 	// Buffer is fixed in size as from specs
@@ -47,34 +48,12 @@ func testHandlerTCPRequest(conn net.Conn) {
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 
 	if _, e := conn.Read(buf); e != nil {
-		log.Printf("testHandlerTCPRequest: Error reading from %v : %v\n", ipc, e)
+		log.Printf("tempHandlerTCPRequest: Error reading from %v : %v\n", ipc, e)
 	} else {
 		gnum := int(buf[1]) | int(buf[0])<<8
-		//if buf[2] != 0 && buf[2] != 255 && buf[2] != 1 {
-		//	log.Printf("testHandlerTCPRequest: illegal value from %v\n", ipc) // do we add a forbidden IP list?
-		//} else {
-		//	if buf[2] == 255 {
-		//		counter -= 1
-		//	}
-		//	if buf[2] == 1 {
-		//		counter += 1
-		//	}
-		//	fmt.Printf("counter from %v@%v = %v\n", gnum, ipc, counter)
-		//}
 
 		// DEBUG
-		//a := 0
-		//if buf[2] == 255 {
-		//	a = -1
-		//}
-		//if buf[2] == 1 {
-		//	a = 1
-		//}
-		//b := ""
-		//for i := 0; i < gnum; i++ {
-		//	b += "0,"
-		//}
-		//fmt.Println(support.Timestamp(), ",", b[2:], a)
+		//fmt.Println(support.Timestamp(), ",", int(buf[2]))
 
 		if e := spaces.SendData(gnum, int(buf[2])); e != nil {
 			log.Println(e)
@@ -83,4 +62,24 @@ func testHandlerTCPRequest(conn net.Conn) {
 	}
 	//noinspection GoUnhandledErrorResult
 	conn.Close()
+}
+
+// Test handler2
+func tempHandlerTCPRequest2(conn net.Conn, f bool) {
+
+	if f {
+		fmt.Println("New connection arrived")
+		go func() {
+			time.Sleep(3 * time.Second)
+			conn.Write([]byte("\x06"))
+		}()
+	}
+
+	buf := make([]byte, 1)
+	if _, e := conn.Read(buf); e == nil {
+		fmt.Printf("%v ", buf)
+	} else {
+		fmt.Printf("error: %v\n", e)
+	}
+	tempHandlerTCPRequest2(conn, false)
 }

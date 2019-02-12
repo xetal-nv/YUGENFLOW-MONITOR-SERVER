@@ -13,19 +13,20 @@ const SIZE int = 2
 var addServer [SIZE]string
 var sdServer [SIZE]chan context.Context
 var hMap [SIZE]map[string]http.Handler
+var crcUsed bool
 
 func setup() error {
 
 	hMap[0] = map[string]http.Handler{
-		"/welcome": testHTTPfuncHandler("Welcome to Go Web Development"),
-		"/message": testHTTPfuncHandler("net/http is awesome"),
-		"/panic":   testHTTPfuncHandler(""),
+		"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
+		"/message": tempHTTPfuncHandler("net/http is awesome"),
+		"/panic":   tempHTTPfuncHandler(""),
 	}
 
 	hMap[1] = map[string]http.Handler{
-		"/welcome": testHTTPfuncHandler("Welcome to Go Web Development"),
-		"/message": testHTTPfuncHandler("net/http is awesome"),
-		"/panic":   testHTTPfuncHandler(""),
+		"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
+		"/message": tempHTTPfuncHandler("net/http is awesome"),
+		"/panic":   tempHTTPfuncHandler(""),
 	}
 
 	for i, v := range strings.Split(os.Getenv("HTTPSPORTS"), ",") {
