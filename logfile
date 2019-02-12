@@ -232,3 +232,24 @@
 2019/02/04 13:09:30 Spaces.saveToFile: enabled space [window]
 2019/02/04 13:09:30 Spaces.saveToFile: enabled space [real]
 2019/02/04 13:09:30 StartTCP: listening on 0.0.0.0:3333
+2019/02/04 13:14:55 Spaces.saveToFile: enabled space [door]
+2019/02/04 13:14:55 setUpSpaces: found space [door] with gates [12592 12336]
+2019/02/04 13:14:55 setUpSpaces: found space [window] with gates [12 13 14]
+2019/02/04 13:14:55 setUpSpaces: found space [real] with gates [1 2 3 4 5 6]
+2019/02/04 13:14:55 Spaces.saveToFile: enabled space [window]
+2019/02/04 13:14:55 Spaces.saveToFile: enabled space [real]
+2019/02/04 13:14:55 StartTCP: listening on 0.0.0.0:3333
+2019/02/04 13:23:21 Spaces.saveToFile: enabled space [door]
+2019/02/04 13:23:21 setUpSpaces: found space [door] with gates [12592 12336]
+2019/02/04 13:23:21 setUpSpaces: found space [window] with gates [12 13 14]
+2019/02/04 13:23:21 setUpSpaces: found space [real] with gates [1 2 3 4 5 6]
+2019/02/04 13:23:21 Spaces.saveToFile: enabled space [window]
+2019/02/04 13:23:21 Spaces.saveToFile: enabled space [real]
+2019/02/04 13:23:21 StartTCP: listening on 0.0.0.0:3333
+2019/02/04 13:26:52 Spaces.saveToFile: enabled space [door]
+2019/02/04 13:26:52 setUpSpaces: found space [door] with gates [12592 12336]
+2019/02/04 13:26:52 setUpSpaces: found space [window] with gates [12 13 14]
+2019/02/04 13:26:52 setUpSpaces: found space [real] with gates [1 2 3 4 5 6]
+2019/02/04 13:26:52 Spaces.saveToFile: enabled space [window]
+2019/02/04 13:26:52 Spaces.saveToFile: enabled space [real]
+2019/02/04 13:26:52 StartTCP: listening on 0.0.0.0:3333

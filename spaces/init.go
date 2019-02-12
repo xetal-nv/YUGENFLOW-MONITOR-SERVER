@@ -51,6 +51,8 @@ func SetUp() {
 			}
 		}
 	}
+
+	// Initialise the statistics on groups
 	for _, v := range g2g {
 		if _, ok := GroupsStats[v]; ok {
 			GroupsStats[v] += 1
@@ -58,9 +60,14 @@ func SetUp() {
 			GroupsStats[v] = 1
 		}
 	}
+
+	// initialise the processing threads for each space
 	for i, name := range spaces {
 		sp[name] = make(chan schan)
-		go saveToFile(name)
+
+		// the go routine below is the processing thread.
+		go CountersSetpUp(name)
+
 		var sg []int
 		for _, val := range strings.Split(os.Getenv("GATES_"+strconv.Itoa(i)), " ") {
 			vt := strings.Trim(val, " ")
@@ -84,11 +91,12 @@ func SetUp() {
 	//os.Exit(0)
 }
 
-// TODO
+// TODO currently just invokes a save to file
 // sets up the counters
-//func CountersSetpUp() {
-//	time.Sleep(1 * time.Second)
-//}
+func CountersSetpUp(spn string) {
+	//time.Sleep(1 * time.Second)
+	saveToFile(spn)
+}
 
 // saves raw data to a file
 func saveToFile(spn string) {
