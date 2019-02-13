@@ -71,5 +71,6 @@ func Test_TCP_Connection(t *testing.T) {
 		conn.Close()
 		fmt.Println(" TEST -> Disconnect to TCP channel")
 	}
+	time.Sleep(5 * time.Second)
 	fmt.Println("End test, counter is", counter)
 }

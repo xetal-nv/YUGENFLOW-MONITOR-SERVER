@@ -4,41 +4,52 @@ import (
 	"countingserver/support"
 	"fmt"
 	"log"
+	"time"
 )
 
 // TODO the counter - in progress
-// TODO how to we do the counting? double windows/queue?
-func Counters(spn string) {
+// TODO need to see how to make the verious counters
+// TODO use a once and array with delays with the same code and difference channels?
+func sampler(spn string) {
 	//time.Sleep(1 * time.Second)
 	//saveToFile(spn)
 	c := spaceChannels[spn]
 	counter := 0
 	lastTS := support.Timestamp()
 	if c == nil {
-		log.Printf("spaces.Counters: error space %v not valid\n", spn)
+		log.Printf("spaces.sampler: error space %v not valid\n", spn)
 	} else {
-		log.Printf("spaces.Counters: enabled space [%v]\n", spn)
+		log.Printf("spaces.sampler: enabled space [%v]\n", spn)
 		defer func() {
 			if e := recover(); e != nil {
 				if e != nil {
-					log.Printf("spaces.Counters: recovering for gate %+v from: %v\n ", c, e)
-					go Counters(spn)
+					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", c, e)
+					go sampler(spn)
 				}
 			}
 		}()
 		for {
-			val := <-c
-			iv := int8(val.val)
-			if iv != 127 {
-				counter += int(iv)
-				if counter < 0 {
-					counter = 0
+			select {
+			case val := <-c:
+				iv := int8(val.val)
+				if iv != 127 {
+					counter += int(iv)
+					if counter < 0 {
+						counter = 0
+					}
 				}
-			}
-			cTS := support.Timestamp()
-			if (cTS - lastTS) >= (samplingWindow * 1000) {
-				fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
-				lastTS = cTS
+				cTS := support.Timestamp()
+				if (cTS - lastTS) >= (samplingWindow * 1000) {
+					fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
+					lastTS = cTS
+				}
+			default:
+				time.Sleep(100 * time.Millisecond)
+				cTS := support.Timestamp()
+				if (cTS - lastTS) >= (samplingWindow * 1000) {
+					fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
+					lastTS = cTS
+				}
 			}
 		}
 	}

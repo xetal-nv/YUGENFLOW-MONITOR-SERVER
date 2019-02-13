@@ -26,6 +26,10 @@ func SetUp() {
 
 	if data := os.Getenv("SPACES"); data != "" {
 		spaces := strings.Split(data, " ")
+		bufsize := 50
+		if v, e := strconv.Atoi(os.Getenv("INTBUFFSIZE")); e == nil {
+			bufsize = v
+		}
 
 		for i := 0; i < len(spaces); i++ {
 			spaces[i] = strings.Trim(spaces[i], " ")
@@ -34,9 +38,9 @@ func SetUp() {
 		// initialise the processing threads for each space
 		for i, name := range spaces {
 			if gts := os.Getenv("GATES_" + strconv.Itoa(i)); gts != "" {
-				spaceChannels[name] = make(chan dataChan)
+				spaceChannels[name] = make(chan dataChan, bufsize)
 				// the go routine below is the processing thread.
-				go Counters(name)
+				go sampler(name)
 				var sg []int
 				for _, val := range strings.Split(gts, " ") {
 					vt := strings.Trim(val, " ")

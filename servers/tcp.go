@@ -31,7 +31,7 @@ func setUpTCP() {
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
 
-	if v, e := strconv.Atoi(os.Getenv("BUFFSIZE")); e != nil {
+	if v, e := strconv.Atoi(os.Getenv("CMDBUFFSIZE")); e != nil {
 		cmdchan = make(chan []byte, 5)
 	} else {
 		cmdchan = make(chan []byte, v)
