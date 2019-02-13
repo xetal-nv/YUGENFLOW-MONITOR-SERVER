@@ -14,7 +14,8 @@ var addServer [SIZE]string              // server addresses
 var sdServer [SIZE]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler  // server handler maps
 var crcUsed bool                        // CRC used flag
-var cmdchan chan []byte                 // channel to handler for receiving device answers answer
+var cmdchan chan []byte                 // channel to handler for receiving gate answers answer
+var cmdlen map[byte]int                 // provides length for legal server2gate commands
 
 func setup() error {
 

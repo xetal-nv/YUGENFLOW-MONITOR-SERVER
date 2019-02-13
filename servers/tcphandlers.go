@@ -35,11 +35,12 @@ func handlerTCPRequest(conn net.Conn) {
 
 				if e == io.EOF {
 					// in case of channel closed (EOF) it gets logged and the handler terminated
-					loop = false
 					log.Printf("servers.handlerTCPRequest: connection lost with device %v::%v\n", ipc, mac)
 				} else {
 					log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
 				}
+				loop = false
+				log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 			} else {
 				// Take action depending on the received data
 				switch cmd[0] {
@@ -52,7 +53,9 @@ func handlerTCPRequest(conn net.Conn) {
 						data = make([]byte, 3)
 					}
 					if _, e := conn.Read(data); e != nil {
+						loop = false
 						log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
+						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 					} else {
 						// Valid data
 						gid := int(data[1]) | int(data[0])<<8
@@ -62,8 +65,27 @@ func handlerTCPRequest(conn net.Conn) {
 						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int8(data[2]))
 					}
 				default:
-					// needs a proper extraction of all other data
-					cmdchan <- cmd
+					if v, ok := cmdlen[cmd[0]]; ok {
+						//do something here
+						if !crcUsed {
+							if v -= 1; v == 0 {
+								cmdchan <- cmd
+							} else {
+								cmdd := make([]byte, v)
+								if _, e := conn.Read(cmdd); e != nil {
+									loop = false
+									log.Printf("servers.handlerTCPRequest: Error reading answer from %v::%v for command %v\n", ipc, mac, cmd)
+									log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
+								} else {
+									cmdchan <- append(cmd, cmdd...)
+								}
+							}
+						}
+					} else {
+						loop = false
+						log.Printf("servers.handlerTCPRequest: illegal command %v sent by %v::%v\n", cmd[0], ipc, mac)
+						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
+					}
 				}
 			}
 		}

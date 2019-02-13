@@ -47,9 +47,9 @@ func Test_TCP_Connection(t *testing.T) {
 		} else {
 			//noinspection GoUnhandledErrorResult
 			conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})
-			fmt.Println(" TEST -> Send illegal data")
+			fmt.Println(" TEST -> Send other data")
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{'a'})
+			conn.Write([]byte{7, 1, 2})
 			for i := 0; i < 10; i++ {
 				rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 				m := vals[rand.Intn(len(vals))]
@@ -59,6 +59,9 @@ func Test_TCP_Connection(t *testing.T) {
 
 			}
 		}
+		fmt.Println(" TEST -> Send illegal data")
+		//noinspection GoUnhandledErrorResult
+		conn.Write([]byte{37, 1, 2})
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
 		fmt.Println(" TEST -> Disconnect to TCP channel")
