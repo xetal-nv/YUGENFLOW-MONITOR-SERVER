@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"countingserver/servers"
+	"countingserver/spaces"
 	"countingserver/support"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -24,6 +25,11 @@ func main() {
 		support.SetUpLog(logfilename)
 
 		//servers.StartServers()
+
+		// the part below needs to go to servers.StartServers()
+		spaces.SetUp()
+		spaces.CountersSetpUp()
+		servers.SetUpTCP()
 		servers.StartTCP(make(chan context.Context))
 	}
 }

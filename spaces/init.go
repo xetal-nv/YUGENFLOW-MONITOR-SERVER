@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// TODO add gate orientation information
 func SetUp() {
 	spaceChannels = make(map[string]chan dataChan)
 	gateChannels = make(map[int][]chan dataChan)

@@ -2,13 +2,13 @@ package servers
 
 import (
 	"context"
-	"countingserver/spaces"
 	"log"
 	"net"
 	"os"
 )
 
-func setUpTCP() {
+//func setUpTCP() {
+func SetUpTCP() {
 	if os.Getenv("CRC") == "1" {
 		crcUsed = true
 	} else {
@@ -18,10 +18,6 @@ func setUpTCP() {
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
 }
 func StartTCP(sd chan context.Context) {
-
-	spaces.SetUp()
-	spaces.CountersSetpUp()
-	setUpTCP()
 
 	// Listen for incoming connections.
 	port := os.Getenv("TCPPORT")
@@ -57,7 +53,8 @@ func StartTCP(sd chan context.Context) {
 			os.Exit(1)
 		}
 		// Handle connections in a new goroutine.
+		go handlerTCPRequest(conn)
 		//go tempHandlerTCPRequest(conn)
-		go tempHandlerTCPRequest2(conn, true)
+		//go tempHandlerTCPRequest2(conn, true)
 	}
 }
