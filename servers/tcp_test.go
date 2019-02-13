@@ -18,13 +18,13 @@ func Test_TCP_Setup(t *testing.T) {
 	}
 	spaces.SetUp()
 	spaces.CountersSetpUp()
-	SetUpTCP()
 
 }
 
 func Test_TCP_Connection(t *testing.T) {
 
 	vals := []int{-2, -1, 0, 1, 2, 127}
+	counter := 0
 
 	if e := godotenv.Load("../.env"); e != nil {
 		t.Error("Error loading .env file")
@@ -33,7 +33,6 @@ func Test_TCP_Connection(t *testing.T) {
 
 	spaces.SetUp()
 	spaces.CountersSetpUp()
-	SetUpTCP()
 
 	go StartTCP(make(chan context.Context))
 
@@ -53,9 +52,15 @@ func Test_TCP_Connection(t *testing.T) {
 			for i := 0; i < 10; i++ {
 				rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 				m := vals[rand.Intn(len(vals))]
+				if m != 127 {
+					counter += m
+					if counter < 0 {
+						counter = 0
+					}
+				}
 				//noinspection GoUnhandledErrorResult
 				conn.Write([]byte{1, 0, 2, byte(m)})
-				time.Sleep(100 * time.Millisecond)
+				time.Sleep(1000 * time.Millisecond)
 
 			}
 		}
@@ -66,4 +71,5 @@ func Test_TCP_Connection(t *testing.T) {
 		conn.Close()
 		fmt.Println(" TEST -> Disconnect to TCP channel")
 	}
+	fmt.Println("End test, counter is", counter)
 }

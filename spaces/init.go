@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func SetUp() {
@@ -95,7 +94,17 @@ func SetUp() {
 
 }
 
-// TODO sets up the counters
+// TODO sets up the counters - in progress
 func CountersSetpUp() {
-	time.Sleep(1 * time.Second)
+	sw := os.Getenv("SAMWINDOW")
+	if sw == "" {
+		samplingWindow = 30
+	} else {
+		if v, e := strconv.Atoi(sw); e != nil {
+			log.Fatal("spaces.CountersSetpUp: fatal error in definition of SAMWINDOW")
+		} else {
+			samplingWindow = int64(v)
+		}
+	}
+	log.Printf("spaces.CountersSetpUp: setting sliding window at %vs\n", samplingWindow)
 }

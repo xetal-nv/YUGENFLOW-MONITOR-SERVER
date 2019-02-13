@@ -11,10 +11,7 @@ import (
 
 func handlerTCPRequest(conn net.Conn) {
 
-	defer func() {
-		//noinspection GoUnhandledErrorResult
-		conn.Close()
-	}()
+	defer conn.Close()
 
 	mac := make([]byte, 6)
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]

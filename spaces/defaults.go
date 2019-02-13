@@ -16,5 +16,5 @@ var gateChannels map[int][]chan dataChan   // maps gate to the channels/spaces i
 var gateGroup map[int]int                  // maps gate to group_id
 var reversedGates []int                    // list of gates with reversed counters
 var GroupsStats map[int]int                // gives size og group per group_id
-//var slidingWindows int                     // internal for the averaging of data
+var samplingWindow int64                   // internal for the averaging of data
 //var samplingWindows []sampleData           // specification sampling data for visualisation

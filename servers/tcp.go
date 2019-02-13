@@ -9,7 +9,7 @@ import (
 )
 
 //func setUpTCP() {
-func SetUpTCP() {
+func setUpTCP() {
 	cmdlen = map[byte]int{
 		2:  1,
 		3:  1,
@@ -39,6 +39,8 @@ func SetUpTCP() {
 	go handlerCommandAnswer(cmdchan)
 }
 func StartTCP(sd chan context.Context) {
+
+	setUpTCP()
 
 	// Listen for incoming connections.
 	port := os.Getenv("TCPPORT")
