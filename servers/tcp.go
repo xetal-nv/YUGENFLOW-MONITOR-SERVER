@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 )
 
 //func setUpTCP() {
@@ -16,6 +17,13 @@ func SetUpTCP() {
 	}
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
+
+	if v, e := strconv.Atoi(os.Getenv("BUFFSIZE")); e != nil {
+		cmdchan = make(chan []byte, 5)
+	} else {
+		cmdchan = make(chan []byte, v)
+	}
+	go handlerCommandAnswer(cmdchan)
 }
 func StartTCP(sd chan context.Context) {
 

@@ -10,10 +10,11 @@ import (
 
 const SIZE int = 2
 
-var addServer [SIZE]string
-var sdServer [SIZE]chan context.Context
-var hMap [SIZE]map[string]http.Handler
-var crcUsed bool
+var addServer [SIZE]string              // server addresses
+var sdServer [SIZE]chan context.Context // channel for closure of servers
+var hMap [SIZE]map[string]http.Handler  // server handler maps
+var crcUsed bool                        // CRC used flag
+var cmdchan chan []byte                 // channel to handler for receiving device answers answer
 
 func setup() error {
 

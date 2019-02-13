@@ -37,7 +37,7 @@ func Test_TCP_Connection(t *testing.T) {
 
 	go StartTCP(make(chan context.Context))
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		time.Sleep(2 * time.Second)
 		fmt.Println(" TEST -> Connect to TCP channel")
 		port := os.Getenv("TCPPORT")
@@ -50,7 +50,7 @@ func Test_TCP_Connection(t *testing.T) {
 			fmt.Println(" TEST -> Send illegal data")
 			//noinspection GoUnhandledErrorResult
 			conn.Write([]byte{'a'})
-			for i := 0; i < 2; i++ {
+			for i := 0; i < 10; i++ {
 				rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 				m := vals[rand.Intn(len(vals))]
 				//noinspection GoUnhandledErrorResult
