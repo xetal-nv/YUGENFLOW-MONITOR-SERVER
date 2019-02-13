@@ -42,7 +42,7 @@ func handlerTCPRequest(conn net.Conn) {
 						// Valid data
 						// TODO send to the proper thread
 						gid := int(data[1]) | int(data[0])<<8
-						fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int(data[2]))
+						fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int8(data[2]))
 					}
 				default:
 					log.Printf("servers.handlerTCPRequest: received illegale command %v\n", int(cmd[0]))

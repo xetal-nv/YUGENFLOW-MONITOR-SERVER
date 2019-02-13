@@ -5,6 +5,7 @@ import (
 	"countingserver/spaces"
 	"fmt"
 	"github.com/joho/godotenv"
+	"math/rand"
 	"net"
 	"os"
 	"testing"
@@ -22,6 +23,8 @@ func Test_TCP_Setup(t *testing.T) {
 }
 
 func Test_TCP_Connection(t *testing.T) {
+
+	vals := []int{-2, -1, 0, 1, 2, 127}
 
 	if e := godotenv.Load("../.env"); e != nil {
 		t.Error("Error loading .env file")
@@ -42,8 +45,10 @@ func Test_TCP_Connection(t *testing.T) {
 		//noinspection GoUnhandledErrorResult
 		conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})
 		for i := 0; i < 30; i++ {
+			rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
+			m := vals[rand.Intn(len(vals))]
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, 2, 3})
+			conn.Write([]byte{1, 0, 2, byte(m)})
 			time.Sleep(100 * time.Millisecond)
 
 		}
