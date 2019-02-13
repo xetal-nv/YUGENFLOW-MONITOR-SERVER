@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-// TODO a proper identification of command answer to read all data and send ot to the command handler
-// not it just sends all data till it finds a 1, which is WRONG
 func handlerTCPRequest(conn net.Conn) {
 
 	defer func() {
@@ -42,7 +40,6 @@ func handlerTCPRequest(conn net.Conn) {
 				loop = false
 				log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 			} else {
-				// Take action depending on the received data
 				switch cmd[0] {
 				case 1:
 					// Gate new counting data
@@ -65,8 +62,8 @@ func handlerTCPRequest(conn net.Conn) {
 						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int8(data[2]))
 					}
 				default:
+					// verify it is a command answer, if not closes the TCP channel
 					if v, ok := cmdlen[cmd[0]]; ok {
-						//do something here
 						if !crcUsed {
 							if v -= 1; v == 0 {
 								cmdchan <- cmd
