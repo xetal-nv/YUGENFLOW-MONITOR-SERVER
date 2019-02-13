@@ -16,10 +16,16 @@ func saveToFile(spn string) {
 		log.Printf("spaces.saveToFile: enabled space [%v]\n", spn)
 		var resultf *os.File
 		var e error
-		//if resultf, e = os.OpenFile(spn+".csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
-		if resultf, e = os.OpenFile(spn+".csv", os.O_WRONLY|os.O_CREATE, 0644); e != nil { // DEBUG
+
+		if os.Getenv("DELDATAFILES") == "1" {
+			//noinspection GoUnhandledErrorResult
+			os.Remove(spn + ".csv")
+		}
+
+		if resultf, e = os.OpenFile(spn+".csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil { // DEBUG
 			log.Fatal(e)
 		}
+
 		defer func() {
 			if e := recover(); e != nil {
 				if e != nil {
@@ -32,19 +38,8 @@ func saveToFile(spn string) {
 		}()
 		for {
 			val := <-c
-			dt := 0
-			if val.val == 255 {
-				dt = -1
-			}
-			if val.val == 1 {
-				dt = 1
-			}
-			sp := ""
-			for i := 0; i < val.num; i++ {
-				sp += "0,"
-			}
-			//if _, e := fmt.Fprintln(resultf, val.group, ",", support.Timestamp(), spaceChannels[1:], dt); e != nil {
-			if _, e := fmt.Fprintln(resultf, support.Timestamp(), sp[1:], dt); e != nil {
+			if _, e := fmt.Fprintln(resultf, support.Timestamp(), ",", val.num, ",", int8(val.val),
+				",", val.group); e != nil {
 				log.Printf("apaces.saveToFile: error space %v not valid\n", spn)
 			}
 		}

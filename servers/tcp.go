@@ -54,7 +54,5 @@ func StartTCP(sd chan context.Context) {
 		}
 		// Handle connections in a new goroutine.
 		go handlerTCPRequest(conn)
-		//go tempHandlerTCPRequest(conn)
-		//go tempHandlerTCPRequest2(conn, true)
 	}
 }

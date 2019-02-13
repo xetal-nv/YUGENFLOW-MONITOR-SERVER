@@ -1,8 +1,8 @@
 package servers
 
 import (
-	"countingserver/support"
-	"fmt"
+	"countingserver/spaces"
+	"io"
 	"log"
 	"net"
 	"strings"
@@ -22,34 +22,44 @@ func handlerTCPRequest(conn net.Conn) {
 
 	// Initially receive the MAC address
 	if _, e := conn.Read(mac); e != nil {
-		log.Printf("servers.handlerTCPRequest: Error reading from %v : %v\n", ipc, e)
+		log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
 	} else {
-		log.Printf("servers.handlerTCPRequest: New connected device from %v with MAC %v\n", ipc, mac)
+		log.Printf("servers.handlerTCPRequest: New connected device %v::%v\n", ipc, mac)
 
 		// Start reading data
-		for {
+		// TODO make it to handle EOF !!!
+		loop := true
+		for loop {
 			cmd := make([]byte, 1)
 			if _, e := conn.Read(cmd); e != nil {
-				log.Printf("servers.handlerTCPRequest: Error reading from %v : %v\n", ipc, e)
+
+				if e == io.EOF {
+					loop = false
+					log.Printf("servers.handlerTCPRequest: connection lost with device %v::%v\n", ipc, mac)
+				} else {
+					log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
+				}
 			} else {
+				// Take action depending on the received data
 				switch cmd[0] {
 				case 1:
 					// Gate new counting data
 					data := make([]byte, 3)
 					if _, e := conn.Read(data); e != nil {
-						log.Printf("servers.handlerTCPRequest: Error reading from %v : %v\n", ipc, e)
+						log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
 					} else {
 						// Valid data
-						// TODO send to the proper thread
 						gid := int(data[1]) | int(data[0])<<8
-						fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int8(data[2]))
+						if e := spaces.SendData(gid, int(data[2])); e != nil {
+							log.Println(e)
+						}
+						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int8(data[2]))
 					}
 				default:
-					log.Printf("servers.handlerTCPRequest: received illegale command %v\n", int(cmd[0]))
+					log.Printf("servers.handlerTCPRequest: received illegal command %v from %v::%v",
+						int(cmd[0]), ipc, mac)
 				}
 			}
-			//gnum := int(buf[1]) | int(buf[0])<<8
-			//fmt.Println(support.Timestamp(), ",", gnum, int(buf[2]))
 		}
 	}
 }
