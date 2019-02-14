@@ -4,6 +4,7 @@ import (
 	"countingserver/registers"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -70,6 +71,7 @@ func setUpSpaces() {
 	}
 
 	if data := os.Getenv("GROUPS"); data != "" {
+		data = strings.Trim(data, ";")
 		for _, gg := range strings.Split(data, ";") {
 			gg = strings.Trim(gg, " ")
 			tempg := strings.Split(gg, " ")
@@ -124,9 +126,11 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", samplingWindow)
 
-	avgw := os.Getenv("SAVEWINDOW")
-	avgWindows = make(map[string]int)
+	avgw := strings.Trim(os.Getenv("SAVEWINDOW"), ";")
+	avgWindows := make(map[string]int)
+	tw := make(map[int]string)
 	avgWindows["current"] = samplingWindow
+	tw[samplingWindow] = "current"
 	if avgw != "" {
 		for _, v := range strings.Split(avgw, ";") {
 			data := strings.Split(strings.Trim(v, " "), " ")
@@ -136,11 +140,25 @@ func setpUpCounter() {
 			if v, e := strconv.Atoi(data[1]); e != nil {
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
 			} else {
-				avgWindows[data[0]] = v
+				if v > samplingWindow {
+					avgWindows[data[0]] = v
+					tw[v] = data[0]
+				} else {
+					log.Printf("spaces.setpUpCounter: averaging window %v skipped since equal to \"current\"\n", data[0])
+				}
 			}
 		}
 	}
-	log.Printf("spaces.setpUpCounter: setting averaging windows at %v\n", avgWindows)
+	keys := make([]int, 0, len(tw))
+	avgAnalysis = make([]avgInterval, len(tw))
+	for k := range tw {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	for i, v := range keys {
+		avgAnalysis[i] = avgInterval{tw[v], v}
+	}
+	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 }
 
 func setUpDataBank() {
@@ -148,14 +166,13 @@ func setUpDataBank() {
 	LatestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 
 	for name, _ := range spaceChannels {
-		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgWindows))
-		LatestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgWindows))
-		for id, _ := range avgWindows {
-			LatestDataBankOut[name][id] = make(chan registers.DataCt)
-			LatestDataBankIn[name][id] = make(chan registers.DataCt)
-			go registers.TimedIntCell(name+id, LatestDataBankIn[name][id], LatestDataBankOut[name][id])
+		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+		LatestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+		for _, v := range avgAnalysis {
+			LatestDataBankOut[name][v.name] = make(chan registers.DataCt)
+			LatestDataBankIn[name][v.name] = make(chan registers.DataCt)
+			go registers.TimedIntCell(name+v.name, LatestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
 		}
-		log.Println("spaces.setUpDataBank: DataBank initialised")
+		log.Printf("spaces.setUpDataBank: DataBank for space %v initialised\n", name)
 	}
-
 }

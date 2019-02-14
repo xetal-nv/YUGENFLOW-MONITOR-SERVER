@@ -11,8 +11,6 @@ import (
 // TODO need to see how to make the various counters
 // TODO use a once and array with delays with the same code and difference channels?
 func sampler(spn string) {
-	//time.Sleep(1 * time.Second)
-	//saveToFile(spn)
 	c := spaceChannels[spn]
 	counter := 0
 	lastTS := support.Timestamp()
@@ -29,6 +27,9 @@ func sampler(spn string) {
 			}
 		}()
 		for {
+			// will need to add the check for groups and consensus
+			// when on group it stores in a groupo variable checking timestamos
+			// or only checks in the time out
 			select {
 			case val := <-c:
 				iv := int8(val.val)
@@ -41,7 +42,6 @@ func sampler(spn string) {
 				cTS := support.Timestamp()
 				if (cTS - lastTS) >= (int64(samplingWindow) * 1000) {
 					LatestDataBankIn[spn]["current"] <- registers.DataCt{cTS, counter}
-					//fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
 					lastTS = cTS
 				}
 			default:
@@ -49,7 +49,6 @@ func sampler(spn string) {
 				cTS := support.Timestamp()
 				if (cTS - lastTS) >= (int64(samplingWindow) * 1000) {
 					LatestDataBankIn[spn]["current"] <- registers.DataCt{cTS, counter}
-					//fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
 					lastTS = cTS
 				}
 			}

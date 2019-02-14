@@ -3,9 +3,14 @@ package spaces
 import "countingserver/registers"
 
 type dataChan struct {
-	num   int
-	val   int
-	group int
+	num   int // gate number
+	val   int // data received
+	group int // group id
+}
+
+type avgInterval struct {
+	name     string
+	interval int
 }
 
 // Internal variables
@@ -16,7 +21,7 @@ var gateGroup map[int]int                  // maps gate to group_id
 var reversedGates []int                    // list of gates with reversed counters
 var groupsStats map[int]int                // gives size og group per group_id
 var samplingWindow int                     // internal for the averaging of data
-var avgWindows map[string]int              // specification sampling data for visualisation
+var avgAnalysis []avgInterval              // specification sampling data for visualisation
 
 // external variables
 
