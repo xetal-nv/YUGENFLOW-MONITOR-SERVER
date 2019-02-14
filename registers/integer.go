@@ -8,7 +8,7 @@ import (
 // IntCell implement a single input (n) single output (o)
 // non-blocking integer register.
 // d is its default value at start, if not given -1 will be used
-func IntCell(id string, n, o chan int, d ...int) {
+func IntCell(id string, in, out chan int, d ...int) {
 	r := func() {
 		var data int
 		if len(d) == 1 {
@@ -18,8 +18,8 @@ func IntCell(id string, n, o chan int, d ...int) {
 		}
 		for {
 			select {
-			case data = <-n:
-			case o <- data:
+			case data = <-in:
+			case out <- data:
 			}
 		}
 	}

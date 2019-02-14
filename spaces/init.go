@@ -1,6 +1,7 @@
 package spaces
 
 import (
+	"countingserver/registers"
 	"log"
 	"os"
 	"strconv"
@@ -8,9 +9,15 @@ import (
 )
 
 func SetUp() {
+	setUpSpaces()
+	setpUpCounter()
+	setUpDataBank()
+}
+
+func setUpSpaces() {
 	spaceChannels = make(map[string]chan dataChan)
 	gateChannels = make(map[int][]chan dataChan)
-	GroupsStats = make(map[int]int)
+	groupsStats = make(map[int]int)
 	gateGroup = make(map[int]int)
 
 	if data := os.Getenv("REVERSE"); data != "" {
@@ -18,10 +25,10 @@ func SetUp() {
 			if vi, e := strconv.Atoi(v); e == nil {
 				reversedGates = append(reversedGates, vi)
 			} else {
-				log.Fatal("spaces.SetUp: fatal error converting reversed gate name", v)
+				log.Fatal("spaces.setUpSpaces: fatal error converting reversed gate name", v)
 			}
 		}
-		log.Println("spaces.SetUp: defined reversed gates", reversedGates)
+		log.Println("spaces.setUpSpaces: defined reversed gates", reversedGates)
 	}
 
 	if data := os.Getenv("SPACES"); data != "" {
@@ -47,19 +54,19 @@ func SetUp() {
 					if v, e := strconv.Atoi(vt); e == nil {
 						sg = append(sg, v)
 					} else {
-						log.Fatal("spaces.SetUp: fatal error gate name", val)
+						log.Fatal("spaces.setUpSpaces: fatal error gate name", val)
 					}
 				}
-				log.Printf("spaces.SetUp: found space [%v] with gates %v\n", name, sg)
+				log.Printf("spaces.setUpSpaces: found space [%v] with gates %v\n", name, sg)
 				for _, g := range sg {
 					gateChannels[g] = append(gateChannels[g], spaceChannels[name])
 				}
 			} else {
-				log.Printf("spaces.SetUp: found  empty space [%v]\n", name)
+				log.Printf("spaces.setUpSpaces: found  empty space [%v]\n", name)
 			}
 		}
 	} else {
-		log.Fatal("spaces.SetUp: fatal error no space has been defined")
+		log.Fatal("spaces.setUpSpaces: fatal error no space has been defined")
 	}
 
 	if data := os.Getenv("GROUPS"); data != "" {
@@ -68,17 +75,17 @@ func SetUp() {
 			tempg := strings.Split(gg, " ")
 			tgn, e := strconv.Atoi(tempg[0])
 			if e != nil {
-				log.Fatal("spaces.SetUp: fatal error group name", tempg[0])
+				log.Fatal("spaces.setUpSpaces: fatal error group name", tempg[0])
 			} else {
-				log.Printf("spaces.SetUp: found group with ID:%v\n", tempg[0])
+				log.Printf("spaces.setUpSpaces: found group with ID:%v\n", tempg[0])
 			}
 			tempg = tempg[1:]
 			for _, v := range tempg {
 				if val, e := strconv.Atoi(strings.Trim(v, " ")); e != nil {
-					log.Fatal("spaces.SetUp: fatal error group gate name", v)
+					log.Fatal("spaces.setUpSpaces: fatal error group gate name", v)
 				} else {
 					if _, pres := gateGroup[val]; pres {
-						log.Println("spaces.SetUp: error group duplicated gate name", val)
+						log.Println("spaces.setUpSpaces: error group duplicated gate name", val)
 					} else {
 						gateGroup[val] = tgn
 					}
@@ -88,27 +95,67 @@ func SetUp() {
 
 		// Initialise the statistics on groups
 		for _, v := range gateGroup {
-			if _, ok := GroupsStats[v]; ok {
-				GroupsStats[v] += 1
+			if _, ok := groupsStats[v]; ok {
+				groupsStats[v] += 1
 			} else {
-				GroupsStats[v] = 1
+				groupsStats[v] = 1
 			}
 		}
 	}
 
 }
 
-// TODO sets up the counters - in progress
-func CountersSetpUp() {
+func setpUpCounter() {
 	sw := os.Getenv("SAMWINDOW")
+	if os.Getenv("INSTANTNEG") == "1" {
+		negSkip = false
+	} else {
+		negSkip = true
+	}
 	if sw == "" {
 		samplingWindow = 30
 	} else {
 		if v, e := strconv.Atoi(sw); e != nil {
-			log.Fatal("spaces.CountersSetpUp: fatal error in definition of SAMWINDOW")
+			log.Fatal("spaces.setpUpCounter: fatal error in definition of SAMWINDOW")
 		} else {
-			samplingWindow = int64(v)
+			samplingWindow = v
+			//}
 		}
 	}
-	log.Printf("spaces.CountersSetpUp: setting sliding window at %vs\n", samplingWindow)
+	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", samplingWindow)
+
+	avgw := os.Getenv("SAVEWINDOW")
+	avgWindows = make(map[string]int)
+	avgWindows["current"] = samplingWindow
+	if avgw != "" {
+		for _, v := range strings.Split(avgw, ";") {
+			data := strings.Split(strings.Trim(v, " "), " ")
+			if (len(data)) != 2 {
+				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
+			}
+			if v, e := strconv.Atoi(data[1]); e != nil {
+				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
+			} else {
+				avgWindows[data[0]] = v
+			}
+		}
+	}
+	log.Printf("spaces.setpUpCounter: setting averaging windows at %v\n", avgWindows)
+}
+
+func setUpDataBank() {
+	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+	LatestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+
+	for name, _ := range spaceChannels {
+		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgWindows))
+		LatestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgWindows))
+		for id, _ := range avgWindows {
+			LatestDataBankOut[name][id] = make(chan registers.DataCt)
+			LatestDataBankIn[name][id] = make(chan registers.DataCt)
+			go registers.TimedIntCell(name+id, LatestDataBankIn[name][id], LatestDataBankOut[name][id])
+		}
+		log.Println("spaces.setUpDataBank: DataBank initialised")
+	}
+
 }

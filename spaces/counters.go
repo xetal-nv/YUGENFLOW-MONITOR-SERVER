@@ -1,14 +1,14 @@
 package spaces
 
 import (
+	"countingserver/registers"
 	"countingserver/support"
-	"fmt"
 	"log"
 	"time"
 )
 
 // TODO the counter - in progress
-// TODO need to see how to make the verious counters
+// TODO need to see how to make the various counters
 // TODO use a once and array with delays with the same code and difference channels?
 func sampler(spn string) {
 	//time.Sleep(1 * time.Second)
@@ -34,20 +34,22 @@ func sampler(spn string) {
 				iv := int8(val.val)
 				if iv != 127 {
 					counter += int(iv)
-					if counter < 0 {
+					if counter < 0 && negSkip {
 						counter = 0
 					}
 				}
 				cTS := support.Timestamp()
-				if (cTS - lastTS) >= (samplingWindow * 1000) {
-					fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
+				if (cTS - lastTS) >= (int64(samplingWindow) * 1000) {
+					LatestDataBankIn[spn]["current"] <- registers.DataCt{cTS, counter}
+					//fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
 					lastTS = cTS
 				}
 			default:
 				time.Sleep(100 * time.Millisecond)
 				cTS := support.Timestamp()
-				if (cTS - lastTS) >= (samplingWindow * 1000) {
-					fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
+				if (cTS - lastTS) >= (int64(samplingWindow) * 1000) {
+					LatestDataBankIn[spn]["current"] <- registers.DataCt{cTS, counter}
+					//fmt.Printf("%v :: counter for %v is %v\n", support.Timestamp(), spn, counter)
 					lastTS = cTS
 				}
 			}

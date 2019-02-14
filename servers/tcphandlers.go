@@ -11,6 +11,7 @@ import (
 
 func handlerTCPRequest(conn net.Conn) {
 
+	//noinspection GoUnhandledErrorResult
 	defer conn.Close()
 
 	mac := make([]byte, 6)

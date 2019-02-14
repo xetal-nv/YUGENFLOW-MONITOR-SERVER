@@ -28,7 +28,6 @@ func main() {
 
 		// the part below needs to go to servers.StartServers()
 		spaces.SetUp()
-		spaces.CountersSetpUp()
 		servers.StartTCP(make(chan context.Context))
 	}
 }

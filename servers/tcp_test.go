@@ -2,6 +2,7 @@ package servers
 
 import (
 	"context"
+	"countingserver/registers"
 	"countingserver/spaces"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -12,27 +13,37 @@ import (
 	"time"
 )
 
+func Test_Registers(t *testing.T) {
+	a := make(chan int)
+	b := make(chan int)
+	go registers.IntCell("", a, b)
+	if <-b != -1 {
+		t.Fatalf("Expected %v but got %v", -1, <-b)
+	}
+}
+
 func Test_TCP_Setup(t *testing.T) {
 	if e := godotenv.Load("../.env"); e != nil {
 		t.Error("Error loading .env file")
 	}
 	spaces.SetUp()
-	spaces.CountersSetpUp()
-
+	test := registers.DataCt{1, 2}
+	spaces.LatestDataBankIn["noname"]["current"] <- test
+	a := <-spaces.LatestDataBankOut["noname"]["current"]
+	if a != test {
+		t.Fatalf("Expected %v but got %v", 123, a)
+	}
 }
 
-func Test_TCP_Connection(t *testing.T) {
-
-	vals := []int{-2, -1, 0, 1, 2, 127}
+func TCP_Connection(vals []int) string {
 	counter := 0
 
 	if e := godotenv.Load("../.env"); e != nil {
-		t.Error("Error loading .env file")
-
+		return "Error loading .env file"
 	}
+	neg := os.Getenv("INSTANTNEG")
 
 	spaces.SetUp()
-	spaces.CountersSetpUp()
 
 	go StartTCP(make(chan context.Context))
 
@@ -42,7 +53,7 @@ func Test_TCP_Connection(t *testing.T) {
 		port := os.Getenv("TCPPORT")
 		conn, e := net.Dial(os.Getenv("TCPPROT"), "0.0.0.0:"+port)
 		if e != nil {
-			t.Error("Unable to connect")
+			return "Unable to connect"
 		} else {
 			//noinspection GoUnhandledErrorResult
 			conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})
@@ -54,7 +65,7 @@ func Test_TCP_Connection(t *testing.T) {
 				m := vals[rand.Intn(len(vals))]
 				if m != 127 {
 					counter += m
-					if counter < 0 {
+					if counter < 0 && neg == "0" {
 						counter = 0
 					}
 				}
@@ -72,5 +83,22 @@ func Test_TCP_Connection(t *testing.T) {
 		fmt.Println(" TEST -> Disconnect to TCP channel")
 	}
 	time.Sleep(5 * time.Second)
-	fmt.Println("End test, counter is", counter)
+	a := <-spaces.LatestDataBankOut["noname"]["current"]
+	if a.Ct != counter {
+		return "Expected counter ir not as real counter"
+	}
+	return ""
+}
+
+func Test_TCP_ConnectionNeg(t *testing.T) {
+
+	if res := TCP_Connection([]int{-2, -1, 0, 127}); res != "" {
+		t.Fatalf("Test Neg: " + res + "\n")
+	}
+}
+
+func Test_TCP_ConnectionAll(t *testing.T) {
+	if res := TCP_Connection([]int{-2, -1, 0, 1, 2, 127}); res != "" {
+		t.Fatalf("Test Full: " + res + "\n")
+	}
 }
