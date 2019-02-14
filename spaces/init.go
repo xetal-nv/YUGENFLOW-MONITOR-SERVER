@@ -10,8 +10,8 @@ import (
 )
 
 func SetUp() {
-	setUpSpaces()
 	setpUpCounter()
+	setUpSpaces()
 	setUpDataBank()
 }
 
@@ -48,7 +48,7 @@ func setUpSpaces() {
 			if gts := os.Getenv("GATES_" + strconv.Itoa(i)); gts != "" {
 				spaceChannels[name] = make(chan dataChan, bufsize)
 				// the go routine below is the processing thread.
-				go sampler(name)
+				go sampler(name, 0)
 				var sg []int
 				for _, val := range strings.Split(gts, " ") {
 					vt := strings.Trim(val, " ")
