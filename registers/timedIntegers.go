@@ -30,3 +30,6 @@ func TimedIntCell(id string, in, out chan DataCt, d ...DataCt) {
 	}
 	go support.RunWithRecovery(r, nil)
 }
+
+// TODO
+func TimedIntDataBank(id string, in, out chan DataCt, d ...DataCt) {}

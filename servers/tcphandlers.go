@@ -19,9 +19,9 @@ func handlerTCPRequest(conn net.Conn) {
 
 	// Initially receive the MAC address
 	if _, e := conn.Read(mac); e != nil {
-		log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
+		log.Printf("servers.handlerTCPRequest: error reading from %v::%v : %v\n", ipc, mac, e)
 	} else {
-		log.Printf("servers.handlerTCPRequest: New connected device %v::%v\n", ipc, mac)
+		log.Printf("servers.handlerTCPRequest: new connected device %v::%v\n", ipc, mac)
 
 		// Start reading data
 		loop := true
@@ -33,7 +33,7 @@ func handlerTCPRequest(conn net.Conn) {
 					// in case of channel closed (EOF) it gets logged and the handler terminated
 					log.Printf("servers.handlerTCPRequest: connection lost with device %v::%v\n", ipc, mac)
 				} else {
-					log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
+					log.Printf("servers.handlerTCPRequest: error reading from %v::%v : %v\n", ipc, mac, e)
 				}
 				loop = false
 				log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
@@ -49,7 +49,7 @@ func handlerTCPRequest(conn net.Conn) {
 					}
 					if _, e := conn.Read(data); e != nil {
 						loop = false
-						log.Printf("servers.handlerTCPRequest: Error reading from %v::%v : %v\n", ipc, mac, e)
+						log.Printf("servers.handlerTCPRequest: error reading from %v::%v : %v\n", ipc, mac, e)
 						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 					} else {
 						// Valid data
@@ -69,7 +69,7 @@ func handlerTCPRequest(conn net.Conn) {
 								cmdd := make([]byte, v)
 								if _, e := conn.Read(cmdd); e != nil {
 									loop = false
-									log.Printf("servers.handlerTCPRequest: Error reading answer from %v::%v for command %v\n", ipc, mac, cmd)
+									log.Printf("servers.handlerTCPRequest: error reading answer from %v::%v for command %v\n", ipc, mac, cmd)
 									log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 								} else {
 									cmdchan <- append(cmd, cmdd...)
@@ -90,7 +90,11 @@ func handlerTCPRequest(conn net.Conn) {
 // TODO command handler
 func handlerCommandAnswer(c chan []byte) {
 	defer func() {
-		handlerCommandAnswer(c)
+		if e := recover(); e != nil {
+			if e != nil {
+				handlerCommandAnswer(c)
+			}
+		}
 	}()
 	for {
 		fmt.Printf("Received something else %v\n", <-c)

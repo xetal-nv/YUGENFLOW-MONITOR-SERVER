@@ -4,110 +4,109 @@ import (
 	"countingserver/registers"
 	"countingserver/support"
 	"log"
+	"sync"
 	"time"
 )
 
-//func samplerold(spn string) {
-//	c := spaceChannels[spn]
-//	counter := 0
-//	lastTS := support.Timestamp()
-//	if c == nil {
-//		log.Printf("spaces.sampler: error space %v not valid\n", spn)
-//	} else {
-//		log.Printf("spaces.sampler: enabled space [%v]\n", spn)
-//		defer func() {
-//			if e := recover(); e != nil {
-//				if e != nil {
-//					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", c, e)
-//					go sampler(spn)
-//				}
-//			}
-//		}()
-//		for {
-//			// will need to add the check for groups and consensus
-//			// when on group it stores in a groupo variable checking timestamos
-//			// or only checks in the time out
-//			select {
-//			case val := <-c:
-//				iv := int8(val.val)
-//				if iv != 127 {
-//					counter += int(iv)
-//					if counter < 0 && negSkip {
-//						counter = 0
-//					}
-//				}
-//				cTS := support.Timestamp()
-//				if (cTS - lastTS) >= (int64(samplingWindow) * 1000) {
-//					LatestDataBankIn[spn]["current"] <- registers.DataCt{cTS, counter}
-//					lastTS = cTS
-//				}
-//			default:
-//				time.Sleep(100 * time.Millisecond)
-//				cTS := support.Timestamp()
-//				if (cTS - lastTS) >= (int64(samplingWindow) * 1000) {
-//					LatestDataBankIn[spn]["current"] <- registers.DataCt{cTS, counter}
-//					lastTS = cTS
-//				}
-//			}
-//		}
-//	}
-//}
-
-//func sampler(spn string) {
-//	sampler(spn,0)
-//}
-
-// TODO the counter - in progress
-// TODO need to see how to make the various counters
-// TODO use a once and array with delays with the same code and difference channels?
-
-func sampler(spacename string, avgID int) {
-	c := spaceChannels[spacename]
+// TODO add database sent
+func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID int, once sync.Once) {
+	// set-up the next analysis stage and the communication channel
+	once.Do(func() {
+		if avgID < (len(avgAnalysis) - 1) {
+			nextStageChan = make(chan dataGate, bufsize)
+			go sampler(spacename, nextStageChan, nil, avgID+1, sync.Once{})
+		}
+	})
 	samplerName := avgAnalysis[avgID].name
 	samplerInterval := avgAnalysis[avgID].interval
 	timeoutInterval := 100 * time.Millisecond
 	if avgID > 0 {
-		timeoutInterval = time.Duration(avgAnalysis[avgID].interval) * time.Second
+		timeoutInterval += time.Duration(avgAnalysis[avgID-1].interval) * time.Second
 	}
 	counter := 0
 	lastTS := support.Timestamp()
-	if c == nil {
+	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spacename)
 	} else {
-		//log.Printf("spaces.sampler: enabled space [%v]\n", spacename)
 		defer func() {
 			if e := recover(); e != nil {
 				if e != nil {
-					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", c, e)
-					go sampler(spacename, avgID)
+					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
+					go sampler(spacename, prevStageChan, nextStageChan, avgID, once)
 				}
 			}
 		}()
+
 		log.Printf("spaces.sampler: setting sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spacename)
-		for {
-			// will need to add the check for groups and consensus
-			// when on group it stores in a groupo variable checking timestamos
-			// or only checks in the time out
-			select {
-			case val := <-c:
-				iv := int8(val.val)
-				if iv != 127 {
-					counter += int(iv)
-					if counter < 0 && negSkip {
-						counter = 0
+
+		if avgID == 0 {
+			// the first in the threads chain makes the counting
+			for {
+				// will need to add the check for groups and consensus
+				// when on group it stores in a group variable checking timestamps
+				// or only checks in the time out
+				cTS := support.Timestamp()
+				select {
+				case val := <-prevStageChan:
+					iv := int8(val.val)
+					if iv != 127 {
+						counter += int(iv)
+						if counter < 0 && instNegSkip {
+							counter = 0
+						}
 					}
+				default:
+					time.Sleep(timeoutInterval)
 				}
-				cTS := support.Timestamp()
 				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
-					LatestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
+					go func() {
+						latestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
+					}()
+					if nextStageChan != nil {
+						go func() { nextStageChan <- dataGate{val: counter, ts: cTS} }()
+					}
 					lastTS = cTS
 				}
-			default:
-				time.Sleep(timeoutInterval)
+			}
+		} else {
+			// threads 2+ in the chain needs to make the average and pass it forward
+			var buffer []dataGate
+			for {
 				cTS := support.Timestamp()
+				var val dataGate
+				valid := true
+				select {
+				case val = <-prevStageChan:
+				default:
+					time.Sleep(timeoutInterval)
+					valid = false
+				}
 				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
-					LatestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
+					go func(cTS, lastTS int64) {
+						acc := int64(0)
+						refTS := lastTS
+						for _, v := range buffer {
+							sp := int64(v.val)
+							if sp < 0 && avgNegSkip {
+								sp = 0
+							}
+							acc += sp * (v.ts - refTS)
+						}
+						avg := int(acc / (cTS - lastTS))
+						go func() {
+							latestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, avg}
+						}()
+						//fmt.Println(samplerName, "::", avg)
+						if nextStageChan != nil {
+							nextStageChan <- dataGate{val: avg, ts: cTS}
+						}
+					}(cTS, lastTS)
+
+					buffer = nil
 					lastTS = cTS
+				}
+				if valid {
+					buffer = append(buffer, val)
 				}
 			}
 		}

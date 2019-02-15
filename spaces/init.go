@@ -7,17 +7,18 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func SetUp() {
 	setpUpCounter()
-	setUpSpaces()
-	setUpDataBank()
+	spchans := setUpSpaces()
+	setUpDataDBSBank(spchans)
 }
 
-func setUpSpaces() {
-	spaceChannels = make(map[string]chan dataChan)
-	gateChannels = make(map[int][]chan dataChan)
+func setUpSpaces() map[string]chan dataGate {
+	spaceChannels := make(map[string]chan dataGate)
+	gateChannels = make(map[int][]chan dataGate)
 	groupsStats = make(map[int]int)
 	gateGroup = make(map[int]int)
 
@@ -34,7 +35,7 @@ func setUpSpaces() {
 
 	if data := os.Getenv("SPACES"); data != "" {
 		spaces := strings.Split(data, " ")
-		bufsize := 50
+		bufsize = 50
 		if v, e := strconv.Atoi(os.Getenv("INTBUFFSIZE")); e == nil {
 			bufsize = v
 		}
@@ -43,12 +44,15 @@ func setUpSpaces() {
 			spaces[i] = strings.Trim(spaces[i], " ")
 		}
 
+		//onces := make([]sync.Once, len(spaces))
+
 		// initialise the processing threads for each space
 		for i, name := range spaces {
 			if gts := os.Getenv("GATES_" + strconv.Itoa(i)); gts != "" {
-				spaceChannels[name] = make(chan dataChan, bufsize)
+				//if gts := os.Getenv("GATES_" + name); gts != "" {
+				spaceChannels[name] = make(chan dataGate, bufsize)
 				// the go routine below is the processing thread.
-				go sampler(name, 0)
+				go sampler(name, spaceChannels[name], nil, 0, sync.Once{})
 				var sg []int
 				for _, val := range strings.Split(gts, " ") {
 					vt := strings.Trim(val, " ")
@@ -104,16 +108,24 @@ func setUpSpaces() {
 			}
 		}
 	}
-
+	return spaceChannels
 }
 
 func setpUpCounter() {
 	sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
-		negSkip = false
+		instNegSkip = false
 	} else {
-		negSkip = true
+		instNegSkip = true
 	}
+	log.Printf("spaces.setpUpCounter: setting flag for skipping negative samples to %v\n", instNegSkip)
+	if os.Getenv("AVERAGENEG") == "1" {
+		avgNegSkip = false
+	} else {
+		avgNegSkip = true
+	}
+	log.Printf("spaces.setpUpCounter: setting flag for skipping negative averages to %v\n", avgNegSkip)
+
 	if sw == "" {
 		samplingWindow = 30
 	} else {
@@ -161,18 +173,21 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 }
 
-func setUpDataBank() {
+// TODO database links - needs a local copy of dbsChans also !!!
+func setUpDataDBSBank(spaceChannels map[string]chan dataGate) {
+
 	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
-	LatestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+	latestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 
 	for name, _ := range spaceChannels {
 		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
-		LatestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+		latestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		for _, v := range avgAnalysis {
 			LatestDataBankOut[name][v.name] = make(chan registers.DataCt)
-			LatestDataBankIn[name][v.name] = make(chan registers.DataCt)
-			go registers.TimedIntCell(name+v.name, LatestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
+			latestDataBankIn[name][v.name] = make(chan registers.DataCt)
+			go registers.TimedIntCell(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
 		}
-		log.Printf("spaces.setUpDataBank: DataBank for space %v initialised\n", name)
+		log.Printf("spaces.setUpDataDBSBank: DataBank for space %v initialised\n", name)
 	}
+
 }

@@ -8,7 +8,7 @@ func SendData(gate int, val int) error {
 		return errors.New("Spaces.SendData: error gate not valid")
 	}
 	for _, v := range gateChannels[gate] {
-		go func() { v <- dataChan{num: gate, val: val, group: gateGroup[gate]} }()
+		go func() { v <- dataGate{num: gate, val: val, group: gateGroup[gate]} }()
 	}
 	return nil
 }
