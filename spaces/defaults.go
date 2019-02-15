@@ -29,4 +29,4 @@ var latestDataDBSIn map[string]map[string]chan registers.DataCt  // input channe
 
 // external variables
 var LatestDataBankOut map[string]map[string]chan registers.DataCt // output channels to registry
-var latestDataDBSOut map[string]map[string]chan registers.DataCt  // input channels to databases
+var LatestDataDBSOut map[string]map[string]chan registers.DataCt  // input channels to databases

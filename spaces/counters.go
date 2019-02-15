@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// TODO add database sent
 func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID int, once sync.Once) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
@@ -62,6 +61,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID
 					go func() {
 						latestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
 					}()
+					go func() {
+						latestDataDBSIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
+					}()
 					if nextStageChan != nil {
 						go func() { nextStageChan <- dataGate{val: counter, ts: cTS} }()
 					}
@@ -95,6 +97,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID
 						avg := int(acc / (cTS - lastTS))
 						go func() {
 							latestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, avg}
+						}()
+						go func() {
+							latestDataDBSIn[spacename][samplerName] <- registers.DataCt{cTS, avg}
 						}()
 						//fmt.Println(samplerName, "::", avg)
 						if nextStageChan != nil {

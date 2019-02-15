@@ -177,15 +177,22 @@ func setpUpCounter() {
 func setUpDataDBSBank(spaceChannels map[string]chan dataGate) {
 
 	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+	LatestDataDBSOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 	latestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+	latestDataDBSIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 
 	for name, _ := range spaceChannels {
+		LatestDataDBSOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+		latestDataDBSIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		latestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		for _, v := range avgAnalysis {
+			LatestDataDBSOut[name][v.name] = make(chan registers.DataCt)
 			LatestDataBankOut[name][v.name] = make(chan registers.DataCt)
+			latestDataDBSIn[name][v.name] = make(chan registers.DataCt)
 			latestDataBankIn[name][v.name] = make(chan registers.DataCt)
 			go registers.TimedIntCell(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
+			go registers.TimedIntDataBank(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
 		}
 		log.Printf("spaces.setUpDataDBSBank: DataBank for space %v initialised\n", name)
 	}
