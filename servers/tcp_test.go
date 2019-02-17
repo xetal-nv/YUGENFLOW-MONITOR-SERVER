@@ -77,6 +77,9 @@ func TCP_Connection(vals []int) string {
 		fmt.Println("TEST Failed:", counter, a.Ct)
 		return "Expected counter is not as real counter"
 	}
+
+	spaces.ResetDataDBS["noname"]["current"] <- false
+
 	return ""
 }
 

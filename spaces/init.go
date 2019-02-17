@@ -173,26 +173,26 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 }
 
-// TODO database links - needs a local copy of dbsChans also !!!
+// TODO with database
 func setUpDataDBSBank(spaceChannels map[string]chan dataGate) {
 
 	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
-	LatestDataDBSOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 	latestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 	latestDataDBSIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+	ResetDataDBS = make(map[string]map[string]chan bool, len(spaceChannels))
 
 	for name, _ := range spaceChannels {
-		LatestDataDBSOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+		ResetDataDBS[name] = make(map[string]chan bool, len(avgAnalysis))
 		latestDataDBSIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		latestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
 		for _, v := range avgAnalysis {
-			LatestDataDBSOut[name][v.name] = make(chan registers.DataCt)
 			LatestDataBankOut[name][v.name] = make(chan registers.DataCt)
+			ResetDataDBS[name][v.name] = make(chan bool)
 			latestDataDBSIn[name][v.name] = make(chan registers.DataCt)
 			latestDataBankIn[name][v.name] = make(chan registers.DataCt)
 			go registers.TimedIntCell(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
-			go registers.TimedIntDataBank(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
+			go registers.TimedIntDataBank(name+v.name, latestDataBankIn[name][v.name], ResetDataDBS[name][v.name])
 		}
 		log.Printf("spaces.setUpDataDBSBank: DataBank for space %v initialised\n", name)
 	}
