@@ -2,6 +2,7 @@ package gates
 
 import (
 	"countingserver/support"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -58,7 +59,13 @@ func SetUp() {
 					if support.Contains(revdev, ind) {
 						rev = true
 					}
-					sensorList[ind] = sensorDef{id: ind, reversed: rev, gate: i}
+					if v, ok := sensorList[ind]; ok {
+						v.gate = append(v.gate, i)
+						sensorList[ind] = v
+					} else {
+						sensorList[ind] = sensorDef{id: ind, reversed: rev, gate: []int{i}}
+					}
+
 					gateList[i] = append(gateList[i], ind)
 				}
 			}
@@ -74,24 +81,36 @@ func SetUp() {
 	if data := os.Getenv("ENTRY_" + strconv.Itoa(i)); data == "" {
 		log.Fatal("gateList.SetUp: fatal error, no entry has been defined")
 	} else {
-		entryList = make(map[int][]int)
+		entryList := make(map[int][]int) // only for reporting at this point
 		for data != "" {
 			entryChan := make(chan sensorData)
 			for _, v := range strings.Split(strings.Trim(data, " "), " ") {
 				if ind, ok := strconv.Atoi(v); ok != nil {
 					log.Fatal("gateList.SetUp: fatal error in definition of ENTRY ", i)
 				} else {
-					entryList[i] = append(entryList[i], ind)
-					tm := sensorList[ind]
-					tm.entry = entryChan
-					sensorList[ind] = tm
+					for _, d := range gateList[ind] {
+						entryList[i] = append(entryList[d], ind)
+						tm := sensorList[d]
+						kp := true
+						for _, v := range tm.entry {
+							if v == entryChan {
+								kp = false
+							}
+						}
+						if kp {
+							tm.entry = append(tm.entry, entryChan)
+							sensorList[d] = tm
+						}
+					}
 				}
 			}
-			// TODO start the entry thread
+			// TODO start the entry thread place holder
+			go entryProcessing(i, entryChan)
 			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, entryList[i])
 			i += 1
 			data = os.Getenv("ENTRY_" + strconv.Itoa(i))
 		}
 
 	}
+	fmt.Println(sensorList)
 }

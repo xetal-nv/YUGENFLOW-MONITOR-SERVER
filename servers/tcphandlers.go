@@ -1,7 +1,7 @@
 package servers
 
 import (
-	"countingserver/spaces"
+	"countingserver/gates"
 	"fmt"
 	"io"
 	"log"
@@ -54,7 +54,7 @@ func handlerTCPRequest(conn net.Conn) {
 					} else {
 						// Valid data
 						deviceId := int(data[1]) | int(data[0])<<8
-						if e := spaces.SendData(deviceId, int(data[2])); e != nil {
+						if e := gates.SendData(deviceId, int(data[2])); e != nil {
 							log.Println(e)
 						}
 						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), deviceId, int8(data[2]))

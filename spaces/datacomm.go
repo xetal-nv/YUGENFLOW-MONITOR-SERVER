@@ -1,14 +1,17 @@
 package spaces
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+	"strconv"
+)
 
 // sends the gate data to the proper counters
-func SendData(gate int, val int) error {
-	if entrySpaceChannels[gate] == nil {
-		return errors.New("Spaces.SendData: error gate not valid")
+func SendData(entry int, val int) error {
+	if entrySpaceChannels[entry] == nil {
+		return errors.New("spaces.SendData: error entry not valid id: " + strconv.Itoa(entry))
 	}
-	for _, v := range entrySpaceChannels[gate] {
-		go func() { v <- dataEntry{num: gate, val: val} }()
+	for _, v := range entrySpaceChannels[entry] {
+		go func() { v <- dataEntry{num: entry, val: val} }()
 	}
 	return nil
 }

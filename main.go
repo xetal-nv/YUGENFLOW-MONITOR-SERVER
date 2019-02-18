@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"countingserver/gates"
 	"countingserver/servers"
 	"countingserver/spaces"
 	"countingserver/support"
@@ -27,6 +28,7 @@ func main() {
 		//servers.StartServers()
 
 		// the part below needs to go to servers.StartServers()
+		gates.SetUp()
 		spaces.SetUp()
 		servers.StartTCP(make(chan context.Context))
 	}

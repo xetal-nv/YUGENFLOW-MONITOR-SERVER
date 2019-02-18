@@ -69,14 +69,14 @@ func TCP_Connection(vals []int) string {
 					}
 				}
 				//noinspection GoUnhandledErrorResult
-				conn.Write([]byte{1, 0, 2, byte(m)})
+				conn.Write([]byte{1, 0, 1, byte(m)})
 				time.Sleep(1000 * time.Millisecond)
 
 			}
 		}
 		fmt.Println(" TEST -> Send illegal data")
 		//noinspection GoUnhandledErrorResult
-		conn.Write([]byte{37, 1, 2})
+		conn.Write([]byte{37, 1, 1})
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
 		fmt.Println(" TEST -> Disconnect to TCP channel")
@@ -127,6 +127,7 @@ func Test_TCP_Stream(t *testing.T) {
 	}
 	neg := os.Getenv("INSTANTNEG")
 
+	gates.SetUp()
 	spaces.SetUp()
 
 	go StartTCP(make(chan context.Context))
@@ -150,7 +151,7 @@ func Test_TCP_Stream(t *testing.T) {
 				}
 			}
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, 1, byte(m)})
+			conn.Write([]byte{1, 0, 5, byte(m)})
 			time.Sleep(1000 * time.Millisecond)
 
 		}
