@@ -36,9 +36,9 @@ func setUpSpaces() map[string]chan dataEntry {
 		//onces := make([]sync.Once, len(spaces))
 
 		// initialise the processing threads for each space
-		for i, name := range spaces {
-			if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
-				//if sts := os.Getenv("SPACE_" + name); sts != "" {
+		for _, name := range spaces {
+			//if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
+			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				spaceChannels[name] = make(chan dataEntry, bufsize)
 				// the go routine below is the processing thread.
 				go sampler(name, spaceChannels[name], nil, 0, sync.Once{}, 0, 0)
