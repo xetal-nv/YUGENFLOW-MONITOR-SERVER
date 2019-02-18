@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,7 +20,7 @@ type DevData struct {
 var DLog chan DevData
 
 func SetUpDevLogger() {
-	DLog = make(chan DevData, 30)
+	DLog = make(chan DevData, 50)
 	go devLogger(DLog)
 }
 
@@ -41,7 +42,8 @@ func devLogger(data chan DevData) {
 		msg = strings.Trim(msg, " ")
 		if d.Tag != "skip" {
 			ct := time.Now().Local()
-			file := ct.Format("2006-01-02") + ".log"
+			pwd, _ := os.Getwd()
+			file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
 
 			if input, err := ioutil.ReadFile(file); err != nil {
 				if fn, err := os.Create(file); err != nil {
