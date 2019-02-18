@@ -41,7 +41,7 @@ func setUpSpaces() map[string]chan dataEntry {
 				//if sts := os.Getenv("SPACE_" + name); sts != "" {
 				spaceChannels[name] = make(chan dataEntry, bufsize)
 				// the go routine below is the processing thread.
-				go sampler(name, spaceChannels[name], nil, 0, sync.Once{})
+				go sampler(name, spaceChannels[name], nil, 0, sync.Once{}, 0, 0)
 				var sg []int
 				for _, val := range strings.Split(sts, " ") {
 					vt := strings.Trim(val, " ")

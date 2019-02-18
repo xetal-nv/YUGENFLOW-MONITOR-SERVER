@@ -8,10 +8,10 @@ import (
 
 var logf *os.File
 var e error
-var once sync.Once
+var o1, o2 sync.Once
 
 func SetUpLog(n string) {
-	once.Do(func() {
+	o1.Do(func() {
 		if logf, e = os.OpenFile(n, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
 			log.Fatal(e)
 		}

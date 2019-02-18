@@ -8,14 +8,15 @@ import (
 	"time"
 )
 
-func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgID int, once sync.Once) {
+func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
 		if avgID < (len(avgAnalysis) - 1) {
 			nextStageChan = make(chan dataEntry, bufsize)
-			go sampler(spacename, nextStageChan, nil, avgID+1, sync.Once{})
+			go sampler(spacename, nextStageChan, nil, avgID+1, sync.Once{}, 0, 0)
 		}
 	})
+	stats := []int{tn, ntn}
 	samplerName := avgAnalysis[avgID].name
 	samplerInterval := avgAnalysis[avgID].interval
 	timeoutInterval := 100 * time.Millisecond
@@ -31,7 +32,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 			if e := recover(); e != nil {
 				if e != nil {
 					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
-					go sampler(spacename, prevStageChan, nextStageChan, avgID, once)
+					go sampler(spacename, prevStageChan, nextStageChan, avgID, once, tn, ntn)
 				}
 			}
 		}()
@@ -41,15 +42,18 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 		if avgID == 0 {
 			// the first in the threads chain makes the counting
 			for {
-				// will need to add the check for groups and consensus
-				// when on group it stores in a group variable checking timestamps
-				// or only checks in the time out
 				cTS := support.Timestamp()
 				select {
 				case val := <-prevStageChan:
 					iv := int8(val.val)
 					if iv != 127 {
 						counter += int(iv)
+						stats[0] += 1
+						if counter < 0 {
+							// development logging
+							stats[1] += 1
+							support.DLog <- support.DevData{"spacename_current", support.Timestamp(), "negative counter", stats}
+						}
 						if counter < 0 && instNegSkip {
 							counter = 0
 						}

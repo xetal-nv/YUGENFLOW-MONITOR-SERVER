@@ -24,6 +24,7 @@ func main() {
 			os.Remove(logfilename)
 		}
 		support.SetUpLog(logfilename)
+		support.SetUpDevLogger()
 
 		//servers.StartServers()
 

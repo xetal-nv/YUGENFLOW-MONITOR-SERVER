@@ -5,6 +5,7 @@ import (
 	"countingserver/gates"
 	"countingserver/registers"
 	"countingserver/spaces"
+	"countingserver/support"
 	"fmt"
 	"github.com/joho/godotenv"
 	"math/rand"
@@ -28,9 +29,9 @@ func Test_SETUP(t *testing.T) {
 	if e := godotenv.Load("../.env"); e != nil {
 		t.Fatalf("Error loading .env file: %v", e)
 	}
-
+	support.SetUpDevLogger()
 	gates.SetUp()
-	//spaces.SetUp()
+	spaces.SetUp()
 }
 
 func TCP_Connection(vals []int) string {
@@ -40,7 +41,7 @@ func TCP_Connection(vals []int) string {
 		return "Error loading .env file"
 	}
 	neg := os.Getenv("INSTANTNEG")
-
+	support.SetUpDevLogger()
 	gates.SetUp()
 	spaces.SetUp()
 
@@ -126,7 +127,7 @@ func Test_TCP_Stream(t *testing.T) {
 		}
 	}
 	neg := os.Getenv("INSTANTNEG")
-
+	support.SetUpDevLogger()
 	gates.SetUp()
 	spaces.SetUp()
 
