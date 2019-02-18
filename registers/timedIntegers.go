@@ -45,8 +45,8 @@ func TimedIntDataBank(id string, in chan DataCt, rst chan bool) {
 	fmt.Println("DBS id:", id, "called TBD")
 	for {
 		select {
-		case <-in:
-			fmt.Println("DBS id:", id, "got data TBD")
+		case d := <-in:
+			fmt.Println("DBS id:", id, "got data", d)
 		case a := <-rst:
 			fmt.Println("DBS id:", id, "got reset request", a, " TBD")
 		}

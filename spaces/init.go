@@ -16,24 +16,13 @@ func SetUp() {
 	setUpDataDBSBank(spchans)
 }
 
-func setUpSpaces() map[string]chan dataGate {
-	spaceChannels := make(map[string]chan dataGate)
-	gateChannels = make(map[int][]chan dataGate)
-	groupsStats = make(map[int]int)
-	gateGroup = make(map[int]int)
+func setUpSpaces() map[string]chan dataEntry {
+	spaceChannels := make(map[string]chan dataEntry)
+	entrySpaceChannels = make(map[int][]chan dataEntry)
+	//groupsStats = make(map[int]int)
+	//entryGroup = make(map[int]int)
 
-	if data := os.Getenv("REVERSE"); data != "" {
-		for _, v := range strings.Split(data, " ") {
-			if vi, e := strconv.Atoi(v); e == nil {
-				reversedGates = append(reversedGates, vi)
-			} else {
-				log.Fatal("spaces.setUpSpaces: fatal error converting reversed gate name", v)
-			}
-		}
-		log.Println("spaces.setUpSpaces: defined reversed gates", reversedGates)
-	}
-
-	if data := os.Getenv("SPACES"); data != "" {
+	if data := os.Getenv("SPACES_NAMES"); data != "" {
 		spaces := strings.Split(data, " ")
 		bufsize = 50
 		if v, e := strconv.Atoi(os.Getenv("INTBUFFSIZE")); e == nil {
@@ -48,23 +37,23 @@ func setUpSpaces() map[string]chan dataGate {
 
 		// initialise the processing threads for each space
 		for i, name := range spaces {
-			if gts := os.Getenv("GATES_" + strconv.Itoa(i)); gts != "" {
-				//if gts := os.Getenv("GATES_" + name); gts != "" {
-				spaceChannels[name] = make(chan dataGate, bufsize)
+			if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
+				//if sts := os.Getenv("SPACE_" + name); sts != "" {
+				spaceChannels[name] = make(chan dataEntry, bufsize)
 				// the go routine below is the processing thread.
 				go sampler(name, spaceChannels[name], nil, 0, sync.Once{})
 				var sg []int
-				for _, val := range strings.Split(gts, " ") {
+				for _, val := range strings.Split(sts, " ") {
 					vt := strings.Trim(val, " ")
 					if v, e := strconv.Atoi(vt); e == nil {
 						sg = append(sg, v)
 					} else {
-						log.Fatal("spaces.setUpSpaces: fatal error gate name", val)
+						log.Fatal("spaces.setUpSpaces: fatal error entry name", val)
 					}
 				}
-				log.Printf("spaces.setUpSpaces: found space [%v] with gates %v\n", name, sg)
+				log.Printf("spaces.setUpSpaces: found space [%v] with entry %v\n", name, sg)
 				for _, g := range sg {
-					gateChannels[g] = append(gateChannels[g], spaceChannels[name])
+					entrySpaceChannels[g] = append(entrySpaceChannels[g], spaceChannels[name])
 				}
 			} else {
 				log.Printf("spaces.setUpSpaces: found  empty space [%v]\n", name)
@@ -72,41 +61,6 @@ func setUpSpaces() map[string]chan dataGate {
 		}
 	} else {
 		log.Fatal("spaces.setUpSpaces: fatal error no space has been defined")
-	}
-
-	if data := os.Getenv("GROUPS"); data != "" {
-		data = strings.Trim(data, ";")
-		for _, gg := range strings.Split(data, ";") {
-			gg = strings.Trim(gg, " ")
-			tempg := strings.Split(gg, " ")
-			tgn, e := strconv.Atoi(tempg[0])
-			if e != nil {
-				log.Fatal("spaces.setUpSpaces: fatal error group name", tempg[0])
-			} else {
-				log.Printf("spaces.setUpSpaces: found group with ID:%v\n", tempg[0])
-			}
-			tempg = tempg[1:]
-			for _, v := range tempg {
-				if val, e := strconv.Atoi(strings.Trim(v, " ")); e != nil {
-					log.Fatal("spaces.setUpSpaces: fatal error group gate name", v)
-				} else {
-					if _, pres := gateGroup[val]; pres {
-						log.Println("spaces.setUpSpaces: error group duplicated gate name", val)
-					} else {
-						gateGroup[val] = tgn
-					}
-				}
-			}
-		}
-
-		// Initialise the statistics on groups
-		for _, v := range gateGroup {
-			if _, ok := groupsStats[v]; ok {
-				groupsStats[v] += 1
-			} else {
-				groupsStats[v] = 1
-			}
-		}
 	}
 	return spaceChannels
 }
@@ -174,7 +128,7 @@ func setpUpCounter() {
 }
 
 // TODO with database
-func setUpDataDBSBank(spaceChannels map[string]chan dataGate) {
+func setUpDataDBSBank(spaceChannels map[string]chan dataEntry) {
 
 	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
 	latestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))

@@ -53,11 +53,11 @@ func handlerTCPRequest(conn net.Conn) {
 						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 					} else {
 						// Valid data
-						gid := int(data[1]) | int(data[0])<<8
-						if e := spaces.SendData(gid, int(data[2])); e != nil {
+						deviceId := int(data[1]) | int(data[0])<<8
+						if e := spaces.SendData(deviceId, int(data[2])); e != nil {
 							log.Println(e)
 						}
-						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), gid, int8(data[2]))
+						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), deviceId, int8(data[2]))
 					}
 				default:
 					// verify it is a command answer, if not closes the TCP channel

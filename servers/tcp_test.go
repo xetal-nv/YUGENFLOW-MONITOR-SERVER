@@ -2,6 +2,7 @@ package servers
 
 import (
 	"context"
+	"countingserver/gates"
 	"countingserver/registers"
 	"countingserver/spaces"
 	"fmt"
@@ -23,6 +24,15 @@ func Test_Registers(t *testing.T) {
 	}
 }
 
+func Test_SETUP(t *testing.T) {
+	if e := godotenv.Load("../.env"); e != nil {
+		t.Fatalf("Error loading .env file: %v", e)
+	}
+
+	gates.SetUp()
+	//spaces.SetUp()
+}
+
 func TCP_Connection(vals []int) string {
 	counter := 0
 
@@ -31,6 +41,7 @@ func TCP_Connection(vals []int) string {
 	}
 	neg := os.Getenv("INSTANTNEG")
 
+	gates.SetUp()
 	spaces.SetUp()
 
 	go StartTCP(make(chan context.Context))
@@ -47,7 +58,7 @@ func TCP_Connection(vals []int) string {
 			conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})
 			fmt.Println(" TEST -> Send other data")
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{7, 1, 2})
+			conn.Write([]byte{7, 1, 1})
 			for i := 0; i < 10; i++ {
 				rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 				m := vals[rand.Intn(len(vals))]
@@ -139,7 +150,7 @@ func Test_TCP_Stream(t *testing.T) {
 				}
 			}
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, 2, byte(m)})
+			conn.Write([]byte{1, 0, 1, byte(m)})
 			time.Sleep(1000 * time.Millisecond)
 
 		}
@@ -147,7 +158,7 @@ func Test_TCP_Stream(t *testing.T) {
 	//noinspection GoUnhandledErrorResult
 	conn.Close()
 	fmt.Println(" TEST -> Disconnect to TCP channel")
-	time.Sleep(5 * time.Second)
+	time.Sleep(30 * time.Second)
 	a := <-spaces.LatestDataBankOut["noname"]["current"]
 
 	if a.Ct != counter {

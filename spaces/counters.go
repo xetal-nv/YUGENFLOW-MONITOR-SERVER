@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID int, once sync.Once) {
+func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgID int, once sync.Once) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
 		if avgID < (len(avgAnalysis) - 1) {
-			nextStageChan = make(chan dataGate, bufsize)
+			nextStageChan = make(chan dataEntry, bufsize)
 			go sampler(spacename, nextStageChan, nil, avgID+1, sync.Once{})
 		}
 	})
@@ -65,17 +65,17 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID
 						latestDataDBSIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
 					}()
 					if nextStageChan != nil {
-						go func() { nextStageChan <- dataGate{val: counter, ts: cTS} }()
+						go func() { nextStageChan <- dataEntry{val: counter, ts: cTS} }()
 					}
 					lastTS = cTS
 				}
 			}
 		} else {
 			// threads 2+ in the chain needs to make the average and pass it forward
-			var buffer []dataGate
+			var buffer []dataEntry
 			for {
 				cTS := support.Timestamp()
-				var val dataGate
+				var val dataEntry
 				valid := true
 				select {
 				case val = <-prevStageChan:
@@ -103,7 +103,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataGate, avgID
 						}()
 						//fmt.Println(samplerName, "::", avg)
 						if nextStageChan != nil {
-							nextStageChan <- dataGate{val: avg, ts: cTS}
+							nextStageChan <- dataEntry{val: avg, ts: cTS}
 						}
 					}(cTS, lastTS)
 
