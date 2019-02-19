@@ -14,11 +14,14 @@ func TimedIntDBS(id string, in chan DataCt, rst chan bool) {
 			select {
 			case d := <-in:
 				// TODO to be fully tested with the API server
-				if err := StoreSerieSample(id, d.Ts, d.Ct, !support.Stringending(id, "current")); err != nil {
-					log.Printf("registers.TimedIntDBS: DBS handler %v error %v\n", id, err)
+				if support.Debug != 3 && support.Debug != 4 {
+					if err := StoreSerieSample(id, d.Ts, d.Ct, !support.Stringending(id, "current")); err != nil {
+						log.Printf("registers.TimedIntDBS: DBS handler %v error %v\n", id, err)
+					}
 				}
-				// DEBUG
-				fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", support.Stringending(id, "current"))
+				if support.Debug > 0 {
+					fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", support.Stringending(id, "current"))
+				}
 			case a := <-rst:
 				// Reset via API might be dangerous, this is justa  placeholder
 				log.Println("registers.TimedIntDBS: handler id:", id, "got reset request", a, " - does nothing still")

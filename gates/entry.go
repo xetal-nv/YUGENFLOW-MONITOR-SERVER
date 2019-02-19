@@ -16,15 +16,25 @@ func entryProcessing(id int, in chan sensorData) {
 			}
 		}
 	}()
-	log.Printf("gates.entryProcessing: setting entry %v\n", id)
+	log.Printf("gates.entry: Processing: setting entry %v\n", id)
 	for {
 		data := <-in
-		// TODO to be done fully, now it just sends the data it receives
-		dp := data.val
-		if e := spaces.SendData(id, dp); e != nil {
-			log.Println(e)
+		if support.Debug != 2 && support.Debug != 4 {
+			trackPeople()
+		} else {
+			dp := data.val
+			if e := spaces.SendData(id, dp); e != nil {
+				log.Println(e)
+			}
 		}
-		fmt.Printf("DEBUG: entry %v has calculated datapoint at %v as %v\n", id, support.Timestamp(), dp)
+		if support.Debug > 0 {
+			fmt.Printf("DEBUG: entry %v has calculated datapoint at %v as %v\n", id, support.Timestamp(), data.val)
+		}
 	}
 
+}
+
+// TODO
+func trackPeople() {
+	// I do nothing right now!
 }

@@ -2,7 +2,6 @@ package gates
 
 import (
 	"countingserver/support"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -104,7 +103,6 @@ func SetUp() {
 					}
 				}
 			}
-			// TODO start the entry thread place holder
 			go entryProcessing(i, entryChan)
 			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, entryList[i])
 			i += 1
@@ -112,5 +110,4 @@ func SetUp() {
 		}
 
 	}
-	fmt.Println(sensorList)
 }

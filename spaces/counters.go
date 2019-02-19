@@ -105,7 +105,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 						go func() {
 							latestDataDBSIn[spacename][samplerName] <- registers.DataCt{cTS, avg}
 						}()
-						//fmt.Println(samplerName, "::", avg)
 						if nextStageChan != nil {
 							nextStageChan <- dataEntry{val: avg, ts: cTS}
 						}

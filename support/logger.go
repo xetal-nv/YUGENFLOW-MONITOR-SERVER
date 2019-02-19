@@ -8,10 +8,10 @@ import (
 
 var logf *os.File
 var e error
-var o1, o2 sync.Once
+var once sync.Once
 
-func SetUpLog(n string) {
-	o1.Do(func() {
+func setUpLog(n string) {
+	once.Do(func() {
 		if logf, e = os.OpenFile(n, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
 			log.Fatal(e)
 		}
@@ -19,7 +19,7 @@ func SetUpLog(n string) {
 	})
 }
 
-func CloseLog() {
+func closeLog() {
 	if logf != nil {
 		_ = logf.Close()
 	}

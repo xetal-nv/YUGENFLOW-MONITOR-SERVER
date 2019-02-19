@@ -7,7 +7,6 @@ import (
 	"countingserver/spaces"
 	"countingserver/support"
 	"fmt"
-	"github.com/joho/godotenv"
 	"math/rand"
 	"net"
 	"os"
@@ -26,10 +25,7 @@ func Test_Registers(t *testing.T) {
 }
 
 func Test_SETUP(t *testing.T) {
-	if e := godotenv.Load("../.env"); e != nil {
-		t.Fatalf("Error loading .env file: %v", e)
-	}
-	support.SetUpDevLogger()
+	support.SupportSetUp("../.env")
 	if err := registers.TimedIntDBSSetUp(); err != nil {
 		t.Fatal(err)
 	}
@@ -40,12 +36,8 @@ func Test_SETUP(t *testing.T) {
 
 func TCP_Connection(vals []int) string {
 	counter := 0
-
-	if e := godotenv.Load("../.env"); e != nil {
-		return "Error loading .env file"
-	}
+	support.SupportSetUp("../.env")
 	neg := os.Getenv("INSTANTNEG")
-	support.SetUpDevLogger()
 	gates.SetUp()
 	spaces.SetUp()
 
@@ -122,9 +114,7 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	vals := []int{-1, 0, 1, 2, 127}
 	counter := 0
 
-	if e := godotenv.Load("../.env"); e != nil {
-		t.Fatalf("Error loading .env file")
-	}
+	support.SupportSetUp("../.env")
 
 	var avgws []string
 	avgws = append(avgws, "current")
@@ -137,7 +127,6 @@ func Test_TCP_StreamDBS(t *testing.T) {
 		}
 	}
 	neg := os.Getenv("INSTANTNEG")
-	support.SetUpDevLogger()
 	gates.SetUp()
 	spaces.SetUp()
 

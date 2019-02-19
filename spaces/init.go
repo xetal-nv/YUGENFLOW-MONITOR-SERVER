@@ -127,7 +127,6 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 }
 
-// TODO with database
 func setUpDataDBSBank(spaceChannels map[string]chan dataEntry) {
 
 	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))

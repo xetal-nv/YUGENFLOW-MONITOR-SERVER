@@ -71,7 +71,7 @@ func tempHandlerTCPRequest2(conn net.Conn, f bool) {
 		fmt.Println("New connection arrived")
 		go func() {
 			time.Sleep(3 * time.Second)
-			conn.Write([]byte("\x06"))
+			_, _ = conn.Write([]byte("\x06"))
 		}()
 	}
 

@@ -5,7 +5,7 @@ import (
 )
 
 func Test_DLogger(t *testing.T) {
-	SetUpDevLogger()
+	setUpDevLogger()
 	DLog <- DevData{"pippo", Timestamp(), "this is just a test", []int{1, 0, 1}}
 	// remember to set chan buffer to 1
 	DLog <- DevData{Tag: "skip"}

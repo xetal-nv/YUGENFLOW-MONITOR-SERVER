@@ -57,7 +57,6 @@ func handlerTCPRequest(conn net.Conn) {
 						if e := gates.SendData(deviceId, int(data[2])); e != nil {
 							log.Println(e)
 						}
-						//fmt.Printf("%v :: ID %v :: VALUE %v\n", support.Timestamp(), deviceId, int8(data[2]))
 					}
 				default:
 					// verify it is a command answer, if not closes the TCP channel

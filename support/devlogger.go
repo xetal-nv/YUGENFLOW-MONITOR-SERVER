@@ -19,7 +19,7 @@ type DevData struct {
 
 var DLog chan DevData
 
-func SetUpDevLogger() {
+func setUpDevLogger() {
 	DLog = make(chan DevData, 50)
 	go devLogger(DLog)
 }

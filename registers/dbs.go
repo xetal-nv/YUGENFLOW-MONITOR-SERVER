@@ -121,15 +121,10 @@ func StoreSerieSample(tag string, ts int64, val int, avg bool) error {
 		binary.LittleEndian.PutUint64(a, uint64(val))
 		var d codeddata
 		d = a
-		//fmt.Println(d)
 		if avg {
 			err = d.update([]byte(lab), *statsDB, false)
-			//v, _ := read([]byte(lab), 8, *statsDB)
-			//fmt.Println(lab, v)
 		} else {
 			err = d.update([]byte(lab), *currentDB, true)
-			//v, _ := read([]byte(lab), 8, *currentDB)
-			//fmt.Println(lab, v)
 		}
 	} else {
 		err = errors.New("Serie " + tag + " not found")
