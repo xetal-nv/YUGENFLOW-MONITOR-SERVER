@@ -30,6 +30,10 @@ func Test_SETUP(t *testing.T) {
 		t.Fatalf("Error loading .env file: %v", e)
 	}
 	support.SetUpDevLogger()
+	if err := registers.TimedIntDBSSetUp(); err != nil {
+		t.Fatal(err)
+	}
+	defer registers.TimedIntDBSClose()
 	gates.SetUp()
 	spaces.SetUp()
 }
@@ -108,7 +112,13 @@ func Test_TCP_ConnectionAll(t *testing.T) {
 	}
 }
 
-func Test_TCP_Stream(t *testing.T) {
+func Test_TCP_StreamDBS(t *testing.T) {
+
+	if err := registers.TimedIntDBSSetUp(); err != nil {
+		t.Fatal(err)
+	}
+	defer registers.TimedIntDBSClose()
+
 	vals := []int{-1, 0, 1, 2, 127}
 	counter := 0
 

@@ -2,6 +2,7 @@ package servers
 
 import (
 	"context"
+	"countingserver/support"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -20,11 +21,13 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 		Handler:        mx,
 	}
 
-	go func() {
+	r := func() {
 		ctx := <-sd
 		//noinspection GoUnhandledErrorResult
 		server.Shutdown(ctx)
-	}()
+	}
+
+	go support.RunWithRecovery(r, nil)
 
 	go func() {
 		defer func() {

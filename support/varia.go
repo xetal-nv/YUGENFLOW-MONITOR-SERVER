@@ -14,3 +14,12 @@ func Contains(s []int, e int) bool {
 	}
 	return false
 }
+
+func Stringending(a, b string) bool {
+	for i := 0; i < len(b); i++ {
+		if a[len(a)-len(b)+i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

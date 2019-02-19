@@ -146,6 +146,9 @@ func setUpDataDBSBank(spaceChannels map[string]chan dataEntry) {
 			latestDataDBSIn[name][v.name] = make(chan registers.DataCt)
 			latestDataBankIn[name][v.name] = make(chan registers.DataCt)
 			go registers.TimedIntCell(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
+			if _, e := registers.SetSeries(name+v.name, v.interval, false); e != nil {
+				log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
+			}
 			go registers.TimedIntDBS(name+v.name, latestDataBankIn[name][v.name], ResetDataDBS[name][v.name])
 		}
 		log.Printf("spaces.setUpDataDBSBank: DataBank for space %v initialised\n", name)

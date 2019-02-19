@@ -2,6 +2,7 @@ package servers
 
 import (
 	"context"
+	"countingserver/support"
 	"log"
 	"net"
 	"os"
@@ -49,11 +50,13 @@ func StartTCP(sd chan context.Context) {
 		log.Fatal("servers.StartTCP: fatal error:", e)
 	}
 
-	go func() {
+	r := func() {
 		<-sd
 		//noinspection GoUnhandledErrorResult
 		l.Close()
-	}()
+	}
+
+	go support.RunWithRecovery(r, nil)
 
 	defer func() {
 		if e := recover(); e != nil {

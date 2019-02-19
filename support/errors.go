@@ -10,7 +10,7 @@ func RunWithRecovery(f, r fn) {
 			if e != nil {
 				r()
 			}
-			RunWithRecovery(f, r)
+			go RunWithRecovery(f, r)
 		}
 	}()
 	f()

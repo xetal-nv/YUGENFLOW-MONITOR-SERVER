@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"countingserver/gates"
+	"countingserver/registers"
 	"countingserver/servers"
 	"countingserver/spaces"
 	"countingserver/support"
 	"fmt"
 	"github.com/joho/godotenv"
+	"log"
 	"os"
 )
 
@@ -23,9 +25,17 @@ func main() {
 			//noinspection GoUnhandledErrorResult
 			os.Remove(logfilename)
 		}
+		// Set-up loggers
 		support.SetUpLog(logfilename)
 		support.SetUpDevLogger()
 
+		// Set-up databases
+		if err := registers.TimedIntDBSSetUp(); err != nil {
+			log.Fatal(err)
+		}
+		defer registers.TimedIntDBSClose()
+
+		// Set-up and start servers
 		//servers.StartServers()
 
 		// the part below needs to go to servers.StartServers()

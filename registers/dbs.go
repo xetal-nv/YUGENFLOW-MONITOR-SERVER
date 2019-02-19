@@ -92,8 +92,9 @@ func SetSeries(tag string, step int, avg bool) (bool, error) {
 			a.lastUpdt = a.fromRst
 			a.created = a.fromRst
 			b := a.marshall()
-			err = b.Update(nt, db, false)
+			err = b.update(nt, db, false)
 			tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
+			log.Printf("register.SetSeries: new series %v:%v added\n", tag, step)
 		} else {
 			if c, e := read(nt, 28, db); e != nil {
 				err = e
@@ -102,6 +103,7 @@ func SetSeries(tag string, step int, avg bool) (bool, error) {
 					err = e
 				} else {
 					tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
+					log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
 				}
 
 			}
@@ -121,11 +123,11 @@ func StoreSerieSample(tag string, ts int64, val int, avg bool) error {
 		d = a
 		//fmt.Println(d)
 		if avg {
-			err = d.Update([]byte(lab), *statsDB, false)
+			err = d.update([]byte(lab), *statsDB, false)
 			//v, _ := read([]byte(lab), 8, *statsDB)
 			//fmt.Println(lab, v)
 		} else {
-			err = d.Update([]byte(lab), *currentDB, true)
+			err = d.update([]byte(lab), *currentDB, true)
 			//v, _ := read([]byte(lab), 8, *currentDB)
 			//fmt.Println(lab, v)
 		}
@@ -228,16 +230,16 @@ func read(id []byte, l int, db badger.DB) (codeddata, error) {
 }
 
 // Delete deletes an entry
-func delEntry(id []byte, db badger.DB) error {
-	err := db.Update(func(txn *badger.Txn) error {
-		err := txn.Delete(id)
-		return err
-	})
-	return err
-}
+//func delEntry(id []byte, db badger.DB) error {
+//	err := db.Update(func(txn *badger.Txn) error {
+//		err := txn.Delete(id)
+//		return err
+//	})
+//	return err
+//}
 
-// Update updates updates an entry
-func (a codeddata) Update(id []byte, db badger.DB, ttl bool) error {
+// update updates updates an entry
+func (a codeddata) update(id []byte, db badger.DB, ttl bool) error {
 	err := db.Update(func(txn *badger.Txn) error {
 		var err error
 		if ttl {
