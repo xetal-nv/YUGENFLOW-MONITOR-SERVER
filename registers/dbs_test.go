@@ -8,7 +8,9 @@ import (
 )
 
 func Test_Setup(t *testing.T) {
-	TimedIntDBSSetUp()
+	if err := TimedIntDBSSetUp(); err != nil {
+		t.Fatal(err)
+	}
 	TimedIntDBSClose()
 }
 
@@ -26,22 +28,27 @@ func Test_Marshall(t *testing.T) {
 }
 
 func Test_DBS(t *testing.T) {
-	TimedIntDBSSetUp()
+	if err := TimedIntDBSSetUp(); err != nil {
+		t.Fatal(err)
+	}
 	defer TimedIntDBSClose()
 
-	if f, err := SetSeries("test", 30); err != nil {
+	if f, err := SetSeries("test", 2, false); err != nil {
 		t.Fatal(err)
 	} else {
-		fmt.Println("Found:", f)
+		if f {
+			fmt.Println("Serie definition:", GetDefinition("test"))
+		}
 	}
 	time.Sleep(2 * time.Second)
-	if err := StoreSerieSample("test", support.Timestamp(), 3); err != nil {
+	ts := support.Timestamp()
+	if err := StoreSerieSample("test", ts, 8, false); err != nil {
 		t.Fatal(err)
 	}
-
-	//if c, e := read([]byte{0}, 28, *currentDB); e != nil {
-	//	t.Fatal(e)
-	//} else {
-	//	fmt.Println(c.unmarshall())
-	//}
+	time.Sleep(2 * time.Second)
+	if v, e := ReadSeries("test", ts-200000, ts, false); e != nil {
+		t.Fatal(e)
+	} else {
+		fmt.Println(v)
+	}
 }

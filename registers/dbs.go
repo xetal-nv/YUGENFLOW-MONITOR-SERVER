@@ -1,6 +1,7 @@
 package registers
 
 import (
+	"bytes"
 	"countingserver/support"
 	"encoding/binary"
 	"errors"
@@ -53,9 +54,7 @@ func TimedIntDBSSetUp() error {
 		optsStats.ValueDir = "dbs/statsDB"
 		currentDB, err = badger.Open(optsCurr)
 		if err == nil {
-
 			statsDB, err = badger.Open(optsStats)
-		} else {
 			if err != nil {
 				currentDB.Close()
 			}
@@ -72,26 +71,31 @@ func TimedIntDBSClose() {
 }
 
 // External functions/API
-func SetSeries(tag string, step int) (bool, error) {
+func SetSeries(tag string, step int, avg bool) (bool, error) {
 	var err error
 	found := true
+	var db badger.DB
+	if avg {
+		db = *statsDB
+	} else {
+		db = *currentDB
+	}
 	if _, ok := tagStart[tag]; !ok {
 		// if not initialised it creates a new series
 		// sets the entry in tagStart
 		nt := []byte(tag + "0")
-		if _, e := read(nt, 28, *currentDB); e != nil {
+		if _, e := read(nt, 28, db); e != nil {
 			found = false
-			fmt.Println("not found")
 			a := headerData{}
 			a.fromRst = uint64(support.Timestamp())
 			a.step = uint32(step)
 			a.lastUpdt = a.fromRst
 			a.created = a.fromRst
 			b := a.marshall()
-			err = b.Update(nt, *currentDB, false)
+			err = b.Update(nt, db, false)
 			tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
 		} else {
-			if c, e := read([]byte{0}, 28, *currentDB); e != nil {
+			if c, e := read(nt, 28, db); e != nil {
 				err = e
 			} else {
 				if a, e := c.unmarshall(); e != nil {
@@ -106,26 +110,67 @@ func SetSeries(tag string, step int) (bool, error) {
 	return found, err
 }
 
-// TODO
-func StoreSerieSample(tag string, ts int64, val int) error {
-	// stores value, TS is from stored data
-	// in case of large difference with TS fills based on lastFill
-	// and returns an error
+func StoreSerieSample(tag string, ts int64, val int, avg bool) error {
 	var err error
-
 	if st, ok := tagStart[tag]; ok {
-		fmt.Println(st)
 		i := (ts - st[0]) / (st[1] * 1000)
-		fmt.Println(ts, st, i)
+		lab := tag + strconv.Itoa(int(i))
+		a := make([]byte, 8)
+		binary.LittleEndian.PutUint64(a, uint64(val))
+		var d codeddata
+		d = a
+		//fmt.Println(d)
+		if avg {
+			err = d.Update([]byte(lab), *statsDB, false)
+			//v, _ := read([]byte(lab), 8, *statsDB)
+			//fmt.Println(lab, v)
+		} else {
+			err = d.Update([]byte(lab), *currentDB, true)
+			//v, _ := read([]byte(lab), 8, *currentDB)
+			//fmt.Println(lab, v)
+		}
 	} else {
 		err = errors.New("Serie " + tag + " not found")
 	}
 	return err
 }
 
-func ReadSeries(tag string, ts1, ts2 int64) []serieSample {
+func ReadSeries(tag string, ts0, ts1 int64, avg bool) ([]serieSample, error) {
 	// returns all values between ts1 ans ts2
-	return nil
+	var err error
+	var rv []serieSample
+	var db badger.DB
+	if avg {
+		db = *statsDB
+	} else {
+		db = *currentDB
+	}
+	if st, ok := tagStart[tag]; ok {
+		if ts1 != st[0] {
+			if ts0 <= st[0] {
+				ts0 = st[0] + st[1]*1000 // offset to skip the header
+			}
+			i := (ts0 - st[0]) / (st[1] * 1000)
+			i1 := (ts1 - st[0]) / (st[1] * 1000)
+			for i <= i1 {
+				lab := []byte(tag + strconv.Itoa(int(i)))
+				if v, e := read(lab, 8, db); e == nil {
+					nts := st[0] + i*st[1]*1000
+					var nv int32
+					buf := bytes.NewReader(v)
+					if err := binary.Read(buf, binary.LittleEndian, &nv); err != nil {
+						fmt.Println("registers.ReadSeries: binary.Read failed:", err)
+					} else {
+						rv = append(rv, serieSample{nts, int(nv)})
+					}
+				}
+				i += 1
+			}
+		}
+	} else {
+		err = errors.New("Serie " + tag + " not found")
+	}
+	return rv, err
 }
 
 func GetDefinition(tag string) []int64 {
@@ -183,7 +228,7 @@ func read(id []byte, l int, db badger.DB) (codeddata, error) {
 }
 
 // Delete deletes an entry
-func delete(id []byte, db badger.DB) error {
+func delEntry(id []byte, db badger.DB) error {
 	err := db.Update(func(txn *badger.Txn) error {
 		err := txn.Delete(id)
 		return err
