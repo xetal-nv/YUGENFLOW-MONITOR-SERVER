@@ -21,16 +21,16 @@ func SupportSetUp(envf string) {
 		}
 		if db := os.Getenv("DEBUGMODE"); db == "0" {
 			Debug = 0
-			fmt.Println("DEBUG MODE ACTIVE")
 		} else {
 			if v, e := strconv.Atoi(db); e == nil {
 				Debug = v
+				fmt.Println("DEBUG MODE ACTIVE")
 			} else {
 				panic("Fatal error:" + e.Error())
 			}
 		}
 		// Set-up loggers
-		if Debug > 0 {
+		if Debug == 0 {
 			setUpLog(logfilename)
 		}
 		setUpDevLogger()

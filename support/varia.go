@@ -23,3 +23,10 @@ func Stringending(a, b string) bool {
 	}
 	return true
 }
+
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}

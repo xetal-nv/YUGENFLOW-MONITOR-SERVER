@@ -2,6 +2,7 @@ package gates
 
 import (
 	"countingserver/support"
+	"fmt"
 	"github.com/pkg/errors"
 	"strconv"
 )
@@ -19,6 +20,15 @@ func SendData(dev int, val int) error {
 			}
 		}
 		for _, c := range v.entry {
+			// convert to int from int8 with 127 as special value
+			if val == 127 {
+				val = 0
+			} else {
+				val = int(int8(val & 255))
+			}
+			if support.Debug > 0 {
+				fmt.Printf("\nDevice %v sent data %v at %v\n", dev, val, support.Timestamp())
+			}
 			go func() { c <- sensorData{num: dev, val: val, ts: support.Timestamp()} }()
 		}
 		return nil

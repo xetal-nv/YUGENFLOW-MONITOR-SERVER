@@ -45,29 +45,35 @@ func TimedIntDBSSetUp() error {
 		}
 	}
 	log.Printf("registers.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
-	once.Do(func() {
-		optsCurr := badger.DefaultOptions
-		optsCurr.Dir = "dbs/current"
-		optsCurr.ValueDir = "dbs/current"
-		optsStats := badger.DefaultOptions
-		optsStats.Dir = "dbs/statsDB"
-		optsStats.ValueDir = "dbs/statsDB"
-		currentDB, err = badger.Open(optsCurr)
-		if err == nil {
-			statsDB, err = badger.Open(optsStats)
-			if err != nil {
-				currentDB.Close()
+	if support.Debug < 3 {
+		once.Do(func() {
+			optsCurr := badger.DefaultOptions
+			optsCurr.Dir = "dbs/current"
+			optsCurr.ValueDir = "dbs/current"
+			optsStats := badger.DefaultOptions
+			optsStats.Dir = "dbs/statsDB"
+			optsStats.ValueDir = "dbs/statsDB"
+			currentDB, err = badger.Open(optsCurr)
+			if err == nil {
+				statsDB, err = badger.Open(optsStats)
+				if err != nil {
+					currentDB.Close()
+				}
 			}
-		}
-	})
+		})
+	} else {
+		log.Printf("registers.TimedIntDBSClose: Databases not enables for current Debug mode\n", currentTTL)
+	}
 	return err
 }
 
 func TimedIntDBSClose() {
-	//noinspection GoUnhandledErrorResult
-	currentDB.Close()
-	//noinspection GoUnhandledErrorResult
-	statsDB.Close()
+	if support.Debug < 3 {
+		//noinspection GoUnhandledErrorResult
+		currentDB.Close()
+		//noinspection GoUnhandledErrorResult
+		statsDB.Close()
+	}
 }
 
 // External functions/API

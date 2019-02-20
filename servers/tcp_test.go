@@ -106,6 +106,8 @@ func Test_TCP_ConnectionAll(t *testing.T) {
 
 func Test_TCP_StreamDBS(t *testing.T) {
 
+	support.SupportSetUp("../.env")
+
 	if err := registers.TimedIntDBSSetUp(); err != nil {
 		t.Fatal(err)
 	}
@@ -113,8 +115,6 @@ func Test_TCP_StreamDBS(t *testing.T) {
 
 	vals := []int{-1, 0, 1, 2, 127}
 	counter := 0
-
-	support.SupportSetUp("../.env")
 
 	var avgws []string
 	avgws = append(avgws, "current")
@@ -151,7 +151,7 @@ func Test_TCP_StreamDBS(t *testing.T) {
 				}
 			}
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, 5, byte(m)})
+			conn.Write([]byte{1, 0, 1, byte(m)})
 			time.Sleep(1000 * time.Millisecond)
 
 		}
