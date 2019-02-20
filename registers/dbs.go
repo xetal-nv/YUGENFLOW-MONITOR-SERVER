@@ -62,7 +62,7 @@ func TimedIntDBSSetUp() error {
 			}
 		})
 	} else {
-		log.Printf("registers.TimedIntDBSClose: Databases not enables for current Debug mode\n", currentTTL)
+		log.Printf("registers.TimedIntDBSClose: Databases not enables for current Debug mode\n")
 	}
 	return err
 }

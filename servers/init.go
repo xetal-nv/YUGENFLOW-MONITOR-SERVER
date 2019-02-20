@@ -2,6 +2,8 @@ package servers
 
 import (
 	"context"
+	"countingserver/gates"
+	"countingserver/spaces"
 	"log"
 	"os"
 	"os/signal"
@@ -40,11 +42,22 @@ func StartServers() {
 		log.Println("servers.StartServers: server set-up error:", e)
 	} else {
 
+		// Starts first the TCP server for data collection
+
+		ctcp := make(chan context.Context)
+		gates.SetUp()
+		spaces.SetUp()
+		go StartTCP(ctcp)
+
+		// Starts all HTTP service servers
+
 		for i := range addServer {
 			// Start HTTP servers
 			sdServer[i] = make(chan context.Context)
 			startHTTP(addServer[i], sdServer[i], hMap[i])
 		}
+
+		sdServer[len(sdServer)-1] = ctcp
 
 		// Two way termination to handle:
 		// -  Graceful shutdown when quit via SIGINT (Ctrl+C)

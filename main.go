@@ -1,11 +1,8 @@
 package main
 
 import (
-	"context"
-	"countingserver/gates"
 	"countingserver/registers"
 	"countingserver/servers"
-	"countingserver/spaces"
 	"countingserver/support"
 	"log"
 )
@@ -21,11 +18,12 @@ func main() {
 	}
 	defer registers.TimedIntDBSClose()
 
+	// comment below for TCP debug
 	// Set-up and start servers
-	//servers.StartServers()
+	servers.StartServers()
 
-	// the part below needs to go to servers.StartServers()
-	gates.SetUp()
-	spaces.SetUp()
-	servers.StartTCP(make(chan context.Context))
+	// Uncomment below for TCP debug
+	//gates.SetUp()
+	//spaces.SetUp()
+	//servers.StartTCP(make(chan context.Context))
 }

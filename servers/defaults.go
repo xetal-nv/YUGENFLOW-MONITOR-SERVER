@@ -10,12 +10,12 @@ import (
 
 const SIZE int = 2
 
-var addServer [SIZE]string              // server addresses
-var sdServer [SIZE]chan context.Context // channel for closure of servers
-var hMap [SIZE]map[string]http.Handler  // server handler maps
-var crcUsed bool                        // CRC used flag
-var cmdchan chan []byte                 // channel to handler for receiving gate answers answer
-var cmdlen map[byte]int                 // provides length for legal server2gate commands
+var addServer [SIZE]string                  // server addresses
+var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
+var hMap [SIZE]map[string]http.Handler      // server handler maps
+var crcUsed bool                            // CRC used flag
+var cmdchan chan []byte                     // channel to handler for receiving gate answers answer
+var cmdlen map[byte]int                     // provides length for legal server2gate commands
 
 func setup() error {
 
