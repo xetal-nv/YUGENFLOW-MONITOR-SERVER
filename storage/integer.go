@@ -1,4 +1,4 @@
-package registers
+package storage
 
 import (
 	"playground/support"
@@ -8,7 +8,7 @@ import (
 // IntCell implement a single input (n) single output (o)
 // non-blocking integer register.
 // d is its default value at start, if not given -1 will be used
-func IntCell(id string, in, out chan int, d ...int) {
+func IntCell(_ string, in, out chan int, d ...int) { // id
 	r := func() {
 		var data int
 		if len(d) == 1 {
@@ -26,7 +26,7 @@ func IntCell(id string, in, out chan int, d ...int) {
 	go support.RunWithRecovery(r, nil)
 }
 
-func IntBank(id string, n, o []chan int, d ...int) bool {
+func _(id string, n, o []chan int, d ...int) bool { // IntBank
 	if len(n) != len(o) {
 		return true
 	}

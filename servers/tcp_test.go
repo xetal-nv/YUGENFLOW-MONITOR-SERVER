@@ -3,8 +3,8 @@ package servers
 import (
 	"context"
 	"countingserver/gates"
-	"countingserver/registers"
 	"countingserver/spaces"
+	"countingserver/storage"
 	"countingserver/support"
 	"fmt"
 	"math/rand"
@@ -18,7 +18,7 @@ import (
 func Test_Registers(t *testing.T) {
 	a := make(chan int)
 	b := make(chan int)
-	go registers.IntCell("", a, b)
+	go storage.IntCell("", a, b)
 	if <-b != -1 {
 		t.Fatalf("Expected %v but got %v", -1, <-b)
 	}
@@ -26,10 +26,10 @@ func Test_Registers(t *testing.T) {
 
 func Test_SETUP(t *testing.T) {
 	support.SupportSetUp("../.env")
-	if err := registers.TimedIntDBSSetUp(); err != nil {
+	if err := storage.TimedIntDBSSetUp(); err != nil {
 		t.Fatal(err)
 	}
-	defer registers.TimedIntDBSClose()
+	defer storage.TimedIntDBSClose()
 	gates.SetUp()
 	spaces.SetUp()
 }
@@ -108,10 +108,10 @@ func Test_TCP_StreamDBS(t *testing.T) {
 
 	support.SupportSetUp("../.env")
 
-	if err := registers.TimedIntDBSSetUp(); err != nil {
+	if err := storage.TimedIntDBSSetUp(); err != nil {
 		t.Fatal(err)
 	}
-	defer registers.TimedIntDBSClose()
+	defer storage.TimedIntDBSClose()
 
 	vals := []int{-1, 0, 1, 2, 127}
 	counter := 0

@@ -1,7 +1,7 @@
 package spaces
 
 import (
-	"countingserver/registers"
+	"countingserver/storage"
 	"countingserver/support"
 	"log"
 	"os"
@@ -130,31 +130,31 @@ func setpUpCounter() {
 
 func setUpDataDBSBank(spaceChannels map[string]chan dataEntry) {
 
-	LatestDataBankOut = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
-	latestDataBankIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+	LatestDataBankOut = make(map[string]map[string]chan storage.DataCt, len(spaceChannels))
+	latestDataBankIn = make(map[string]map[string]chan storage.DataCt, len(spaceChannels))
 	if support.Debug < 3 {
-		latestDataDBSIn = make(map[string]map[string]chan registers.DataCt, len(spaceChannels))
+		latestDataDBSIn = make(map[string]map[string]chan storage.DataCt, len(spaceChannels))
 		ResetDataDBS = make(map[string]map[string]chan bool, len(spaceChannels))
 	}
 
 	for name := range spaceChannels {
-		LatestDataBankOut[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
-		latestDataBankIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+		LatestDataBankOut[name] = make(map[string]chan storage.DataCt, len(avgAnalysis))
+		latestDataBankIn[name] = make(map[string]chan storage.DataCt, len(avgAnalysis))
 		if support.Debug < 3 {
 			ResetDataDBS[name] = make(map[string]chan bool, len(avgAnalysis))
-			latestDataDBSIn[name] = make(map[string]chan registers.DataCt, len(avgAnalysis))
+			latestDataDBSIn[name] = make(map[string]chan storage.DataCt, len(avgAnalysis))
 		}
 		for _, v := range avgAnalysis {
-			LatestDataBankOut[name][v.name] = make(chan registers.DataCt)
-			latestDataBankIn[name][v.name] = make(chan registers.DataCt)
-			go registers.TimedIntCell(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
+			LatestDataBankOut[name][v.name] = make(chan storage.DataCt)
+			latestDataBankIn[name][v.name] = make(chan storage.DataCt)
+			go storage.TimedIntCell(name+v.name, latestDataBankIn[name][v.name], LatestDataBankOut[name][v.name])
 			if support.Debug < 3 {
 				ResetDataDBS[name][v.name] = make(chan bool)
-				latestDataDBSIn[name][v.name] = make(chan registers.DataCt)
-				if _, e := registers.SetSeries(name+v.name, v.interval, false); e != nil {
+				latestDataDBSIn[name][v.name] = make(chan storage.DataCt)
+				if _, e := storage.SetSeries(name+v.name, v.interval, false); e != nil {
 					log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
 				}
-				go registers.TimedIntDBS(name+v.name, latestDataBankIn[name][v.name], ResetDataDBS[name][v.name])
+				go storage.TimedIntDBS(name+v.name, latestDataBankIn[name][v.name], ResetDataDBS[name][v.name])
 			}
 		}
 		log.Printf("spaces.setUpDataDBSBank: DataBank for space %v initialised\n", name)

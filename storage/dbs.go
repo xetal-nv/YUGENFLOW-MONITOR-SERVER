@@ -1,4 +1,4 @@
-package registers
+package storage
 
 import (
 	"bytes"
@@ -44,7 +44,7 @@ func TimedIntDBSSetUp() error {
 			currentTTL = time.Hour * 24 * time.Duration(vd)
 		}
 	}
-	log.Printf("registers.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
+	log.Printf("storage.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
 	if support.Debug < 3 {
 		once.Do(func() {
 			optsCurr := badger.DefaultOptions
@@ -62,7 +62,7 @@ func TimedIntDBSSetUp() error {
 			}
 		})
 	} else {
-		log.Printf("registers.TimedIntDBSClose: Databases not enables for current Debug mode\n")
+		log.Printf("storage.TimedIntDBSClose: Databases not enables for current Debug mode\n")
 	}
 	return err
 }
@@ -162,7 +162,7 @@ func ReadSeries(tag string, ts0, ts1 int64, avg bool) ([]serieSample, error) {
 					var nv int32
 					buf := bytes.NewReader(v)
 					if err := binary.Read(buf, binary.LittleEndian, &nv); err != nil {
-						fmt.Println("registers.ReadSeries: binary.Read failed:", err)
+						fmt.Println("storage.ReadSeries: binary.Read failed:", err)
 					} else {
 						rv = append(rv, serieSample{nts, int(nv)})
 					}

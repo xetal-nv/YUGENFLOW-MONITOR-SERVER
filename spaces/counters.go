@@ -1,7 +1,7 @@
 package spaces
 
 import (
-	"countingserver/registers"
+	"countingserver/storage"
 	"countingserver/support"
 	"log"
 	"sync"
@@ -46,27 +46,25 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 				select {
 				case val := <-prevStageChan:
 					iv := int8(val.val)
-					if iv != 127 {
-						counter += int(iv)
-						stats[0] += 1
-						if counter < 0 {
-							// development logging
-							stats[1] += 1
-							support.DLog <- support.DevData{"spacename_current", support.Timestamp(), "negative counter", stats}
-						}
-						if counter < 0 && instNegSkip {
-							counter = 0
-						}
+					stats[0] += 1
+					counter += int(iv)
+					if counter < 0 {
+						// development logging
+						stats[1] += 1
+						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
+					}
+					if counter < 0 && instNegSkip {
+						counter = 0
 					}
 				default:
 					time.Sleep(timeoutInterval)
 				}
 				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
 					go func() {
-						latestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
+						latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
 					}()
 					go func() {
-						latestDataDBSIn[spacename][samplerName] <- registers.DataCt{cTS, counter}
+						latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
 					}()
 					if nextStageChan != nil {
 						go func() { nextStageChan <- dataEntry{val: counter, ts: cTS} }()
@@ -100,10 +98,10 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 						}
 						avg := int(acc / (cTS - lastTS))
 						go func() {
-							latestDataBankIn[spacename][samplerName] <- registers.DataCt{cTS, avg}
+							latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
 						}()
 						go func() {
-							latestDataDBSIn[spacename][samplerName] <- registers.DataCt{cTS, avg}
+							latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
 						}()
 						if nextStageChan != nil {
 							nextStageChan <- dataEntry{val: avg, ts: cTS}

@@ -54,12 +54,12 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 
 }
 
-// TODO tested in reality
-// TODO extend to more than 2 devices per gate
+// TODO tested in real office
+// NOTE extend to more than 2 devices per gate
 func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int, scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
-	//var rt int
 	rt := 0
-	//fmt.Println(sensorListEntry,gateListEntry,scratchPad)
+	// it might be needed to keep the flag in the scratchpad, to be tested
+	flag := make([]bool, len(sensorListEntry), len(sensorListEntry))
 
 	// NOTE it might have an issue with extremely fast noise ona  device faster than 1 ms
 	for i, sen := range sensorListEntry {
@@ -69,17 +69,20 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			smem.val = sen.val
 			scratchPad.senData[i] = smem
 			scratchPad.unusedSampleSum[i] += sen.val
+			flag[i] = true
 		}
 	}
 
 	for _, gate := range gateListEntry {
-		if scratchPad.unusedSampleSum[gate[0]] > 0 && scratchPad.unusedSampleSum[gate[1]] > 0 { //ingresso
-			tmp := support.Abs(scratchPad.unusedSampleSum[gate[0]] - scratchPad.unusedSampleSum[gate[1]])
+		if scratchPad.unusedSampleSum[gate[0]] > 0 && scratchPad.unusedSampleSum[gate[1]] > 0 { //in
+			tmp := support.Min(support.Abs(scratchPad.unusedSampleSum[gate[0]]),
+				support.Abs(scratchPad.unusedSampleSum[gate[1]]))
 			rt += tmp
 			scratchPad.unusedSampleSum[gate[0]] -= tmp
 			scratchPad.unusedSampleSum[gate[1]] -= tmp
-		} else if scratchPad.unusedSampleSum[gate[0]] < 0 && scratchPad.unusedSampleSum[gate[1]] < 0 { //uscita
-			tmp := support.Abs(scratchPad.unusedSampleSum[gate[0]] - scratchPad.unusedSampleSum[gate[1]])
+		} else if scratchPad.unusedSampleSum[gate[0]] < 0 && scratchPad.unusedSampleSum[gate[1]] < 0 { //out
+			tmp := support.Min(support.Abs(scratchPad.unusedSampleSum[gate[0]]),
+				support.Abs(scratchPad.unusedSampleSum[gate[1]]))
 			rt -= tmp
 			scratchPad.unusedSampleSum[gate[0]] += tmp
 			scratchPad.unusedSampleSum[gate[1]] += tmp
@@ -87,19 +90,33 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 	}
 
 	for _, gate := range gateListEntry {
-		if scratchPad.unusedSampleSum[gate[0]] < 0 { //uscita not detected by sensor 1, max one error
+		// out not detected by sensor 1
+		if scratchPad.unusedSampleSum[gate[0]] < 0 {
 			scratchPad.unusedSampleSum[gate[0]] = 0
 			rt--
 		}
-		if scratchPad.unusedSampleSum[gate[1]] > 0 { //ingresso not detected by sensor 0, max one error
+		// in not detected by sensor 0
+		if scratchPad.unusedSampleSum[gate[1]] > 0 {
 			scratchPad.unusedSampleSum[gate[1]] = 0
 			rt++
+		}
+		// in not detected by sensor 1
+		if flag[gate[1]] && scratchPad.senData[gate[1]].val == 0 && scratchPad.unusedSampleSum[gate[0]] > 0 {
+			// if flag in the scratchPad it needs to ne reset
+			rt++
+			scratchPad.unusedSampleSum[gate[0]]--
+		}
+		// out not detected by sensor 0
+		if flag[gate[0]] && scratchPad.senData[gate[0]].val == 0 && scratchPad.unusedSampleSum[gate[1]] < 0 {
+			// if flag in the scratchPad it needs to ne reset
+			rt--
+			scratchPad.unusedSampleSum[gate[1]]++
 		}
 	}
 
 	if support.Debug > 0 {
-		fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", id, sensorListEntry)
-		fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", id, gateListEntry)
+		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", id, sensorListEntry)
+		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", id, gateListEntry)
 		fmt.Printf("Entry %v has scratchPad:\n\t%v\n", id, scratchPad)
 	}
 

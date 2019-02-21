@@ -51,7 +51,7 @@ func getCurrentSampleAPI() http.Handler {
 	})
 }
 
-func main() {
+func main_test() {
 
 	mx := mux.NewRouter()
 

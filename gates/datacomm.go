@@ -16,13 +16,14 @@ func SendData(dev int, val int) error {
 		}
 		if v.reversed {
 			if val != 127 {
-				val = 255 - val
+				val = 256 - val
 			}
 		}
 		for _, c := range v.entry {
 			// convert to int from int8 with 127 as special value
 			if val == 127 {
 				val = 0
+				//support.DLog <- support.DevData{"device " + strconv.Itoa(dev), support.Timestamp(), "127 reported", nil}
 			} else {
 				val = int(int8(val & 255))
 			}

@@ -1,4 +1,4 @@
-package registers
+package storage
 
 import (
 	"countingserver/support"
@@ -16,7 +16,7 @@ func TimedIntDBS(id string, in chan DataCt, rst chan bool) {
 				// TODO to be fully tested with the API server
 				if support.Debug != 3 && support.Debug != 4 {
 					if err := StoreSerieSample(id, d.Ts, d.Ct, !support.Stringending(id, "current")); err != nil {
-						log.Printf("registers.TimedIntDBS: DBS handler %v error %v\n", id, err)
+						log.Printf("storage.TimedIntDBS: DBS handler %v error %v\n", id, err)
 					}
 				}
 				if support.Debug > 0 {
@@ -24,12 +24,12 @@ func TimedIntDBS(id string, in chan DataCt, rst chan bool) {
 				}
 			case a := <-rst:
 				// Reset via API might be dangerous, this is justa  placeholder
-				log.Println("registers.TimedIntDBS: handler id:", id, "got reset request", a, " - does nothing still")
+				log.Println("storage.TimedIntDBS: handler id:", id, "got reset request", a, " - does nothing still")
 			}
 		}
 	}
 	er := func() {
-		log.Printf("registers.TimedIntDBS: recovering from crash\n ")
+		log.Printf("storage.TimedIntDBS: recovering from crash\n ")
 	}
 	go support.RunWithRecovery(r, er)
 }
