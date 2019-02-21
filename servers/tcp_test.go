@@ -26,7 +26,7 @@ func Test_Registers(t *testing.T) {
 
 func Test_SETUP(t *testing.T) {
 	support.SupportSetUp("../.env")
-	if err := storage.TimedIntDBSSetUp(); err != nil {
+	if err := storage.TimedIntDBSSetUp(false); err != nil {
 		t.Fatal(err)
 	}
 	defer storage.TimedIntDBSClose()
@@ -108,7 +108,7 @@ func Test_TCP_StreamDBS(t *testing.T) {
 
 	support.SupportSetUp("../.env")
 
-	if err := storage.TimedIntDBSSetUp(); err != nil {
+	if err := storage.TimedIntDBSSetUp(false); err != nil {
 		t.Fatal(err)
 	}
 	defer storage.TimedIntDBSClose()

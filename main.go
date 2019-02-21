@@ -12,7 +12,7 @@ func main() {
 	support.SupportSetUp("")
 
 	// Set-up databases
-	if err := storage.TimedIntDBSSetUp(); err != nil {
+	if err := storage.TimedIntDBSSetUp(false); err != nil {
 		log.Fatal(err)
 	}
 	defer storage.TimedIntDBSClose()

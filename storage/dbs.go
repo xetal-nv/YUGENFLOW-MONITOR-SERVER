@@ -9,6 +9,7 @@ import (
 	"github.com/dgraph-io/badger"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -35,7 +36,32 @@ type serieSample struct {
 	val int
 }
 
-func TimedIntDBSSetUp() error {
+func TimedIntDBSSetUp(fd bool) error {
+	// fd is used for testing or bypass the configuration file also in its absence
+	force := false
+	if !fd {
+		if os.Getenv("FORCEDBS") == "1" {
+			force = true
+		}
+	} else {
+		force = true
+	}
+	if force {
+		log.Printf("storage.TimedIntDBSClose: Force mode on, deleting lock files if present\n")
+		_ = os.Remove("dbs/current/LOCK")
+		_ = os.Remove("dbs/statsDB/LOCK")
+
+		if files, e := filepath.Glob("dbs/current/*.vlog"); e == nil {
+			for _, f := range files {
+				_ = os.Remove(f)
+			}
+		}
+		if files, e := filepath.Glob("dbs/statsDB/*.vlog"); e == nil {
+			for _, f := range files {
+				_ = os.Remove(f)
+			}
+		}
+	}
 	var err error
 	tagStart = make(map[string][]int64)
 	currentTTL = time.Hour * 24 * 14

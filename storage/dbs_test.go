@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Setup(t *testing.T) {
-	if err := TimedIntDBSSetUp(); err != nil {
+	if err := TimedIntDBSSetUp(true); err != nil {
 		t.Fatal(err)
 	}
 	TimedIntDBSClose()
@@ -28,10 +28,10 @@ func Test_Marshall(t *testing.T) {
 }
 
 func Test_DBS(t *testing.T) {
-	if err := TimedIntDBSSetUp(); err != nil {
+	if err := TimedIntDBSSetUp(true); err != nil {
 		t.Fatal(err)
 	}
-	defer TimedIntDBSClose()
+	//defer TimedIntDBSClose()
 
 	if f, err := SetSeries("test", 2, false); err != nil {
 		t.Fatal(err)
