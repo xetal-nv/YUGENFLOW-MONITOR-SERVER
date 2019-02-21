@@ -13,8 +13,6 @@ import (
 // StartServers starts all required HTTP/TCP servers
 func StartServers() {
 
-	// TODO add TCP server
-
 	c1 := make(chan bool)      // error quit signal
 	c2 := make(chan os.Signal) // quit signal
 	ready := false             // it is needed to avoid hanging on c1 before reaching the termination fork

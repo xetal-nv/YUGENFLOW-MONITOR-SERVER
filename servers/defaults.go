@@ -25,10 +25,14 @@ func setup() error {
 		"/panic":   tempHTTPfuncHandler(""),
 	}
 
+	//hMap[1] = map[string]http.Handler{
+	//	"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
+	//	"/message": tempHTTPfuncHandler("net/http is awesome"),
+	//	"/panic":   tempHTTPfuncHandler(""),
+	//}
+
 	hMap[1] = map[string]http.Handler{
-		"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
-		"/message": tempHTTPfuncHandler("net/http is awesome"),
-		"/panic":   tempHTTPfuncHandler(""),
+		"/actuals": getCurrentSampleAPI(),
 	}
 
 	for i, v := range strings.Split(os.Getenv("HTTPSPORTS"), ",") {
