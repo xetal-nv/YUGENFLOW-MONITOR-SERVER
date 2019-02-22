@@ -1,7 +1,5 @@
 package storage
 
-import "fmt"
-
 // Interface for all type of data manageable as sample
 type SampleData interface {
 	Marshal() []byte
@@ -12,6 +10,6 @@ type SampleData interface {
 	Extract(interface{}) error
 }
 
-func TestSampleDataCompliance(_ SampleData) {
-	fmt.Println("Compliant")
+type GenericData interface {
+	Extract(interface{}) error
 }

@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgID int, once sync.Once, tn, ntn int) {
+func sampler(spacename string, prevStageChan, nextStageChan chan interface{}, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
 		if avgID < (len(avgAnalysis) - 1) {
-			nextStageChan = make(chan dataEntry, bufsize)
+			nextStageChan = make(chan interface{}, bufsize)
 			go sampler(spacename, nextStageChan, nil, avgID+1, sync.Once{}, 0, 0)
 		}
 	})
@@ -27,6 +27,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spacename)
 	} else {
+		// this is the core
 		defer func() {
 			if e := recover(); e != nil {
 				if e != nil {
@@ -43,17 +44,22 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 			for {
 				cTS := support.Timestamp()
 				select {
-				case val := <-prevStageChan:
-					iv := int8(val.val)
-					stats[0] += 1
-					counter += int(iv)
-					if counter < 0 {
-						// development logging
-						stats[1] += 1
-						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
-					}
-					if counter < 0 && instNegSkip {
-						counter = 0
+				case psc := <-prevStageChan:
+					val := new(dataEntry)
+					if e := val.Extract(psc); e != nil {
+						log.Println(e, psc)
+					} else {
+						iv := int8(val.val)
+						stats[0] += 1
+						counter += int(iv)
+						if counter < 0 {
+							// development logging
+							stats[1] += 1
+							support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
+						}
+						if counter < 0 && instNegSkip {
+							counter = 0
+						}
 					}
 				default:
 					time.Sleep(timeoutInterval)
@@ -64,10 +70,12 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 						ts  int64
 						val int
 					}{spacename + samplerName, cTS, counter}
+					// new sample sent to the output registers
 					go func() {
 						//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
 						latestDataBankIn[spacename][samplerName] <- data
 					}()
+					// new sample sent to the database
 					go func() {
 						//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
 						latestDataDBSIn[spacename][samplerName] <- data
@@ -82,15 +90,20 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 			// threads 2+ in the chain needs to make the average and pass it forward
 			var buffer []dataEntry
 			for {
+				// get new data or timeout
 				cTS := support.Timestamp()
-				var val dataEntry
+				val := new(dataEntry)
 				valid := true
 				select {
-				case val = <-prevStageChan:
+				case psc := <-prevStageChan:
+					if e := val.Extract(psc); e != nil {
+						valid = false
+					}
 				default:
 					time.Sleep(timeoutInterval)
 					valid = false
 				}
+				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
 					go func(cTS, lastTS int64) {
 						acc := int64(0)
@@ -108,10 +121,12 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 							ts  int64
 							val int
 						}{spacename + samplerName, cTS, avg}
+						// new sample sent to the output registers
 						go func() {
 							//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
 							latestDataBankIn[spacename][samplerName] <- data
 						}()
+						// new sample sent to the database
 						go func() {
 							//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
 							latestDataDBSIn[spacename][samplerName] <- data
@@ -124,8 +139,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 					buffer = nil
 					lastTS = cTS
 				}
+				// when not timed out, the new data is added to he queue
 				if valid {
-					buffer = append(buffer, val)
+					buffer = append(buffer, *val)
 				}
 			}
 		}

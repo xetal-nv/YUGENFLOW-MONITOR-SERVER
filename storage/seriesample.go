@@ -24,6 +24,8 @@ func (ss *SerieSample) Ts() int64 { return ss.ts }
 
 func (ss *SerieSample) Tag() string { return ss.tag }
 
+func (ss *SerieSample) Val() int { return ss.val }
+
 func (ss *SerieSample) Marshal() []byte {
 	vb := make([]byte, 4)
 	binary.LittleEndian.PutUint32(vb, uint32(ss.val))

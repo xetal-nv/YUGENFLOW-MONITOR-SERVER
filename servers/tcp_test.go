@@ -95,11 +95,14 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	fmt.Println(" TEST -> Disconnect to TCP channel")
 	time.Sleep(30 * time.Second)
 	//a := <-spaces.LatestDataBankOut["noname"]["current"]
-	//
-	//if a.Ct != counter {
-	//	fmt.Println("TEST Failed:", counter, a.Ct)
-	//	t.Fatalf("Expected counter is not as real counter")
-	//}
+	a := new(storage.SerieSample)
+	if e := a.Extract(<-spaces.LatestDataBankOut["noname"]["current"]); e != nil {
+		t.Fatalf("Invalid value from the current register")
+	}
+	if a.Val() != counter {
+		fmt.Println("TEST Failed:", counter, a.Val())
+		t.Fatalf("Expected counter is not as real counter")
+	}
 
 	fmt.Println("Expected result is", counter)
 
