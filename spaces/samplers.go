@@ -23,7 +23,8 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	if avgID > 0 {
 		timeoutInterval += time.Duration(avgAnalysis[avgID-1].interval) * time.Second
 	}
-	counter := 0
+	//counter := 0
+	counter := spaceEntries{ts: support.Timestamp(), val: 0}
 	lastTS := support.Timestamp()
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spacename)
@@ -48,25 +49,25 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				case sp := <-prevStageChan:
 					iv := int8(sp.val)
 					stats[0] += 1
-					counter += int(iv)
-					if counter < 0 {
+					counter.val += int(iv)
+					if counter.val < 0 {
 						// development logging
 						stats[1] += 1
 						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
 					}
-					if counter < 0 && instNegSkip {
-						counter = 0
+					if counter.val < 0 && instNegSkip {
+						counter.val = 0
 					}
 
 				default:
 					time.Sleep(timeoutInterval)
 				}
-				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
+				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					data := struct {
 						Id  string
 						ts  int64
 						val int
-					}{spacename + samplerName, cTS, counter}
+					}{spacename + samplerName, cTS, counter.val}
 					// new sample sent to the output registers
 					go func() {
 						//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
@@ -78,9 +79,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						latestDataDBSIn[spacename][samplerName] <- data
 					}()
 					if nextStageChan != nil {
-						go func() { nextStageChan <- spaceEntries{val: counter, ts: cTS} }()
+						counter.ts = cTS
+						go func() { nextStageChan <- counter }()
 					}
-					lastTS = cTS
 				}
 			}
 		} else {
