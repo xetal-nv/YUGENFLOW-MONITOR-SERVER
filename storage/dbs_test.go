@@ -16,22 +16,33 @@ func Test_Setup(t *testing.T) {
 
 func Test_Marshall(t *testing.T) {
 
-	a := headerData{}
+	a := headerdata{}
 	a.fromRst = uint64(support.Timestamp())
 	a.step = 500
 	a.lastUpdt = a.fromRst
 	a.created = a.fromRst
-	b := a.marshall()
-	if c, _ := b.unmarshall(); c != a {
-		t.Fatal("Wring conversions")
+	b := a.Marshal()
+	var c headerdata
+	if e := c.Unmarshal(b); e != nil || c != a {
+		t.Fatal("Wring conversions 1:", e)
 	}
+
+	x := SerieSample{"test", int64(a.fromRst), 8}
+	y := x.Marshal()
+	z := new(SerieSample)
+
+	if e := z.Unmarshal(y); e != nil {
+		t.Fatal("Wring conversions 1:", e)
+	}
+	fmt.Println(*z)
+
 }
 
 func Test_DBS(t *testing.T) {
 	if err := TimedIntDBSSetUp(true); err != nil {
 		t.Fatal(err)
 	}
-	//defer TimedIntDBSClose()
+	defer TimedIntDBSClose()
 
 	if f, err := SetSeries("test", 2, false); err != nil {
 		t.Fatal(err)
@@ -42,13 +53,16 @@ func Test_DBS(t *testing.T) {
 	}
 	time.Sleep(2 * time.Second)
 	ts := support.Timestamp()
-	if err := StoreSerieSample("test", ts, 8, false); err != nil {
+	ts = support.Timestamp()
+	a := SerieSample{"test", ts, 11}
+	if err := StoreSample(&a, false); err != nil {
 		t.Fatal(err)
 	}
-	time.Sleep(2 * time.Second)
-	if v, e := ReadSeries("test", ts-200000, ts, false); e != nil {
+	s0 := SerieSample{"test", ts - 500000, 8}
+	s1 := SerieSample{"test", ts + 1000, 8}
+	if tag, ts, vals, e := ReadSerie(&s0, &s1, false); e != nil {
 		t.Fatal(e)
 	} else {
-		fmt.Println(v)
+		fmt.Println(UnmarshalSlice(tag, ts, vals))
 	}
 }

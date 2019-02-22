@@ -1,7 +1,6 @@
 package spaces
 
 import (
-	"countingserver/storage"
 	"countingserver/support"
 	"log"
 	"sync"
@@ -60,11 +59,18 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 					time.Sleep(timeoutInterval)
 				}
 				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
+					data := struct {
+						Id  string
+						ts  int64
+						val int
+					}{spacename + samplerName, cTS, counter}
 					go func() {
-						latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
+						//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
+						latestDataBankIn[spacename][samplerName] <- data
 					}()
 					go func() {
-						latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
+						//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, counter}
+						latestDataDBSIn[spacename][samplerName] <- data
 					}()
 					if nextStageChan != nil {
 						go func() { nextStageChan <- dataEntry{val: counter, ts: cTS} }()
@@ -97,11 +103,18 @@ func sampler(spacename string, prevStageChan, nextStageChan chan dataEntry, avgI
 							acc += sp * (v.ts - refTS)
 						}
 						avg := int(acc / (cTS - lastTS))
+						data := struct {
+							Id  string
+							ts  int64
+							val int
+						}{spacename + samplerName, cTS, avg}
 						go func() {
-							latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataBankIn[spacename][samplerName] <- data
 						}()
 						go func() {
-							latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataDBSIn[spacename][samplerName] <- data
 						}()
 						if nextStageChan != nil {
 							nextStageChan <- dataEntry{val: avg, ts: cTS}
