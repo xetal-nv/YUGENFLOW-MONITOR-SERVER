@@ -17,6 +17,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	})
 
 	stats := []int{tn, ntn}
+	statsb := []int{0}
 	samplerName := avgAnalysis[avgID].name
 	samplerInterval := avgAnalysis[avgID].interval
 	timeoutInterval := 100 * time.Millisecond
@@ -25,7 +26,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	}
 	//counter := 0
 	counter := spaceEntries{ts: support.Timestamp(), val: 0}
-	lastTS := support.Timestamp()
+	support.DLog <- support.DevData{"counter starting " + spacename + samplerName, support.Timestamp(), "", stats}
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spacename)
 	} else {
@@ -53,7 +54,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					if counter.val < 0 {
 						// development logging
 						stats[1] += 1
-						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
+						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter tot/negs", stats}
 					}
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
@@ -99,38 +100,66 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					valid = false
 				}
 				// if the time interval has passed a new sample is calculated and passed over
-				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
-					acc := int64(0)
-					refTS := lastTS
-					for _, v := range buffer {
-						sp := int64(v.val)
-						if sp < 0 && avgNegSkip {
-							sp = 0
+				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
+					if buffer != nil {
+						// when new samples have arrived we need to calculate the new state
+						acc := int64(0)
+						for _, v := range buffer {
+							sp := int64(v.val)
+							if sp < 0 && avgNegSkip {
+								sp = 0
+							}
+							acc += sp * (v.ts - counter.ts)
 						}
-						acc += sp * (v.ts - refTS)
-					}
-					avg := int(acc / (cTS - lastTS))
-					data := struct {
-						Id  string
-						ts  int64
-						val int
-					}{spacename + samplerName, cTS, avg}
-					// new sample sent to the output registers
-					go func() {
-						//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
-						latestDataBankIn[spacename][samplerName] <- data
-					}()
-					// new sample sent to the database
-					go func() {
-						//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
-						latestDataDBSIn[spacename][samplerName] <- data
-					}()
-					if nextStageChan != nil {
-						nextStageChan <- spaceEntries{val: avg, ts: cTS}
-					}
+						avg := int(acc / (cTS - counter.ts))
+						data := struct {
+							Id  string
+							ts  int64
+							val int
+						}{spacename + samplerName, cTS, avg}
+						// new sample sent to the output registers
+						go func() {
+							//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataBankIn[spacename][samplerName] <- data
+						}()
+						// new sample sent to the database
+						go func() {
+							//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataDBSIn[spacename][samplerName] <- data
+						}()
+						if nextStageChan != nil {
+							counter.ts = cTS
+							counter.val = avg
+							nextStageChan <- counter
+						}
 
-					buffer = nil
-					lastTS = cTS
+						buffer = nil
+					} else {
+						statsb[0] += 1
+						support.DLog <- support.DevData{"counter " + spacename + samplerName, support.Timestamp(),
+							"no samples branch count", statsb}
+						// the following code will force the state to persist, it should not be reachable in normal use
+						// poorly defined sampling windows can cause this branch to be reachable
+						counter.ts = cTS
+						data := struct {
+							Id  string
+							ts  int64
+							val int
+						}{spacename + samplerName, counter.ts, counter.val}
+						// new sample sent to the output registers
+						go func() {
+							//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataBankIn[spacename][samplerName] <- data
+						}()
+						// new sample sent to the database
+						go func() {
+							//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataDBSIn[spacename][samplerName] <- data
+						}()
+						if nextStageChan != nil {
+							nextStageChan <- counter
+						}
+					}
 				}
 				// when not timed out, the new data is added to he queue
 				if valid {
