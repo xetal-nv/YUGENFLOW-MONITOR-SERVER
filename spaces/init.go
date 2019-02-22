@@ -163,9 +163,9 @@ func setUpDataDBSBank(spaceChannels map[string]chan interface{}) {
 				latestDataDBSIn[name][v.name] = make(chan interface{})
 				if _, e := storage.SetSeries(name+v.name, v.interval, false); e != nil {
 					log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
-					//go storage.TimedIntDBS(name+v.name, latestDataBankIn[name][v.name], ResetDataDBS[name][v.name])
-					go storage.SerieSampleDBS(name+v.name, latestDataDBSIn[name][v.name], ResetDataDBS[name][v.name])
 				}
+				//go storage.TimedIntDBS(name+v.name, latestDataBankIn[name][v.name], ResetDataDBS[name][v.name])
+				go storage.SerieSampleDBS(name+v.name, latestDataDBSIn[name][v.name], ResetDataDBS[name][v.name])
 			}
 		}
 		log.Printf("spaces.setUpDataDBSBank: DataBank for space %v initialised\n", name)

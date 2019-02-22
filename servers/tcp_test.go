@@ -34,11 +34,12 @@ func Test_SETUP(t *testing.T) {
 	defer storage.TimedIntDBSClose()
 	gates.SetUp()
 	spaces.SetUp()
+	time.Sleep(5 * time.Second)
 }
 
 func Test_TCP_StreamDBS(t *testing.T) {
 
-	iter := 10
+	iter := 100
 
 	support.SupportSetUp("../.env")
 
@@ -63,7 +64,6 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	neg := os.Getenv("INSTANTNEG")
 	gates.SetUp()
 	spaces.SetUp()
-
 	go StartTCP(make(chan context.Context))
 
 	time.Sleep(2 * time.Second)
