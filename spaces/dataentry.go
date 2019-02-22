@@ -5,15 +5,26 @@ import (
 	"reflect"
 )
 
-type dataEntry struct {
+type dataOneEntry struct {
 	num int   // entry number
 	val int   // data received
 	ts  int64 // timestamp
 }
 
-func (de *dataEntry) Extract(i interface{}) error {
+type dataEntry struct {
+	val int   // data received
+	ts  int64 // timestamp
+}
+
+type spaceEntries struct {
+	ts      int64             // timestap for the cumulative value
+	val     int               // cumulative value
+	entries map[int]dataEntry // cumulative value per entry
+}
+
+func (de *dataOneEntry) Extract(i interface{}) error {
 	if i == nil {
-		return errors.New("spaces.dataEntry.Extract: error illegal data received")
+		return errors.New("spaces.dataOneEntry.Extract: error illegal data received")
 	}
 	rv := reflect.ValueOf(i)
 	defer func() {
@@ -23,7 +34,7 @@ func (de *dataEntry) Extract(i interface{}) error {
 			}
 		}
 	}()
-	z := dataEntry{int(rv.Field(0).Int()), int(rv.Field(1).Int()), rv.Field(2).Int()}
+	z := dataOneEntry{int(rv.Field(0).Int()), int(rv.Field(1).Int()), rv.Field(2).Int()}
 	*de = z
 	return nil
 }

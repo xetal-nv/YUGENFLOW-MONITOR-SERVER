@@ -7,15 +7,14 @@ import (
 	"time"
 )
 
-func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, avgID int, once sync.Once, tn, ntn int) {
+func sampler_old(spacename string, prevStageChan, nextStageChan chan interface{}, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
 		if avgID < (len(avgAnalysis) - 1) {
-			nextStageChan = make(chan spaceEntries, bufsize)
-			go sampler(spacename, nextStageChan, nil, avgID+1, sync.Once{}, 0, 0)
+			nextStageChan = make(chan interface{}, bufsize)
+			go sampler_old(spacename, nextStageChan, nil, avgID+1, sync.Once{}, 0, 0)
 		}
 	})
-
 	stats := []int{tn, ntn}
 	samplerName := avgAnalysis[avgID].name
 	samplerInterval := avgAnalysis[avgID].interval
@@ -33,7 +32,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 			if e := recover(); e != nil {
 				if e != nil {
 					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
-					go sampler(spacename, prevStageChan, nextStageChan, avgID, once, tn, ntn)
+					go sampler_old(spacename, prevStageChan, nextStageChan, avgID, once, tn, ntn)
 				}
 			}
 		}()
@@ -45,19 +44,23 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 			for {
 				cTS := support.Timestamp()
 				select {
-				case sp := <-prevStageChan:
-					iv := int8(sp.val)
-					stats[0] += 1
-					counter += int(iv)
-					if counter < 0 {
-						// development logging
-						stats[1] += 1
-						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
+				case psc := <-prevStageChan:
+					val := new(dataOneEntry)
+					if e := val.Extract(psc); e != nil {
+						log.Println(e, psc)
+					} else {
+						iv := int8(val.val)
+						stats[0] += 1
+						counter += int(iv)
+						if counter < 0 {
+							// development logging
+							stats[1] += 1
+							support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter", stats}
+						}
+						if counter < 0 && instNegSkip {
+							counter = 0
+						}
 					}
-					if counter < 0 && instNegSkip {
-						counter = 0
-					}
-
 				default:
 					time.Sleep(timeoutInterval)
 				}
@@ -78,62 +81,67 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						latestDataDBSIn[spacename][samplerName] <- data
 					}()
 					if nextStageChan != nil {
-						go func() { nextStageChan <- spaceEntries{val: counter, ts: cTS} }()
+						go func() { nextStageChan <- dataOneEntry{val: counter, ts: cTS} }()
 					}
 					lastTS = cTS
 				}
 			}
 		} else {
 			// threads 2+ in the chain needs to make the average and pass it forward
-			var buffer []spaceEntries
+			var buffer []dataOneEntry
 			for {
 				// get new data or timeout
 				cTS := support.Timestamp()
-				var avgsp spaceEntries
+				val := new(dataOneEntry)
 				valid := true
 				select {
-				case avgsp = <-prevStageChan:
+				case psc := <-prevStageChan:
+					if e := val.Extract(psc); e != nil {
+						valid = false
+					}
 				default:
 					time.Sleep(timeoutInterval)
 					valid = false
 				}
 				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - lastTS) >= (int64(samplerInterval) * 1000) {
-					acc := int64(0)
-					refTS := lastTS
-					for _, v := range buffer {
-						sp := int64(v.val)
-						if sp < 0 && avgNegSkip {
-							sp = 0
+					go func(cTS, lastTS int64) {
+						acc := int64(0)
+						refTS := lastTS
+						for _, v := range buffer {
+							sp := int64(v.val)
+							if sp < 0 && avgNegSkip {
+								sp = 0
+							}
+							acc += sp * (v.ts - refTS)
 						}
-						acc += sp * (v.ts - refTS)
-					}
-					avg := int(acc / (cTS - lastTS))
-					data := struct {
-						Id  string
-						ts  int64
-						val int
-					}{spacename + samplerName, cTS, avg}
-					// new sample sent to the output registers
-					go func() {
-						//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
-						latestDataBankIn[spacename][samplerName] <- data
-					}()
-					// new sample sent to the database
-					go func() {
-						//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
-						latestDataDBSIn[spacename][samplerName] <- data
-					}()
-					if nextStageChan != nil {
-						nextStageChan <- spaceEntries{val: avg, ts: cTS}
-					}
+						avg := int(acc / (cTS - lastTS))
+						data := struct {
+							Id  string
+							ts  int64
+							val int
+						}{spacename + samplerName, cTS, avg}
+						// new sample sent to the output registers
+						go func() {
+							//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataBankIn[spacename][samplerName] <- data
+						}()
+						// new sample sent to the database
+						go func() {
+							//latestDataDBSIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
+							latestDataDBSIn[spacename][samplerName] <- data
+						}()
+						if nextStageChan != nil {
+							nextStageChan <- dataOneEntry{val: avg, ts: cTS}
+						}
+					}(cTS, lastTS)
 
 					buffer = nil
 					lastTS = cTS
 				}
 				// when not timed out, the new data is added to he queue
 				if valid {
-					buffer = append(buffer, avgsp)
+					buffer = append(buffer, *val)
 				}
 			}
 		}

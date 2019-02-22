@@ -6,12 +6,12 @@ type avgInterval struct {
 }
 
 // Internal variables - some might be turned into local variables
-var instNegSkip bool                              // skips instantaneous negative counters
-var avgNegSkip bool                               // skips instantaneous negative counters
-var bufsize int                                   // size of channel buffer among samplers
-var entrySpaceChannels map[int][]chan interface{} // channels form entry to associated space
-var samplingWindow int                            // internal for the averaging of data
-var avgAnalysis []avgInterval                     // specification sampling data for visualisation
+var instNegSkip bool                               // skips instantaneous negative counters
+var avgNegSkip bool                                // skips instantaneous negative counters
+var bufsize int                                    // size of channel buffer among samplers
+var entrySpaceChannels map[int][]chan spaceEntries // channels form entry to associated space
+var samplingWindow int                             // internal for the averaging of data
+var avgAnalysis []avgInterval                      // specification sampling data for visualisation
 //var latestDataBankIn map[string]map[string]chan storage.DataCt // input channels to registry
 var latestDataBankIn map[string]map[string]chan interface{} // input channels to registry
 //var latestDataDBSIn map[string]map[string]chan storage.DataCt  // input channels to databases

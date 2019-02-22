@@ -11,7 +11,7 @@ func SendData(entry int, val int) error {
 		return errors.New("spaces.SendData: error entry not valid id: " + strconv.Itoa(entry))
 	}
 	for _, v := range entrySpaceChannels[entry] {
-		go func() { v <- dataEntry{num: entry, val: val} }()
+		go func() { v <- spaceEntries{val: val} }()
 	}
 	return nil
 }

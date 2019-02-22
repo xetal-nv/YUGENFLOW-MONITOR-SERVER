@@ -17,9 +17,9 @@ func SetUp() {
 	setUpDataDBSBank(spchans)
 }
 
-func setUpSpaces() (spaceChannels map[string]chan interface{}) {
-	spaceChannels = make(map[string]chan interface{})
-	entrySpaceChannels = make(map[int][]chan interface{})
+func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
+	spaceChannels = make(map[string]chan spaceEntries)
+	entrySpaceChannels = make(map[int][]chan spaceEntries)
 	//groupsStats = make(map[int]int)
 	//entryGroup = make(map[int]int)
 
@@ -40,7 +40,7 @@ func setUpSpaces() (spaceChannels map[string]chan interface{}) {
 		for _, name := range spaces {
 			//if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
-				spaceChannels[name] = make(chan interface{}, bufsize)
+				spaceChannels[name] = make(chan spaceEntries, bufsize)
 				// the go routine below is the processing thread.
 				go sampler(name, spaceChannels[name], nil, 0, sync.Once{}, 0, 0)
 				var sg []int
@@ -128,7 +128,7 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 }
 
-func setUpDataDBSBank(spaceChannels map[string]chan interface{}) {
+func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
 	//LatestDataBankOut = make(map[string]map[string]chan storage.DataCt, len(spaceChannels))
 	LatestDataBankOut = make(map[string]map[string]chan interface{}, len(spaceChannels))
