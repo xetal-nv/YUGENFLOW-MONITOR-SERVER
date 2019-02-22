@@ -84,9 +84,8 @@ func TimedIntDBSClose() {
 }
 
 // External functions/API
-func SetSeries(tag string, step int, avg bool) (bool, error) {
-	var err error
-	found := true
+func SetSeries(tag string, step int, avg bool) (found bool, err error) {
+	found = true
 	var db badger.DB
 	if avg {
 		db = *statsDB
@@ -126,8 +125,7 @@ func SetSeries(tag string, step int, avg bool) (bool, error) {
 	return found, err
 }
 
-func StoreSample(d SampleData, sDB bool) error {
-	var err error
+func StoreSample(d SampleData, sDB bool) (err error) {
 	ts := d.Ts()
 	tag := d.Tag()
 	val := d.Marshal()
@@ -145,18 +143,15 @@ func StoreSample(d SampleData, sDB bool) error {
 	return err
 }
 
-func ReadSerie(s0, s1 SampleData, sDB bool) (string, []int64, [][]byte, error) {
+func ReadSerie(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
-	var err error
-	var rt [][]byte
-	var rts []int64
 	var db badger.DB
 	if sDB {
 		db = *statsDB
 	} else {
 		db = *currentDB
 	}
-	tag := s0.Tag()
+	tag = s0.Tag()
 	ts0 := s0.Ts()
 	ts1 := s1.Ts()
 	if st, ok := tagStart[tag]; ok {
@@ -187,9 +182,9 @@ func GetDefinition(tag string) []int64 {
 }
 
 // View read an entry
-func read(id []byte, l int, db badger.DB) ([]byte, error) {
-	r := make([]byte, l)
-	err := db.View(func(txn *badger.Txn) error {
+func read(id []byte, l int, db badger.DB) (r []byte, err error) {
+	r = make([]byte, l)
+	err = db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(id)
 		if err != nil {
 			return err
@@ -214,8 +209,8 @@ func read(id []byte, l int, db badger.DB) ([]byte, error) {
 //}
 
 // update updates updates an entry
-func update(a []byte, id []byte, db badger.DB, ttl bool) error {
-	err := db.Update(func(txn *badger.Txn) error {
+func update(a []byte, id []byte, db badger.DB, ttl bool) (err error) {
+	err = db.Update(func(txn *badger.Txn) error {
 		var err error
 		if ttl {
 			err = txn.SetWithTTL(id, a, currentTTL)

@@ -56,7 +56,8 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 
 // TODO tested in real office
 // NOTE extend to more than 2 devices per gate
-func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int, scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
+func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int,
+	scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
 	rt := 0
 	// it might be needed to keep the flag in the scratchpad, to be tested
 	flag := make([]bool, len(sensorListEntry), len(sensorListEntry))

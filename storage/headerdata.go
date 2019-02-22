@@ -15,8 +15,8 @@ type headerdata struct {
 }
 
 // Marshal encodes a Data values into codeddata
-func (hd *headerdata) Marshal() []byte {
-	r := make([]byte, 8)
+func (hd *headerdata) Marshal() (r []byte) {
+	r = make([]byte, 8)
 	binary.LittleEndian.PutUint64(r, hd.fromRst)
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint32(b, hd.step)

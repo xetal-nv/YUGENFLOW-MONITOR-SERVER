@@ -72,8 +72,7 @@ func (ss *SerieSample) Unmarshal(c []byte) error {
 	return nil
 }
 
-func UnmarshalSlice(tag string, ts []int64, vals [][]byte) []SerieSample {
-	var rt []SerieSample
+func UnmarshalSlice(tag string, ts []int64, vals [][]byte) (rt []SerieSample) {
 	for i, mt := range vals {
 		a := new(SerieSample)
 		if e := a.Unmarshal(mt); e == nil {

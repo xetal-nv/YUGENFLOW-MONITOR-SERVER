@@ -17,8 +17,8 @@ func SetUp() {
 	setUpDataDBSBank(spchans)
 }
 
-func setUpSpaces() map[string]chan interface{} {
-	spaceChannels := make(map[string]chan interface{})
+func setUpSpaces() (spaceChannels map[string]chan interface{}) {
+	spaceChannels = make(map[string]chan interface{})
 	entrySpaceChannels = make(map[int][]chan interface{})
 	//groupsStats = make(map[int]int)
 	//entryGroup = make(map[int]int)
