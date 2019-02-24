@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// TODO add counting per entry
 func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
@@ -90,33 +91,37 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 			var buffer []spaceEntries
 			for {
 				// get new data or timeout
-				cTS := support.Timestamp()
-				var avgsp spaceEntries
-				valid := true
+				avgsp := spaceEntries{ts: 0}
 				select {
 				case avgsp = <-prevStageChan:
 				default:
 					time.Sleep(timeoutInterval)
-					valid = false
 				}
+				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
+				// TODO check
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
+					//fmt.Println("START", spacename, samplerName, cTS, counter.ts)
+					//fmt.Println("START", spacename, samplerName, buffer)
 					if buffer != nil {
 						// when new samples have arrived we need to calculate the new state
 						acc := int64(0)
-						for _, v := range buffer {
-							sp := int64(v.val)
-							if sp < 0 && avgNegSkip {
-								sp = 0
-							}
-							acc += sp * (v.ts - counter.ts)
+						for i := 0; i < len(buffer)-1; i++ {
+							acc += int64(buffer[i].val) * (buffer[i+1].ts - buffer[i].ts) / (cTS - buffer[0].ts)
+							//fmt.Println(spacename, samplerName, i, acc)
 						}
-						avg := int(acc / (cTS - counter.ts))
+						acc += int64(buffer[len(buffer)-1].val) * (cTS - buffer[len(buffer)-1].ts) / (cTS - buffer[0].ts)
+						//fmt.Println(spacename, samplerName, "final", acc)
+						counter.val = int(acc)
+						if counter.val < 0 && avgNegSkip {
+							counter.val = 0
+						}
+						counter.ts = cTS
 						data := struct {
 							Id  string
 							ts  int64
 							val int
-						}{spacename + samplerName, cTS, avg}
+						}{spacename + samplerName, counter.ts, counter.val}
 						// new sample sent to the output registers
 						go func() {
 							//latestDataBankIn[spacename][samplerName] <- storage.DataCt{cTS, avg}
@@ -128,8 +133,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							latestDataDBSIn[spacename][samplerName] <- data
 						}()
 						if nextStageChan != nil {
-							counter.ts = cTS
-							counter.val = avg
 							nextStageChan <- counter
 						}
 
@@ -138,8 +141,8 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						statsb[0] += 1
 						support.DLog <- support.DevData{"counter " + spacename + samplerName, support.Timestamp(),
 							"no samples branch count", statsb}
-						// the following code will force the state to persist, it should not be reachable in normal use
-						// poorly defined sampling windows can cause this branch to be reachable
+						// the following code will force the state to persist, it should not be reachable except
+						// at the beginning of time
 						counter.ts = cTS
 						data := struct {
 							Id  string
@@ -162,8 +165,12 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					}
 				}
 				// when not timed out, the new data is added to he queue
-				if valid {
+				if avgsp.ts != 0 {
+					avgsp.ts = cTS
 					buffer = append(buffer, avgsp)
+				} else if buffer == nil {
+					// the first sample of the series is the previous result
+					buffer = append(buffer, counter)
 				}
 			}
 		}
