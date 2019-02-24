@@ -17,6 +17,7 @@ type dataEntry struct {
 }
 
 type spaceEntries struct {
+	id      int               // entry id
 	ts      int64             // timestap for the cumulative value
 	val     int               // cumulative value
 	entries map[int]dataEntry // cumulative value per entry
