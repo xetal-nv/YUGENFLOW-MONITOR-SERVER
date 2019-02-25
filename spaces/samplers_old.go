@@ -45,7 +45,7 @@ func sampler_old(spacename string, prevStageChan, nextStageChan chan interface{}
 				cTS := support.Timestamp()
 				select {
 				case psc := <-prevStageChan:
-					val := new(dataOneEntry)
+					val := new(dataEntry)
 					if e := val.Extract(psc); e != nil {
 						log.Println(e, psc)
 					} else {
@@ -81,18 +81,18 @@ func sampler_old(spacename string, prevStageChan, nextStageChan chan interface{}
 						latestDataDBSIn[spacename][samplerName] <- data
 					}()
 					if nextStageChan != nil {
-						go func() { nextStageChan <- dataOneEntry{val: counter, ts: cTS} }()
+						go func() { nextStageChan <- dataEntry{val: counter, ts: cTS} }()
 					}
 					lastTS = cTS
 				}
 			}
 		} else {
 			// threads 2+ in the chain needs to make the average and pass it forward
-			var buffer []dataOneEntry
+			var buffer []dataEntry
 			for {
 				// get new data or timeout
 				cTS := support.Timestamp()
-				val := new(dataOneEntry)
+				val := new(dataEntry)
 				valid := true
 				select {
 				case psc := <-prevStageChan:
@@ -132,7 +132,7 @@ func sampler_old(spacename string, prevStageChan, nextStageChan chan interface{}
 							latestDataDBSIn[spacename][samplerName] <- data
 						}()
 						if nextStageChan != nil {
-							nextStageChan <- dataOneEntry{val: avg, ts: cTS}
+							nextStageChan <- dataEntry{val: avg, ts: cTS}
 						}
 					}(cTS, lastTS)
 

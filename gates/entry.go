@@ -27,7 +27,8 @@ func entryProcessing(id int, in chan sensorData) {
 
 }
 
-func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sensorData, gateListEntry map[int][]int, scratchPad scratchData) {
+func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sensorData,
+	gateListEntry map[int][]int, scratchPad scratchData) {
 	defer func() {
 		if e := recover(); e != nil {
 			if e != nil {

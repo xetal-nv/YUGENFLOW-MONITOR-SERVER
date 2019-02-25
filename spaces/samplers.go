@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-// TODO add counting per entry
-// TODO check for pointer races on maps sent our vioa channels!!!
 // The algorithm is built on the ordered arrival of samples that is preserfved in a slice.
 // It means that x[i] is newer than x[i-1] and older than x[i+1]
 func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, avgID int, once sync.Once, tn, ntn int) {
@@ -91,8 +89,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				}
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
-				// TODO test and test
-				// TODO average of entries
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					if buffer != nil {
 						// when new samples have arrived we need to calculate the new state
@@ -106,9 +102,26 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							counter.val = 0
 						}
 
-						// TODO HERE
-						averageEntries(buffer, counter, cTS)
+						// Extract all applicable seriesfor each entry
+						entries := make(map[int][]dataEntry)
+						ne := make(map[int]dataEntry)
+						var wg sync.WaitGroup
 
+						for i, v := range buffer {
+							for j, ent := range v.entries {
+								ent.ts = buffer[i].ts
+								entries[j] = append(entries[j], ent)
+							}
+						}
+						for i, v := range entries {
+							wg.Add(1)
+							go func(i int, v []dataEntry) {
+								defer wg.Done()
+								ne[i] = dataEntry{i, avgDataVector(v, cTS), cTS}
+							}(i, v)
+						}
+						wg.Wait()
+						counter.entries = ne
 						counter.ts = cTS
 						passData(spacename, samplerName, counter, nextStageChan, int(samplerInterval/2))
 						buffer = nil
@@ -137,6 +150,12 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 // TODO the entry map will need to be send to the proper thread once made
 func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, timeout int) {
+	// need to make a new map to avoid pointer races
+	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
+	cc.entries = make(map[int]dataEntry)
+	for i, v := range counter.entries {
+		cc.entries[i] = v
+	}
 	data := struct {
 		Id  string
 		ts  int64
@@ -145,6 +164,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	// new sample sent to the output registers
 	fmt.Println("passData", samplerName, data)
 	latestDataBankIn[spacename][samplerName] <- data
+	fmt.Println("Passing new entries ...", cc.entries)
 	// new sample sent to the database
 	go func() {
 		select {
@@ -155,31 +175,19 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 			}
 		}
 	}()
-	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
-	cc.entries = make(map[int]dataEntry)
-	for i, v := range counter.entries {
-		cc.entries[i] = v
-	}
+
 	if nextStageChan != nil {
 		nextStageChan <- cc
 	}
 }
 
-// TODO in progress, will not be a func in the end
-// TODO it misses the timestamp !!!
-// The algorithm is built on the ordered arrival of samples that is preserfved in a slice.
-// It means that x[i] is newer than x[i-1] and older than x[i+1]
-func averageEntries(buffer []spaceEntries, counter spaceEntries, ts int64) {
-	// Extract all applicable seriesfor each entry
-	entries := make(map[int][]dataEntry)
-	for _, v := range buffer {
-		for j, ent := range v.entries {
-			//if _, ok := entries[j]; !ok {
-			//	entries[j] = []dataEntry{}
-			//}
-			entries[j] = append(entries[j], ent)
-		}
+func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
+
+	acc := float64(0)
+	for i := 0; i < len(entries)-1; i++ {
+		acc += float64(entries[i].val) * float64(entries[i+1].ts-entries[i].ts) / float64(cTS-entries[0].ts)
 	}
-	fmt.Println("averageEntries", buffer)
-	fmt.Println("averageEntries", entries)
+	acc += float64(entries[len(entries)-1].val) * float64(cTS-entries[len(entries)-1].ts) / float64(cTS-entries[0].ts)
+	avg = int(acc)
+	return
 }
