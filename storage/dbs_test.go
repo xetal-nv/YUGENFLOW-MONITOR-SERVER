@@ -14,7 +14,7 @@ func Test_Setup(t *testing.T) {
 	TimedIntDBSClose()
 }
 
-func Test_Marshall(t *testing.T) {
+func Test_SerieSample(t *testing.T) {
 
 	a := headerdata{}
 	a.fromRst = uint64(support.Timestamp())
@@ -36,6 +36,49 @@ func Test_Marshall(t *testing.T) {
 	}
 	fmt.Println(*z)
 
+}
+
+func Test_SerieEntries(t *testing.T) {
+	var a [][]int
+	a = append(a, []int{1, 2})
+	a = append(a, []int{4, 5})
+	a = append(a, []int{7, 8})
+	b := SerieEntries{"all", 123, a}
+	fmt.Println(b)
+	fmt.Println(b.Marshal())
+
+	r := func(a interface{}) interface{} {
+		return a
+	}
+	bb := struct {
+		tag string
+		ts  int64
+		ll  int
+		val [][]int
+	}{b.tag, b.ts, 3, b.val}
+	c := new(SerieEntries)
+	d := r(bb)
+	if err := c.Extract(d); err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("extract:", *c)
+	e := new(SerieEntries)
+	if err := e.Unmarshal(b.Marshal()); err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println("unmarshal:", *e)
+}
+
+func Test_DBSraw(t *testing.T) {
+	if err := TimedIntDBSSetUp(true); err != nil {
+		t.Fatal(err)
+	}
+	defer TimedIntDBSClose()
+
+	if e := update([]byte{2, 0, 23, 44, 44, 56}, []byte{34}, *currentDB, true); e == nil {
+		val, err := readVar16([]byte{34}, 2, 0, *currentDB)
+		fmt.Println(val, err)
+	}
 }
 
 func Test_DBS(t *testing.T) {

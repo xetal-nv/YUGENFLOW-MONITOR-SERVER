@@ -149,7 +149,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	}
 }
 
-// TODO the entry map will need to be send to the proper thread once made
 func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
@@ -170,22 +169,24 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 			log.Printf("storage.passData: Timeout writing to register for %v:%v\n", spacename, samplerName)
 		}
 	}()
-	// TODO transform data in proper format andf send it over
 	go func() {
 		defer wg.Done()
-		var entries [][]int
-		for _, v := range cc.entries {
-			if i, e := strconv.Atoi(v.id); e == nil {
-				entries = append(entries, []int{i, v.val})
+		if len(cc.entries) > 0 {
+			var entries [][]int
+			for id, v := range cc.entries {
+				entries = append(entries, []int{id, v.val})
 			}
+			data := struct {
+				id      string
+				ts      int64
+				length  int
+				entries [][]int
+			}{id: spacename + samplerName, ts: cc.ts, length: len(entries), entries: entries}
+			// TODO the entry map will need to be send to the proper thread once made
+			fmt.Println("Passing new entries ...", data)
+		} else {
+			fmt.Println("Nothing to pass as new entries ...", spacename+samplerName)
 		}
-		data := struct {
-			id      string
-			ts      int64
-			length  int
-			entries [][]int
-		}{id: spacename + samplerName, ts: cc.ts, length: len(entries), entries: entries}
-		fmt.Println("Passing new entries ...", data)
 	}()
 	// new sample sent to the database
 	go func() {

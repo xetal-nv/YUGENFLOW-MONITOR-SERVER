@@ -2,6 +2,7 @@ package storage
 
 import (
 	"countingserver/support"
+	"encoding/binary"
 	"errors"
 	"github.com/dgraph-io/badger"
 	"log"
@@ -197,6 +198,21 @@ func read(id []byte, l int, db badger.DB) (r []byte, err error) {
 		return nil
 	})
 	return r, err
+}
+
+// View read a variable length entry (maximum number of fields in 16 bit)
+func readVar16(id []byte, fs, md int, db badger.DB) (v []byte, err error) {
+	var r []byte
+	r, err = read(id, 2, db)
+	if err == nil {
+		vs := int(binary.LittleEndian.Uint16(r))*fs + 2 + md
+		if r, err = read([]byte{34}, vs, db); err == nil {
+			v = make([]byte, len(r))
+			copy(v, r)
+		}
+
+	}
+	return
 }
 
 // Delete deletes an entry

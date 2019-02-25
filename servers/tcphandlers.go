@@ -86,7 +86,7 @@ func handlerTCPRequest(conn net.Conn) {
 	}
 }
 
-// TODO command handler
+// TODO command handler as well the API channels
 func handlerCommandAnswer(c chan []byte) {
 	defer func() {
 		if e := recover(); e != nil {
