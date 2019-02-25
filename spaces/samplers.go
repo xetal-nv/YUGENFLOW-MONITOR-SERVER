@@ -173,7 +173,19 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	// TODO transform data in proper format andf send it over
 	go func() {
 		defer wg.Done()
-		fmt.Println("Passing new entries ...", cc.entries)
+		var entries [][]int
+		for _, v := range cc.entries {
+			if i, e := strconv.Atoi(v.id); e == nil {
+				entries = append(entries, []int{i, v.val})
+			}
+		}
+		data := struct {
+			id      string
+			ts      int64
+			length  int
+			entries [][]int
+		}{id: spacename + samplerName, ts: cc.ts, length: len(entries), entries: entries}
+		fmt.Println("Passing new entries ...", data)
 	}()
 	// new sample sent to the database
 	go func() {

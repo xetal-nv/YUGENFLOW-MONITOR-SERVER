@@ -7,7 +7,7 @@ import (
 )
 
 type dataEntry struct {
-	id  string // entry number
+	id  string // entry id as string to support entry data in the entire comunication pipe
 	ts  int64  // timestamp
 	val int    // data received
 }
