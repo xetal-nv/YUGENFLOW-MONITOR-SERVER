@@ -63,6 +63,6 @@ func Test_DBS(t *testing.T) {
 	if tag, ts, vals, e := ReadSerie(&s0, &s1, false); e != nil {
 		t.Fatal(e)
 	} else {
-		fmt.Println(UnmarshalSlice(tag, ts, vals))
+		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
 	}
 }

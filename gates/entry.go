@@ -42,7 +42,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		data := <-in
 		nv := data.val
 		if support.Debug != 2 && support.Debug != 4 {
-			sensorListEntry[data.num] = data
+			sensorListEntry[data.id] = data
 			sensorListEntry, gateListEntry, scratchPad, nv = trackPeople(id, sensorListEntry, gateListEntry, scratchPad)
 		}
 		if e := spaces.SendData(id, nv); e != nil {

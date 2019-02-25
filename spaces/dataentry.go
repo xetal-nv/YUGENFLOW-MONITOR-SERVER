@@ -3,18 +3,14 @@ package spaces
 import (
 	"errors"
 	"reflect"
+	"strconv"
 )
 
 type dataEntry struct {
-	id  int   // entry number
-	val int   // data received
-	ts  int64 // timestamp
+	id  string // entry number
+	ts  int64  // timestamp
+	val int    // data received
 }
-
-//type dataEntry2 struct {
-//	val int   // data received
-//	ts  int64 // timestamp
-//}
 
 type spaceEntries struct {
 	id      int               // entry id
@@ -35,7 +31,7 @@ func (de *dataEntry) Extract(i interface{}) error {
 			}
 		}
 	}()
-	z := dataEntry{int(rv.Field(0).Int()), int(rv.Field(1).Int()), rv.Field(2).Int()}
+	z := dataEntry{id: strconv.Itoa(int(rv.Field(0).Int())), ts: rv.Field(2).Int(), val: int(rv.Field(1).Int())}
 	*de = z
 	return nil
 }

@@ -1,9 +1,9 @@
 package gates
 
 type sensorData struct {
-	num int   // gate number
-	val int   // data received
+	id  int   // gate number
 	ts  int64 // timestamp
+	val int   // data received
 }
 
 type sensorDef struct {

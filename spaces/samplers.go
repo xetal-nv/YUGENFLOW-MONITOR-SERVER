@@ -4,6 +4,7 @@ import (
 	"countingserver/support"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -72,7 +73,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
-					passData(spacename, samplerName, counter, nextStageChan, int(samplerInterval/2))
+					passData(spacename, samplerName, counter, nextStageChan, int(timeoutInterval), int(samplerInterval/2))
 				}
 			}
 		} else {
@@ -117,13 +118,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							wg.Add(1)
 							go func(i int, v []dataEntry) {
 								defer wg.Done()
-								ne[i] = dataEntry{i, avgDataVector(v, cTS), cTS}
+								ne[i] = dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}
 							}(i, v)
 						}
 						wg.Wait()
 						counter.entries = ne
 						counter.ts = cTS
-						passData(spacename, samplerName, counter, nextStageChan, int(samplerInterval/2))
+						passData(spacename, samplerName, counter, nextStageChan, int(timeoutInterval), int(samplerInterval/2))
 						buffer = nil
 					} else {
 						statsb[0] += 1
@@ -132,7 +133,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						// the following code will force the state to persist, it should not be reachable except
 						// at the beginning of time
 						counter.ts = cTS
-						passData(spacename, samplerName, counter, nextStageChan, int(samplerInterval/2))
+						passData(spacename, samplerName, counter, nextStageChan, int(timeoutInterval), int(samplerInterval/2))
 					}
 				}
 				// when not timed out, the new data is added to he queue
@@ -149,27 +150,37 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 }
 
 // TODO the entry map will need to be send to the proper thread once made
-func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, timeout int) {
+func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
 	cc.entries = make(map[int]dataEntry)
 	for i, v := range counter.entries {
 		cc.entries[i] = v
 	}
-	data := struct {
-		Id  string
-		ts  int64
-		val int
-	}{spacename + samplerName, counter.ts, counter.val}
-	// new sample sent to the output registers
-	fmt.Println("passData", samplerName, data)
-	latestDataBankIn[spacename][samplerName] <- data
-	fmt.Println("Passing new entries ...", cc.entries)
+	data := dataEntry{id: spacename + samplerName, ts: counter.ts, val: counter.val}
+	// sending new data to the proper registers/DBS
+	var wg sync.WaitGroup
+	wg.Add(2)
+	//fmt.Println("passData", samplerName, data)
+	go func() {
+		defer wg.Done()
+		select {
+		case latestDataBankIn[spacename][samplerName] <- data:
+		case <-time.After(time.Duration(stimeout) * time.Second):
+			log.Printf("storage.passData: Timeout writing to register for %v:%v\n", spacename, samplerName)
+		}
+	}()
+	// TODO transform data in proper format andf send it over
+	go func() {
+		defer wg.Done()
+		fmt.Println("Passing new entries ...", cc.entries)
+	}()
 	// new sample sent to the database
 	go func() {
+		// We do not need to wait for this goroutine
 		select {
 		case latestDataDBSIn[spacename][samplerName] <- data:
-		case <-time.After(time.Duration(timeout) * time.Second):
+		case <-time.After(time.Duration(ltimeout) * time.Second):
 			if support.Debug != 3 && support.Debug != 4 {
 				log.Printf("storage.passData: Timeout writing to database for %v:%v\n", spacename, samplerName)
 			}
@@ -177,8 +188,13 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	}()
 
 	if nextStageChan != nil {
-		nextStageChan <- cc
+		select {
+		case nextStageChan <- cc:
+		case <-time.After(time.Duration(stimeout) * time.Second):
+			log.Printf("storage.passData: Timeout sending to next stage for %v:%v\n", spacename, samplerName)
+		}
 	}
+	wg.Wait()
 }
 
 func avgDataVector(entries []dataEntry, cTS int64) (avg int) {

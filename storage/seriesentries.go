@@ -7,21 +7,21 @@ import (
 	"reflect"
 )
 
-type SerieSample struct {
+type SerieEntries struct {
 	tag string
 	ts  int64
 	val int
 }
 
-func (ss *SerieSample) MarshalSize() int { return 12 }
+func (ss *SerieEntries) MarshalSize() int { return 0 } // TBD
 
-func (ss *SerieSample) Ts() int64 { return ss.ts }
+func (ss *SerieEntries) Ts() int64 { return ss.ts }
 
-func (ss *SerieSample) Tag() string { return ss.tag }
+func (ss *SerieEntries) Tag() string { return ss.tag }
 
-func (ss *SerieSample) Val() int { return ss.val }
+func (ss *SerieEntries) Val() int { return 0 } // TBD
 
-func (ss *SerieSample) Marshal() []byte {
+func (ss *SerieEntries) Marshal() []byte { // TBD
 	vb := make([]byte, 4)
 	binary.LittleEndian.PutUint32(vb, uint32(ss.val))
 	vts := make([]byte, 8)
@@ -30,7 +30,7 @@ func (ss *SerieSample) Marshal() []byte {
 	return append(vts, vb...)
 }
 
-func (ss *SerieSample) Extract(i interface{}) error {
+func (ss *SerieEntries) Extract(i interface{}) error { // TBD
 	if i == nil {
 		return errors.New("storage.SerieSample.Extract: error illegal data received")
 	}
@@ -42,12 +42,12 @@ func (ss *SerieSample) Extract(i interface{}) error {
 			}
 		}
 	}()
-	z := SerieSample{tag: rv.Field(0).String(), ts: rv.Field(1).Int(), val: int(rv.Field(2).Int())}
+	z := SerieEntries{rv.Field(0).String(), rv.Field(1).Int(), int(rv.Field(2).Int())}
 	*ss = z
 	return nil
 }
 
-func (ss *SerieSample) Unmarshal(c []byte) error {
+func (ss *SerieEntries) Unmarshal(c []byte) error { // TBS
 	if len(c) != 12 {
 		return errors.New("storage.SerieSample.Unmarshal: wrong byte array passed")
 	}
@@ -63,13 +63,13 @@ func (ss *SerieSample) Unmarshal(c []byte) error {
 	if err := binary.Read(buf, binary.LittleEndian, &val); err != nil {
 		return errors.New("storage.SerieSample.Unmarshal: binary.Read failed: " + err.Error())
 	}
-	*ss = SerieSample{"", ts, int(val)}
+	*ss = SerieEntries{"", ts, int(val)}
 	return nil
 }
 
-func UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SerieSample) {
+func UnmarshalSliceSE(tag string, ts []int64, vals [][]byte) (rt []SerieEntries) { // TBD
 	for i, mt := range vals {
-		a := new(SerieSample)
+		a := new(SerieEntries)
 		if e := a.Unmarshal(mt); e == nil {
 			a.tag = tag
 			a.ts = ts[i]
@@ -79,7 +79,7 @@ func UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SerieSample) 
 	return rt
 }
 
-func SerieSampleDBS(id string, in chan interface{}, rst chan bool) {
+func SeriesEntryDBS(id string, in chan interface{}, rst chan bool) {
 
-	handlerDBS(id, in, rst, new(SerieSample))
+	handlerDBS(id, in, rst, new(SerieEntries))
 }

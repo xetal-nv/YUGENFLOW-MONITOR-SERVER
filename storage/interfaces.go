@@ -10,6 +10,7 @@ type SampleData interface {
 	Extract(interface{}) error
 }
 
+// All types beinf transmitted via registers must implement this interface
 type GenericData interface {
 	Extract(interface{}) error
 }
