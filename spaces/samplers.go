@@ -4,6 +4,7 @@ import (
 	"countingserver/support"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -68,8 +69,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					}
 					fmt.Println("current step new sample", counter)
 				case <-time.After(timeoutInterval):
-					//default:
-					//	time.Sleep(timeoutInterval)
 				}
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
@@ -87,20 +86,18 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				case avgsp = <-prevStageChan:
 					fmt.Println("received", samplerName, avgsp)
 				case <-time.After(timeoutInterval):
-					//default:
-					//time.Sleep(timeoutInterval)
 				}
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					if buffer != nil {
 						// when new samples have arrived we need to calculate the new state
-						acc := int64(0)
+						acc := float64(0)
 						for i := 0; i < len(buffer)-1; i++ {
-							acc += int64(buffer[i].val) * (buffer[i+1].ts - buffer[i].ts) / (cTS - buffer[0].ts)
+							acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
 						}
-						acc += int64(buffer[len(buffer)-1].val) * (cTS - buffer[len(buffer)-1].ts) / (cTS - buffer[0].ts)
-						counter.val = int(acc)
+						acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(cTS-buffer[0].ts)
+						counter.val = int(math.RoundToEven(acc))
 						if counter.val < 0 && avgNegSkip {
 							counter.val = 0
 						}
@@ -151,6 +148,17 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	}
 }
 
+func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
+
+	acc := float64(0)
+	for i := 0; i < len(entries)-1; i++ {
+		acc += float64(entries[i].val) * float64(entries[i+1].ts-entries[i].ts) / float64(cTS-entries[0].ts)
+	}
+	acc += float64(entries[len(entries)-1].val) * float64(cTS-entries[len(entries)-1].ts) / float64(cTS-entries[0].ts)
+	avg = int(math.RoundToEven(acc))
+	return
+}
+
 func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
@@ -158,52 +166,33 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	for i, v := range counter.entries {
 		cc.entries[i] = v
 	}
-	data := dataEntry{id: spacename + samplerName, ts: counter.ts, val: counter.val}
 	// sending new data to the proper registers/DBS
 	var wg sync.WaitGroup
-	wg.Add(2)
-	//fmt.Println("passData", samplerName, data)
-	go func() {
-		defer wg.Done()
-		select {
-		//case latestDataBankIn[spacename][samplerName] <- data:
-		case latestBankIn["sample"][spacename][samplerName] <- data:
-		case <-time.After(time.Duration(stimeout) * time.Millisecond):
-			log.Printf("storage.passData: Timeout writing to register for %v:%v\n", spacename, samplerName)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		if len(cc.entries) > 0 {
-			var entries [][]int
-			for id, v := range cc.entries {
-				entries = append(entries, []int{id, v.val})
-			}
-			data := struct {
-				id      string
-				ts      int64
-				length  int
-				entries [][]int
-			}{id: spacename + samplerName, ts: cc.ts, length: len(entries), entries: entries}
-			// TODO the entry map will need to be send to the proper thread once made
-			fmt.Println("Passing new entries ...", data)
-		} else {
-			fmt.Println("Nothing to pass as new entries ...", spacename+samplerName)
-		}
-	}()
-	// new sample sent to the database
-	go func() {
-		// We do not need to wait for this goroutine
-		select {
-		case latestDBSIn["sample"][spacename][samplerName] <- data:
-		//case latestDataDBSIn[spacename][samplerName] <- data:
-		case <-time.After(time.Duration(ltimeout) * time.Millisecond):
-			if support.Debug != 3 && support.Debug != 4 {
-				log.Printf("storage.passData: Timeout writing to database for %v:%v\n", spacename, samplerName)
-			}
-		}
-	}()
 
+	for n, dt := range dtypes {
+		wg.Add(1)
+		data := dt.pf(n+spacename+samplerName, cc)
+		// new sample sent to the output register
+		go func(dtn string, data interface{}) {
+			defer wg.Done()
+			select {
+			case latestBankIn[dtn][spacename][samplerName] <- data:
+			case <-time.After(time.Duration(stimeout) * time.Millisecond):
+				log.Printf("storage.passData: Timeout writing to register for %v:%v\n", spacename, samplerName)
+			}
+		}(n, data)
+		// new sample sent to the database
+		go func(dtn string, data interface{}) {
+			// We do not need to wait for this goroutine
+			select {
+			case latestDBSIn[dtn][spacename][samplerName] <- data:
+			case <-time.After(time.Duration(ltimeout) * time.Millisecond):
+				if support.Debug != 3 && support.Debug != 4 {
+					log.Printf("storage.passData: Timeout writing to sample database for %v:%v\n", spacename, samplerName)
+				}
+			}
+		}(n, data)
+	}
 	if nextStageChan != nil {
 		select {
 		case nextStageChan <- cc:
@@ -212,15 +201,4 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 		}
 	}
 	wg.Wait()
-}
-
-func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
-
-	acc := float64(0)
-	for i := 0; i < len(entries)-1; i++ {
-		acc += float64(entries[i].val) * float64(entries[i+1].ts-entries[i].ts) / float64(cTS-entries[0].ts)
-	}
-	acc += float64(entries[len(entries)-1].val) * float64(cTS-entries[len(entries)-1].ts) / float64(cTS-entries[0].ts)
-	avg = int(acc)
-	return
 }
