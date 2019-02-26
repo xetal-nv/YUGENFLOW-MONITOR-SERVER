@@ -1,6 +1,8 @@
 package storage
 
-import "countingserver/support"
+import (
+	"countingserver/support"
+)
 
 // SafeReg implement a single input (n) single output (o)
 // non-blocking register. It blocks only when it is not initialised

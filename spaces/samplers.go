@@ -24,7 +24,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	statsb := []int{0}
 	samplerName := avgAnalysis[avgID].name
 	samplerInterval := avgAnalysis[avgID].interval
-	timeoutInterval := 100 * time.Millisecond
+	timeoutInterval := chantimeout * time.Millisecond
 	if avgID > 0 {
 		timeoutInterval += time.Duration(avgAnalysis[avgID-1].interval) * time.Second
 	}
@@ -67,13 +67,14 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						counter.entries[sp.id] = dataEntry{val: sp.val}
 					}
 					fmt.Println("current step new sample", counter)
-				default:
-					time.Sleep(timeoutInterval)
+				case <-time.After(timeoutInterval):
+					//default:
+					//	time.Sleep(timeoutInterval)
 				}
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
-					passData(spacename, samplerName, counter, nextStageChan, int(timeoutInterval), int(samplerInterval/2))
+					passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
 				}
 			}
 		} else {
@@ -85,8 +86,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				select {
 				case avgsp = <-prevStageChan:
 					fmt.Println("received", samplerName, avgsp)
-				default:
-					time.Sleep(timeoutInterval)
+				case <-time.After(timeoutInterval):
+					//default:
+					//time.Sleep(timeoutInterval)
 				}
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
@@ -124,7 +126,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						wg.Wait()
 						counter.entries = ne
 						counter.ts = cTS
-						passData(spacename, samplerName, counter, nextStageChan, int(timeoutInterval), int(samplerInterval/2))
+						passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
 						buffer = nil
 					} else {
 						statsb[0] += 1
@@ -133,7 +135,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						// the following code will force the state to persist, it should not be reachable except
 						// at the beginning of time
 						counter.ts = cTS
-						passData(spacename, samplerName, counter, nextStageChan, int(timeoutInterval), int(samplerInterval/2))
+						passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
 					}
 				}
 				// when not timed out, the new data is added to he queue
@@ -164,8 +166,9 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	go func() {
 		defer wg.Done()
 		select {
-		case latestDataBankIn[spacename][samplerName] <- data:
-		case <-time.After(time.Duration(stimeout) * time.Second):
+		//case latestDataBankIn[spacename][samplerName] <- data:
+		case latestBankIn["sample"][spacename][samplerName] <- data:
+		case <-time.After(time.Duration(stimeout) * time.Millisecond):
 			log.Printf("storage.passData: Timeout writing to register for %v:%v\n", spacename, samplerName)
 		}
 	}()
@@ -192,8 +195,9 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	go func() {
 		// We do not need to wait for this goroutine
 		select {
-		case latestDataDBSIn[spacename][samplerName] <- data:
-		case <-time.After(time.Duration(ltimeout) * time.Second):
+		case latestDBSIn["sample"][spacename][samplerName] <- data:
+		//case latestDataDBSIn[spacename][samplerName] <- data:
+		case <-time.After(time.Duration(ltimeout) * time.Millisecond):
 			if support.Debug != 3 && support.Debug != 4 {
 				log.Printf("storage.passData: Timeout writing to database for %v:%v\n", spacename, samplerName)
 			}
@@ -203,7 +207,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	if nextStageChan != nil {
 		select {
 		case nextStageChan <- cc:
-		case <-time.After(time.Duration(stimeout) * time.Second):
+		case <-time.After(time.Duration(stimeout) * time.Millisecond):
 			log.Printf("storage.passData: Timeout sending to next stage for %v:%v\n", spacename, samplerName)
 		}
 	}

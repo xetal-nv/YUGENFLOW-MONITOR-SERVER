@@ -39,7 +39,7 @@ func Test_SETUP(t *testing.T) {
 
 func Test_TCP_StreamDBS(t *testing.T) {
 
-	iter := 100
+	iter := 20
 
 	support.SupportSetUp("../.env")
 
@@ -96,7 +96,8 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	time.Sleep(30 * time.Second)
 	//a := <-spaces.LatestDataBankOut["noname"]["current"]
 	a := new(storage.SerieSample)
-	if e := a.Extract(<-spaces.LatestDataBankOut["noname"]["current"]); e != nil {
+	if e := a.Extract(<-spaces.LatestBankOut["sample"]["noname"]["current"]); e != nil {
+		//if e := a.Extract(<-spaces.LatestBankOut["space"]["noname"]["current"]); e != nil {
 		t.Fatalf("Invalid value from the current register")
 	}
 	if a.Val() != counter {
@@ -108,8 +109,11 @@ func Test_TCP_StreamDBS(t *testing.T) {
 
 	for _, v := range avgws {
 		go func(name string) {
-			a := reflect.ValueOf(<-spaces.LatestDataBankOut["noname"][name])
+			a := reflect.ValueOf(<-spaces.LatestBankOut["sample"]["noname"][name])
+			//a := reflect.ValueOf(<-spaces.LatestBankOut["sample"]["noname"][name])
 			fmt.Println("Check", name, "pipe ::", a)
+			//a = reflect.ValueOf(<-spaces.LatestBankOut["entry"]["noname"][name])
+			//fmt.Println("Check", name, "pipe ::", a)
 		}(v)
 	}
 }
