@@ -40,12 +40,16 @@ func Test_SerieSample(t *testing.T) {
 
 func Test_SerieEntries(t *testing.T) {
 	support.LabelLength = 8
+	if err := TimedIntDBSSetUp(true); err != nil {
+		t.Fatal(err)
+	}
+	defer TimedIntDBSClose()
 	var a [][]int
 	a = append(a, []int{1, 2})
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, 8})
 	a = append(a, []int{6, 3})
-	b := SerieEntries{support.StringLimit("all", support.LabelLength), 123, a}
+	b := SerieEntries{support.StringLimit("test", support.LabelLength), 123, a}
 	fmt.Println(b)
 	fmt.Println(b.Marshal())
 
@@ -69,6 +73,32 @@ func Test_SerieEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println("unmarshal:", *e)
+
+	if e := update(b.Marshal(), []byte{34}, *currentDB, true); e == nil {
+		//offset := b.MarshalSizeModifiers()
+		val, err := read2([]byte{34}, b.MarshalSize(), b.MarshalSizeModifiers(), *currentDB)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			e := new(SerieEntries)
+			_ = e.Unmarshal(val)
+			fmt.Println("From DBS:", *e)
+		}
+	} else {
+		fmt.Println(e)
+	}
+
+	if f, err := SetSeries(support.StringLimit("test", support.LabelLength), 2, true); err != nil {
+		t.Fatal(err)
+	} else {
+		if f {
+			fmt.Println("Serie definition:", GetDefinition(support.StringLimit("test", support.LabelLength)))
+		}
+	}
+
+	if err := StoreSample(&b, true, false); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func Test_DBSraw(t *testing.T) {
@@ -78,7 +108,7 @@ func Test_DBSraw(t *testing.T) {
 	defer TimedIntDBSClose()
 
 	if e := update([]byte{2, 0, 23, 44, 44, 56}, []byte{34}, *currentDB, true); e == nil {
-		val, err := readVar16([]byte{34}, 2, 0, *currentDB)
+		val, err := read2([]byte{34}, 0, []int{2, 0}, *currentDB)
 		fmt.Println(val, err)
 	} else {
 		fmt.Println(e)
@@ -120,7 +150,7 @@ func Test_DBS(t *testing.T) {
 		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
 	}
 
-	if tag, ts, vals, e := ReadLastN(&s1, 3, false); e != nil {
+	if tag, ts, vals, e := ReadLastN(&s1, 3, []int{}, false); e != nil {
 		t.Fatal(e)
 	} else {
 		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
