@@ -6,7 +6,7 @@ import (
 )
 
 // Data is the data format for the header
-type headerdata struct {
+type Headerdata struct {
 	id       string
 	fromRst  uint64
 	step     uint32
@@ -15,7 +15,7 @@ type headerdata struct {
 }
 
 // Marshal encodes a Data values into codeddata
-func (hd *headerdata) Marshal() (r []byte) {
+func (hd *Headerdata) Marshal() (r []byte) {
 	r = make([]byte, 8)
 	binary.LittleEndian.PutUint64(r, hd.fromRst)
 	b := make([]byte, 4)
@@ -29,8 +29,8 @@ func (hd *headerdata) Marshal() (r []byte) {
 	return r
 }
 
-// Unmarshal decodes a codeddata into headerdata
-func (hd *headerdata) Unmarshal(c []byte) error {
+// Unmarshal decodes a codeddata into Headerdata
+func (hd *Headerdata) Unmarshal(c []byte) error {
 
 	if len(c) != 28 {
 		return errors.New("Invalid raw data provided")

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -85,10 +86,10 @@ func TimedIntDBSClose() {
 }
 
 // External functions/API
-func SetSeries(tag string, step int, avg bool) (found bool, err error) {
+func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 	found = true
 	var db badger.DB
-	if avg {
+	if sDB {
 		db = *statsDB
 	} else {
 		db = *currentDB
@@ -97,9 +98,9 @@ func SetSeries(tag string, step int, avg bool) (found bool, err error) {
 		// if not initialised it creates a new series
 		// sets the entry in tagStart
 		nt := []byte(tag + "0")
-		if _, e := read(nt, 28, db); e != nil {
+		if c, e := read(nt, 28, db); e != nil {
 			found = false
-			a := headerdata{}
+			a := Headerdata{}
 			a.fromRst = uint64(support.Timestamp())
 			a.step = uint32(step)
 			a.lastUpdt = a.fromRst
@@ -109,43 +110,96 @@ func SetSeries(tag string, step int, avg bool) (found bool, err error) {
 			tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
 			log.Printf("register.SetSeries: new series %v:%v added\n", tag, step)
 		} else {
-			if c, e := read(nt, 28, db); e != nil {
+			//if c, e := read(nt, 28, db); e != nil {
+			//	err = e
+			//} else {
+			var a Headerdata
+			if e := a.Unmarshal(c); e != nil {
 				err = e
 			} else {
-				var a headerdata
-				if e := a.Unmarshal(c); e != nil {
-					err = e
-				} else {
-					tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
-					log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
-				}
-
+				tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
+				log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
 			}
+
 		}
+		//}
 	}
 	return found, err
 }
 
-func StoreSample(d SampleData, sDB bool) (err error) {
+func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
+	var db badger.DB
+	if sDB {
+		db = *statsDB
+	} else {
+		db = *currentDB
+	}
+	//if _, ok := tagStart[tag]; !ok {
+	//	err = errors.New("Header not found")
+	//} else {
+	if c, e := read([]byte(tag+"0"), 28, db); e != nil {
+		err = e
+	} else {
+		err = hd.Unmarshal(c)
+	}
+	//}
+	return
+}
+
+func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
+	var ts int64
+	var hd Headerdata
+	var db badger.DB
+	if sDB {
+		db = *statsDB
+	} else {
+		db = *currentDB
+	}
+	if len(gts) != 1 {
+		ts = support.Timestamp()
+	} else {
+		ts = gts[0]
+	}
+	if hd, err = ReadHeader(tag, sDB); err == nil {
+		hd.lastUpdt = uint64(ts)
+		b := hd.Marshal()
+		err = update(b, []byte(tag+"0"), db, false)
+	}
+	return
+}
+
+func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	ts := d.Ts()
 	tag := d.Tag()
 	val := d.Marshal()
+	var db badger.DB
+	if sDB {
+		db = *statsDB
+	} else {
+		db = *currentDB
+	}
 	if st, ok := tagStart[tag]; ok {
 		i := (ts - st[0]) / (st[1] * 1000)
 		lab := tag + strconv.Itoa(int(i))
-		if sDB {
-			err = update(val, []byte(lab), *statsDB, false)
-		} else {
-			err = update(val, []byte(lab), *currentDB, true)
-		}
+		err = update(val, []byte(lab), db, false)
 	} else {
 		err = errors.New("Serie " + tag + " not found")
+	}
+	if len(updatehead) == 1 {
+		if updatehead[0] {
+			updateHeader(d.Tag(), sDB, ts)
+		}
 	}
 	return err
 }
 
 func ReadSerie(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
+	if s0.MarshalSize() == 0 {
+		// TODO add support for variable sized data !
+		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(s0).String())
+		return
+	}
 	var db badger.DB
 	if sDB {
 		db = *statsDB
@@ -176,6 +230,46 @@ func ReadSerie(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byt
 		err = errors.New("Serie " + tag + " not found")
 	}
 	return tag, rts, rt, err
+}
+
+func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+	if head.MarshalSize() == 0 {
+		// TODO add support for variable sized data !
+		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
+		return
+	}
+	var db badger.DB
+	if sDB {
+		db = *statsDB
+	} else {
+		db = *currentDB
+	}
+	tag = head.Tag()
+	ts1 := head.Ts()
+	if st, ok := tagStart[tag]; ok {
+		if ts1 <= st[0] {
+			err = errors.New("storage.ReadLastN: illegal end series point provided")
+		} else {
+			ts0 := ts1 - int64(ns*1000)*st[1]
+			if ts0 <= st[0] {
+				ts0 = st[0] + st[1]*1000 // offset to skip the header
+			}
+			i := (ts0 - st[0]) / (st[1] * 1000)
+			i1 := (ts1 - st[0]) / (st[1] * 1000)
+			for i <= i1 {
+				lab := []byte(tag + strconv.Itoa(int(i)))
+				if v, e := read(lab, head.MarshalSize(), db); e == nil {
+					nts := st[0] + i*st[1]*1000
+					rt = append(rt, v)
+					rts = append(rts, nts)
+				}
+				i += 1
+			}
+		}
+	} else {
+		err = errors.New("storage.ReadLastN: serie " + tag + " not found")
+	}
+	return
 }
 
 func GetDefinition(tag string) []int64 {

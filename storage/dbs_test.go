@@ -16,13 +16,13 @@ func Test_Setup(t *testing.T) {
 
 func Test_SerieSample(t *testing.T) {
 
-	a := headerdata{}
+	a := Headerdata{}
 	a.fromRst = uint64(support.Timestamp())
 	a.step = 500
 	a.lastUpdt = a.fromRst
 	a.created = a.fromRst
 	b := a.Marshal()
-	var c headerdata
+	var c Headerdata
 	if e := c.Unmarshal(b); e != nil || c != a {
 		t.Fatal("Wring conversions 1:", e)
 	}
@@ -94,11 +94,18 @@ func Test_DBS(t *testing.T) {
 			fmt.Println("Serie definition:", GetDefinition("test"))
 		}
 	}
+
+	if h, e := ReadHeader("test", false); e != nil {
+		t.Fatal(e)
+	} else {
+		fmt.Println("HEADER: ", h)
+	}
+
 	time.Sleep(2 * time.Second)
 	ts := support.Timestamp()
 	ts = support.Timestamp()
 	a := SerieSample{"test", ts, 11}
-	if err := StoreSample(&a, false); err != nil {
+	if err := StoreSample(&a, false, true); err != nil {
 		t.Fatal(err)
 	}
 	s0 := SerieSample{"test", ts - 500000, 8}
@@ -107,5 +114,17 @@ func Test_DBS(t *testing.T) {
 		t.Fatal(e)
 	} else {
 		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
+	}
+
+	if tag, ts, vals, e := ReadLastN(&s1, 3, false); e != nil {
+		t.Fatal(e)
+	} else {
+		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
+	}
+
+	if h, e := ReadHeader("test", false); e != nil {
+		t.Fatal(e)
+	} else {
+		fmt.Println("HEADER: ", h)
 	}
 }
