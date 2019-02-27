@@ -104,7 +104,6 @@ func Test_TCP_StreamDBS(t *testing.T) {
 		}
 		if a.Val() != counter {
 			fmt.Println("TEST Failed (e/r):", counter, a.Val())
-			//t.Fatalf("Expected counter is not as real counter")
 			ret = false
 		}
 
@@ -130,7 +129,6 @@ func Test_TCP_StreamDBS(t *testing.T) {
 		select {
 		case <-end:
 		case <-time.After(5 * time.Second):
-			//t.Fatal("Hanging on register read")
 			fmt.Println("Hanging on register read")
 			ret = false
 		}
