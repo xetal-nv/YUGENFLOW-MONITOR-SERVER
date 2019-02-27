@@ -40,7 +40,7 @@ func Test_SETUP(t *testing.T) {
 
 func Test_TCP_StreamDBS(t *testing.T) {
 
-	iter := 10
+	iter := 20
 
 	support.SupportSetUp("../.env")
 
@@ -98,7 +98,8 @@ func Test_TCP_StreamDBS(t *testing.T) {
 		fmt.Println(" TEST -> Disconnect to TCP channel")
 		time.Sleep(30 * time.Second)
 		a := new(storage.SerieSample)
-		if e := a.Extract(<-spaces.LatestBankOut["sample"]["noname"]["current"]); e != nil {
+		if e := a.Extract(<-spaces.LatestBankOut[support.StringLimit("sample", support.LabelLength)][support.StringLimit("noname",
+			support.LabelLength)][support.StringLimit("current", support.LabelLength)]); e != nil {
 			t.Fatalf("Invalid value from the current register")
 		}
 		if a.Val() != counter {
@@ -114,9 +115,11 @@ func Test_TCP_StreamDBS(t *testing.T) {
 			wg.Add(1)
 			go func(name string) {
 				defer wg.Done()
-				a := reflect.ValueOf(<-spaces.LatestBankOut["sample"]["noname"][name])
+				a := reflect.ValueOf(<-spaces.LatestBankOut[support.StringLimit("sample",
+					support.LabelLength)][support.StringLimit("noname", support.LabelLength)][support.StringLimit(name, support.LabelLength)])
 				fmt.Println("Check sample", name, "pipe ::", a)
-				b := reflect.ValueOf(<-spaces.LatestBankOut["entry"]["noname"][name])
+				b := reflect.ValueOf(<-spaces.LatestBankOut[support.StringLimit("entry",
+					support.LabelLength)][support.StringLimit("noname", support.LabelLength)][support.StringLimit(name, support.LabelLength)])
 				fmt.Println("Check entry", name, "pipe ::", b)
 			}(v)
 		}
@@ -128,18 +131,22 @@ func Test_TCP_StreamDBS(t *testing.T) {
 		case <-end:
 		case <-time.After(5 * time.Second):
 			//t.Fatal("Hanging on register read")
+			fmt.Println("Hanging on register read")
 			ret = false
 		}
 		return
 	}
 
 	ok := 0
-	tot := 1
+	tot := 10
 	for i := 0; i < tot; i++ {
 		if r() {
 			ok += 1
 		}
 		time.Sleep(2 * time.Second)
 	}
-	fmt.Printf("Success %v on %v", ok, tot)
+	fmt.Printf("Success %v on %v\n", ok, tot)
+	if ok != tot {
+		t.Fatal("Failed")
+	}
 }

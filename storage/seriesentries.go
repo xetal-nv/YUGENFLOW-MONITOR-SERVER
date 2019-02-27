@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"countingserver/support"
 	"encoding/binary"
 	"fmt"
 	"github.com/pkg/errors"
@@ -16,22 +17,23 @@ type SerieEntries struct {
 // it needs the variable read from the DBS with md = 12, fs = 8
 func (ss *SerieEntries) MarshalSize() int { return 0 }
 
+// returns the recurrent data size (val) and the offset data size for database read
+func (ss *SerieEntries) MarshalSizeModifiers() []int { return []int{8, support.LabelLength + 8} }
+
 func (ss *SerieEntries) Ts() int64 { return ss.ts }
 
 func (ss *SerieEntries) Tag() string { return ss.tag }
 
 func (ss *SerieEntries) Val() [][]int { return ss.val }
 
-// FORMAT (LENGTH:2:8, LENTAG:2:8, TAG:LENTAG:8, TS:8:8, VAL:(LENGTH-LENTAG):64
+// FORMAT fiels:N_units:unit_in_bytes
+// FORMAT (LENGTH:2:1, TAG:support.LabelLength:1, TS:1:1, VAL:(LENGTH):8
 func (ss *SerieEntries) Marshal() (rt []byte) {
-	ll := 2 + len(ss.tag) + 8 + 8*len(ss.val)
+	ll := len(ss.val)
 	msg := make([]byte, 2)
 	binary.LittleEndian.PutUint16(msg, uint16(ll))
-	hp := make([]byte, 2)
-	binary.LittleEndian.PutUint16(hp, uint16(len(ss.tag)))
-	msg = append(msg, hp...)
 	msg = append(msg, []byte(ss.tag)...)
-	hp = make([]byte, 8)
+	hp := make([]byte, 8)
 	binary.LittleEndian.PutUint64(hp, uint64(ss.ts))
 	msg = append(msg, hp...)
 	for _, v := range ss.val {
@@ -78,10 +80,12 @@ func (ss *SerieEntries) Extract(i interface{}) (err error) {
 	return
 }
 
-// FORMAT (LENGTH:2:8, LENTAG:2:1, TAG:LENTAG:1, TS:8:1, VAL:(LENGTH-LENTAG):8
+// FORMAT fiels:N_units:unit_in_bytes
+// FORMAT (LENGTH:2:1, TAG:support.LabelLength:1, TS:1:1, VAL:(LENGTH):8
 func (ss *SerieEntries) Unmarshal(c []byte) error {
-	if int(binary.LittleEndian.Uint16(c[0:2])) != len(c[2:]) {
-		return errors.New("storage.SerieEntries.Unmarshal illegale code, too short")
+	offsets := ss.MarshalSizeModifiers()
+	if len(c[2:]) != (int(binary.LittleEndian.Uint16(c[0:2]))*offsets[0] + offsets[1]) {
+		return errors.New("storage.SerieEntries.Unmarshal illegale code size")
 	}
 	defer func() {
 		if e := recover(); e != nil {
@@ -91,10 +95,10 @@ func (ss *SerieEntries) Unmarshal(c []byte) error {
 			}
 		}
 	}()
-	n := int(binary.LittleEndian.Uint16(c[2:4]))
-	ss.tag = string(c[4:(4 + n)])
-	ss.ts = int64(binary.LittleEndian.Uint64(c[(4 + n):(4 + n + 8)]))
-	for n += 12; n < len(c); n += 8 {
+
+	ss.tag = string(c[2:(2 + support.LabelLength)])
+	ss.ts = int64(binary.LittleEndian.Uint64(c[(2 + support.LabelLength):(2 + offsets[1])]))
+	for n := (2 + offsets[1]); n < len(c); n += offsets[0] {
 		val := []int{int(binary.LittleEndian.Uint32(c[n : n+4])), int(binary.LittleEndian.Uint32(c[n+4 : n+8]))}
 		ss.val = append(ss.val, val)
 	}

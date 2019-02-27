@@ -173,6 +173,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 		wg.Add(1)
 		data := dt.pf(n+spacename+samplerName, cc)
 		// new sample sent to the output register
+		//fmt.Println("sending:", data)
 		go func(dtn string, data interface{}) {
 			defer wg.Done()
 			select {

@@ -39,11 +39,13 @@ func Test_SerieSample(t *testing.T) {
 }
 
 func Test_SerieEntries(t *testing.T) {
+	support.LabelLength = 8
 	var a [][]int
 	a = append(a, []int{1, 2})
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, 8})
-	b := SerieEntries{"all", 123, a}
+	a = append(a, []int{6, 3})
+	b := SerieEntries{support.StringLimit("all", support.LabelLength), 123, a}
 	fmt.Println(b)
 	fmt.Println(b.Marshal())
 
@@ -55,7 +57,7 @@ func Test_SerieEntries(t *testing.T) {
 		ts  int64
 		ll  int
 		val [][]int
-	}{b.tag, b.ts, 3, b.val}
+	}{b.tag, b.ts, len(b.val), b.val}
 	c := new(SerieEntries)
 	d := r(bb)
 	if err := c.Extract(d); err != nil {
@@ -78,6 +80,8 @@ func Test_DBSraw(t *testing.T) {
 	if e := update([]byte{2, 0, 23, 44, 44, 56}, []byte{34}, *currentDB, true); e == nil {
 		val, err := readVar16([]byte{34}, 2, 0, *currentDB)
 		fmt.Println(val, err)
+	} else {
+		fmt.Println(e)
 	}
 }
 

@@ -21,7 +21,7 @@ func SetUp() {
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst)
 	}
-	dtypes["sample"] = sample
+	dtypes[support.StringLimit("sample", support.LabelLength)] = sample
 	var entry = dtfuncs{}
 	entry.pf = func(nm string, se spaceEntries) interface{} {
 		data := struct {
@@ -45,7 +45,7 @@ func SetUp() {
 	entry.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SeriesEntryDBS(id, in, rst)
 	}
-	dtypes["entry"] = entry
+	dtypes[support.StringLimit("entry", support.LabelLength)] = entry
 	// set up the server for data analysis/transmission/storage
 	setpUpCounter()
 	spchans := setUpSpaces()
@@ -73,6 +73,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 		for _, name := range spaces {
 			//if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
+				name = support.StringLimit(name, support.LabelLength)
 				spaceChannels[name] = make(chan spaceEntries, bufsize)
 				// the go routine below is the processing thread.
 				go sampler(name, spaceChannels[name], nil, 0, sync.Once{}, 0, 0)
@@ -129,8 +130,9 @@ func setpUpCounter() {
 	avgw := strings.Trim(os.Getenv("SAVEWINDOW"), ";")
 	avgWindows := make(map[string]int)
 	tw := make(map[int]string)
-	avgWindows["current"] = samplingWindow
-	tw[samplingWindow] = "current"
+	curr := support.StringLimit("current", support.LabelLength)
+	avgWindows[curr] = samplingWindow
+	tw[samplingWindow] = curr
 	if avgw != "" {
 		for _, v := range strings.Split(avgw, ";") {
 			data := strings.Split(strings.Trim(v, " "), " ")
@@ -141,8 +143,9 @@ func setpUpCounter() {
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
 			} else {
 				if v > samplingWindow {
-					avgWindows[data[0]] = v
-					tw[v] = data[0]
+					name := support.StringLimit(data[0], support.LabelLength)
+					avgWindows[name] = v
+					tw[v] = name
 				} else {
 					log.Printf("spaces.setpUpCounter: averaging window %v skipped since equal to \"current\"\n", data[0])
 				}

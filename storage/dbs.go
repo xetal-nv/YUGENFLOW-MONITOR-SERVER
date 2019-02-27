@@ -4,6 +4,7 @@ import (
 	"countingserver/support"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/dgraph-io/badger"
 	"log"
 	"os"
@@ -172,6 +173,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	ts := d.Ts()
 	tag := d.Tag()
 	val := d.Marshal()
+	fmt.Println(tag, reflect.TypeOf(d).String())
 	var db badger.DB
 	if sDB {
 		db = *statsDB
@@ -187,7 +189,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	}
 	if len(updatehead) == 1 {
 		if updatehead[0] {
-			updateHeader(d.Tag(), sDB, ts)
+			err = updateHeader(d.Tag(), sDB, ts)
 		}
 	}
 	return err
@@ -234,7 +236,6 @@ func ReadSerie(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byt
 
 func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	if head.MarshalSize() == 0 {
-		// TODO add support for variable sized data !
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
 		return
 	}
@@ -276,31 +277,42 @@ func GetDefinition(tag string) []int64 {
 	return tagStart[tag]
 }
 
-// View read an entry
-func read(id []byte, l int, db badger.DB) (r []byte, err error) {
-	r = make([]byte, l)
-	err = db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(id)
-		if err != nil {
-			return err
-		}
-		val, err := item.Value()
-		if err != nil {
-			return err
-		}
-		copy(r, val)
-		return nil
-	})
-	return r, err
+// View read an entry, when l==0, it assumes it is a variable length element
+// and it retrieves the length from the element first (maximum number of fields in 16 bit)
+// TODO
+func read2(id []byte, l int, db badger.DB) (r []byte, err error) {
+	return
 }
 
-// View read a variable length entry (maximum number of fields in 16 bit)
+// View read an entry,
+func read(id []byte, lb int, db badger.DB) (r []byte, err error) {
+	if lb > 0 {
+		r = make([]byte, lb)
+		err = db.View(func(txn *badger.Txn) error {
+			item, err := txn.Get(id)
+			if err != nil {
+				return err
+			}
+			val, err := item.Value()
+			if err != nil {
+				return err
+			}
+			copy(r, val)
+			return nil
+		})
+	} else {
+		err = errors.New("storage.DBS: error storing data with length <= 0")
+	}
+	return
+}
+
+// View read a variable length entry (length given in the first 2 bytes)
 func readVar16(id []byte, fs, md int, db badger.DB) (v []byte, err error) {
 	var r []byte
 	r, err = read(id, 2, db)
 	if err == nil {
 		vs := int(binary.LittleEndian.Uint16(r))*fs + 2 + md
-		if r, err = read([]byte{34}, vs, db); err == nil {
+		if r, err = read(id, vs, db); err == nil {
 			v = make([]byte, len(r))
 			copy(v, r)
 		}

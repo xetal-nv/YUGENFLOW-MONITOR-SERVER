@@ -15,6 +15,8 @@ type SerieSample struct {
 
 func (ss *SerieSample) MarshalSize() int { return 12 }
 
+func (ss *SerieSample) MarshalSizeModifiers() []int { return []int{0, 0} }
+
 func (ss *SerieSample) Ts() int64 { return ss.ts }
 
 func (ss *SerieSample) Tag() string { return ss.tag }

@@ -7,6 +7,7 @@ type SampleData interface {
 	Ts() int64
 	Tag() string
 	MarshalSize() int
+	MarshalSizeModifiers() []int
 	Extract(interface{}) error
 }
 
