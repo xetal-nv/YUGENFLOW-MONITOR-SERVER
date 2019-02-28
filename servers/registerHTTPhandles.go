@@ -18,6 +18,8 @@ type Answer struct {
 	Data  *storage.SerieSample `json:"data"`
 }
 
+// TODO
+// gives eror for hour ?? but data is correct
 func registerHTTPhandles(path string) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
