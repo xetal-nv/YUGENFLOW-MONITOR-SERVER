@@ -2,8 +2,6 @@ package servers
 
 import (
 	"context"
-	"countingserver/gates"
-	"countingserver/spaces"
 	"log"
 	"os"
 	"os/signal"
@@ -43,8 +41,6 @@ func StartServers() {
 		// Starts first the TCP server for data collection
 
 		ctcp := make(chan context.Context)
-		gates.SetUp()
-		spaces.SetUp()
 		go StartTCP(ctcp)
 
 		// Starts all HTTP service servers

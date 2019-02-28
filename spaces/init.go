@@ -195,7 +195,8 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 				if support.Debug < 3 {
 					ResetDBS[dl][name][v.name] = make(chan bool)
 					latestDBSIn[dl][name][v.name] = make(chan interface{})
-					if _, e := storage.SetSeries(dl+name+v.name, v.interval, false); e != nil {
+					label := dl + name + v.name
+					if _, e := storage.SetSeries(label, v.interval, !support.Stringending(label, "current", "_")); e != nil {
 						log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
 					}
 					go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], ResetDBS[dl][name][v.name])

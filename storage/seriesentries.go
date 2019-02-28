@@ -14,6 +14,14 @@ type SerieEntries struct {
 	val [][]int
 }
 
+func (ss *SerieEntries) Valid() bool {
+	if ss.ts > 0 && len(ss.val) > 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
 // it needs the variable read from the DBS with md = 12, fs = 8
 func (ss *SerieEntries) MarshalSize() int { return 0 }
 

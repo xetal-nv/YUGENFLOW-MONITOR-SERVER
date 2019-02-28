@@ -67,6 +67,8 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	spaces.SetUp()
 	go StartTCP(make(chan context.Context))
 
+	time.Sleep(5 * time.Second)
+
 	r := func() (ret bool) {
 		ret = true
 		time.Sleep(2 * time.Second)

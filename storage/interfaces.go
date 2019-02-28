@@ -9,6 +9,7 @@ type SampleData interface {
 	MarshalSize() int
 	MarshalSizeModifiers() []int
 	Extract(interface{}) error
+	Valid() bool
 }
 
 // All types beinf transmitted via registers must implement this interface

@@ -4,6 +4,7 @@ import (
 	"countingserver/support"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"github.com/dgraph-io/badger"
 	"log"
 	"os"
@@ -124,6 +125,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 		}
 		//}
 	}
+	fmt.Println(tagStart)
 	return found, err
 }
 
@@ -184,6 +186,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 		err = update(val, []byte(lab), db, false)
 	} else {
 		err = errors.New("Serie " + tag + " not found")
+		//fmt.Println(d,sDB)
 	}
 	if len(updatehead) == 1 {
 		if updatehead[0] {

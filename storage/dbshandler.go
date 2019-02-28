@@ -44,8 +44,12 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData) {
 				// TODO to be fully tested with the API server
 				if support.Debug != 3 && support.Debug != 4 {
 					if e := a.Extract(d); e == nil {
-						if err := StoreSample(a, !support.Stringending(id, "current", "_")); err != nil {
-							log.Printf("storage.TimedIntDBS: DBS handler %v error %v\n", id, err)
+						if a.Valid() {
+							if err := StoreSample(a, !support.Stringending(id, "current", "_")); err != nil {
+								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v\n", id, err, a)
+							}
+						} else {
+							log.Printf("storage.TimedIntDBS: DBS handler discarded empty data % v for %v\n", a, id)
 						}
 					} else {
 						log.Println(e.Error(), d)

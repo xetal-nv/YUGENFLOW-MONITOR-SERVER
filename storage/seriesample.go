@@ -13,6 +13,14 @@ type SerieSample struct {
 	val int
 }
 
+func (ss *SerieSample) Valid() bool {
+	if ss.ts > 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (ss *SerieSample) MarshalSize() int { return 12 }
 
 func (ss *SerieSample) MarshalSizeModifiers() []int { return []int{0, 0} }

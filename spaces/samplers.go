@@ -2,13 +2,14 @@ package spaces
 
 import (
 	"countingserver/support"
-	"fmt"
 	"log"
 	"math"
 	"strconv"
 	"sync"
 	"time"
 )
+
+// TODO there is an issue when the servewr is started and NO sample has been sent!!!
 
 // The algorithm is built on the ordered arrival of samples that is preserfved in a slice.
 // It means that x[i] is newer than x[i-1] and older than x[i+1]
@@ -67,7 +68,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					} else {
 						counter.entries[sp.id] = dataEntry{val: sp.val}
 					}
-					fmt.Println("current step new sample", counter)
+					//fmt.Println("current step new sample", counter)
 				case <-time.After(timeoutInterval):
 				}
 				cTS := support.Timestamp()
@@ -84,7 +85,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				avgsp := spaceEntries{ts: 0}
 				select {
 				case avgsp = <-prevStageChan:
-					fmt.Println("received", samplerName, avgsp)
+					//fmt.Println("received", samplerName, avgsp)
 				case <-time.After(timeoutInterval):
 				}
 				cTS := support.Timestamp()
@@ -173,7 +174,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 		wg.Add(1)
 		data := dt.pf(n+spacename+samplerName, cc)
 		// new sample sent to the output register
-		//fmt.Println("sending:", data)
+		//fmt.Println("sending:", cc)
 		go func(dtn string, data interface{}) {
 			defer wg.Done()
 			select {
