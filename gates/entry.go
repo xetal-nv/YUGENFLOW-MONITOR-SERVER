@@ -10,12 +10,12 @@ import (
 func entryProcessing(id int, in chan sensorData) {
 	var scratchPad scratchData
 	sensorListEntry := make(map[int]sensorData)
-	gateListEntry := entryList[id].gates
+	gateListEntry := EntryList[id].gates
 
 	scratchPad.senData = make(map[int]sensorData)
 	scratchPad.unusedSampleSum = make(map[int]int)
 
-	for i := range entryList[id].senDef {
+	for i := range EntryList[id].senDef {
 		scratchPad.senData[i] = sensorData{i, 0, 0}
 		sensorListEntry[i] = sensorData{i, 0, 0}
 	}

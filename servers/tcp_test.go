@@ -40,8 +40,6 @@ func Test_SETUP(t *testing.T) {
 
 func Test_TCP_StreamDBS(t *testing.T) {
 
-	iter := 20
-
 	support.SupportSetUp("../.env")
 
 	if err := storage.TimedIntDBSSetUp(false); err != nil {
@@ -49,7 +47,6 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	}
 	defer storage.TimedIntDBSClose()
 
-	vals := []int{-1, 0, 1, 2, 127}
 	counter := 0
 
 	var avgws []string
@@ -70,6 +67,9 @@ func Test_TCP_StreamDBS(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	r := func() (ret bool) {
+		iter := 20
+		vals := []int{-1, 0, 1, 2, 127}
+
 		ret = true
 		time.Sleep(2 * time.Second)
 		fmt.Println(" TEST -> Connect to TCP channel")

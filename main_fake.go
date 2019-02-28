@@ -1,6 +1,10 @@
 package main
 
 import (
+	"countingserver/gates"
+	"countingserver/spaces"
+	"countingserver/storage"
+	"countingserver/support"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -65,6 +69,17 @@ func catchRest(w http.ResponseWriter, r *http.Request) {
 }
 
 func main_fake() {
+	support.SupportSetUp("")
+
+	// Set-up databases
+	if err := storage.TimedIntDBSSetUp(false); err != nil {
+		log.Fatal(err)
+	}
+	defer storage.TimedIntDBSClose()
+
+	gates.SetUp()
+	spaces.SetUp()
+	support.SupportTerminate()
 
 	mx := mux.NewRouter()
 
@@ -76,19 +91,37 @@ func main_fake() {
 		Handler:        mx,
 	}
 
-	datatypes := []string{"sample", "entry"}
-	spaces := []string{"living", "studio", "bedroom"}
-	analisys := []string{"current", "hour", "day", "week"}
+	//datatypes := []string{"sample", "entry"}
+	//spaces := []string{"living", "studio", "bedroom"}
+	//analisys := []string{"current", "hour", "day", "week"}
+	//
+	//for _, dt := range datatypes {
+	//	for _, sp := range spaces {
+	//		for _, ays := range analisys {
+	//			path := "/" + strings.Join([]string{dt, sp, ays}, "/") + "/"
+	//			mx.Handle(path, referenceHandler3Ways(path))
+	//		}
+	//	}
+	//}
 
-	for _, dt := range datatypes {
-		for _, sp := range spaces {
-			for _, ays := range analisys {
-				path := "/" + strings.Join([]string{dt, sp, ays}, "/") + "/"
-				mx.Handle(path, referenceHandler3Ways(path))
+	handles := make(map[string]http.Handler)
+
+	for dtn, dt := range spaces.LatestBankOut {
+		for spn, sp := range dt {
+			for alsn, _ := range sp {
+				path := "/" + strings.Join([]string{strings.Trim(dtn, "_"), strings.Trim(spn, "_"),
+					strings.Trim(alsn, "_")}, "/")
+				fmt.Println("Serving", path)
+				handles[path] = referenceHandler3Ways(path)
+				//handles[path] = servers.registerHTTPhandles(path)
 			}
 		}
 	}
 
+	for p, h := range handles {
+		mx.Handle(p, h)
+	}
+
 	mx.PathPrefix("/").Handler(http.HandlerFunc(catchRest))
-	server.ListenAndServe()
+	_ = server.ListenAndServe()
 }

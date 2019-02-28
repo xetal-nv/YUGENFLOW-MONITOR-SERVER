@@ -15,7 +15,7 @@ func tempHTTPfuncHandler(message string) http.Handler {
 	m := message
 	log.Println("Test Handler: started")
 	if rand.Intn(5) == 2 {
-		panic("setup error")
+		panic("setupHTTP error")
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {

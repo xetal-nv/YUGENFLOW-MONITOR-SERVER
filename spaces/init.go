@@ -55,6 +55,7 @@ func SetUp() {
 func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	spaceChannels = make(map[string]chan spaceEntries)
 	entrySpaceChannels = make(map[int][]chan spaceEntries)
+	SpaceDef = make(map[string][]int)
 
 	if data := os.Getenv("SPACES_NAMES"); data != "" {
 		spaces := strings.Split(data, " ")
@@ -86,6 +87,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 						log.Fatal("spaces.setUpSpaces: fatal error entry name", val)
 					}
 				}
+				SpaceDef[name] = sg
 				log.Printf("spaces.setUpSpaces: found space [%v] with entry %v\n", name, sg)
 				for _, g := range sg {
 					entrySpaceChannels[g] = append(entrySpaceChannels[g], spaceChannels[name])

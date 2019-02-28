@@ -29,3 +29,4 @@ var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains a
 // external variables
 var ResetDBS map[string]map[string]map[string]chan bool             // reset channel for the DBS's
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
+var SpaceDef map[string][]int                                       // maps a space name to its entries

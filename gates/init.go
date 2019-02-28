@@ -80,7 +80,7 @@ func SetUp() {
 	if data := os.Getenv("ENTRY_" + strconv.Itoa(i)); data == "" {
 		log.Fatal("gateList.SetUp: fatal error, no entry has been defined")
 	} else {
-		entryList = make(map[int]entryDef)
+		EntryList = make(map[int]entryDef)
 		for data != "" {
 			t := entryDef{id: 1}
 			t.senDef = make(map[int]sensorDef)
@@ -92,7 +92,7 @@ func SetUp() {
 				} else {
 					t.gates[ind] = gateList[ind]
 					for _, d := range gateList[ind] {
-						//entryList[i] = append(entryList[i], d)
+						//EntryList[i] = append(EntryList[i], d)
 						tm := sensorList[d]
 						kp := true
 						for _, v := range tm.entry {
@@ -108,9 +108,9 @@ func SetUp() {
 					}
 				}
 			}
-			entryList[i] = t
+			EntryList[i] = t
 			go entryProcessing(i, entryChan)
-			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, entryList[i])
+			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, EntryList[i])
 			i += 1
 			data = os.Getenv("ENTRY_" + strconv.Itoa(i))
 		}

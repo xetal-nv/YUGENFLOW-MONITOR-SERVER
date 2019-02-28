@@ -34,7 +34,7 @@ func StartServers() {
 		}
 	}()
 
-	if e := setup(); e != nil {
+	if e := setupHTTP(); e != nil {
 		log.Println("servers.StartServers: server set-up error:", e)
 	} else {
 

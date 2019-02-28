@@ -8,13 +8,13 @@ import (
 )
 
 type SerieSample struct {
-	tag string
-	ts  int64
-	val int
+	Stag string `json:"tag"`
+	Sts  int64  `json:"ts"`
+	Sval int    `json:"val"`
 }
 
 func (ss *SerieSample) Valid() bool {
-	if ss.ts > 0 {
+	if ss.Sts > 0 {
 		return true
 	} else {
 		return false
@@ -25,17 +25,17 @@ func (ss *SerieSample) MarshalSize() int { return 12 }
 
 func (ss *SerieSample) MarshalSizeModifiers() []int { return []int{0, 0} }
 
-func (ss *SerieSample) Ts() int64 { return ss.ts }
+func (ss *SerieSample) Ts() int64 { return ss.Sts }
 
-func (ss *SerieSample) Tag() string { return ss.tag }
+func (ss *SerieSample) Tag() string { return ss.Stag }
 
-func (ss *SerieSample) Val() int { return ss.val }
+func (ss *SerieSample) Val() int { return ss.Sval }
 
 func (ss *SerieSample) Marshal() []byte {
 	vb := make([]byte, 4)
-	binary.LittleEndian.PutUint32(vb, uint32(ss.val))
+	binary.LittleEndian.PutUint32(vb, uint32(ss.Sval))
 	vts := make([]byte, 8)
-	binary.LittleEndian.PutUint64(vts, uint64(ss.ts))
+	binary.LittleEndian.PutUint64(vts, uint64(ss.Sts))
 
 	return append(vts, vb...)
 }
@@ -52,7 +52,7 @@ func (ss *SerieSample) Extract(i interface{}) error {
 			}
 		}
 	}()
-	z := SerieSample{tag: rv.Field(0).String(), ts: rv.Field(1).Int(), val: int(rv.Field(2).Int())}
+	z := SerieSample{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int(), Sval: int(rv.Field(2).Int())}
 	*ss = z
 	return nil
 }
@@ -81,8 +81,8 @@ func UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SerieSample) 
 	for i, mt := range vals {
 		a := new(SerieSample)
 		if e := a.Unmarshal(mt); e == nil {
-			a.tag = tag
-			a.ts = ts[i]
+			a.Stag = tag
+			a.Sts = ts[i]
 			rt = append(rt, *a)
 		}
 	}

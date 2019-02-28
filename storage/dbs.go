@@ -4,7 +4,6 @@ import (
 	"countingserver/support"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"github.com/dgraph-io/badger"
 	"log"
 	"os"
@@ -125,7 +124,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 		}
 		//}
 	}
-	fmt.Println(tagStart)
+	//fmt.Println(tagStart)
 	return found, err
 }
 
@@ -136,7 +135,7 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	} else {
 		db = *currentDB
 	}
-	//if _, ok := tagStart[tag]; !ok {
+	//if _, ok := tagStart[Stag]; !ok {
 	//	err = errors.New("Header not found")
 	//} else {
 	if c, e := read2([]byte(tag+"0"), 28, []int{}, db); e != nil {
@@ -331,11 +330,11 @@ func read2(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 //			if err != nil {
 //				return err
 //			}
-//			val, err := item.Value()
+//			Sval, err := item.Value()
 //			if err != nil {
 //				return err
 //			}
-//			copy(r, val)
+//			copy(r, Sval)
 //			return nil
 //		})
 //	} else {

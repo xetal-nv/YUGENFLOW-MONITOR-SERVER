@@ -25,7 +25,7 @@ func (ss *SerieEntries) Valid() bool {
 // it needs the variable read from the DBS with md = 12, fs = 8
 func (ss *SerieEntries) MarshalSize() int { return 0 }
 
-// returns the recurrent data size (val) and the offset data size for database read
+// returns the recurrent data size (Sval) and the offset data size for database read
 func (ss *SerieEntries) MarshalSizeModifiers() []int { return []int{8, support.LabelLength + 8} }
 
 func (ss *SerieEntries) Ts() int64 { return ss.ts }
@@ -60,7 +60,7 @@ func (ss *SerieEntries) Marshal() (rt []byte) {
 	return
 }
 
-// Extract assumes that after ts there is a extra int that gives the length of the 2s array
+// Extract assumes that after Sts there is a extra int that gives the length of the 2s array
 // see spaces.passData in samplers.go
 func (ss *SerieEntries) Extract(i interface{}) (err error) {
 	err = nil
@@ -113,12 +113,12 @@ func (ss *SerieEntries) Unmarshal(c []byte) error {
 	return nil
 }
 
-//func UnmarshalSliceSE(tag string, ts []int64, vals [][]byte) (rt []SerieEntries) { // TBD
+//func UnmarshalSliceSE(Stag string, Sts []int64, vals [][]byte) (rt []SerieEntries) { // TBD
 //	for i, mt := range vals {
 //		a := new(SerieEntries)
 //		if e := a.Unmarshal(mt); e == nil {
-//			a.tag = tag
-//			a.ts = ts[i]
+//			a.Stag = Stag
+//			a.Sts = Sts[i]
 //			rt = append(rt, *a)
 //		}
 //	}

@@ -2,6 +2,7 @@ package servers
 
 import (
 	"context"
+	"countingserver/spaces"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ var crcUsed bool                            // CRC used flag
 var cmdchan chan []byte                     // channel to handler for receiving gate answers answer
 var cmdlen map[byte]int                     // provides length for legal server2gate commands
 
-func setup() error {
+func setupHTTP() error {
 
 	hMap[0] = map[string]http.Handler{
 		"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
@@ -26,13 +27,20 @@ func setup() error {
 	}
 
 	//hMap[1] = map[string]http.Handler{
-	//	"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
-	//	"/message": tempHTTPfuncHandler("net/http is awesome"),
-	//	"/panic":   tempHTTPfuncHandler(""),
+	//	"/actuals": getCurrentSampleAPI(),
 	//}
 
-	hMap[1] = map[string]http.Handler{
-		"/actuals": getCurrentSampleAPI(),
+	hMap[1] = make(map[string]http.Handler)
+
+	for dtn, dt := range spaces.LatestBankOut {
+		for spn, sp := range dt {
+			for alsn := range sp {
+				path := "/" + strings.Join([]string{strings.Trim(dtn, "_"), strings.Trim(spn, "_"),
+					strings.Trim(alsn, "_")}, "/")
+				log.Println("ServersSetup: Serving API", path)
+				hMap[1][path] = registerHTTPhandles(path)
+			}
+		}
 	}
 
 	for i, v := range strings.Split(os.Getenv("HTTPSPORTS"), ",") {
