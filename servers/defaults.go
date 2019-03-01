@@ -34,12 +34,16 @@ func setupHTTP() error {
 
 	for dtn, dt := range spaces.LatestBankOut {
 		for spn, sp := range dt {
+			subpath := "/" + strings.Trim(dtn, "_") + "/" + strings.Trim(spn, "_")
+			log.Println("ServersSetup: Serving API", subpath)
+			var keys []string
 			for alsn := range sp {
-				path := "/" + strings.Join([]string{strings.Trim(dtn, "_"), strings.Trim(spn, "_"),
-					strings.Trim(alsn, "_")}, "/")
+				path := subpath + "/" + strings.Trim(alsn, "_")
+				keys = append(keys, alsn)
 				log.Println("ServersSetup: Serving API", path)
-				hMap[1][path] = registerHTTPhandles(path)
+				hMap[1][path] = singleRegisterHTTPhandles(path)
 			}
+			hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys)
 		}
 	}
 

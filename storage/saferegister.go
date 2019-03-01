@@ -2,7 +2,6 @@ package storage
 
 import (
 	"countingserver/support"
-	"fmt"
 )
 
 // SafeReg implement a single input (n) single output (o)
@@ -18,9 +17,9 @@ func SafeReg(in, out chan interface{}, init ...interface{}) {
 		for {
 			select {
 			case data = <-in:
-				fmt.Println("received:", data)
+				//fmt.Println("received:", data)
 			case out <- data:
-				fmt.Println("sent:", data)
+				//fmt.Println("sent:", data)
 			}
 		}
 	}
