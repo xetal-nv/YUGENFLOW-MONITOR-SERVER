@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -23,7 +24,7 @@ type RegisterBank struct {
 }
 
 // handles single register requests
-func singleRegisterHTTPhandles(path string, tp storage.GenericData) http.Handler {
+func singleRegisterHTTPhandles(path string, ref string) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
 	tag := ""
@@ -32,7 +33,7 @@ func singleRegisterHTTPhandles(path string, tp storage.GenericData) http.Handler
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
-	rt := Register{true, "", tp}
+	rt := Register{true, "", storage.DataMap[ref]}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -65,8 +66,7 @@ func singleRegisterHTTPhandles(path string, tp storage.GenericData) http.Handler
 }
 
 // handles space requests
-// TODO need to be in threads
-func spaceRegisterHTTPhandles(path string, als []string, ref storage.GenericData) http.Handler {
+func spaceRegisterHTTPhandles(path string, als []string, ref string) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
 	tag := ""
@@ -90,30 +90,71 @@ func spaceRegisterHTTPhandles(path string, als []string, ref storage.GenericData
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 
 		var rt RegisterBank
+		//var rt2 RegisterBank
 
 		rt.Name = tag
+		//rt2.Name = tag
+
+		//for _, nm := range als {
+		//	var tmp Register
+		//	tmp.Data = ref.NewEl()
+		//	select {
+		//	case data := <-spaces.LatestBankOut[sp[0]][sp[1]][nm]:
+		//		if e := tmp.Data.Extract(data); e != nil {
+		//			tmp.Valid = false
+		//			tmp.Error = "ID"
+		//		} else {
+		//			tmp.Valid = true
+		//		}
+		//		tmp.Data.SetTag(tag + "_" + strings.Replace(nm, "_", "", -1))
+		//	case <-time.After(2000 * time.Millisecond):
+		//		tmp.Valid = false
+		//		tmp.Error = "TO"
+		//	}
+		//	rt2.Data = append(rt2.Data, tmp)
+		//}
+
+		var tmpv []*Register
+		var wg sync.WaitGroup
 
 		for _, nm := range als {
-			var tmp Register
-			tmp.Data = ref.NewEl()
-			select {
-			case data := <-spaces.LatestBankOut[sp[0]][sp[1]][nm]:
-				if e := tmp.Data.Extract(data); e != nil {
+			tmp := new(Register)
+			wg.Add(1)
+			//var tmp Register
+			tmp.Data = storage.DataMap[ref]
+			//rt.Data = append(rt.Data, tmp)
+			tmpv = append(tmpv, tmp)
+			go func(tmp *Register) {
+				defer wg.Done()
+				select {
+				case data := <-spaces.LatestBankOut[sp[0]][sp[1]][nm]:
+					if e := tmp.Data.Extract(data); e != nil {
+						tmp.Valid = false
+						tmp.Error = "ID"
+					} else {
+						tmp.Valid = true
+					}
+					tmp.Data.SetTag(tag + "_" + strings.Replace(nm, "_", "", -1))
+				case <-time.After(2000 * time.Millisecond):
 					tmp.Valid = false
-					tmp.Error = "ID"
-				} else {
-					tmp.Valid = true
+					tmp.Error = "TO"
 				}
-				tmp.Data.SetTag(tag + "_" + strings.Replace(nm, "_", "", -1))
-			case <-time.After(2000 * time.Millisecond):
-				tmp.Valid = false
-				tmp.Error = "TO"
-			}
-			rt.Data = append(rt.Data, tmp)
+			}(tmp)
 		}
 
+		wg.Wait()
+		for _, v := range tmpv {
+			rt.Data = append(rt.Data, *v)
+		}
+
+		//fmt.Println(rt2.Data)
+		//fmt.Println(rt.Data)
+
+		//a := []RegisterBank{rt,rt2}
+
 		//noinspection GoUnhandledErrorResult
-		json.NewEncoder(w).Encode(rt)
+		//json.NewEncoder(w).Encode(a)
+		_ = json.NewEncoder(w).Encode(rt)
 
 	})
 }

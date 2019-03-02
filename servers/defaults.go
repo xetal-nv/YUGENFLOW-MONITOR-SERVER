@@ -34,6 +34,7 @@ func setupHTTP() error {
 	hMap[1] = make(map[string]http.Handler)
 
 	for dtn, dt := range spaces.LatestBankOut {
+		ref := strings.Trim(dtn, "_")
 		for spn, sp := range dt {
 			subpath := "/" + strings.Trim(dtn, "_") + "/" + strings.Trim(spn, "_")
 			//log.Println("ServersSetup: Serving API", subpath)
@@ -41,25 +42,35 @@ func setupHTTP() error {
 			for alsn := range sp {
 				path := subpath + "/" + strings.Trim(alsn, "_")
 				keys = append(keys, alsn)
-				switch strings.Trim(dtn, "_") {
-				case "sample":
+
+				if _, ok := storage.DataMap[ref]; ok {
 					log.Println("ServersSetup: Serving API", path)
-					hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieSample))
-				case "entry":
-					log.Println("ServersSetup: Serving API", path)
-					hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieEntries))
-				default:
+					hMap[1][path] = singleRegisterHTTPhandles(path, ref)
 				}
+				//switch strings.Trim(dtn, "_") {
+				//case "sample":
+				//	log.Println("ServersSetup: Serving API", path)
+				//	hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieSample))
+				//case "entry":
+				//	log.Println("ServersSetup: Serving API", path)
+				//	hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieEntries))
+				//default:
+				//}
 			}
-			switch strings.Trim(dtn, "_") {
-			case "sample":
+			ref := strings.Trim(dtn, "_")
+			if _, ok := storage.DataMap[ref]; ok {
 				log.Println("ServersSetup: Serving API", subpath)
-				hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieSample))
-			case "entry":
-				log.Println("ServersSetup: Serving API", subpath)
-				hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieEntries))
-			default:
+				hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, ref)
 			}
+			//switch strings.Trim(dtn, "_") {
+			//case "sample":
+			//	log.Println("ServersSetup: Serving API", subpath)
+			//	hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieSample))
+			//case "entry":
+			//	log.Println("ServersSetup: Serving API", subpath)
+			//	hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieEntries))
+			//default:
+			//}
 			//hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys)
 		}
 	}

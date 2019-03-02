@@ -10,14 +10,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
-	"sync"
 	"time"
 )
-
-var currentDB, statsDB *badger.DB
-var once sync.Once
-var currentTTL time.Duration
-var tagStart map[string][]int64
 
 func TimedIntDBSSetUp(fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence
@@ -73,6 +67,9 @@ func TimedIntDBSSetUp(fd bool) error {
 	} else {
 		log.Printf("storage.TimedIntDBSClose: Databases not enables for current Debug mode\n")
 	}
+	DataMap = make(map[string]GenericData)
+	DataMap["sample"] = func() GenericData { return new(SerieSample) }()
+	DataMap["entry"] = func() GenericData { return new(SerieEntries) }()
 	return err
 }
 

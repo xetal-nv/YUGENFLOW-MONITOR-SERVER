@@ -23,7 +23,7 @@ func (ss *SerieSample) SetVal(v ...int) {
 	}
 }
 
-func (ss *SerieSample) NewEl() GenericData { return new(SerieSample) }
+//func (ss *SerieSample) NewEl() GenericData { return new(SerieSample) }
 
 func (ss *SerieSample) SetTs(ts int64) {
 	ss.Sts = ts
