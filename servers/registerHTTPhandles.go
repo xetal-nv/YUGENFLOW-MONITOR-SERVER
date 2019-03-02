@@ -5,7 +5,6 @@ import (
 	"countingserver/storage"
 	"countingserver/support"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -13,9 +12,9 @@ import (
 )
 
 type Register struct {
-	Valid bool                 `json:"valid"`
-	Error string               `json:"errorcode"`
-	Data  *storage.SerieSample `json:"counter"`
+	Valid bool                `json:"valid"`
+	Error string              `json:"errorcode"`
+	Data  storage.GenericData `json:"counter"`
 }
 
 type RegisterBank struct {
@@ -24,7 +23,8 @@ type RegisterBank struct {
 }
 
 // handles single register requests
-func singleRegisterHTTPhandles(path string) http.Handler {
+// TODO ERROR, it needs to be able to handle the different data types like sample and entry!!!
+func singleRegisterHTTPhandles(path string, tp storage.GenericData) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
 	tag := ""
@@ -33,7 +33,7 @@ func singleRegisterHTTPhandles(path string) http.Handler {
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
-	rt := Register{true, "", new(storage.SerieSample)}
+	rt := Register{true, "", tp}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -53,7 +53,7 @@ func singleRegisterHTTPhandles(path string) http.Handler {
 				rt.Valid = false
 				rt.Error = "ID"
 			} else {
-				rt.Data.Stag = tag
+				rt.Data.SetTag(tag)
 			}
 		case <-time.After(2000 * time.Millisecond):
 			rt.Valid = false
@@ -66,6 +66,7 @@ func singleRegisterHTTPhandles(path string) http.Handler {
 }
 
 // handles space requests
+// TOTO error see above and need to be in threads
 func spaceRegisterHTTPhandles(path string, als []string) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
@@ -75,7 +76,7 @@ func spaceRegisterHTTPhandles(path string, als []string) http.Handler {
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
-	fmt.Println(tag)
+	//fmt.Println(tag)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -104,7 +105,7 @@ func spaceRegisterHTTPhandles(path string, als []string) http.Handler {
 				} else {
 					tmp.Valid = true
 				}
-				tmp.Data.Stag = tag + "_" + strings.Replace(nm, "_", "", -1)
+				tmp.Data.SetTag(tag + "_" + strings.Replace(nm, "_", "", -1))
 			case <-time.After(2000 * time.Millisecond):
 				tmp.Valid = false
 				tmp.Error = "TO"

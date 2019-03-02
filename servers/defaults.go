@@ -3,6 +3,7 @@ package servers
 import (
 	"context"
 	"countingserver/spaces"
+	"countingserver/storage"
 	"log"
 	"net/http"
 	"os"
@@ -40,8 +41,15 @@ func setupHTTP() error {
 			for alsn := range sp {
 				path := subpath + "/" + strings.Trim(alsn, "_")
 				keys = append(keys, alsn)
-				log.Println("ServersSetup: Serving API", path)
-				hMap[1][path] = singleRegisterHTTPhandles(path)
+				switch strings.Trim(dtn, "_") {
+				case "sample":
+					log.Println("ServersSetup: Serving API", path)
+					hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieSample))
+				case "entry":
+					log.Println("ServersSetup: Serving API", path)
+					hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieEntries))
+				default:
+				}
 			}
 			hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys)
 		}

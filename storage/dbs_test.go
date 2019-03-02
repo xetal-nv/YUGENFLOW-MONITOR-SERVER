@@ -61,7 +61,7 @@ func Test_SerieEntries(t *testing.T) {
 		ts  int64
 		ll  int
 		val [][]int
-	}{b.tag, b.ts, len(b.val), b.val}
+	}{b.Stag, b.Sts, len(b.Sval), b.Sval}
 	c := new(SerieEntries)
 	d := r(bb)
 	if err := c.Extract(d); err != nil {
