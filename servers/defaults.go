@@ -36,7 +36,7 @@ func setupHTTP() error {
 	for dtn, dt := range spaces.LatestBankOut {
 		for spn, sp := range dt {
 			subpath := "/" + strings.Trim(dtn, "_") + "/" + strings.Trim(spn, "_")
-			log.Println("ServersSetup: Serving API", subpath)
+			//log.Println("ServersSetup: Serving API", subpath)
 			var keys []string
 			for alsn := range sp {
 				path := subpath + "/" + strings.Trim(alsn, "_")
@@ -51,7 +51,16 @@ func setupHTTP() error {
 				default:
 				}
 			}
-			hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys)
+			switch strings.Trim(dtn, "_") {
+			case "sample":
+				log.Println("ServersSetup: Serving API", subpath)
+				hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieSample))
+			case "entry":
+				log.Println("ServersSetup: Serving API", subpath)
+				hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieEntries))
+			default:
+			}
+			//hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys)
 		}
 	}
 

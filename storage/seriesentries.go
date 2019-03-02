@@ -9,9 +9,9 @@ import (
 )
 
 type SerieEntries struct {
-	Stag string  `json:"Stag"`
-	Sts  int64   `json:"Sts"`
-	Sval [][]int `json:"Sval"`
+	Stag string  `json:"tag"`
+	Sts  int64   `json:"ts"`
+	Sval [][]int `json:"val"`
 }
 
 func (ss *SerieEntries) SetTag(nm string) {
@@ -22,6 +22,8 @@ func (ss *SerieEntries) SetTag(nm string) {
 func (ss *SerieEntries) SetVal(v ...int) {
 	// this does nothing
 }
+
+func (ss *SerieEntries) NewEl() GenericData { return new(SerieEntries) }
 
 func (ss *SerieEntries) SetTs(ts int64) {
 	ss.Sts = ts

@@ -23,7 +23,6 @@ type RegisterBank struct {
 }
 
 // handles single register requests
-// TODO ERROR, it needs to be able to handle the different data types like sample and entry!!!
 func singleRegisterHTTPhandles(path string, tp storage.GenericData) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
@@ -66,8 +65,8 @@ func singleRegisterHTTPhandles(path string, tp storage.GenericData) http.Handler
 }
 
 // handles space requests
-// TOTO error see above and need to be in threads
-func spaceRegisterHTTPhandles(path string, als []string) http.Handler {
+// TODO need to be in threads
+func spaceRegisterHTTPhandles(path string, als []string, ref storage.GenericData) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
 	tag := ""
@@ -96,7 +95,7 @@ func spaceRegisterHTTPhandles(path string, als []string) http.Handler {
 
 		for _, nm := range als {
 			var tmp Register
-			tmp.Data = new(storage.SerieSample)
+			tmp.Data = ref.NewEl()
 			select {
 			case data := <-spaces.LatestBankOut[sp[0]][sp[1]][nm]:
 				if e := tmp.Data.Extract(data); e != nil {

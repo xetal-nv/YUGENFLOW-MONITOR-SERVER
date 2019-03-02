@@ -18,4 +18,5 @@ type GenericData interface {
 	SetTag(string)
 	SetVal(...int)
 	SetTs(int64)
+	NewEl() GenericData
 }

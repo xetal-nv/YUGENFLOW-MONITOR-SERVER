@@ -8,9 +8,9 @@ import (
 )
 
 type SerieSample struct {
-	Stag string `json:"Stag"`
-	Sts  int64  `json:"Sts"`
-	Sval int    `json:"Sval"`
+	Stag string `json:"tag"`
+	Sts  int64  `json:"ts"`
+	Sval int    `json:"val"`
 }
 
 func (ss *SerieSample) SetTag(nm string) {
@@ -22,6 +22,8 @@ func (ss *SerieSample) SetVal(v ...int) {
 		ss.Sval = v[1]
 	}
 }
+
+func (ss *SerieSample) NewEl() GenericData { return new(SerieSample) }
 
 func (ss *SerieSample) SetTs(ts int64) {
 	ss.Sts = ts
