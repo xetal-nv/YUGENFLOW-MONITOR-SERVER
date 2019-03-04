@@ -12,14 +12,21 @@ import (
 
 const SIZE int = 2
 
+type datafunc func() GenericData
+
 var addServer [SIZE]string                  // server addresses
 var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
 var crcUsed bool                            // CRC used flag
 var cmdchan chan []byte                     // channel to handler for receiving gate answers answer
 var cmdlen map[byte]int                     // provides length for legal server2gate commands
+var dataMap map[string]datafunc             // used for HTTP API handling of different data types
 
 func setupHTTP() error {
+
+	dataMap = make(map[string]datafunc)
+	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
+	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
 
 	hMap[0] = map[string]http.Handler{
 		"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
@@ -35,44 +42,30 @@ func setupHTTP() error {
 
 	for dtn, dt := range spaces.LatestBankOut {
 		ref := strings.Trim(dtn, "_")
+		keysSpaces := make(map[string][]string)
 		for spn, sp := range dt {
 			subpath := "/" + strings.Trim(dtn, "_") + "/" + strings.Trim(spn, "_")
 			//log.Println("ServersSetup: Serving API", subpath)
-			var keys []string
+			var keysType []string
 			for alsn := range sp {
 				path := subpath + "/" + strings.Trim(alsn, "_")
-				keys = append(keys, alsn)
+				keysType = append(keysType, alsn)
 
-				if _, ok := storage.DataMap[ref]; ok {
+				if _, ok := dataMap[ref]; ok {
 					log.Println("ServersSetup: Serving API", path)
-					hMap[1][path] = singleRegisterHTTPhandles(path, ref)
+					hMap[1][path] = singleRegisterHTTPhandler(path, ref)
 				}
-				//switch strings.Trim(dtn, "_") {
-				//case "sample":
-				//	log.Println("ServersSetup: Serving API", path)
-				//	hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieSample))
-				//case "entry":
-				//	log.Println("ServersSetup: Serving API", path)
-				//	hMap[1][path] = singleRegisterHTTPhandles(path, new(storage.SerieEntries))
-				//default:
-				//}
 			}
 			ref := strings.Trim(dtn, "_")
-			if _, ok := storage.DataMap[ref]; ok {
+			if _, ok := dataMap[ref]; ok {
 				log.Println("ServersSetup: Serving API", subpath)
-				hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, ref)
+				hMap[1][subpath] = spaceRegisterHTTPhandler(subpath, keysType, ref)
 			}
-			//switch strings.Trim(dtn, "_") {
-			//case "sample":
-			//	log.Println("ServersSetup: Serving API", subpath)
-			//	hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieSample))
-			//case "entry":
-			//	log.Println("ServersSetup: Serving API", subpath)
-			//	hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys, new(storage.SerieEntries))
-			//default:
-			//}
-			//hMap[1][subpath] = spaceRegisterHTTPhandles(subpath, keys)
+			keysSpaces[spn] = keysType
 		}
+		p := "/" + strings.Trim(dtn, "_")
+		log.Println("ServersSetup: Serving API", p)
+		hMap[1][p] = datatypeRegisterHTTPhandler(p, keysSpaces)
 	}
 
 	for i, v := range strings.Split(os.Getenv("HTTPSPORTS"), ",") {

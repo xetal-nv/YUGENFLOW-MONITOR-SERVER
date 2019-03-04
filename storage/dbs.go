@@ -16,6 +16,7 @@ import (
 func TimedIntDBSSetUp(fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence
 	force := false
+	_ = os.MkdirAll("dbs", os.ModePerm)
 	if !fd {
 		if os.Getenv("FORCEDBS") == "1" {
 			force = true
@@ -67,9 +68,6 @@ func TimedIntDBSSetUp(fd bool) error {
 	} else {
 		log.Printf("storage.TimedIntDBSClose: Databases not enables for current Debug mode\n")
 	}
-	DataMap = make(map[string]GenericData)
-	DataMap["sample"] = func() GenericData { return new(SerieSample) }()
-	DataMap["entry"] = func() GenericData { return new(SerieEntries) }()
 	return err
 }
 

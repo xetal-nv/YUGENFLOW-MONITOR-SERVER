@@ -27,8 +27,10 @@ func main() {
 	gates.SetUp()
 	spaces.SetUp()
 
-	// testting
-	go r()
+	// testing
+	if os.Getenv("DEVMODE") != "" {
+		go fake_devices()
+	}
 
 	// comment below for TCP debug
 	// Set-up and start servers
@@ -43,9 +45,10 @@ func main() {
 
 }
 
-func r() {
+func fake_devices() {
 	iter := 20
 	vals := []int{-1, 0, 1, 2, 127}
+	devices := []int{0, 1}
 
 	time.Sleep(2 * time.Second)
 	fmt.Println(" TEST -> Connect to TCP channel")
@@ -58,9 +61,10 @@ func r() {
 		conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})
 		for i := 0; i < iter; i++ {
 			rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
-			m := vals[rand.Intn(len(vals))]
+			data := vals[rand.Intn(len(vals))]
+			dev := devices[rand.Intn(len(devices))]
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, 1, byte(m)})
+			conn.Write([]byte{1, 0, byte(dev), byte(data)})
 			time.Sleep(1000 * time.Millisecond)
 
 		}
