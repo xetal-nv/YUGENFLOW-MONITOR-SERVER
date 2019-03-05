@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"playground/support"
+	"countingserver/support"
 )
 
 type DataCt struct {
