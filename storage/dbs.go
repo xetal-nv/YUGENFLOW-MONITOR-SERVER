@@ -93,7 +93,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 		// if not initialised it creates a new series
 		// sets the entry in tagStart
 		nt := []byte(tag + "0")
-		if c, e := read2(nt, 28, []int{}, db); e != nil {
+		if c, e := read(nt, 28, []int{}, db); e != nil {
 			found = false
 			a := Headerdata{}
 			a.fromRst = uint64(support.Timestamp())
@@ -133,7 +133,7 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	//if _, ok := tagStart[Stag]; !ok {
 	//	err = errors.New("Header not found")
 	//} else {
-	if c, e := read2([]byte(tag+"0"), 28, []int{}, db); e != nil {
+	if c, e := read([]byte(tag+"0"), 28, []int{}, db); e != nil {
 		err = e
 	} else {
 		err = hd.Unmarshal(c)
@@ -190,7 +190,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	return err
 }
 
-func ReadSerie(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(s0).String())
@@ -214,7 +214,7 @@ func ReadSerie(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byt
 			i1 := (ts1 - st[0]) / (st[1] * 1000)
 			for i <= i1 {
 				lab := []byte(tag + strconv.Itoa(int(i)))
-				if v, e := read2(lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), db); e == nil {
+				if v, e := read(lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), db); e == nil {
 					nts := st[0] + i*st[1]*1000
 					rt = append(rt, v)
 					rts = append(rts, nts)
@@ -253,7 +253,7 @@ func ReadLastN(head SampleData, ns int, offsets []int, sDB bool) (tag string, rt
 			i1 := (ts1 - st[0]) / (st[1] * 1000)
 			for i <= i1 {
 				lab := []byte(tag + strconv.Itoa(int(i)))
-				if v, e := read2(lab, head.MarshalSize(), offsets, db); e == nil {
+				if v, e := read(lab, head.MarshalSize(), offsets, db); e == nil {
 					nts := st[0] + i*st[1]*1000
 					rt = append(rt, v)
 					rts = append(rts, nts)
@@ -273,7 +273,7 @@ func GetDefinition(tag string) []int64 {
 
 // View read an entry, when l==0, it assumes it is a variable length element
 // and it retrieves the length from the element first (maximum number of fields in 16 bit)
-func read2(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
+func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 
 	read := func(id []byte, lb int, db badger.DB) (r []byte, err error) {
 		if lb > 0 {
@@ -283,7 +283,7 @@ func read2(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 				if err != nil {
 					return err
 				}
-				val, err := item.Value()
+				val, err := item.ValueCopy(nil)
 				if err != nil {
 					return err
 				}
@@ -315,43 +315,6 @@ func read2(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 	}
 	return
 }
-
-// View read an entry,
-//func read(id []byte, lb int, db badger.DB) (r []byte, err error) {
-//	if lb > 0 {
-//		r = make([]byte, lb)
-//		err = db.View(func(txn *badger.Txn) error {
-//			item, err := txn.Get(id)
-//			if err != nil {
-//				return err
-//			}
-//			Sval, err := item.Value()
-//			if err != nil {
-//				return err
-//			}
-//			copy(r, Sval)
-//			return nil
-//		})
-//	} else {
-//		err = errors.New("storage.DBS: error storing data with length <= 0")
-//	}
-//	return
-//}
-
-// View read a variable length entry (length given in the first 2 bytes)
-//func readVar16(id []byte, fs, md int, db badger.DB) (v []byte, err error) {
-//	var r []byte
-//	r, err = read(id, 2, db)
-//	if err == nil {
-//		vs := int(binary.LittleEndian.Uint16(r))*fs + 2 + md
-//		if r, err = read(id, vs, db); err == nil {
-//			v = make([]byte, len(r))
-//			copy(v, r)
-//		}
-//
-//	}
-//	return
-//}
 
 // Delete deletes an entry
 //func delEntry(id []byte, db badger.DB) error {

@@ -76,7 +76,7 @@ func Test_SerieEntries(t *testing.T) {
 
 	if e := update(b.Marshal(), []byte{34}, *currentDB, true); e == nil {
 		//offset := b.MarshalSizeModifiers()
-		val, err := read2([]byte{34}, b.MarshalSize(), b.MarshalSizeModifiers(), *currentDB)
+		val, err := read([]byte{34}, b.MarshalSize(), b.MarshalSizeModifiers(), *currentDB)
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -108,7 +108,7 @@ func Test_DBSraw(t *testing.T) {
 	defer TimedIntDBSClose()
 
 	if e := update([]byte{2, 0, 23, 44, 44, 56}, []byte{34}, *currentDB, true); e == nil {
-		val, err := read2([]byte{34}, 0, []int{2, 0}, *currentDB)
+		val, err := read([]byte{34}, 0, []int{2, 0}, *currentDB)
 		fmt.Println(val, err)
 	} else {
 		fmt.Println(e)
@@ -144,7 +144,7 @@ func Test_DBS(t *testing.T) {
 	}
 	s0 := SerieSample{"test", ts - 500000, 8}
 	s1 := SerieSample{"test", ts + 1000, 8}
-	if tag, ts, vals, e := ReadSerie(&s0, &s1, false); e != nil {
+	if tag, ts, vals, e := ReadSeries(&s0, &s1, false); e != nil {
 		t.Fatal(e)
 	} else {
 		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
