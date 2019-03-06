@@ -43,6 +43,7 @@ func devLogger(data chan DevData) {
 		if d.Tag != "skip" {
 			ct := time.Now().Local()
 			pwd, _ := os.Getwd()
+			_ = os.MkdirAll("log", os.ModePerm)
 			file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
 
 			if input, err := ioutil.ReadFile(file); err != nil {
