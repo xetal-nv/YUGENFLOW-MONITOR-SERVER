@@ -1,6 +1,7 @@
 package main
 
 import (
+	"countingserver/codings"
 	"countingserver/gates"
 	"countingserver/servers"
 	"countingserver/spaces"
@@ -64,7 +65,9 @@ func fake_devices() {
 			data := vals[rand.Intn(len(vals))]
 			dev := devices[rand.Intn(len(devices))]
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, byte(dev), byte(data), 0})
+			msg := []byte{1, 0, byte(dev), byte(data)}
+			msg = append(msg, codings.Crc8(msg))
+			conn.Write(msg)
 			time.Sleep(1000 * time.Millisecond)
 
 		}

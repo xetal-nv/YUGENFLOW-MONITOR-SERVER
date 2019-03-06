@@ -1,7 +1,9 @@
 package servers
 
 import (
+	"countingserver/codings"
 	"countingserver/gates"
+	"countingserver/support"
 	"fmt"
 	"io"
 	"log"
@@ -53,17 +55,32 @@ func handlerTCPRequest(conn net.Conn) {
 						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 					} else {
 						// Valid data
-						deviceId := int(data[1]) | int(data[0])<<8
-						if e := gates.SendData(deviceId, int(data[2])); e != nil {
-							log.Println(e)
+						valid := true
+						if crcUsed {
+							msg := append(cmd, data[:3]...)
+							crc := codings.Crc8(msg)
+							if crc != data[3] {
+								if support.Debug > 0 {
+									log.Print("servers.handlerTCPRequest: wrong CRC on received message\n")
+								}
+								valid = false
+							}
 						}
-						//if crcUsed {fmt.Println("CRC is ", data[3])}
+
+						if valid {
+							deviceId := int(data[1]) | int(data[0])<<8
+							if e := gates.SendData(deviceId, int(data[2])); e != nil {
+								log.Println(e)
+							}
+						}
 					}
 				default:
 					// verify it is a command answer, if not closes the TCP channel
+					// TODO add proper CRC8 support
 					if v, ok := cmdlen[cmd[0]]; ok {
 						if !crcUsed {
-							if v -= 1; v == 0 {
+							//if v -= 1; v == 0 {
+							if v == 1 {
 								cmdchan <- cmd
 							} else {
 								cmdd := make([]byte, v)
