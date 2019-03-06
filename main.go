@@ -64,7 +64,7 @@ func fake_devices() {
 			data := vals[rand.Intn(len(vals))]
 			dev := devices[rand.Intn(len(devices))]
 			//noinspection GoUnhandledErrorResult
-			conn.Write([]byte{1, 0, byte(dev), byte(data)})
+			conn.Write([]byte{1, 0, byte(dev), byte(data), 0})
 			time.Sleep(1000 * time.Millisecond)
 
 		}

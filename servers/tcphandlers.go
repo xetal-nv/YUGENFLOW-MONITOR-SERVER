@@ -57,6 +57,7 @@ func handlerTCPRequest(conn net.Conn) {
 						if e := gates.SendData(deviceId, int(data[2])); e != nil {
 							log.Println(e)
 						}
+						//if crcUsed {fmt.Println("CRC is ", data[3])}
 					}
 				default:
 					// verify it is a command answer, if not closes the TCP channel
