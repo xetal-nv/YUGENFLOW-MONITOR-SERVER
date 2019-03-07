@@ -40,8 +40,16 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 			}
 		}()
 
+		stc := ""
 		for p, h := range mh {
-			mx.Handle(p, h)
+			if h != nil {
+				mx.Handle(p, h)
+			} else {
+				stc = p
+			}
+		}
+		if stc != "" {
+			mx.PathPrefix("/").Handler(http.FileServer(http.Dir(stc)))
 		}
 
 		log.Println("startHTTP: Listening on server server: ", add)

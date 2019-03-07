@@ -29,9 +29,10 @@ func setupHTTP() error {
 	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
 
 	hMap[0] = map[string]http.Handler{
-		"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
-		"/message": tempHTTPfuncHandler("net/http is awesome"),
-		"/panic":   tempHTTPfuncHandler(""),
+		//"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
+		//"/message": tempHTTPfuncHandler("net/http is awesome"),
+		//"/panic":   tempHTTPfuncHandler(""),
+		"./html/": nil,
 	}
 
 	//hMap[1] = map[string]http.Handler{
