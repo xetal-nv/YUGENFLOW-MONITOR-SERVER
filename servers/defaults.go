@@ -18,9 +18,26 @@ var addServer [SIZE]string                  // server addresses
 var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
 var crcUsed bool                            // CRC used flag
-var cmdchan chan []byte                     // channel to handler for receiving gate answers answer
-var cmdlen map[byte]int                     // provides length for legal server2gate commands
+var cmdBuffLen int                          // length of buffer for command channels
+var sensorMac map[int][]byte                // map of sensor id to sensor MAC as provided by the sensor itself
+var sensorChan map[int]chan []byte          // channel to handler managing commands to each connected sensor
+var SensorCmd map[int]chan []byte           // externally visible channel to handler managing commands to each connected sensor
 var dataMap map[string]datafunc             // used for HTTP API handling of different data types
+var cmdAnswerLen = map[byte]int{            // provides length for legal server2gate commands
+	2:  1,
+	3:  1,
+	4:  1,
+	5:  1,
+	6:  1,
+	8:  1,
+	10: 1,
+	12: 1,
+	13: 1,
+	14: 1,
+	7:  3,
+	9:  3,
+	11: 3,
+}
 
 func setupHTTP() error {
 

@@ -13,8 +13,18 @@ import (
 
 func handlerTCPRequest(conn net.Conn) {
 
-	//noinspection GoUnhandledErrorResult
-	defer conn.Close()
+	var deviceId int
+	loop := true
+	idKnown := false
+	stop := make(chan bool)
+
+	defer func() {
+		if idKnown {
+			stop <- true
+		}
+		//noinspection GoUnhandledErrorResult
+		conn.Close()
+	}()
 
 	mac := make([]byte, 6)
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
@@ -26,7 +36,6 @@ func handlerTCPRequest(conn net.Conn) {
 		log.Printf("servers.handlerTCPRequest: new connected device %v::%v\n", ipc, mac)
 
 		// Start reading data
-		loop := true
 		for loop {
 			cmd := make([]byte, 1)
 			if _, e := conn.Read(cmd); e != nil {
@@ -68,33 +77,73 @@ func handlerTCPRequest(conn net.Conn) {
 						}
 
 						if valid {
-							deviceId := int(data[1]) | int(data[0])<<8
+							// starts handlerCommandAnswer once wkith the proper ID
+							if !idKnown {
+								deviceId = int(data[1]) | int(data[0])<<8
+								sensorMac[deviceId] = mac
+								sensorChan[deviceId] = make(chan []byte, cmdBuffLen)
+								SensorCmd[deviceId] = make(chan []byte, cmdBuffLen)
+								go handlerCommandAnswer(conn, sensorChan[deviceId], SensorCmd[deviceId], stop, deviceId)
+								idKnown = true
+							}
+							// first sample creates the command channels and handler if it does not exists
 							if e := gates.SendData(deviceId, int(data[2])); e != nil {
 								log.Println(e)
 							}
 						}
 					}
 				default:
-					// verify it is a command answer, if not closes the TCP channel
-					// TODO add proper CRC8 support
-					if v, ok := cmdlen[cmd[0]]; ok {
-						if !crcUsed {
+					if !idKnown {
+						loop = false
+					} else {
+						// verify it is a command answer, if not closes the TCP channel
+						if v, ok := cmdAnswerLen[cmd[0]]; ok {
+							if !crcUsed {
+								v -= 1
+							}
 							//if v -= 1; v == 0 {
-							if v == 1 {
-								cmdchan <- cmd
+							if v == 0 {
+								// this will never happen when CRC8 is used
+								//fmt.Printf("Received something else %v\n", cmd)
+								sensorChan[deviceId] <- cmd
+								// if the answer is incorrect the channel will be closed
+								if ans := <-sensorChan[deviceId]; ans != nil {
+									loop = false
+								}
 							} else {
 								cmdd := make([]byte, v)
 								if _, e := conn.Read(cmdd); e != nil {
 									loop = false
-									log.Printf("servers.handlerTCPRequest: error reading answer from %v::%v for command %v\n", ipc, mac, cmd)
+									log.Printf("servers.handlerTCPRequest: error reading answer from %v::%v "+
+										"for command %v\n", ipc, deviceId, cmd)
 									log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 								} else {
-									cmdchan <- append(cmd, cmdd...)
+									cmd = append(cmd, cmdd...)
+									valid := true
+									if crcUsed {
+										crc := codings.Crc8(cmd[:len(cmd)-1])
+										if crc != cmd[len(cmd)-1] {
+											if support.Debug > 0 {
+												log.Print("servers.handlerTCPRequest: wrong CRC on received message\n")
+											}
+											valid = false
+										}
+									}
+									if valid {
+										//fmt.Printf("Received something else %v\n", cmd)
+										sensorChan[deviceId] <- cmd
+										// if the answer is incorrect the channel will be closed
+										if ans := <-sensorChan[deviceId]; ans != nil {
+											loop = false
+										}
+									}
 								}
 							}
+						} else {
+							loop = false
 						}
-					} else {
-						loop = false
+					}
+					if !loop {
 						log.Printf("servers.handlerTCPRequest: illegal command %v sent by %v::%v\n", cmd[0], ipc, mac)
 						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 					}
@@ -105,15 +154,29 @@ func handlerTCPRequest(conn net.Conn) {
 }
 
 // TODO command handler as well the API channels
-func handlerCommandAnswer(c chan []byte) {
+func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id ...int) {
+	loop := true
 	defer func() {
 		if e := recover(); e != nil {
 			if e != nil {
-				handlerCommandAnswer(c)
+				if len(id) == 1 {
+					handlerCommandAnswer(conn, ci, ce, stop, id[0])
+				} else {
+					handlerCommandAnswer(conn, ci, ce, stop)
+				}
 			}
 		}
 	}()
-	for {
-		fmt.Printf("Received something else %v\n", <-c)
+	for loop {
+		select {
+		case d := <-ci:
+			fmt.Printf("Received from device %v\n", d)
+			ci <- nil
+		case d := <-ce:
+			fmt.Printf("Received from user %v\n", d)
+		case <-stop:
+			loop = false
+			fmt.Printf("Received termination signal\n")
+		}
 	}
 }

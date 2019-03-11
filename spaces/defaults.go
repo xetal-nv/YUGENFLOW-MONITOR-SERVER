@@ -1,10 +1,17 @@
 package spaces
 
+import "time"
+
 type avgInterval struct {
 	name     string
 	interval int
 }
 
+type closureRange struct {
+	start  time.Time
+	end    time.Time
+	offset bool
+}
 type pfunc func(string, spaceEntries) interface{}
 type cfunc func(string, chan interface{}, chan bool)
 type dtfuncs struct {
@@ -30,3 +37,4 @@ var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains a
 var ResetDBS map[string]map[string]map[string]chan bool             // reset channel for the DBS's
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
 var SpaceDef map[string][]int                                       // maps a space name to its entries
+var spaceTimes map[string]closureRange                              // maps a space name to its closure times

@@ -1,6 +1,7 @@
 package support
 
 import (
+	"strconv"
 	"strings"
 	"time"
 )
@@ -52,4 +53,32 @@ func StringLimit(a string, n int) string {
 		a = a[:n]
 	}
 	return a
+}
+
+func InClosureTime(start, end time.Time) (rt bool, err error) {
+	if start == end {
+		return false, nil
+	}
+	now := time.Now()
+	//TimeLayout := "15:04"
+	var ns time.Time
+	ns, err = time.Parse(TimeLayout, strconv.Itoa(now.Hour())+":"+strconv.Itoa(now.Minute()))
+	//srt, e2 := time.Parse(TimeLayout, start)
+	//ed, e3 := time.Parse(TimeLayout, end)
+	if err != nil {
+		return
+	} else {
+		rt = inTimeSpan(start, end, ns)
+	}
+	return
+}
+
+func inTimeSpan(start, end, check time.Time) bool {
+	if check.After(end) {
+		return false
+	}
+	if end.After(start) {
+		return check.After(start)
+	}
+	return check.Before(start)
 }

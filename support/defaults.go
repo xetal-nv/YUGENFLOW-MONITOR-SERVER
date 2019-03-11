@@ -11,6 +11,7 @@ var Debug int
 var LabelLength int
 
 const logfilename string = "logfile"
+const TimeLayout = "15:04"
 
 func SupportSetUp(envf string) {
 	if envf == "" {

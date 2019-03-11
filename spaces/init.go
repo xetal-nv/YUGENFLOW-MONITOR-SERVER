@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 func SetUp() {
@@ -56,6 +57,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	spaceChannels = make(map[string]chan spaceEntries)
 	entrySpaceChannels = make(map[int][]chan spaceEntries)
 	SpaceDef = make(map[string][]int)
+	spaceTimes = make(map[string]closureRange)
 
 	if data := os.Getenv("SPACES_NAMES"); data != "" {
 		spaces := strings.Split(data, " ")
@@ -72,6 +74,31 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 		// initialise the processing threads for each space
 		for _, name := range spaces {
+			var sprange closureRange
+			nl, _ := time.Parse(support.TimeLayout, "00:00")
+			rng := strings.Split(strings.Trim(os.Getenv("CLOSURE_"+name), ";"), ";")
+			sprange.start, sprange.end, sprange.offset = nl, nl, false
+			if len(rng) == 3 {
+				for i, v := range rng {
+					rng[i] = strings.Trim(v, " ")
+				}
+				if v, e := time.Parse(support.TimeLayout, rng[0]); e == nil {
+					sprange.start = v
+					if v, e := time.Parse(support.TimeLayout, rng[1]); e == nil {
+						sprange.end = v
+					} else {
+						sprange.start = nl
+					}
+				}
+				if v, e := strconv.Atoi(rng[2]); e == nil {
+					if v >= 0 {
+						sprange.offset = false
+					} else {
+						sprange.offset = true
+					}
+				}
+			}
+			spaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
 			//if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				name = support.StringLimit(name, support.LabelLength)

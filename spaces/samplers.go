@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// TODO there is an issue when the servewr is started and NO sample has been sent!!!
-
 // The algorithm is built on the ordered arrival of samples that is preserfved in a slice.
 // It means that x[i] is newer than x[i-1] and older than x[i+1]
 func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, avgID int, once sync.Once, tn, ntn int) {
@@ -32,7 +30,8 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	}
 	counter := spaceEntries{ts: support.Timestamp(), val: 0}
 	counter.entries = make(map[int]dataEntry)
-	support.DLog <- support.DevData{"counter starting " + spacename + samplerName, support.Timestamp(), "", stats}
+	support.DLog <- support.DevData{"counter starting " + spacename + samplerName,
+		support.Timestamp(), "", stats, false}
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spacename)
 	} else {
@@ -53,11 +52,25 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 			for {
 				select {
 				case sp := <-prevStageChan:
-					stats[0] += 1
+					if skip, e := support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+						if skip {
+							counter.val = 0
+							// Calculate the confidence measurement (number wrong data / number data
+							if sp.val != 0 {
+								stats[0] += 1
+								support.DLog <- support.DevData{"counter " + spacename + " current",
+									support.Timestamp(), "negative counter wrong/tots", stats, true}
+							}
+							sp.val = 0
+						}
+					}
+					stats[1] += 1
 					counter.val += sp.val
+					// Calculate the confidence measurement (number wrong data / number data
 					if counter.val < 0 {
-						stats[1] += 1
-						support.DLog <- support.DevData{"counter " + spacename + " current", support.Timestamp(), "negative counter tot/negs", stats}
+						stats[0] += 1
+						support.DLog <- support.DevData{"counter " + spacename + " current",
+							support.Timestamp(), "negative counter wrong/tots", stats, true}
 					}
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
@@ -129,7 +142,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					} else {
 						statsb[0] += 1
 						support.DLog <- support.DevData{"counter " + spacename + samplerName, support.Timestamp(),
-							"no samples branch count", statsb}
+							"no samples branch count", statsb, true}
 						// the following code will force the state to persist, it should not be reachable except
 						// at the beginning of time
 						counter.ts = cTS

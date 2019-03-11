@@ -11,19 +11,6 @@ import (
 
 //func setUpTCP() {
 func setUpTCP() {
-	cmdlen = map[byte]int{
-		2:  1,
-		3:  1,
-		4:  1,
-		5:  1,
-		6:  1,
-		8:  1,
-		10: 1,
-		12: 1,
-		7:  3,
-		9:  3,
-		11: 3,
-	}
 	if os.Getenv("CRC") == "1" {
 		crcUsed = true
 	} else {
@@ -33,11 +20,16 @@ func setUpTCP() {
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
 
 	if v, e := strconv.Atoi(os.Getenv("CMDBUFFSIZE")); e != nil {
-		cmdchan = make(chan []byte, 5)
+		cmdBuffLen = 5
+		//cmdchan = make(chan []byte, 5)
 	} else {
-		cmdchan = make(chan []byte, v)
+		cmdBuffLen = v
+		//cmdchan = make(chan []byte, v)
 	}
-	go handlerCommandAnswer(cmdchan)
+	//go handlerCommandAnswer(cmdchan)
+	sensorChan = make(map[int]chan []byte)
+	SensorCmd = make(map[int]chan []byte)
+	sensorMac = make(map[int][]byte)
 }
 func StartTCP(sd chan context.Context) {
 

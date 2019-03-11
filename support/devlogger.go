@@ -15,6 +15,7 @@ type DevData struct {
 	Ts   int64  // timestamp of last update
 	Note string // possible description
 	Data []int  // effective data
+	Aggr bool   // true if needs to be cumulative
 }
 
 var DLog chan DevData
@@ -25,6 +26,25 @@ func setUpDevLogger() {
 }
 
 func devLogger(data chan DevData) {
+
+	r := func(d DevData, dt ...[]int) (msg string) {
+		msg = d.Tag + ", " + strconv.Itoa(int(d.Ts)) + ", \"" + d.Note + "\""
+		if len(dt) == 0 {
+			for _, v := range d.Data {
+				msg += ", " + strconv.Itoa(v)
+			}
+		} else {
+			if len(dt[0]) != len(d.Data) {
+				return ""
+			}
+			for i, v := range d.Data {
+				msg += ", " + strconv.Itoa(v+dt[0][i])
+			}
+		}
+		msg = strings.Trim(msg, " ")
+		return
+	}
+
 	defer func() {
 		if e := recover(); e != nil {
 			if e != nil {
@@ -35,11 +55,6 @@ func devLogger(data chan DevData) {
 	}()
 	for {
 		d := <-data
-		msg := d.Tag + ", " + strconv.Itoa(int(d.Ts)) + ", \"" + d.Note + "\""
-		for _, v := range d.Data {
-			msg += ", " + strconv.Itoa(v)
-		}
-		msg = strings.Trim(msg, " ")
 		if d.Tag != "skip" {
 			ct := time.Now().Local()
 			pwd, _ := os.Getwd()
@@ -52,7 +67,7 @@ func devLogger(data chan DevData) {
 				} else {
 					//noinspection GoUnhandledErrorResult
 					defer fn.Close()
-					if _, err := fn.WriteString(msg + "\n"); err != nil {
+					if _, err := fn.WriteString(r(d) + "\n"); err != nil {
 						log.Println("support.devLogger: error creating log: ", err)
 					}
 				}
@@ -63,7 +78,16 @@ func devLogger(data chan DevData) {
 				for _, v := range strings.Split(strings.Trim(string(input), " "), "\n") {
 					spv := strings.Split(v, ",")
 					if strings.Trim(spv[0], " ") == d.Tag {
-						newc += msg + "\n"
+						var nd []int
+						for _, dt := range spv[3:] {
+							if val, e := strconv.Atoi(strings.Trim(dt, " ")); e == nil {
+								nd = append(nd, val)
+							} else {
+								log.Println("support.devLogger: error converting accruing data from log: ", e)
+								nd = append(nd, 0)
+							}
+						}
+						newc += r(d, nd) + "\n"
 						adfile = false
 					} else {
 						if tmp := strings.Trim(v, " "); tmp != "" {
@@ -73,7 +97,7 @@ func devLogger(data chan DevData) {
 					}
 				}
 				if adfile {
-					newc += msg + "\n"
+					newc += r(d) + "\n"
 				}
 				if err = ioutil.WriteFile(file, []byte(newc), 0644); err != nil {
 					log.Println("support.devLogger: error writing log: ", err)
