@@ -101,7 +101,6 @@ func handlerTCPRequest(conn net.Conn) {
 							if !crcUsed {
 								v -= 1
 							}
-							//if v -= 1; v == 0 {
 							if v == 0 {
 								// this will never happen when CRC8 is used
 								//fmt.Printf("Received something else %v\n", cmd)

@@ -27,7 +27,8 @@ func main() {
 	// testing
 	switch os.Getenv("DEVMODE") {
 	case "1":
-		go sensormodels.Randgen()
+		//go sensormodels.Randgen()
+		go sensormodels.SensorModel(0, 20, 5, []int{-1, 0, 1, 2, 127})
 	default:
 	}
 
@@ -35,11 +36,6 @@ func main() {
 	// Set-up and start servers
 	servers.StartServers()
 
-	// Uncomment below for TCP debug
-	//gates.SetUp()
-	//spaces.SetUp()
-	//servers.StartTCP(make(chan context.Context))
-
-	// for the API use the globals SpaceDef and EntryList to extract the entire installation logical structure
+	// TODO for the API use the globals SpaceDef and EntryList to extract the entire installation logical structure
 
 }

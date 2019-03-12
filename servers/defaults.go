@@ -58,6 +58,8 @@ func setupHTTP() error {
 
 	hMap[1] = make(map[string]http.Handler)
 
+	hMap[1]["/dvl"] = dvlHTTHandler()
+
 	for dtn, dt := range spaces.LatestBankOut {
 		ref := strings.Trim(dtn, "_")
 		keysSpaces := make(map[string][]string)

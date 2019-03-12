@@ -19,13 +19,17 @@ type DevData struct {
 }
 
 var DLog chan DevData
+var ODLog chan string
+
+const bufd = 50
 
 func setUpDevLogger() {
-	DLog = make(chan DevData, 50)
-	go devLogger(DLog)
+	DLog = make(chan DevData, bufd)
+	ODLog = make(chan string, bufd)
+	go devLogger(DLog, ODLog)
 }
 
-func devLogger(data chan DevData) {
+func devLogger(data chan DevData, out chan string) {
 
 	r := func(d DevData, dt ...[]int) (msg string) {
 		msg = d.Tag + ", " + strconv.Itoa(int(d.Ts)) + ", \"" + d.Note + "\""
@@ -49,18 +53,32 @@ func devLogger(data chan DevData) {
 		if e := recover(); e != nil {
 			if e != nil {
 				log.Printf("support.devLogger: recovering for crash\n ")
-				go devLogger(data)
+				go devLogger(data, out)
 			}
 		}
 	}()
 	for {
 		d := <-data
-		if d.Tag != "skip" {
-			ct := time.Now().Local()
-			pwd, _ := os.Getwd()
-			_ = os.MkdirAll("log", os.ModePerm)
-			file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
-
+		ct := time.Now().Local()
+		pwd, _ := os.Getwd()
+		_ = os.MkdirAll("log", os.ModePerm)
+		file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
+		switch d.Tag {
+		case "skip":
+		case "read":
+			var rt string
+			if input, err := ioutil.ReadFile(file); err != nil {
+				rt = "ERROR: File not fount"
+			} else {
+				rt = string(input)
+			}
+			go func() {
+				select {
+				case out <- rt:
+				case <-time.After(2 * time.Second):
+				}
+			}()
+		default:
 			if input, err := ioutil.ReadFile(file); err != nil {
 				if fn, err := os.Create(file); err != nil {
 					log.Println("support.devLogger: error creating log: ", err)
