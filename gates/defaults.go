@@ -19,9 +19,15 @@ type entryDef struct {
 	gates  map[int][]int     // maps gate id with its sensor composition
 }
 
-type scratchData struct {
+type scratchDataOld struct {
 	senData         map[int]sensorData // maps sensors ID with its latest used data
 	unusedSampleSum map[int]int        // maps sensors ID with the sum of unused samples received
+}
+
+type scratchData struct {
+	senData            map[int]sensorData // maps sensors ID with its latest used data
+	unusedSampleSumIn  map[int]int        // maps sensors ID with the sum of unused in samples received
+	unusedSampleSumOut map[int]int        // maps sensors ID with the sum of unused out samples received
 }
 
 // Internal variables - some might eb turned into local variables or removed if never used
