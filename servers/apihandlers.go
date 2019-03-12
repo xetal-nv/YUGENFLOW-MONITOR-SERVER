@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"countingserver/support"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,9 +11,9 @@ func getCurrentSampleAPI() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				if e != nil {
-					log.Println("servers.getCurrentSampleAPI: recovering from: ", e)
-				}
+				support.DLog <- support.DevData{"servers.getCurrentSampleAPI recover",
+					support.Timestamp(), "", []int{1}, true}
+				log.Println("servers.getCurrentSampleAPI: recovering from: ", e)
 			}
 		}()
 		//noinspection GoUnhandledErrorResult

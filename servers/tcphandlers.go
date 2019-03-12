@@ -22,6 +22,10 @@ func handlerTCPRequest(conn net.Conn) {
 		if idKnown {
 			stop <- true
 		}
+		go func() {
+			support.DLog <- support.DevData{"handlerTCPRequest recover",
+				support.Timestamp(), "", []int{1}, true}
+		}()
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
 	}()
@@ -157,12 +161,14 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 	loop := true
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				if len(id) == 1 {
-					handlerCommandAnswer(conn, ci, ce, stop, id[0])
-				} else {
-					handlerCommandAnswer(conn, ci, ce, stop)
-				}
+			go func() {
+				support.DLog <- support.DevData{"servers.handlerCommandAnswer: recovering server",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+			if len(id) == 1 {
+				handlerCommandAnswer(conn, ci, ce, stop, id[0])
+			} else {
+				handlerCommandAnswer(conn, ci, ce, stop)
 			}
 		}
 	}()

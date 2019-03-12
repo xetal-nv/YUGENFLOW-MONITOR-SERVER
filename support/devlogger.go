@@ -51,10 +51,12 @@ func devLogger(data chan DevData, out chan string) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				log.Printf("support.devLogger: recovering for crash\n ")
-				go devLogger(data, out)
-			}
+			go func() {
+				DLog <- DevData{"support.devLogger: recovering server",
+					Timestamp(), "", []int{1}, true}
+			}()
+			log.Printf("support.devLogger: recovering for crash\n ")
+			go devLogger(data, out)
 		}
 	}()
 	for {

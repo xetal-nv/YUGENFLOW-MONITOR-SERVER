@@ -35,9 +35,11 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				if e != nil {
-					log.Println("servers.singleRegisterHTTPhandler: died from: ", e)
-				}
+				go func() {
+					support.DLog <- support.DevData{"servers.singleRegisterHTTPhandler: recovering server",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("servers.singleRegisterHTTPhandler: died from: ", e)
 			}
 		}()
 		//fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
@@ -77,9 +79,11 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				if e != nil {
-					log.Println("servers.spaceRegisterHTTPhandler: recovering from: ", e)
-				}
+				go func() {
+					support.DLog <- support.DevData{"servers.spaceRegisterHTTPhandler: recovering server",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("servers.spaceRegisterHTTPhandler: recovering from: ", e)
 			}
 		}()
 
@@ -96,9 +100,11 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				if e != nil {
-					log.Println("servers.datatypeRegisterHTTPhandler: died from: ", e)
-				}
+				go func() {
+					support.DLog <- support.DevData{"servers.datatypeRegisterHTTPhandler: recovering server",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("servers.datatypeRegisterHTTPhandler: died from: ", e)
 			}
 		}()
 		//fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)

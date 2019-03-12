@@ -52,13 +52,15 @@ func StartTCP(sd chan context.Context) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				log.Println("servers.StartTCP: recovering server", port, "from:\n", e)
-				sd <- context.Background() // close running shutdown goroutine
-				//noinspection GoUnhandledErrorResult
-				l.Close()
-				StartTCP(sd)
-			}
+			go func() {
+				support.DLog <- support.DevData{"servers.StartTCP: recovering server",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+			log.Println("servers.StartTCP: recovering server", port, "from:\n", e)
+			sd <- context.Background() // close running shutdown goroutine
+			//noinspection GoUnhandledErrorResult
+			l.Close()
+			StartTCP(sd)
 		}
 	}()
 

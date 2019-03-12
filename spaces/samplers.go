@@ -38,10 +38,12 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 		// this is the core
 		defer func() {
 			if e := recover(); e != nil {
-				if e != nil {
-					log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
-					go sampler(spacename, prevStageChan, nextStageChan, avgID, once, tn, ntn)
-				}
+				go func() {
+					support.DLog <- support.DevData{"spaces.sampler: recovering server",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
+				go sampler(spacename, prevStageChan, nextStageChan, avgID, once, tn, ntn)
 			}
 		}()
 

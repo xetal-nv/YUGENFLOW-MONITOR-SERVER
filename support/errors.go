@@ -7,9 +7,7 @@ type fn func()
 func RunWithRecovery(f, r fn) {
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				r()
-			}
+			r()
 			go RunWithRecovery(f, r)
 		}
 	}()

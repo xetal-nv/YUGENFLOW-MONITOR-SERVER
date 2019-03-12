@@ -33,7 +33,11 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 		defer func() {
 			if e := recover(); e != nil {
 				if e != nil {
-					log.Println("startHTTP: recovering server ", add, " from:\n ", e)
+					go func() {
+						support.DLog <- support.DevData{"startHTTP: recovering server",
+							support.Timestamp(), "", []int{1}, true}
+					}()
+					log.Println("startHTTP: recovering server", add, " from:\n ", e)
 					sd <- context.Background() // close running shutdown goroutine
 					startHTTP(add, sd, mh)
 				}

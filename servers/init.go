@@ -2,6 +2,7 @@ package servers
 
 import (
 	"context"
+	"countingserver/support"
 	"log"
 	"os"
 	"os/signal"
@@ -17,20 +18,22 @@ func StartServers() {
 
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				log.Println("servers.StartServers: recovering from", e)
-				// terminating all running servers
-				for _, v := range sdServer {
-					if v != nil {
-						v <- context.Background()
-					}
+			go func() {
+				support.DLog <- support.DevData{"servers.StartServers: recovering server",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+			log.Println("servers.StartServers: recovering from", e)
+			// terminating all running servers
+			for _, v := range sdServer {
+				if v != nil {
+					v <- context.Background()
 				}
-				// terminating the current StartServers
-				if ready {
-					c1 <- true
-				}
-				StartServers()
 			}
+			// terminating the current StartServers
+			if ready {
+				c1 <- true
+			}
+			StartServers()
 		}
 	}()
 

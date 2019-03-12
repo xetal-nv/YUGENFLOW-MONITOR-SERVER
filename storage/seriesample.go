@@ -63,9 +63,7 @@ func (ss *SerieSample) Extract(i interface{}) error {
 	rv := reflect.ValueOf(i)
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				_ = ss.Extract(nil)
-			}
+			_ = ss.Extract(nil)
 		}
 	}()
 	z := SerieSample{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int(), Sval: int(rv.Field(2).Int())}

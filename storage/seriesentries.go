@@ -85,10 +85,8 @@ func (ss *SerieEntries) Extract(i interface{}) (err error) {
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				fmt.Println(e)
-				_ = ss.Extract(nil)
-			}
+			fmt.Println(e)
+			_ = ss.Extract(nil)
 		}
 	}()
 	rv := reflect.ValueOf(i)
@@ -112,10 +110,8 @@ func (ss *SerieEntries) Unmarshal(c []byte) error {
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				fmt.Println(e)
-				_ = ss.Unmarshal(c[0:2])
-			}
+			fmt.Println(e)
+			_ = ss.Unmarshal(c[0:2])
 		}
 	}()
 

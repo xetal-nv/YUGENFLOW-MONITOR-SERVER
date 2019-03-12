@@ -35,10 +35,12 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 	gateListEntry map[int][]int, scratchPad scratchData) {
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				log.Printf("gates.entryProcessing: recovering for entry thread %v due to %v\n ", id, e)
-				go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
-			}
+			go func() {
+				support.DLog <- support.DevData{"gates.entryProcessing",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+			log.Printf("gates.entryProcessing: recovering for entry thread %v due to %v\n ", id, e)
+			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
 		}
 	}()
 	log.Printf("gates.entry: Processing: setting entry %v\n", id)

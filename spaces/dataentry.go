@@ -26,9 +26,7 @@ func (de *dataEntry) Extract(i interface{}) error {
 	rv := reflect.ValueOf(i)
 	defer func() {
 		if e := recover(); e != nil {
-			if e != nil {
-				_ = de.Extract(nil)
-			}
+			_ = de.Extract(nil)
 		}
 	}()
 	z := dataEntry{id: strconv.Itoa(int(rv.Field(0).Int())), ts: rv.Field(2).Int(), val: int(rv.Field(1).Int())}
