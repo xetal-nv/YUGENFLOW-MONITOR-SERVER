@@ -49,8 +49,32 @@ type Jsonspace struct {
 	Entries []Jsonentry `json:"entries"`
 }
 
+var inst []Jsonspace
+
 // returns the installation information
 func infoHTTHandler() http.Handler {
+	fmt.Println("go")
+	for spn, spd := range spaces.SpaceDef {
+		var space Jsonspace
+		space.Id = strings.Replace(spn, "_", "", -1)
+		for _, enm := range spd {
+			var entry Jsonentry
+			entry.Id = enm
+			for gnm, gnd := range gates.EntryList[enm].Gates {
+				var gate Jsongate
+				gate.Id = gnm
+				for _, dvn := range gnd {
+					var device Jsondevs
+					device.Id = dvn
+					device.Reversed = gates.EntryList[enm].SenDef[dvn].Reversed
+					gate.Devices = append(gate.Devices, device)
+				}
+				entry.Gates = append(entry.Gates, gate)
+			}
+			space.Entries = append(space.Entries, entry)
+		}
+		inst = append(inst, space)
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -61,30 +85,6 @@ func infoHTTHandler() http.Handler {
 				log.Println("infoHTTHandler: recovering from: ", e)
 			}
 		}()
-
-		var inst []Jsonspace
-
-		for spn, spd := range spaces.SpaceDef {
-			var space Jsonspace
-			space.Id = strings.Replace(spn, "_", "", -1)
-			for _, enm := range spd {
-				var entry Jsonentry
-				entry.Id = enm
-				for gnm, gnd := range gates.EntryList[enm].Gates {
-					var gate Jsongate
-					gate.Id = gnm
-					for _, dvn := range gnd {
-						var device Jsondevs
-						device.Id = dvn
-						device.Reversed = gates.EntryList[enm].SenDef[dvn].Reversed
-						gate.Devices = append(gate.Devices, device)
-					}
-					entry.Gates = append(entry.Gates, gate)
-				}
-				space.Entries = append(space.Entries, entry)
-			}
-			inst = append(inst, space)
-		}
 
 		_ = json.NewEncoder(w).Encode(inst)
 	})
