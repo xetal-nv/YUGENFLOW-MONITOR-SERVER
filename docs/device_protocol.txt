@@ -2,6 +2,7 @@
 First 6 bytes of a connection is the mac address
 CRC optional
 
+error code is 0x
 
 gate message
 
@@ -99,7 +100,7 @@ server to sensor
 
 sensor to server
 
-0x09 counter(2)
+0x09 counter(2) CRC8(1)
 
 
 Reset IN counter
