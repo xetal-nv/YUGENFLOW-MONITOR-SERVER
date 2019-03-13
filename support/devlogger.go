@@ -32,7 +32,9 @@ func setUpDevLogger() {
 func devLogger(data chan DevData, out chan string) {
 
 	r := func(d DevData, dt ...[]int) (msg string) {
-		msg = d.Tag + ", " + strconv.Itoa(int(d.Ts)) + ", \"" + d.Note + "\""
+		date := time.Unix(d.Ts/1000, 0).Format("Mon Jan:_2 15:04:0 2006")
+		//msg = d.Tag + ", " + strconv.Itoa(int(d.Ts)) + ", \"" + d.Note + "\""
+		msg = d.Tag + ", " + date + ", \"" + d.Note + "\""
 		if len(dt) == 0 {
 			for _, v := range d.Data {
 				msg += ", " + strconv.Itoa(v)

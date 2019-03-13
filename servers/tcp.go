@@ -17,6 +17,14 @@ func setUpTCP() {
 		crcUsed = false
 	}
 
+	if v, e := strconv.Atoi(os.Getenv("DEVICETO")); e != nil {
+		timeout = 5
+		//cmdchan = make(chan []byte, 5)
+	} else {
+		timeout = v
+		//cmdchan = make(chan []byte, v)
+	}
+
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
 
 	if v, e := strconv.Atoi(os.Getenv("CMDBUFFSIZE")); e != nil {

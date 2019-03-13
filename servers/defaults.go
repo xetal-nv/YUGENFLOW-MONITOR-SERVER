@@ -38,6 +38,7 @@ var cmdAnswerLen = map[byte]int{            // provides length for legal server2
 	9:  3,
 	11: 3,
 }
+var timeout int
 
 func setupHTTP() error {
 

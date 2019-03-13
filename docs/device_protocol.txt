@@ -2,7 +2,7 @@
 First 6 bytes of a connection is the mac address
 CRC optional
 
-error code is 0x
+errors are ignored
 
 gate message
 

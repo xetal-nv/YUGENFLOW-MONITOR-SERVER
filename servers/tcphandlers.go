@@ -8,7 +8,9 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func handlerTCPRequest(conn net.Conn) {
@@ -136,7 +138,14 @@ func handlerTCPRequest(conn net.Conn) {
 										//fmt.Printf("Received something else %v\n", cmd)
 										sensorChan[deviceId] <- cmd
 										// if the answer is incorrect the channel will be closed
-										if ans := <-sensorChan[deviceId]; ans != nil {
+										select {
+										case ans := <-sensorChan[deviceId]:
+											if ans != nil {
+												loop = false
+											}
+										case <-time.After(time.Duration(timeout) * time.Second):
+											// internal issue, all goroutines will close on time out including the channel
+											go func() { <-sensorChan[deviceId] }()
 											loop = false
 										}
 									}
@@ -147,7 +156,7 @@ func handlerTCPRequest(conn net.Conn) {
 						}
 					}
 					if !loop {
-						log.Printf("servers.handlerTCPRequest: illegal command %v sent by %v::%v\n", cmd[0], ipc, mac)
+						log.Printf("servers.handlerTCPRequest: illegal command/operation %v sent by %v::%v\n", cmd[0], ipc, mac)
 						log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
 					}
 				}
@@ -156,9 +165,12 @@ func handlerTCPRequest(conn net.Conn) {
 	}
 }
 
-// TODO command handler as well the API channels
+// TODO to be tested with API
 func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id ...int) {
 	loop := true
+	if len(id) == 0 {
+		id = []int{-1}
+	}
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
@@ -174,14 +186,48 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 	}()
 	for loop {
 		select {
-		case d := <-ci:
-			fmt.Printf("Received from device %v\n", d)
-			ci <- nil
-		case d := <-ce:
-			fmt.Printf("Received from user %v\n", d)
+		case <-ci:
+			// unexpected command answer, illegal situation
+			go func() {
+				support.DLog <- support.DevData{"handlerCommandAnswer device " + strconv.Itoa(id[0]),
+					support.Timestamp(), "unsollcited command answer", []int{1}, true}
+			}()
+			ci <- []byte("error")
+		case cmd := <-ce:
+			if support.Debug > 0 {
+				fmt.Printf("Received %v from user for device %v\n", cmd, strconv.Itoa(id[0]))
+			}
+			var rt []byte
+			// we return nil in case of error
+			// verify if the command exists and send it to the device
+			if _, ok := cmdAnswerLen[cmd[0]]; ok {
+				ready := make(chan bool)
+				go func(ba []byte) {
+					if _, e := conn.Write(ba); e == nil {
+						ready <- true
+					} else {
+						ready <- false
+					}
+				}(cmd)
+				select {
+				case valid := <-ready:
+					if valid {
+						select {
+						case rt = <-ci:
+						case <-time.After(time.Duration(timeout) * time.Second):
+						}
+					}
+				case <-time.After(time.Duration(timeout) * time.Second):
+					// avoid hanging goroutines
+					go func() { <-ready }()
+				}
+			}
+			go func() { ce <- rt }()
 		case <-stop:
 			loop = false
-			fmt.Printf("Received termination signal\n")
+			if support.Debug > 0 {
+				fmt.Printf("Received termination signal, device %v\n", strconv.Itoa(id[0]))
+			}
 		}
 	}
 }
