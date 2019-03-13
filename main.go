@@ -36,6 +36,7 @@ func main() {
 	// Set-up and start servers
 	servers.StartServers()
 
-	// TODO for the API use the globals SpaceDef and EntryList to extract the entire installation logical structure
+	// TODO reporting API
+	// TODO command API
 
 }

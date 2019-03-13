@@ -51,22 +51,26 @@ func SensorModel(id, iter, mxdelay int, vals []int) {
 			//noinspection GoUnhandledErrorResult
 			msg := []byte{1, 0, byte(id), byte(data)}
 			msg = append(msg, codings.Crc8(msg))
-			_, _ = conn.Write(msg)
-			// fork for either sending a new data value or receiving a command
-			select {
-			case v := <-c:
-				crc := codings.Crc8(v[:len(v)-1])
-				if crc == v[len(v)-1] {
-					msg := []byte{v[0]}
-					if rt, ok := command[v[0]]; ok {
-						msg = append(msg, rt...)
+			if _, e = conn.Write(msg); e == nil {
+				// fork for either sending a new data value or receiving a command
+				select {
+				case v := <-c:
+					crc := codings.Crc8(v[:len(v)-1])
+					if crc == v[len(v)-1] {
+						msg := []byte{v[0]}
+						if rt, ok := command[v[0]]; ok {
+							msg = append(msg, rt...)
+						}
+						crc = codings.Crc8(msg)
+						msg = append(msg, crc)
+						_, e = conn.Write(msg)
 					}
-					crc = codings.Crc8(msg)
-					msg = append(msg, crc)
-					_, e = conn.Write(msg)
+				case <-time.After(time.Duration(del) * 1000 * time.Millisecond):
+					// continue to send data
 				}
-			case <-time.After(time.Duration(del) * 1000 * time.Millisecond):
-				// continue to send data
+			}
+			if e != nil {
+				break
 			}
 		}
 	}

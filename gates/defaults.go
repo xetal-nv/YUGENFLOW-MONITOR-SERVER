@@ -6,17 +6,17 @@ type sensorData struct {
 	val int   // data received
 }
 
-type sensorDef struct {
+type SensorDef struct {
 	id       int               // gate number
-	reversed bool              // reverse flag
+	Reversed bool              // reverse flag
 	gate     []int             //  gate ids
 	entry    []chan sensorData // entry channels for the sensors
 }
 
-type entryDef struct {
-	id     int               // entry id
-	senDef map[int]sensorDef // maps sensors ID with its definition
-	gates  map[int][]int     // maps gate id with its sensor composition
+type EntryDef struct {
+	Id     int               // entry Id
+	SenDef map[int]SensorDef // maps sensors ID with its definition
+	Gates  map[int][]int     // maps gate Id with its sensor composition
 }
 
 type scratchDataOld struct {
@@ -31,6 +31,6 @@ type scratchData struct {
 }
 
 // Internal variables - some might eb turned into local variables or removed if never used
-var sensorList map[int]sensorDef // all defined sensorList
-var gateList map[int][]int       // list of gates by device id, order is preserved from the configuration
-var EntryList map[int]entryDef   // maps devices to entries
+var sensorList map[int]SensorDef // all defined sensorList
+var gateList map[int][]int       // list of Gates by device Id, order is preserved from the configuration
+var EntryList map[int]EntryDef   // maps devices to entries

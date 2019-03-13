@@ -60,6 +60,7 @@ func setupHTTP() error {
 	hMap[1] = make(map[string]http.Handler)
 
 	hMap[1]["/dvl"] = dvlHTTHandler()
+	hMap[1]["/info"] = infoHTTHandler()
 
 	for dtn, dt := range spaces.LatestBankOut {
 		ref := strings.Trim(dtn, "_")

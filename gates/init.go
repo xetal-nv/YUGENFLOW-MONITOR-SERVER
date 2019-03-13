@@ -34,16 +34,16 @@ func SetUp() {
 			if vi, e := strconv.Atoi(v); e == nil {
 				revdev = append(revdev, vi)
 			} else {
-				log.Fatal("gateList.SetUp: fatal error converting reversed gate name ", v)
+				log.Fatal("gateList.SetUp: fatal error converting Reversed gate name ", v)
 			}
 		}
-		log.Println("gateList.SetUp: defined reversed gates", revdev)
+		log.Println("gateList.SetUp: defined Reversed Gates", revdev)
 	}
 	i := 0
 	if data := os.Getenv("GATE_" + strconv.Itoa(i)); data == "" {
 		log.Fatal("gateList.SetUp: fatal error, no gate has been defined")
 	} else {
-		sensorList = make(map[int]sensorDef)
+		sensorList = make(map[int]SensorDef)
 		gateList = make(map[int][]int)
 		for data != "" {
 			t := strings.Split(strings.Trim(data, " "), " ")
@@ -62,15 +62,15 @@ func SetUp() {
 						v.gate = append(v.gate, i)
 						sensorList[ind] = v
 					} else {
-						sensorList[ind] = sensorDef{id: ind, reversed: rev, gate: []int{i}}
+						sensorList[ind] = SensorDef{id: ind, Reversed: rev, gate: []int{i}}
 					}
 
 					gateList[i] = append(gateList[i], ind)
 				}
 			}
-			log.Printf("gateList.SetUp: defined gate %v as [id reversed]:\n", i)
+			log.Printf("gateList.SetUp: defined gate %v as [Id Reversed]:\n", i)
 			for _, v := range gateList[i] {
-				log.Printf("\t\t [%v %v]\n", sensorList[v].id, sensorList[v].reversed)
+				log.Printf("\t\t [%v %v]\n", sensorList[v].id, sensorList[v].Reversed)
 			}
 			i += 1
 			data = os.Getenv("GATE_" + strconv.Itoa(i))
@@ -80,17 +80,17 @@ func SetUp() {
 	if data := os.Getenv("ENTRY_" + strconv.Itoa(i)); data == "" {
 		log.Fatal("gateList.SetUp: fatal error, no entry has been defined")
 	} else {
-		EntryList = make(map[int]entryDef)
+		EntryList = make(map[int]EntryDef)
 		for data != "" {
-			t := entryDef{id: 1}
-			t.senDef = make(map[int]sensorDef)
-			t.gates = make(map[int][]int)
+			t := EntryDef{Id: 1}
+			t.SenDef = make(map[int]SensorDef)
+			t.Gates = make(map[int][]int)
 			entryChan := make(chan sensorData)
 			for _, v := range strings.Split(strings.Trim(data, " "), " ") {
 				if ind, ok := strconv.Atoi(v); ok != nil {
 					log.Fatal("gateList.SetUp: fatal error in definition of ENTRY ", i)
 				} else {
-					t.gates[ind] = gateList[ind]
+					t.Gates[ind] = gateList[ind]
 					for _, d := range gateList[ind] {
 						//EntryList[i] = append(EntryList[i], d)
 						tm := sensorList[d]
@@ -104,7 +104,7 @@ func SetUp() {
 							tm.entry = append(tm.entry, entryChan)
 							sensorList[d] = tm
 						}
-						t.senDef[d] = sensorList[d]
+						t.SenDef[d] = sensorList[d]
 					}
 				}
 			}

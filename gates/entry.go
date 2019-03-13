@@ -10,14 +10,14 @@ import (
 func entryProcessing(id int, in chan sensorData) {
 	var scratchPad scratchData
 	sensorListEntry := make(map[int]sensorData)
-	gateListEntry := EntryList[id].gates
+	gateListEntry := EntryList[id].Gates
 
 	scratchPad.senData = make(map[int]sensorData)
 	//scratchPad.unusedSampleSum = make(map[int]int)
 	scratchPad.unusedSampleSumIn = make(map[int]int)
 	scratchPad.unusedSampleSumOut = make(map[int]int)
 
-	for i := range EntryList[id].senDef {
+	for i := range EntryList[id].SenDef {
 		scratchPad.senData[i] = sensorData{i, 0, 0}
 		sensorListEntry[i] = sensorData{i, 0, 0}
 	}
@@ -36,14 +36,14 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"gates.entryProcessing",
+				support.DLog <- support.DevData{"Gates.entryProcessing",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			log.Printf("gates.entryProcessing: recovering for entry thread %v due to %v\n ", id, e)
+			log.Printf("Gates.entryProcessing: recovering for entry thread %v due to %v\n ", id, e)
 			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
 		}
 	}()
-	log.Printf("gates.entry: Processing: setting entry %v\n", id)
+	log.Printf("Gates.entry: Processing: setting entry %v\n", id)
 	for {
 		data := <-in
 		nv := data.val
@@ -123,8 +123,8 @@ func trackPeopleOld(id int, sensorListEntry map[int]sensorData, gateListEntry ma
 	}
 
 	if support.Debug > 0 {
-		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", id, sensorListEntry)
-		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", id, gateListEntry)
+		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", Id, sensorListEntry)
+		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", Id, gateListEntry)
 		fmt.Printf("Entry %v has scratchPad:\n\t%v\n", id, scratchPad)
 	}
 
@@ -213,8 +213,8 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 	}
 
 	if support.Debug > 0 {
-		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", id, sensorListEntry)
-		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", id, gateListEntry)
+		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", Id, sensorListEntry)
+		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", Id, gateListEntry)
 		fmt.Printf("Entry %v has scratchPad:\n\t%v\n", id, scratchPad)
 	}
 

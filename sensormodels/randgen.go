@@ -32,7 +32,9 @@ func Randgen() {
 			//noinspection GoUnhandledErrorResult
 			msg := []byte{1, 0, byte(dev), byte(data)}
 			msg = append(msg, codings.Crc8(msg))
-			conn.Write(msg)
+			if _, e := conn.Write(msg); e != nil {
+				break
+			}
 			time.Sleep(1000 * time.Millisecond)
 			if i == 5 {
 				msg := []byte{2}

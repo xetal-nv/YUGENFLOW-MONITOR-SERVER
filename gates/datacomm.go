@@ -12,9 +12,9 @@ func SendData(dev int, val int) error {
 	if v, ok := sensorList[dev]; ok {
 
 		if v.entry == nil {
-			return errors.New("gates.SendData: error device not valid, ID: " + strconv.Itoa(dev))
+			return errors.New("Gates.SendData: error device not valid, ID: " + strconv.Itoa(dev))
 		}
-		if v.reversed {
+		if v.Reversed {
 			if val != 127 {
 				val = 256 - val
 			}
@@ -34,6 +34,6 @@ func SendData(dev int, val int) error {
 		}
 		return nil
 	} else {
-		return errors.New("gates.SendData: error device not valid, ID: " + strconv.Itoa(dev))
+		return errors.New("Gates.SendData: error device not valid, ID: " + strconv.Itoa(dev))
 	}
 }
