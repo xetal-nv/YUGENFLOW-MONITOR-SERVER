@@ -205,7 +205,7 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 	ts1 := s1.Ts()
 	if st, ok := tagStart[tag]; ok {
 		if ts1 != st[0] {
-			if ts0 <= st[0] {
+			if ts0 <= (st[0] + st[1]*1000) {
 				ts0 = st[0] + st[1]*1000 // offset to skip the header
 			}
 			i := (ts0 - st[0]) / (st[1] * 1000)
