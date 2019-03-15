@@ -14,6 +14,39 @@ func Test_Setup(t *testing.T) {
 	TimedIntDBSClose()
 }
 
+func Test_Test_SerieSampleMU(t *testing.T) {
+	support.LabelLength = 8
+	b := SerieSample{"entry___noname__current_", 123, -13}
+	fmt.Println(b)
+	c := b.Marshal()
+	fmt.Println(c, len(c))
+	d := new(SerieSample)
+	if e := d.Unmarshal(c); e == nil {
+		fmt.Println(*d)
+	} else {
+		fmt.Println(e)
+	}
+}
+
+func Test_Test_SerieEntriesMU(t *testing.T) {
+	var a [][]int
+	support.LabelLength = 8
+	a = append(a, []int{0, -1})
+	a = append(a, []int{4, 5})
+	a = append(a, []int{7, -8})
+	a = append(a, []int{6, 3})
+	b := SerieEntries{"entry___noname__current_", 123, a}
+	fmt.Println(b)
+	c := b.Marshal()
+	fmt.Println(c, len(c))
+	d := new(SerieEntries)
+	if e := d.Unmarshal(c); e == nil {
+		fmt.Println(*d)
+	} else {
+		fmt.Println(e)
+	}
+}
+
 func Test_SerieSample(t *testing.T) {
 
 	a := Headerdata{}
@@ -49,7 +82,7 @@ func Test_SerieEntries(t *testing.T) {
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, 8})
 	a = append(a, []int{6, 3})
-	b := SerieEntries{support.StringLimit("test", support.LabelLength), 123, a}
+	b := SerieEntries{support.StringLimit("entry___notame__current_", support.LabelLength), 123, a}
 	fmt.Println(b)
 	fmt.Println(b.Marshal())
 
@@ -88,11 +121,11 @@ func Test_SerieEntries(t *testing.T) {
 		fmt.Println(e)
 	}
 
-	if f, err := SetSeries(support.StringLimit("test", support.LabelLength), 2, true); err != nil {
+	if f, err := SetSeries(support.StringLimit("entry___notame__current_", support.LabelLength), 2, true); err != nil {
 		t.Fatal(err)
 	} else {
 		if f {
-			fmt.Println("Serie definition:", GetDefinition(support.StringLimit("test", support.LabelLength)))
+			fmt.Println("Serie definition:", GetDefinition(support.StringLimit("entry___notame__current_", support.LabelLength)))
 		}
 	}
 
@@ -121,7 +154,7 @@ func Test_DBS(t *testing.T) {
 	}
 	defer TimedIntDBSClose()
 
-	if f, err := SetSeries("test", 2, false); err != nil {
+	if f, err := SetSeries("entry___notame__current_", 2, false); err != nil {
 		t.Fatal(err)
 	} else {
 		if f {
@@ -129,7 +162,7 @@ func Test_DBS(t *testing.T) {
 		}
 	}
 
-	if h, e := ReadHeader("test", false); e != nil {
+	if h, e := ReadHeader("entry___notame__current_", false); e != nil {
 		t.Fatal(e)
 	} else {
 		fmt.Println("HEADER: ", h)
@@ -138,25 +171,26 @@ func Test_DBS(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	ts := support.Timestamp()
 	ts = support.Timestamp()
-	a := SerieSample{"test", ts, 11}
+	a := SerieSample{"entry___notame__current_", ts, 11}
 	if err := StoreSample(&a, false, true); err != nil {
 		t.Fatal(err)
 	}
-	s0 := SerieSample{"test", ts - 500000, 8}
-	s1 := SerieSample{"test", ts + 1000, 8}
+	s0 := SerieSample{"entry___notame__current_", ts - 500000, 8}
+	s1 := SerieSample{"entry___notame__current_", ts + 1000, 8}
 	if tag, ts, vals, e := ReadSeries(&s0, &s1, false); e != nil {
 		t.Fatal(e)
 	} else {
-		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
+		fmt.Println(s1.UnmarshalSliceSS(tag, ts, vals))
 	}
 
-	if tag, ts, vals, e := ReadLastN(&s1, 3, []int{}, false); e != nil {
+	//if tag, ts, vals, e := ReadLastN(&s1, 3, []int{}, false); e != nil {
+	if tag, ts, vals, e := ReadLastN(&s1, 100, false); e != nil {
 		t.Fatal(e)
 	} else {
-		fmt.Println(UnmarshalSliceSS(tag, ts, vals))
+		fmt.Println(s1.UnmarshalSliceSS(tag, ts, vals))
 	}
 
-	if h, e := ReadHeader("test", false); e != nil {
+	if h, e := ReadHeader("entry___notame__current_", false); e != nil {
 		t.Fatal(e)
 	} else {
 		fmt.Println("HEADER: ", h)

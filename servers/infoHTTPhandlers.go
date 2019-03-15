@@ -8,11 +8,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
 // returns the DevLog
 func dvlHTTHandler() http.Handler {
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -23,6 +29,12 @@ func dvlHTTHandler() http.Handler {
 				log.Println("dvlHTTHandler: recovering from: ", e)
 			}
 		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
 		//noinspection GoUnhandledErrorResult
 		support.DLog <- support.DevData{Tag: "read"}
 		_, _ = fmt.Fprintf(w, <-support.ODLog)
@@ -53,7 +65,6 @@ var inst []Jsonspace
 
 // returns the installation information
 func infoHTTHandler() http.Handler {
-	fmt.Println("go")
 	for spn, spd := range spaces.SpaceDef {
 		var space Jsonspace
 		space.Id = strings.Replace(spn, "_", "", -1)
@@ -75,6 +86,12 @@ func infoHTTHandler() http.Handler {
 		}
 		inst = append(inst, space)
 	}
+
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -85,6 +102,11 @@ func infoHTTHandler() http.Handler {
 				log.Println("infoHTTHandler: recovering from: ", e)
 			}
 		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
 
 		_ = json.NewEncoder(w).Encode(inst)
 	})

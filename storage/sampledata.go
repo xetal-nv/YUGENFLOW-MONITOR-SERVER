@@ -10,4 +10,5 @@ type SampleData interface {
 	MarshalSizeModifiers() []int
 	Extract(interface{}) error
 	Valid() bool
+	UnmarshalSliceSS(string, []int64, [][]byte) []SampleData
 }

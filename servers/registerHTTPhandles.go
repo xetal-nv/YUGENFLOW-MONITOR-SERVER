@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -32,6 +33,12 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 	}
 	tag = tag[:len(tag)-1]
 	rt := Register{true, "", dataMap[ref]()}
+
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -45,7 +52,9 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		//fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
 
 		//Allow CORS here By * or specific origin
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
 
 		select {
 		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
@@ -76,6 +85,10 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 	}
 	tag = tag[:len(tag)-1]
 
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -88,7 +101,9 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 		}()
 
 		//Allow CORS here By * or specific origin
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
 
 		_ = json.NewEncoder(w).Encode(retrieveSpace(tag, sp, als, ref))
 
@@ -97,6 +112,12 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 
 func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handler {
 	tag := strings.Replace(path[1:], "_", "", -1)
+
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -110,7 +131,9 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 		//fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
 
 		//Allow CORS here By * or specific origin
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
 
 		var rt []RegisterBank
 		for sp, als := range rg {

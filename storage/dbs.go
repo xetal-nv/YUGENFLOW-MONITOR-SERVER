@@ -119,7 +119,6 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 		}
 		//}
 	}
-	//fmt.Println(tagStart)
 	return found, err
 }
 
@@ -180,7 +179,6 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 		err = update(val, []byte(lab), db, false)
 	} else {
 		err = errors.New("Serie " + tag + " not found")
-		//fmt.Println(d,sDB)
 	}
 	if len(updatehead) == 1 {
 		if updatehead[0] {
@@ -228,8 +226,8 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 	return tag, rts, rt, err
 }
 
-func ReadLastN(head SampleData, ns int, offsets []int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
-	if head.MarshalSize() == 0 && len(offsets) != 2 {
+func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+	if head.MarshalSize() == 0 && len(head.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
 		return
 	}
@@ -245,20 +243,17 @@ func ReadLastN(head SampleData, ns int, offsets []int, sDB bool) (tag string, rt
 		if ts1 <= st[0] {
 			err = errors.New("storage.ReadLastN: illegal end series point provided")
 		} else {
-			ts0 := ts1 - int64(ns*1000)*st[1]
-			if ts0 <= st[0] {
-				ts0 = st[0] + st[1]*1000 // offset to skip the header
-			}
-			i := (ts0 - st[0]) / (st[1] * 1000)
 			i1 := (ts1 - st[0]) / (st[1] * 1000)
-			for i <= i1 {
-				lab := []byte(tag + strconv.Itoa(int(i)))
-				if v, e := read(lab, head.MarshalSize(), offsets, db); e == nil {
-					nts := st[0] + i*st[1]*1000
-					rt = append(rt, v)
-					rts = append(rts, nts)
+			for j := ns; j > 0; j-- {
+				i := i1 - int64(j)
+				if i > 0 {
+					lab := []byte(tag + strconv.Itoa(int(i)))
+					if v, e := read(lab, head.MarshalSize(), head.MarshalSizeModifiers(), db); e == nil {
+						nts := st[0] + i*st[1]*1000
+						rt = append(rt, v)
+						rts = append(rts, nts)
+					}
 				}
-				i += 1
 			}
 		}
 	} else {
@@ -300,7 +295,6 @@ func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 		return read(id, l, db)
 	} else {
 		if l == 0 && len(offset) == 2 {
-			//return readVar16(id, offset[0], offset[1], db)
 			var r []byte
 			r, err = read(id, 2, db)
 			if err == nil {

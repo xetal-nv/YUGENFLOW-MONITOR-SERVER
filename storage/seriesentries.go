@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"countingserver/support"
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/pkg/errors"
@@ -41,7 +41,7 @@ func (ss *SerieEntries) Valid() bool {
 func (ss *SerieEntries) MarshalSize() int { return 0 }
 
 // returns the recurrent data size (Sval) and the offset data size for database read
-func (ss *SerieEntries) MarshalSizeModifiers() []int { return []int{8, support.LabelLength + 8} }
+func (ss *SerieEntries) MarshalSizeModifiers() []int { return []int{8, 8} }
 
 func (ss *SerieEntries) Ts() int64 { return ss.Sts }
 
@@ -50,12 +50,11 @@ func (ss *SerieEntries) Tag() string { return ss.Stag }
 func (ss *SerieEntries) Val() [][]int { return ss.Sval }
 
 // FORMAT fiels:N_units:unit_in_bytes
-// FORMAT (LENGTH:2:1, TAG:support.LabelLength:1, TS:1:1, VAL:(LENGTH):8
+// FORMAT (LENGTH:2:1, TS:1:1, VAL:(LENGTH):8
 func (ss *SerieEntries) Marshal() (rt []byte) {
 	ll := len(ss.Sval)
 	msg := make([]byte, 2)
 	binary.LittleEndian.PutUint16(msg, uint16(ll))
-	msg = append(msg, []byte(ss.Stag)...)
 	hp := make([]byte, 8)
 	binary.LittleEndian.PutUint64(hp, uint64(ss.Sts))
 	msg = append(msg, hp...)
@@ -102,11 +101,11 @@ func (ss *SerieEntries) Extract(i interface{}) (err error) {
 }
 
 // FORMAT fiels:N_units:unit_in_bytes
-// FORMAT (LENGTH:2:1, TAG:support.LabelLength:1, TS:1:1, VAL:(LENGTH):8
+// FORMAT (LENGTH:2:1, TS:1:1, VAL:(LENGTH):8
 func (ss *SerieEntries) Unmarshal(c []byte) error {
 	offsets := ss.MarshalSizeModifiers()
 	if len(c[2:]) != (int(binary.LittleEndian.Uint16(c[0:2]))*offsets[0] + offsets[1]) {
-		return errors.New("storage.SerieEntries.Unmarshal illegale code size")
+		return errors.New("storage.SerieEntries.Unmarshal illegale code size ")
 	}
 	defer func() {
 		if e := recover(); e != nil {
@@ -115,26 +114,38 @@ func (ss *SerieEntries) Unmarshal(c []byte) error {
 		}
 	}()
 
-	ss.Stag = string(c[2:(2 + support.LabelLength)])
-	ss.Sts = int64(binary.LittleEndian.Uint64(c[(2 + support.LabelLength):(2 + offsets[1])]))
+	ss.Sts = int64(binary.LittleEndian.Uint64(c[2:(2 + offsets[1])]))
 	for n := (2 + offsets[1]); n < len(c); n += offsets[0] {
-		val := []int{int(binary.LittleEndian.Uint32(c[n : n+4])), int(binary.LittleEndian.Uint32(c[n+4 : n+8]))}
-		ss.Sval = append(ss.Sval, val)
+		v1 := c[n : n+4]
+		v2 := c[n+4 : n+8]
+		var g, gv int32
+		buf := bytes.NewReader(v1)
+		if err := binary.Read(buf, binary.LittleEndian, &g); err != nil {
+			return errors.New("storage.SerieSample.Unmarshal: binary.Read failed: " + err.Error())
+		}
+		buf = bytes.NewReader(v2)
+		if err := binary.Read(buf, binary.LittleEndian, &gv); err != nil {
+			return errors.New("storage.SerieSample.Unmarshal: binary.Read failed: " + err.Error())
+		}
+		ss.Sval = append(ss.Sval, []int{int(g), int(gv)})
 	}
 	return nil
 }
 
-//func UnmarshalSliceSE(Stag string, Sts []int64, vals [][]byte) (rt []SerieEntries) { // TBD
-//	for i, mt := range vals {
-//		a := new(SerieEntries)
-//		if e := a.Unmarshal(mt); e == nil {
-//			a.Stag = Stag
-//			a.Sts = Sts[i]
-//			rt = append(rt, *a)
-//		}
-//	}
-//	return rt
-//}
+func (ss *SerieEntries) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SampleData) {
+	for i, mt := range vals {
+		a := new(SerieEntries)
+		//fmt.Println(mt)
+		//fmt.Println(a.Unmarshal(mt))
+		if e := a.Unmarshal(mt); e == nil {
+			//fmt.Println(mt, a)
+			a.Stag = tag
+			a.Sts = ts[i]
+			rt = append(rt, a)
+		}
+	}
+	return rt
+}
 
 func SeriesEntryDBS(id string, in chan interface{}, rst chan bool) {
 

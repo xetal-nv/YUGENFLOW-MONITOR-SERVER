@@ -91,13 +91,13 @@ func (ss *SerieSample) Unmarshal(c []byte) error {
 	return nil
 }
 
-func UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SerieSample) {
+func (ss *SerieSample) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SampleData) {
 	for i, mt := range vals {
 		a := new(SerieSample)
 		if e := a.Unmarshal(mt); e == nil {
 			a.Stag = tag
 			a.Sts = ts[i]
-			rt = append(rt, *a)
+			rt = append(rt, a)
 		}
 	}
 	return rt
