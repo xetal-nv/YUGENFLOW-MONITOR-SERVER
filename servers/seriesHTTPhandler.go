@@ -3,6 +3,7 @@ package servers
 import (
 	"countingserver/storage"
 	"countingserver/support"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,7 +16,14 @@ var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
 
 // http://localhost:8090/series?type=sample?space=noname?analysis=current?start=12345?end=12345
 
-// returns the DevLog
+// returns a series of data. it accepts the following parameters
+// type : data type
+// space : space name
+// analysis : analysis name
+// start : initial time stamp of the range
+// end : last time stamp of the range
+// last : number of lsst samples to return
+// last and (start.end) are mutually exclusive with last having priority in case they are all specified
 func seriesHTTPhandler() http.Handler {
 
 	params := make(map[string]string)
@@ -32,10 +40,10 @@ func seriesHTTPhandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"dvlHTTHandler",
+					support.DLog <- support.DevData{"seriesHTTPhandler",
 						support.Timestamp(), "", []int{1}, true}
 				}()
-				log.Println("dvlHTTHandler: recovering from: ", e)
+				log.Println("seriesHTTPhandler: recovering from: ", e)
 			}
 		}()
 
@@ -72,10 +80,8 @@ func seriesHTTPhandler() http.Handler {
 					return
 				}
 				if tag, ts, vals, e := storage.ReadLastN(s, num, params["analysis"] != "current"); e == nil {
-					// TODO format into JSON !!
-					for _, v := range s.UnmarshalSliceSS(tag, ts, vals) {
-						fmt.Fprintf(w, "%v\n", v)
-					}
+					rt := s.UnmarshalSliceSS(tag, ts, vals)
+					_ = json.NewEncoder(w).Encode(rt)
 				}
 			}
 		} else {
