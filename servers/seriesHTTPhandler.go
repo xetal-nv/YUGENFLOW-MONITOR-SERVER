@@ -4,7 +4,6 @@ import (
 	"countingserver/storage"
 	"countingserver/support"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,8 +12,6 @@ import (
 )
 
 var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
-
-// http://localhost:8090/series?type=sample?space=noname?analysis=current?start=12345?end=12345
 
 // returns a series of data. it accepts the following parameters
 // type : data type
@@ -69,8 +66,8 @@ func seriesHTTPhandler() http.Handler {
 		label += support.StringLimit(params["space"], support.LabelLength)
 		label += support.StringLimit(params["analysis"], support.LabelLength)
 		if params["last"] != "" {
+			var s storage.SampleData
 			if num, e := strconv.Atoi(params["last"]); e == nil {
-				var s storage.SampleData
 				switch params["type"] {
 				case "sample":
 					s = &storage.SerieSample{Stag: label, Sts: support.Timestamp()}
@@ -85,8 +82,34 @@ func seriesHTTPhandler() http.Handler {
 				}
 			}
 		} else {
-			// TODO HERE range series
-			fmt.Fprintf(w, "range read %v\n", label)
+			if params["start"] != "" && params["end"] != "" {
+				var st, en int64
+				var e error
+				if st, e = strconv.ParseInt(params["start"], 10, 64); e != nil {
+					return
+				}
+				if en, e = strconv.ParseInt(params["end"], 10, 64); e != nil {
+					return
+				}
+				if st >= en {
+					return
+				}
+				var s0, s1 storage.SampleData
+				switch params["type"] {
+				case "sample":
+					s0 = &storage.SerieSample{Stag: label, Sts: st}
+					s1 = &storage.SerieSample{Stag: label, Sts: en}
+				case "entry":
+					s0 = &storage.SerieEntries{Stag: label, Sts: st}
+					s1 = &storage.SerieEntries{Stag: label, Sts: en}
+				default:
+					return
+				}
+				if tag, ts, vals, e := storage.ReadSeries(s0, s1, params["analysis"] != "current"); e == nil {
+					rt := s0.UnmarshalSliceSS(tag, ts, vals)
+					_ = json.NewEncoder(w).Encode(rt)
+				}
+			}
 		}
 	})
 }

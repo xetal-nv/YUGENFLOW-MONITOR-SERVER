@@ -155,10 +155,12 @@ func Test_DBS(t *testing.T) {
 	defer TimedIntDBSClose()
 
 	if f, err := SetSeries("entry___notame__current_", 2, false); err != nil {
+		fmt.Println(f)
 		t.Fatal(err)
 	} else {
+		fmt.Println(f)
 		if f {
-			fmt.Println("Serie definition:", GetDefinition("test"))
+			fmt.Println("Serie definition:", GetDefinition("entry___notame__current_"))
 		}
 	}
 

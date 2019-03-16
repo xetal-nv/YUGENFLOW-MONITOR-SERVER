@@ -92,8 +92,9 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 	if _, ok := tagStart[tag]; !ok {
 		// if not initialised it creates a new series
 		// sets the entry in tagStart
-		nt := []byte(tag + "0")
-		if c, e := read(nt, 28, []int{}, db); e != nil {
+		//fmt.Println(nt, step, sDB)
+		if c, e := ReadHeader(tag, sDB); e != nil {
+			nt := []byte(tag + "header")
 			found = false
 			a := Headerdata{}
 			a.fromRst = uint64(support.Timestamp())
@@ -105,20 +106,12 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 			tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
 			log.Printf("register.SetSeries: new series %v:%v added\n", tag, step)
 		} else {
-			//if c, e := read(nt, 28, db); e != nil {
-			//	err = e
-			//} else {
-			var a Headerdata
-			if e := a.Unmarshal(c); e != nil {
-				err = e
-			} else {
-				tagStart[tag] = []int64{int64(a.fromRst), int64(a.step)}
-				log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
-			}
-
+			tagStart[tag] = []int64{int64(c.fromRst), int64(c.step)}
+			log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
 		}
-		//}
 	}
+
+	//os.Exit(1)
 	return found, err
 }
 
@@ -132,7 +125,7 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	//if _, ok := tagStart[Stag]; !ok {
 	//	err = errors.New("Header not found")
 	//} else {
-	if c, e := read([]byte(tag+"0"), 28, []int{}, db); e != nil {
+	if c, e := read([]byte(tag+"header"), 28, []int{}, db); e != nil {
 		err = e
 	} else {
 		err = hd.Unmarshal(c)
