@@ -19,22 +19,12 @@ func setUpTCP() {
 
 	if v, e := strconv.Atoi(os.Getenv("DEVICETO")); e != nil {
 		timeout = 5
-		//cmdchan = make(chan []byte, 5)
 	} else {
 		timeout = v
-		//cmdchan = make(chan []byte, v)
 	}
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
 
-	if v, e := strconv.Atoi(os.Getenv("CMDBUFFSIZE")); e != nil {
-		cmdBuffLen = 5
-		//cmdchan = make(chan []byte, 5)
-	} else {
-		cmdBuffLen = v
-		//cmdchan = make(chan []byte, v)
-	}
-	//go handlerCommandAnswer(cmdchan)
 	sensorChan = make(map[int]chan []byte)
 	SensorCmd = make(map[int]chan []byte)
 	sensorMac = make(map[int][]byte)

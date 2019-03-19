@@ -111,3 +111,46 @@ func infoHTTHandler() http.Handler {
 		_ = json.NewEncoder(w).Encode(inst)
 	})
 }
+
+type Jsonasys struct {
+	Name     string `json:"analysis"`
+	Dusation string `json:"seconds"`
+}
+
+func asysHTTHandler() http.Handler {
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
+	var asys []Jsonasys
+	if dt := os.Getenv("SAVEWINDOW"); dt != "" {
+		for _, v := range strings.Split(strings.Trim(dt, ";"), ";") {
+			vc := strings.Split(strings.Trim(v, " "), " ")
+			if len(vc) == 2 {
+				el := Jsonasys{strings.Trim(vc[0], " "), strings.Trim(vc[1], " ")}
+				asys = append(asys, el)
+			}
+		}
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				go func() {
+					support.DLog <- support.DevData{"dvlHTTHandler",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("dvlHTTHandler: recovering from: ", e)
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		_ = json.NewEncoder(w).Encode(asys)
+
+	})
+}

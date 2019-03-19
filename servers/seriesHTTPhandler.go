@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
-
 // returns a series of data. it accepts the following parameters
 // type : data type
 // space : space name
@@ -22,6 +20,7 @@ var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
 // last : number of lsst samples to return
 // last and (start.end) are mutually exclusive with last having priority in case they are all specified
 func seriesHTTPhandler() http.Handler {
+	var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
 
 	params := make(map[string]string)
 	for _, i := range cmds {
@@ -48,7 +47,9 @@ func seriesHTTPhandler() http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-
+		for _, i := range cmds {
+			params[i] = ""
+		}
 		for _, rp := range strings.Split(r.URL.String(), "?")[1:] {
 			val := strings.Split(rp, "=")
 			if _, ok := params[strings.Trim(val[0], " ")]; ok {

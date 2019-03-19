@@ -18,12 +18,12 @@ var addServer [SIZE]string                  // server addresses
 var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
 var crcUsed bool                            // CRC used flag
-var cmdBuffLen int                          // length of buffer for command channels
-var sensorMac map[int][]byte                // map of sensor id to sensor MAC as provided by the sensor itself
-var sensorChan map[int]chan []byte          // channel to handler managing commands to each connected sensor
-var SensorCmd map[int]chan []byte           // externally visible channel to handler managing commands to each connected sensor
-var dataMap map[string]datafunc             // used for HTTP API handling of different data types
-var cmdAnswerLen = map[byte]int{            // provides length for legal server2gate commands
+//var cmdBuffLen int                          // length of buffer for command channels
+var sensorMac map[int][]byte       // map of sensor id to sensor MAC as provided by the sensor itself
+var sensorChan map[int]chan []byte // channel to handler managing commands to each connected sensor
+var SensorCmd map[int]chan []byte  // externally visible channel to handler managing commands to each connected sensor
+var dataMap map[string]datafunc    // used for HTTP API handling of different data types
+var cmdAnswerLen = map[byte]int{   // provides length for legal server2gate commands
 	2:  1,
 	3:  1,
 	4:  1,
@@ -58,11 +58,18 @@ func setupHTTP() error {
 	//}
 
 	hMap[1] = make(map[string]http.Handler)
-
+	// development log API
 	hMap[1]["/dvl"] = dvlHTTHandler()
+	// installation information API
 	hMap[1]["/info"] = infoHTTHandler()
+	// Series data retrieval API
 	hMap[1]["/series"] = seriesHTTPhandler()
+	// Sensor command API
+	hMap[1]["/cmd"] = commandHTTHandler()
+	// analysis information API
+	hMap[1]["/asys"] = asysHTTHandler()
 
+	// Real time data retrieval API
 	for dtn, dt := range spaces.LatestBankOut {
 		ref := strings.Trim(dtn, "_")
 		keysSpaces := make(map[string][]string)

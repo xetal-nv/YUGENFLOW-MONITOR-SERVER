@@ -87,8 +87,8 @@ func handlerTCPRequest(conn net.Conn) {
 							if !idKnown {
 								deviceId = int(data[1]) | int(data[0])<<8
 								sensorMac[deviceId] = mac
-								sensorChan[deviceId] = make(chan []byte, cmdBuffLen)
-								SensorCmd[deviceId] = make(chan []byte, cmdBuffLen)
+								sensorChan[deviceId] = make(chan []byte)
+								SensorCmd[deviceId] = make(chan []byte)
 								go handlerCommandAnswer(conn, sensorChan[deviceId], SensorCmd[deviceId], stop, deviceId)
 								idKnown = true
 							}
@@ -135,18 +135,13 @@ func handlerTCPRequest(conn net.Conn) {
 										}
 									}
 									if valid {
-										//fmt.Printf("Received something else %v\n", cmd)
-										sensorChan[deviceId] <- cmd
-										// if the answer is incorrect the channel will be closed
 										select {
-										case ans := <-sensorChan[deviceId]:
-											if ans != nil {
-												loop = false
-											}
+										case sensorChan[deviceId] <- cmd[:len(cmd)-1]:
 										case <-time.After(time.Duration(timeout) * time.Second):
 											// internal issue, all goroutines will close on time out including the channel
-											go func() { <-sensorChan[deviceId] }()
-											loop = false
+											go func() { sensorChan[deviceId] <- cmd }()
+											log.Printf("servers.handlerTCPRequest: hanging operation in sending "+
+												"command answer %v to user\n", cmd)
 										}
 									}
 								}
@@ -165,7 +160,7 @@ func handlerTCPRequest(conn net.Conn) {
 	}
 }
 
-// TODO to be tested with API
+// TODO to be tested with real device
 func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id ...int) {
 	loop := true
 	if len(id) == 0 {
@@ -194,13 +189,14 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 			}()
 			ci <- []byte("error")
 		case cmd := <-ce:
-			if support.Debug > 0 {
-				fmt.Printf("Received %v from user for device %v\n", cmd, strconv.Itoa(id[0]))
-			}
 			var rt []byte
 			// we return nil in case of error
 			// verify if the command exists and send it to the device
 			if _, ok := cmdAnswerLen[cmd[0]]; ok {
+				if support.Debug > 0 {
+					fmt.Printf("Received %v from user for device %v\n", cmd, strconv.Itoa(id[0]))
+				}
+				cmd = append(cmd, codings.Crc8(cmd))
 				ready := make(chan bool)
 				go func(ba []byte) {
 					if _, e := conn.Write(ba); e == nil {
