@@ -42,7 +42,26 @@ function repRead() {
     });
 }
 
+// function cmdTest() {
+//     $.ajax({
+//         type: 'GET',
+//         // url: "http://localhost:8090/",
+//         // url: "http://localhost:8090/sample/noname",
+//         url: "http://localhost:8090/cmd?cmd=setid?id=0?val=[4,5]",
+//         // url: "http://localhost:8090/entry",
+//         success: function (data) {
+//             console.log(data)
+//
+//         },
+//         error: function (error) {
+//             alert("Error " + error);
+//         }
+//
+//     });
+// }
+
 setInterval(repRead, 500)
+// setInterval(cmdTest, 2000)
 
 </script>
 
