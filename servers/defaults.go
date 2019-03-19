@@ -69,6 +69,12 @@ func setupHTTP() error {
 	// analysis information API
 	hMap[1]["/asys"] = asysHTTHandler()
 
+	// add SVG API for installation graphs
+	for spn := range spaces.SpaceDef {
+		name := strings.Replace(spn, "_", "", -1)
+		hMap[1]["/plan/"+name] = planHTTPHandler(name)
+	}
+
 	// Real time data retrieval API
 	for dtn, dt := range spaces.LatestBankOut {
 		ref := strings.Trim(dtn, "_")
