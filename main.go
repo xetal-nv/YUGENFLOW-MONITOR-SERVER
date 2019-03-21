@@ -56,8 +56,4 @@ func main() {
 	// comment below for TCP debug
 	// Set-up and start servers
 	servers.StartServers()
-
-	// TODO reporting API
-	// TODO command API
-
 }

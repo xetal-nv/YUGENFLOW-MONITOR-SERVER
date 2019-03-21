@@ -17,7 +17,6 @@ func (ss *SerieEntries) SetTag(nm string) {
 	ss.Stag = nm
 }
 
-// TODO
 func (ss *SerieEntries) SetVal(v ...int) {
 	// this does nothing
 }

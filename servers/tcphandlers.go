@@ -90,7 +90,6 @@ func handlerTCPRequest(conn net.Conn) {
 								sensorChan[deviceId] = make(chan []byte)
 								SensorCmd[deviceId] = make(chan []byte)
 								go handlerCommandAnswer(conn, sensorChan[deviceId], SensorCmd[deviceId], stop, deviceId)
-								// TODO HERE
 								idKnown = true
 							}
 							// first sample creates the command channels and handler if it does not exists

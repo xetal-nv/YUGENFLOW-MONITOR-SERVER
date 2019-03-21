@@ -13,7 +13,6 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData) {
 		for {
 			select {
 			case d := <-in:
-				// TODO to be fully tested with the API server
 				if support.Debug != 3 && support.Debug != 4 {
 					if e := a.Extract(d); e == nil {
 						if a.Valid() {
