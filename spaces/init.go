@@ -70,8 +70,6 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 			spaces[i] = strings.Trim(spaces[i], " ")
 		}
 
-		//onces := make([]sync.Once, len(spaces))
-
 		// initialise the processing threads for each space
 		for _, name := range spaces {
 			var sprange closureRange

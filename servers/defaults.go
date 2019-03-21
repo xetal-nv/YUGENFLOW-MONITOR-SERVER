@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 const SIZE int = 2
@@ -39,6 +40,12 @@ var cmdAnswerLen = map[byte]int{   // provides length for legal server2gate comm
 	11: 3,
 }
 var timeout int
+var resetbg struct {
+	start    time.Time
+	end      time.Time
+	interval time.Duration
+	valid    bool
+}
 
 func setupHTTP() error {
 

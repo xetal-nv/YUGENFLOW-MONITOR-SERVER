@@ -7,6 +7,8 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
 //func setUpTCP() {
@@ -21,6 +23,23 @@ func setUpTCP() {
 		timeout = 5
 	} else {
 		timeout = v
+	}
+
+	resetbg.start, resetbg.end, resetbg.interval, resetbg.valid = time.Time{}, time.Time{}, time.Duration(0), false
+	rng := strings.Split(strings.Trim(os.Getenv("RESETSLOT"), ";"), ";")
+	if len(rng) == 3 {
+		if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+			resetbg.start = v
+			if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+				resetbg.end = v
+				if v, e := strconv.Atoi(strings.Trim(rng[2], " ")); e == nil {
+					if v != 0 {
+						resetbg.interval = time.Duration(v)
+						resetbg.valid = true
+					}
+				}
+			}
+		}
 	}
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
