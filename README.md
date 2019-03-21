@@ -18,3 +18,9 @@ HTTPSPORTS[1]//cmd?cmd=x?id=y?val=z -> execute command x on sensor y with data (
 **List HTTP pages:**
 
 HTTPSPORTS[0]/ -> simple JS JSON feed  
+
+**SVG convention:**
+
+Elements triggering data from a entry need to have as ID the entry id as from the configuration file
+Elements triggering data from the full counter need to have as ID the space name
+Two classes need to be defined, st1 for unselected trigger and st2 for selected trigger
