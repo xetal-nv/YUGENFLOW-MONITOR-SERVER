@@ -55,6 +55,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				select {
 				case sp := <-prevStageChan:
 					if skip, e := support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+						//fmt.Println(skip)
 						if skip {
 							counter.val = 0
 							// Calculate the confidence measurement (number wrong data / number data

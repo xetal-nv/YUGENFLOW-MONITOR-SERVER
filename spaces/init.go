@@ -77,8 +77,8 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 			var sprange closureRange
 			nl, _ := time.Parse(support.TimeLayout, "00:00")
 			rng := strings.Split(strings.Trim(os.Getenv("CLOSURE_"+name), ";"), ";")
-			sprange.start, sprange.end, sprange.offset = nl, nl, false
-			if len(rng) == 3 {
+			sprange.start, sprange.end = nl, nl
+			if len(rng) == 2 {
 				for i, v := range rng {
 					rng[i] = strings.Trim(v, " ")
 				}
@@ -88,13 +88,6 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 						sprange.end = v
 					} else {
 						sprange.start = nl
-					}
-				}
-				if v, e := strconv.Atoi(rng[2]); e == nil {
-					if v >= 0 {
-						sprange.offset = false
-					} else {
-						sprange.offset = true
 					}
 				}
 			}

@@ -21,6 +21,7 @@ HTTPSPORTS[0]/ -> simple JS JSON feed
 
 **SVG convention:**
 
-Elements triggering data from a entry need to have as ID the entry id as from the configuration file
-Elements triggering data from the full counter need to have as ID the space name
-Two classes need to be defined, st1 for unselected trigger and st2 for selected trigger
+Elements triggering data from a entry need to have as ID the entry id as from the configuration file  
+Elements triggering data from the full counter need to have as ID the space name  
+Two classes need to be defined, st1 for unselected trigger and st2 for selected trigger  
+If the server does no have a svg for a given space, the space will be ignored  

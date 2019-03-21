@@ -90,6 +90,7 @@ func handlerTCPRequest(conn net.Conn) {
 								sensorChan[deviceId] = make(chan []byte)
 								SensorCmd[deviceId] = make(chan []byte)
 								go handlerCommandAnswer(conn, sensorChan[deviceId], SensorCmd[deviceId], stop, deviceId)
+								// TODO HERE
 								idKnown = true
 							}
 							// first sample creates the command channels and handler if it does not exists
@@ -227,3 +228,20 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 		}
 	}
 }
+
+//func handlerReset(id int) {
+//	defer func() {
+//		if e := recover(); e != nil {
+//			go func() {
+//				support.DLog <- support.DevData{"servers.handlerReset: recovering server",
+//					support.Timestamp(), "", []int{1}, true}
+//			}()
+//			handlerReset(id)
+//		}
+//	}()
+//	done := false
+//	for {
+//		time.Sleep(30 * time.Minute)
+//		if skip, e := support.InClosureTime(spaces.SpaceTimes[spacename].Start,spaces.SpaceTimes[spacename].End); e == nil
+//	}
+//}

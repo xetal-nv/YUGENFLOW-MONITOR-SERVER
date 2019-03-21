@@ -8,9 +8,9 @@ type avgInterval struct {
 }
 
 type closureRange struct {
-	start  time.Time
-	end    time.Time
-	offset bool
+	start time.Time
+	end   time.Time
+	//offset bool
 }
 type pfunc func(string, spaceEntries) interface{}
 type cfunc func(string, chan interface{}, chan bool)

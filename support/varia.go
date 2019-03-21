@@ -74,8 +74,13 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 }
 
 func inTimeSpan(start, end, check time.Time) bool {
+	//fmt.Println(start, end, check )
 	if check.After(end) {
-		return false
+		if end.After(start) {
+			return false
+		} else {
+			return check.After(start)
+		}
 	}
 	if end.After(start) {
 		return check.After(start)
