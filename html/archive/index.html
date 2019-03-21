@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-GB">
+<head>
+    <title>http example</title>
+    <link rel="stylesheet" type="text/css" href="css.css">
+</head>
+<body>
+<textarea>
+</textarea>
+<div>
+</div>
+
+<!-- tool audio file -->
+
+
+<!-- active JS files -->
+
+<!--<script src="../js/svg.min.js" type="application/javascript"></script>-->
+<script src="http://ajax.microsoft.com/ajax/jQuery/jquery-1.4.4.min.js"></script>
+
+<script type="application/javascript">
+
+function repRead() {
+    $.ajax({
+        type: 'GET',
+        // url: "http://localhost:8090/",
+        // url: "http://localhost:8090/sample/noname",
+        url: "http://localhost:8090/sample",
+        // url: "http://localhost:8090/entry",
+        success: function (data) {
+            var jsObj = JSON.parse(data)
+            // document.write(data)
+            $('textarea').text(JSON.stringify(jsObj, null, '  '));
+
+        },
+        error: function (error) {
+            alert("Error " + error);
+        }
+
+    });
+}
+
+// function cmdTest() {
+//     $.ajax({
+//         type: 'GET',
+//         // url: "http://localhost:8090/",
+//         // url: "http://localhost:8090/sample/noname",
+//         url: "http://localhost:8090/cmd?cmd=setid?id=0?val=[4,5]",
+//         // url: "http://localhost:8090/entry",
+//         success: function (data) {
+//             console.log(data)
+//
+//         },
+//         error: function (error) {
+//             alert("Error " + error);
+//         }
+//
+//     });
+// }
+
+setInterval(repRead, 500)
+// setInterval(cmdTest, 2000)
+
+</script>
+
+
+</body>
+</html>

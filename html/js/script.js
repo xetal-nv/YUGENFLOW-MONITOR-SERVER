@@ -1,0 +1,205 @@
+let spacename = "";
+let measurement = "sample";
+let allmeasurements = [{"name": "current", "value": "0"}];
+let selel = null;
+
+function timeConverter(UNIX_timestamp) {
+    let a = new Date(UNIX_timestamp);
+    let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let year = a.getFullYear();
+    let month = months[a.getMonth()];
+    let date = a.getDate();
+    let hour = a.getHours();
+    let min = a.getMinutes();
+    let sec = a.getSeconds();
+    return date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+}
+
+function drawSpace(rawspaces) {
+
+    let spaces = [];
+    let draw = SVG('svgimage');
+    let plan;
+    let select = document.getElementById("spacename");
+    for (i = 0; i < rawspaces.length; i++) {
+        spaces[i] = rawspaces[i]["spacename"]
+    }
+
+    function resetcanvas() {
+        spacename = "";
+        readPlan("logo", true);
+        document.getElementById("lastts").innerText = "n/a";
+        for (let i = 0; i < allmeasurements.length; i++) {
+            document.getElementById(allmeasurements[i].name).innerText = "n/a"
+        }
+        selel = null;
+    }
+
+    function readPlan(name, od) {
+        $.ajax({
+            type: 'GET',
+            url: "http://localhost:8090/plan/" + name,
+            success: function (data) {
+                let jsObj = JSON.parse(data);
+                plan = draw.svg(jsObj["qualifier"]);
+                if (!od) {
+                    spacename = name;
+                    for (let i = 0; i < rawspaces.length; i++) {
+                        // console.log(rawspaces[i])
+                        if (rawspaces[i]["spacename"] === name) {
+                            for (let j = 0; j < rawspaces[i]["entries"].length; j++) {
+                                let nm = rawspaces[i]["entries"][j]["entryid"];
+                                let el = document.getElementById(nm);
+                                if (el != null) {
+                                    el.onmousedown = function () {
+                                        // console.log("found " + nm);
+                                        measurement = "entry_" + nm;
+                                        el.setAttribute("class", "st2");
+                                        if (selel != null) selel.setAttribute("class", "st1");
+                                        selel = el;
+                                    };
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    let total = document.getElementById(name);
+                    selel = total;
+                    total.setAttribute("class", "st2");
+                    total.onmousedown = function () {
+                        // console.log("found " + name)
+                        measurement = "sample";
+                        total.setAttribute("class", "st2");
+                        if (selel != null) selel.setAttribute("class", "st1");
+                        selel = total;
+                    };
+                }
+            },
+            error: function (error) {
+                alert("Error " + error);
+            }
+
+        });
+    }
+
+    for (let i = 0; i < spaces.length; i++) {
+        // console.log(spaces[i])
+        let opt = spaces[i];
+        let el = document.createElement("option");
+        el.textContent = opt;
+        el.value = opt;
+        select.appendChild(el);
+    }
+
+    resetcanvas()
+
+    select.onchange = function () {
+        var myindex = select.selectedIndex;
+        var SelValue = select.options[myindex].value;
+        if (plan != null) plan.clear();
+        // need to remove the onclick events
+        if (SelValue !== "Choose a space") readPlan(SelValue, false); else resetcanvas()
+    };
+
+    function updatedata() {
+        if (spacename !== "") {
+            let urlv = "http://localhost:8090/" + measurement.split("_")[0] + "/" + spacename + "/";
+            // console.log(allmeasurements)
+            for (let i = 0; i < allmeasurements.length; i++) {
+
+                (function () {
+                    $.ajax({
+                        type: 'GET',
+                        url: urlv + allmeasurements[i].name,
+                        success: function (data) {
+                            let spaces = JSON.parse(data);
+                            // console.log(spaces)
+                            if (spaces["valid"]) {
+                                if (allmeasurements[i].name === "current") {
+                                    document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
+                                }
+                                let dt = "n/a";
+                                let ms = measurement.split("_");
+                                switch (ms[0]) {
+                                    case "sample":
+                                        dt = spaces["counter"]["val"];
+                                        // console.log("sample");
+                                        break;
+                                    case "entry":
+                                        for (let i = 0; i < spaces["counter"]["val"].length; i++) {
+                                            if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
+                                                dt = spaces["counter"]["val"][i][1];
+                                                break;
+                                            }
+                                        }
+                                        // console.log("entry");
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                document.getElementById(allmeasurements[i].name).innerText = dt;
+                            }
+                        },
+                        error: function (error) {
+                        }
+
+                    });
+                })();
+
+            }
+        }
+    }
+
+    setInterval(updatedata, 500)
+
+}
+
+$(document).ready(function () {
+
+
+    // extract analysis information and set-up the data section
+    (function () {
+        $.ajax({
+            type: 'GET',
+            url: "http://localhost:8090/asys",
+            success: function (data) {
+                let jsObj = JSON.parse(data);
+                // console.log(jsObj)
+                for (let i = 0; i < jsObj.length; i++) {
+                    let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
+                    allmeasurements.push(el)
+                }
+                let html = "";
+                for (let i = 0; i < allmeasurements.length; i++) {
+                    html += "<tr>" +
+                        "<td>" + allmeasurements[i].name + "</td>" +
+                        "<td id=\'" + allmeasurements[i].name + "\'> n/a </td>";
+                }
+                $("#analysis").html(html);
+            },
+            error: function (error) {
+                alert("Error " + error);
+            }
+
+        });
+    })();
+
+    // extract space information and set-up the canvas and selection menu
+    (function () {
+        $.ajax({
+            type: 'GET',
+            url: "http://localhost:8090/info",
+            success: function (data) {
+                let spaces = JSON.parse(data);
+                drawSpace(spaces)
+            },
+            error: function (error) {
+                alert("Error " + error);
+            }
+
+        });
+    })();
+
+
+});
+

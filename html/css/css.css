@@ -1,0 +1,393 @@
+body {
+    margin: 0;
+    padding: 0;
+    border: 0; /* This removes the border around the viewport in old versions of IE */
+    width: 100%;
+    background: #1000ff;
+    min-width: 600px; /* Minimum width of layout - remove line if not required */
+    /* The min-width property does not work in old versions of Internet Explorer */
+    font-size: 90%;
+}
+
+a {
+    color: #369;
+}
+
+a:hover {
+    color: #fff;
+    background: #369;
+    text-decoration: none;
+}
+
+h1, h2, h3 {
+    margin: .8em 0 .2em 0;
+    padding: 0;
+    color: #ffffff;
+}
+
+p {
+    margin: .4em 0 .8em 0;
+    padding: 0;
+}
+
+img {
+    margin: 10px 0 5px;
+}
+
+audio {
+    display: none;
+}
+
+#ads img {
+    display: block;
+    padding-top: 10px;
+}
+
+/* Header styles */
+#header {
+    clear: both;
+    float: left;
+    width: 100%;
+}
+
+#header {
+    padding-bottom: 1em;
+    border-bottom: 1px solid gray(0);
+}
+
+#header p,
+#header h1,
+#header h2 {
+    padding: .4em 15px 0 15px;
+    margin: 0;
+}
+
+#header ul {
+    clear: left;
+    float: left;
+    width: 100%;
+    list-style: none;
+    margin: 10px 0 0 0;
+    padding: 0;
+}
+
+#header ul li {
+    display: inline;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#header ul li a {
+    display: block;
+    float: left;
+    margin: 0 0 0 1px;
+    padding: 3px 10px;
+    text-align: center;
+    background: #eee;
+    color: #ffffff;
+    text-decoration: none;
+    position: relative;
+    left: 15px;
+    line-height: 1.3em;
+}
+
+#header ul li a:hover {
+    background: #369;
+    color: #fff;
+}
+
+#header ul li a.active,
+#header ul li a.active:hover {
+    color: #fff;
+    background: #000;
+    font-weight: bold;
+}
+
+#header ul li a span {
+    display: block;
+}
+
+/* 'widths' sub menu */
+#layoutdims {
+    clear: both;
+    border-top: 3px solid #000;
+    border-bottom: 1px solid #000;
+    margin: 0;
+    padding: 6px 50px !important;
+    text-align: right;
+    color: #000;
+    background: lightblue;
+}
+
+.masterlabel {
+    font-style: italic;
+    color: lightgray;
+}
+
+#layoutdims ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#layoutdims li {
+    margin-left: 0;
+    margin-bottom: 0;
+    padding: 2px 5px 5px;
+    list-style: none;
+    display: inline-block;
+}
+
+/*drop down list*/
+select {
+    /*border:0;*/
+    background:transparent;
+    height:32px;
+    border:1px solid #d8d8d8;
+    width:90%;
+}
+
+/*table styling*/
+table {
+    font-family: arial, sans-serif;
+    font-size: small;
+    border-collapse: collapse;
+    width:90%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+/* column container */
+.colmask {
+    position: relative; /* This fixes the IE7 overflow hidden bug */
+    clear: both;
+    float: left;
+    width: 100%; /* width of whole page */
+    overflow: hidden; /* This chops off any overhanging divs */
+}
+
+/* common column settings */
+.colright,
+.colmid,
+.colleft {
+    float: left;
+    width: 100%;
+    position: relative;
+}
+
+.col1,
+.col3 {
+    float: left;
+    position: relative;
+    padding: 0 0 1em 0;
+    overflow: hidden;
+}
+
+.col2 {
+    float: left;
+    position: relative;
+    padding: 2em 1em 1em 0;
+    overflow: hidden;
+}
+
+.col2 img {
+    padding: 2px;
+}
+
+/* line separator */
+
+.line-separator {
+
+    height: 1px;
+    background: #717171;
+    border-bottom: 1px solid #99ccff;
+    margin: 0.5em 3.5em 0.5em 0;
+
+}
+
+/* image grow effect */
+
+.image-grow {
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+    -webkit-transition-property: transform;
+    transition-property: transform;
+}
+
+.image-grow:hover, .image-grow:focus, .image-grow:active {
+    -webkit-transform: scale(1.2);
+    transform: scale(1.2);
+}
+
+/* image buzz effect */
+@-webkit-keyframes image-buzz {
+    50% {
+        -webkit-transform: translateX(3px) rotate(2deg);
+        transform: translateX(3px) rotate(2deg);
+    }
+
+    100% {
+        -webkit-transform: translateX(-3px) rotate(-2deg);
+        transform: translateX(-3px) rotate(-2deg);
+    }
+}
+
+@keyframes image-buzz {
+    50% {
+        -webkit-transform: translateX(3px) rotate(2deg);
+        transform: translateX(3px) rotate(2deg);
+    }
+
+    100% {
+        -webkit-transform: translateX(-3px) rotate(-2deg);
+        transform: translateX(-3px) rotate(-2deg);
+    }
+}
+
+.image-buzz {
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.image-buzz:hover, .image-buzz:focus, .image-buzz:active {
+    -webkit-animation-name: image-buzz;
+    animation-name: image-buzz;
+    -webkit-animation-duration: 0.15s;
+    animation-duration: 0.15s;
+    -webkit-animation-timing-function: linear;
+    animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+    animation-iteration-count: infinite;
+}
+
+/* 2 Column (left menu) settings */
+.leftmenu {
+    background: #fff; /* right column background colour */
+}
+
+.leftmenu .colleft {
+    right: 80%; /* right column width */
+    background: #f4f4f4; /* left column background colour */
+}
+
+.leftmenu .col1 {
+    width: 76%; /* right column content width */
+    left: 102%; /* 100% plus left column left padding */
+}
+
+.leftmenu .col2 {
+    width: 18%; /* left column content width (column width minus left and right padding) */
+    left: 6%; /* (right column left and right padding) plus (left column left padding) */
+}
+
+/* Footer styles */
+#footer {
+    clear: both;
+    float: left;
+    width: 100%;
+    border-top: 1px solid #000;
+    color: black;
+    background: lightblue;
+    font-family: arial, sans-serif;
+}
+
+#footer p {
+    padding: 10px;
+    margin: 0;
+    text-align: center;
+}
+
+canvas {
+    background-color: blue;
+    width: 100%;
+    height: auto;
+}
+
+.absent {
+    filter: alpha(opacity=25);
+    -moz-opacity: 0.23;
+    opacity: 0.15
+}
+
+.opaque {
+    filter: alpha(opacity=25);
+    -moz-opacity: 0.23;
+    opacity: 0.50
+}
+
+.sensor {
+    border: 0;
+    line-height: 2.5;
+    padding: 0 20px;
+    font-size: 0.8rem;
+    text-align: center;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    border-radius: 10px;
+    background: rgba(0, 100, 220, 1) linear-gradient(to top left,
+    rgba(0, 0, 0, .2),
+    rgba(0, 0, 0, .2) 30%,
+    rgba(0, 0, 0, 0));
+    box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6),
+    inset -2px -2px 3px rgba(0, 0, 0, .6);
+    width: 10rem;
+}
+
+.sensor:hover {
+    background-color: rgba(255, 0, 0, 1);
+}
+
+.sensor:active {
+    box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6),
+    inset 2px 2px 3px rgba(0, 0, 0, .6);
+}
+
+.tools {
+    border: 0;
+    line-height: 2.5;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    text-align: center;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    border-radius: 10px;
+    background: rgba(0, 220, 100, 1) linear-gradient(to top left,
+    rgba(0, 0, 0, .2),
+    rgba(0, 0, 0, .2) 30%,
+    rgba(0, 0, 0, 0));
+    box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6),
+    inset -2px -2px 3px rgba(0, 0, 0, .6);
+    width: 10rem;
+}
+
+.tools:hover {
+    background-color: rgba(255, 0, 0, 1);
+}
+
+.tools:active {
+    box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6),
+    inset 2px 2px 3px rgba(0, 0, 0, .6);
+}

@@ -74,6 +74,7 @@ func setupHTTP() error {
 		name := strings.Replace(spn, "_", "", -1)
 		hMap[1]["/plan/"+name] = planHTTPHandler(name)
 	}
+	hMap[1]["/plan/logo"] = planHTTPHandler("logo")
 
 	// Real time data retrieval API
 	for dtn, dt := range spaces.LatestBankOut {

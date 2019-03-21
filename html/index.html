@@ -1,69 +1,59 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-GB">
 <head>
-    <title>http example</title>
-    <link rel="stylesheet" type="text/css" href="css.css">
+    <title>Xetal Flow Monitor</title>
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
+    <meta name="description" content="Xetal Flow Monitor"/>
+    <meta name="keywords" content=""/>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" type="text/css" href="./css/css.css" media="screen"/>
+
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/svg.min.js"></script>
+    <script type="text/javascript" src="js/script.js"></script>
+
 </head>
 <body>
-<textarea>
-</textarea>
-<div>
+<div id="layoutdims">
+    <ul>
+        <li style="width: 300px;text-align: right; padding-right: 20px; font-weight: bold;font-family: arial, sans-serif;">
+            Latest timestamp:
+        </li>
+        <li style="width: 10em;text-align: left;font-family: arial, sans-serif;"><span id="lastts">n/a</span></li>
+    </ul>
 </div>
+<div class="colmask leftmenu">
+    <div class="colleft">
+        <div class="col1">
+            <!-- Canvas -->
+            <svg id="svgimage" height='700' width='800' xmlns="http://www.w3.org/2000/svg">
+            </svg>
+            <!-- Canvas end -->
+        </div>
+        <div class="col2" style="align-content: center;">
+            <!-- Data end -->
+            <form id="spacesel">
+                <select id="spacename">
+                    <option>Choose a space</option>
+                </select>
+            </form>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                </tr>
+                <thead>
+                <tbody id="analysis">
 
-<!-- tool audio file -->
-
-
-<!-- active JS files -->
-
-<!--<script src="../js/svg.min.js" type="application/javascript"></script>-->
-<script src="http://ajax.microsoft.com/ajax/jQuery/jquery-1.4.4.min.js"></script>
-
-<script type="application/javascript">
-
-function repRead() {
-    $.ajax({
-        type: 'GET',
-        // url: "http://localhost:8090/",
-        // url: "http://localhost:8090/sample/noname",
-        url: "http://localhost:8090/sample",
-        // url: "http://localhost:8090/entry",
-        success: function (data) {
-            var jsObj = JSON.parse(data)
-            // document.write(data)
-            $('textarea').text(JSON.stringify(jsObj, null, '  '));
-
-        },
-        error: function (error) {
-            alert("Error " + error);
-        }
-
-    });
-}
-
-// function cmdTest() {
-//     $.ajax({
-//         type: 'GET',
-//         // url: "http://localhost:8090/",
-//         // url: "http://localhost:8090/sample/noname",
-//         url: "http://localhost:8090/cmd?cmd=setid?id=0?val=[4,5]",
-//         // url: "http://localhost:8090/entry",
-//         success: function (data) {
-//             console.log(data)
-//
-//         },
-//         error: function (error) {
-//             alert("Error " + error);
-//         }
-//
-//     });
-// }
-
-setInterval(repRead, 500)
-// setInterval(cmdTest, 2000)
-
-</script>
+                </tbody>
+            </table>
+            <!-- Data end -->
+        </div>
+    </div>
+</div>
+<div id="footer">
+    <p>Powered by Xetal Yugen</p>
+</div>
 
 
 </body>

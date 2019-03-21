@@ -100,7 +100,7 @@ func Test_TCP_StreamDBS(t *testing.T) {
 		fmt.Println(" TEST -> Disconnect to TCP channel")
 		time.Sleep(30 * time.Second)
 		a := new(storage.SerieSample)
-		if e := a.Extract(<-spaces.LatestBankOut[support.StringLimit("sample", support.LabelLength)][support.StringLimit("noname",
+		if e := a.Extract(<-spaces.LatestBankOut[support.StringLimit("sample", support.LabelLength)][support.StringLimit("livlab",
 			support.LabelLength)][support.StringLimit("current", support.LabelLength)]); e != nil {
 			t.Fatalf("Invalid value from the current register")
 		}
@@ -117,10 +117,10 @@ func Test_TCP_StreamDBS(t *testing.T) {
 			go func(name string) {
 				defer wg.Done()
 				a := reflect.ValueOf(<-spaces.LatestBankOut[support.StringLimit("sample",
-					support.LabelLength)][support.StringLimit("noname", support.LabelLength)][support.StringLimit(name, support.LabelLength)])
+					support.LabelLength)][support.StringLimit("livlab", support.LabelLength)][support.StringLimit(name, support.LabelLength)])
 				fmt.Println("Check sample", name, "pipe ::", a)
 				b := reflect.ValueOf(<-spaces.LatestBankOut[support.StringLimit("entry",
-					support.LabelLength)][support.StringLimit("noname", support.LabelLength)][support.StringLimit(name, support.LabelLength)])
+					support.LabelLength)][support.StringLimit("livlab", support.LabelLength)][support.StringLimit(name, support.LabelLength)])
 				fmt.Println("Check entry", name, "pipe ::", b)
 			}(v)
 		}
