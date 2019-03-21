@@ -259,16 +259,22 @@ func handlerReset(id int) {
 					rt := exeCommand(strconv.Itoa(id), "rstbg", []int{})
 					if rt.State {
 						done = true
-						log.Printf("servers.handlerReset: device %v has been reset\n", id)
+						go func() {
+							support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
+								support.Timestamp(), "", []int{1}, true}
+						}()
 					} else {
-						log.Printf("servers.handlerReset: device %v reset has failed\n", id)
+						go func() {
+							support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
+								support.Timestamp(), "", []int{1}, true}
+						}()
 					}
 				}
 			} else {
 				done = false
 			}
 		} else {
-			log.Printf("servers.handlerReset: device %v has been reset error %v\n", id, e)
+			log.Printf("servers.handlerReset: device %v has reset error %v\n", id, e)
 		}
 	}
 }
