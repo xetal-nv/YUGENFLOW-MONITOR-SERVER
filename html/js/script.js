@@ -54,8 +54,8 @@ function drawSpace(rawspaces) {
                                     el.onmousedown = function () {
                                         // console.log("found " + nm);
                                         measurement = "entry_" + nm;
-                                        el.setAttribute("class", "st2");
                                         if (selel != null) selel.setAttribute("class", "st1");
+                                        el.setAttribute("class", "st2");
                                         selel = el;
                                     };
                                 }
@@ -69,8 +69,8 @@ function drawSpace(rawspaces) {
                     total.onmousedown = function () {
                         // console.log("found " + name)
                         measurement = "sample";
-                        total.setAttribute("class", "st2");
                         if (selel != null) selel.setAttribute("class", "st1");
+                        total.setAttribute("class", "st2");
                         selel = total;
                     };
                 }
