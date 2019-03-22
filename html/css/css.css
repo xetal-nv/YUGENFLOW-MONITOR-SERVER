@@ -3,7 +3,7 @@ body {
     padding: 0;
     border: 0; /* This removes the border around the viewport in old versions of IE */
     width: 100%;
-    background: #1000ff;
+    background: #00245d;
     min-width: 600px; /* Minimum width of layout - remove line if not required */
     /* The min-width property does not work in old versions of Internet Explorer */
     font-size: 90%;
@@ -321,7 +321,7 @@ tr:nth-child(even) {
 }
 
 canvas {
-    background-color: blue;
+    background-color: #00245d;
     width: 100%;
     height: auto;
 }
