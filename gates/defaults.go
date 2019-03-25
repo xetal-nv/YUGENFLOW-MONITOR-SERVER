@@ -1,11 +1,14 @@
 package gates
 
+// sensor data as identified id, timestampo ts and value val
 type sensorData struct {
 	id  int   // gate number
 	ts  int64 // timestamp
 	val int   // data received
 }
 
+// sensor definition as identified id, is reversed mounted (reversed), to which gates it belongs
+// (slice gate) amd to which entry it belongs (slice entry)
 type SensorDef struct {
 	id       int               // gate number
 	Reversed bool              // reverse flag
@@ -13,17 +16,20 @@ type SensorDef struct {
 	entry    []chan sensorData // entry channels for the sensors
 }
 
+// entry definition as identified id, list of associated sensors definitions and list of associated gates definitions
 type EntryDef struct {
 	Id     int               // entry Id
 	SenDef map[int]SensorDef // maps sensors ID with its definition
 	Gates  map[int][]int     // maps gate Id with its sensor composition
 }
 
+// data cache used by the algorithm calculating flow from sensor data
 type scratchDataOld struct {
 	senData         map[int]sensorData // maps sensors ID with its latest used data
 	unusedSampleSum map[int]int        // maps sensors ID with the sum of unused samples received
 }
 
+// data cache used by the algorithm calculating flow from sensor data
 type scratchData struct {
 	senData            map[int]sensorData // maps sensors ID with its latest used data
 	unusedSampleSumIn  map[int]int        // maps sensors ID with the sum of unused in samples received

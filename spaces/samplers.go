@@ -9,7 +9,9 @@ import (
 	"time"
 )
 
-// The algorithm is built on the ordered arrival of samples that is preserfved in a slice.
+// it implements the counters, both the current one as well as the analysis averages.
+// the sampler threads for a given space are started in a recursive manner
+// The algorithm is built on the ordered arrival of samples that is preserved in a slice.
 // It means that x[i] is newer than x[i-1] and older than x[i+1]
 func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
@@ -165,6 +167,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	}
 }
 
+// calculates the average data from a vector conteining value and timestamps
 func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
 
 	acc := float64(0)
@@ -176,6 +179,7 @@ func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
 	return
 }
 
+// used internally in the sampler to pass data among threads.
 func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}

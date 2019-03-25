@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// set-up of all space threads, channels and variables based on configuration file .env
 func SetUp() {
 	// set-up the data types and conversions
 	dtypes = make(map[string]dtfuncs)
@@ -53,6 +54,7 @@ func SetUp() {
 	setUpDataDBSBank(spchans)
 }
 
+// set-up space thread and data flow structure based on the provided configuration
 func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	spaceChannels = make(map[string]chan spaceEntries)
 	entrySpaceChannels = make(map[int][]chan spaceEntries)
@@ -120,6 +122,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	return spaceChannels
 }
 
+// set-up counters thread and data flow structure based on the provided configuration
 func setpUpCounter() {
 	sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
@@ -184,6 +187,7 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 }
 
+// set-up DBS thread and data flow structure based on the provided configuration
 func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))

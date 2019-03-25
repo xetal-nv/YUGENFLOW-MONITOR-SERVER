@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+// development module for development logger
+
 type DevData struct {
 	Tag  string // unique message Tag
 	Ts   int64  // timestamp of last update

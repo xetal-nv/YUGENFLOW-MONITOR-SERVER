@@ -24,6 +24,8 @@ var cmdargs = map[byte]int{
 	[]byte("\x0e")[0]: 2,
 }
 
+// for testing purposes only
+
 func SensorModel(id, iter, mxdelay int, vals []int) {
 
 	del := rand.Intn(mxdelay) + 1

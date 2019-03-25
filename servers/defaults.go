@@ -47,22 +47,17 @@ var resetbg struct {
 	valid    bool
 }
 
+// set-up of HTTP serverd and handlers
 func setupHTTP() error {
 
 	dataMap = make(map[string]datafunc)
 	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
 	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
 
+	// enable web server
 	hMap[0] = map[string]http.Handler{
-		//"/welcome": tempHTTPfuncHandler("Welcome to Go Web Development"),
-		//"/message": tempHTTPfuncHandler("net/http is awesome"),
-		//"/panic":   tempHTTPfuncHandler(""),
 		"./html/": nil,
 	}
-
-	//hMap[1] = map[string]http.Handler{
-	//	"/actuals": getCurrentSampleAPI(),
-	//}
 
 	hMap[1] = make(map[string]http.Handler)
 	// development log API

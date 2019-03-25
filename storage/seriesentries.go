@@ -7,6 +7,8 @@ import (
 	"reflect"
 )
 
+// implements sampledata and servers.genericdata for managing data of type "entry"
+
 type SerieEntries struct {
 	Stag string  `json:"tag"`
 	Sts  int64   `json:"ts"`
@@ -20,8 +22,6 @@ func (ss *SerieEntries) SetTag(nm string) {
 func (ss *SerieEntries) SetVal(v ...int) {
 	// this does nothing
 }
-
-//func (ss *SerieEntries) NewEl() GenericData { return new(SerieEntries) }
 
 func (ss *SerieEntries) SetTs(ts int64) {
 	ss.Sts = ts

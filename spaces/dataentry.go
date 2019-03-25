@@ -19,6 +19,7 @@ type spaceEntries struct {
 	entries map[int]dataEntry // cumulative value per entry
 }
 
+// extract a dataEntry value from a generic interface{} if possible
 func (de *dataEntry) Extract(i interface{}) error {
 	if i == nil {
 		return errors.New("spaces.dataEntry.Extract: error illegal data received")

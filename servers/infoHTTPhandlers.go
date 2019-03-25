@@ -118,6 +118,7 @@ type Jsonrt struct {
 	Qualifier string `json:"qualifier"`
 }
 
+// returns the analysis definition information
 func asysHTTHandler() http.Handler {
 	cors := false
 	if os.Getenv("CORS") != "" {
@@ -156,6 +157,7 @@ func asysHTTHandler() http.Handler {
 	})
 }
 
+// returns the installation space geometry as SVG
 func planHTTPHandler(name string) http.Handler {
 	cors := false
 	if os.Getenv("CORS") != "" {

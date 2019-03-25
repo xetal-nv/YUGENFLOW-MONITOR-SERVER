@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// set-up for all sensor/gate/entry variables, threads and channels based on the data from the configuration file .env
+
 func SetUp() {
 	var revdev []int
 	devgate := [2]int{2, 2}
@@ -109,7 +111,7 @@ func SetUp() {
 				}
 			}
 			EntryList[i] = t
-			go entryProcessing(i, entryChan)
+			go entryProcessingSetUp(i, entryChan)
 			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, EntryList[i])
 			i += 1
 			data = os.Getenv("ENTRY_" + strconv.Itoa(i))

@@ -7,13 +7,14 @@ import (
 	"log"
 )
 
-func entryProcessing(id int, in chan sensorData) {
+// set-up for the processing of sensor/gate data into flow values for the associated entry id
+// new sensor data is passed by means of the in channel snd send to the proper space via a spaces.SendData call
+func entryProcessingSetUp(id int, in chan sensorData) {
 	var scratchPad scratchData
 	sensorListEntry := make(map[int]sensorData)
 	gateListEntry := EntryList[id].Gates
 
 	scratchPad.senData = make(map[int]sensorData)
-	//scratchPad.unusedSampleSum = make(map[int]int)
 	scratchPad.unusedSampleSumIn = make(map[int]int)
 	scratchPad.unusedSampleSumOut = make(map[int]int)
 
@@ -22,7 +23,6 @@ func entryProcessing(id int, in chan sensorData) {
 		sensorListEntry[i] = sensorData{i, 0, 0}
 	}
 	for i := range sensorListEntry {
-		//scratchPad.unusedSampleSum[i] = 0
 		scratchPad.unusedSampleSumIn[i] = 0
 		scratchPad.unusedSampleSumOut[i] = 0
 	}
@@ -31,15 +31,16 @@ func entryProcessing(id int, in chan sensorData) {
 
 }
 
+// implements the core logic od the sensor/gate data processing
 func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sensorData,
 	gateListEntry map[int][]int, scratchPad scratchData) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"Gates.entryProcessing",
+				support.DLog <- support.DevData{"Gates.entryProcessingSetUp",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			log.Printf("Gates.entryProcessing: recovering for entry thread %v due to %v\n ", id, e)
+			log.Printf("Gates.entryProcessingSetUp: recovering for entry thread %v due to %v\n ", id, e)
 			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
 		}
 	}()
@@ -61,7 +62,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 
 }
 
-// TODO tested in real office
+// implements the algorithm logic od the gate data processing
 // NOTE extend to more than 2 devices per gate
 func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int,
 	scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
@@ -118,16 +119,6 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 	}
 
 	for _, gate := range gateListEntry {
-		// out not detected by sensor 1
-		//if scratchPad.unusedSampleSum[gate[0]] < 0 {
-		//	scratchPad.unusedSampleSum[gate[0]] = 0
-		//	rt--
-		//}
-		//// in not detected by sensor 0
-		//if scratchPad.unusedSampleSum[gate[1]] > 0 {
-		//	scratchPad.unusedSampleSum[gate[1]] = 0
-		//	rt++
-		//}
 		// in not detected by sensor 1
 		if flag[gate[1]] && scratchPad.senData[gate[1]].val == 0 && scratchPad.unusedSampleSumIn[gate[0]] > 0 {
 			// if flag in the scratchPad it needs to ne reset

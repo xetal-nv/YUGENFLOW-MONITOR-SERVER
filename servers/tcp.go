@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-//func setUpTCP() {
+// set-up of the TCP server
 func setUpTCP() {
 	if os.Getenv("CRC") == "1" {
 		crcUsed = true
@@ -48,6 +48,8 @@ func setUpTCP() {
 	SensorCmd = make(map[int]chan []byte)
 	sensorMac = make(map[int][]byte)
 }
+
+// start of the TCP server, including set-up
 func StartTCP(sd chan context.Context) {
 
 	setUpTCP()

@@ -10,8 +10,10 @@ import (
 var Debug int
 var LabelLength int
 
-const logfilename string = "logfile"
-const TimeLayout = "15:04"
+const logfilename string = "logfile" // logfile name
+const TimeLayout = "15:04"           // time layout used to read the configuration file
+
+// set-ups all support variables according to the configuration file .env
 
 func SupportSetUp(envf string) {
 	if envf == "" {

@@ -2,11 +2,13 @@ package spaces
 
 import "time"
 
+// defines an averaging interval
 type avgInterval struct {
 	name     string
 	interval int
 }
 
+// define the interval when every counter needs to be forced to zero
 type closureRange struct {
 	start time.Time
 	end   time.Time

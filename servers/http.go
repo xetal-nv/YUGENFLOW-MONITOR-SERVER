@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// starts HTTP servers
+
 func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) {
 
 	mx := mux.NewRouter()

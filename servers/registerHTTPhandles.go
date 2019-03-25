@@ -74,7 +74,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 	})
 }
 
-// handles space requests
+// handles requests for all current data for a given space
 func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handler {
 
 	sp := strings.Split(strings.Trim(path, "/"), "/")
@@ -110,6 +110,7 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 	})
 }
 
+// handles requests for all current data for a given type (samp,l, entry)
 func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handler {
 	tag := strings.Replace(path[1:], "_", "", -1)
 
@@ -128,7 +129,6 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 				log.Println("servers.datatypeRegisterHTTPhandler: died from: ", e)
 			}
 		}()
-		//fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
 
 		//Allow CORS here By * or specific origin
 		if cors {
@@ -145,8 +145,8 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 	})
 }
 
+// support function for topology extraction
 func retrieveSpace(tag string, sp []string, als []string, ref string) (rt RegisterBank) {
-	//fmt.Println(tag, sp, als, ref)
 	rt.Name = tag
 
 	var ca []chan Register

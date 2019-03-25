@@ -7,7 +7,9 @@ import (
 	"strconv"
 )
 
-// sends the gate data to the proper counters
+// sends a sensor gate data to the proper counters
+// dev: device id
+// val: data
 func SendData(dev int, val int) error {
 	if v, ok := sensorList[dev]; ok {
 

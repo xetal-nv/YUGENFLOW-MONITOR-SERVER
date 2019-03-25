@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// set-ups database
 func TimedIntDBSSetUp(fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence
 	force := false
@@ -71,6 +72,7 @@ func TimedIntDBSSetUp(fd bool) error {
 	return err
 }
 
+// closes database, it is used to support defer closure
 func TimedIntDBSClose() {
 	if support.Debug < 3 {
 		//noinspection GoUnhandledErrorResult
@@ -81,6 +83,7 @@ func TimedIntDBSClose() {
 }
 
 // External functions/API
+// set-ups a series and/or retrieve its definition from the database
 func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 	found = true
 	var db badger.DB
@@ -115,6 +118,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 	return found, err
 }
 
+// reads the header of a series
 func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	var db badger.DB
 	if sDB {
@@ -134,6 +138,7 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	return
 }
 
+// updates the header of a series
 func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
 	var ts int64
 	var hd Headerdata
@@ -156,6 +161,7 @@ func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
 	return
 }
 
+// stores a sample, optionally it updates the header
 func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	ts := d.Ts()
 	tag := d.Tag()
@@ -181,6 +187,12 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	return err
 }
 
+// reads a series, all values between the timestamos included in s0 and s1 are reads
+// values are returnes as a set of values
+// tag: identified of the series
+// rts: list of timestamps
+// rt: list of the series values ordered according to rts
+// err: reports the error is any
 func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
@@ -219,6 +231,12 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 	return tag, rts, rt, err
 }
 
+// It returns the values for the last N timestamps
+// values are returnes as a set of values
+// tag: identified of the series
+// rts: list of timestamps
+// rt: list of the series values ordered according to rts
+// err: reports the error is any
 func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	if head.MarshalSize() == 0 && len(head.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
@@ -255,6 +273,7 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 	return
 }
 
+// returns the stored definition of a series with identified tag
 func GetDefinition(tag string) []int64 {
 	return tagStart[tag]
 }

@@ -6,6 +6,8 @@ import (
 	"log"
 )
 
+// handler for a DBS with generic value coming from a channel on a generic interface{}
+// a is used to infert the actual value from the generic channel
 func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData) {
 
 	r := func() {

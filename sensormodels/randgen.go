@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// for testing purposes only
+
 func Randgen() {
 	iter := 20
 	vals := []int{-1, 0, 1, 2, 127}

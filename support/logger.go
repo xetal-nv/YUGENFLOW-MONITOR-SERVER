@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+// set-ups the official log file
+
 var logf *os.File
 var e error
 var once sync.Once

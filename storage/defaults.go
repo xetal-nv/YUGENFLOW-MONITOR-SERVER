@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var currentDB, statsDB *badger.DB
-var once sync.Once
-var currentTTL time.Duration
-var tagStart map[string][]int64
+var currentDB, statsDB *badger.DB // databases
+var once sync.Once                // used fpr one time set-up function
+var currentTTL time.Duration      // provides the TTL value to be used
+var tagStart map[string][]int64   // map of definition for all series currently in use

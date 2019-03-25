@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+// handlers all TCP requests from a device
+// it detects data, commands and command answers and act accordingly
+// starts the associated handlerCommandAnswer
 func handlerTCPRequest(conn net.Conn) {
 
 	var deviceId int
@@ -163,7 +166,9 @@ func handlerTCPRequest(conn net.Conn) {
 	}
 }
 
-// TODO to be tested with real device
+// handles all command received internall from channel CE and interacts with the associated device and
+// handlerTCPRequest (via ci channel) for proper execution.
+// in case of error the channel is closed
 func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id ...int) {
 	loop := true
 	if len(id) == 0 {
