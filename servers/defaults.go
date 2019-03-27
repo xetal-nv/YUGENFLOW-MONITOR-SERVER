@@ -4,6 +4,7 @@ import (
 	"context"
 	"countingserver/spaces"
 	"countingserver/storage"
+	"countingserver/support"
 	"log"
 	"net/http"
 	"os"
@@ -107,13 +108,35 @@ func setupHTTP() error {
 		hMap[1][p] = datatypeRegisterHTTPhandler(p, keysSpaces)
 	}
 
-	for i, v := range strings.Split(os.Getenv("HTTPSPORTS"), ",") {
-		addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
+	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
+	for i, v := range ports {
+		if port := strings.Trim(v, " "); port != "" {
+			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
+		} else {
+			log.Fatal("ServersSetup: fatal error: invalid addresses")
+		}
+		for j, c := range addServer {
+			if addServer[i] == c && i != j {
+				log.Fatal("ServersSetup: fatal error: invalid addresses")
+			}
+		}
+	}
+	ip := ""
+	if ip = os.Getenv("IP"); ip == "" {
+		ip = support.GetOutboundIP().String()
 	}
 
-	if addServer[0] == addServer[1] || addServer[0] == "" || addServer[1] == "" {
-		log.Fatal("ServersSetup: fatal error: invalid addresses")
+	f, err := os.Create(".\\html\\js\\ip.js")
+	if err != nil {
+		log.Fatal("Fatal error creating ip.js: ", err)
 	}
-
+	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to ip.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing ip.js: ", err)
+	}
 	return nil
 }

@@ -2,8 +2,6 @@ let spacename = "";
 let measurement = "sample";
 let allmeasurements = [{"name": "current", "value": "0"}];
 let selel = null;
-let address = "http://192.168.1.180:8090";
-// let address = "http://localhost:8090";
 
 function timeConverter(UNIX_timestamp) {
     let a = new Date(UNIX_timestamp);
@@ -40,7 +38,7 @@ function drawSpace(rawspaces) {
     function readPlan(name, od) {
         $.ajax({
             type: 'GET',
-            url: address + "/plan/" + name,
+            url: ip + "/plan/" + name,
             success: function (data) {
                 let jsObj = JSON.parse(data);
                 plan = draw.svg(jsObj["qualifier"]);
@@ -93,7 +91,7 @@ function drawSpace(rawspaces) {
         select.appendChild(el);
     }
 
-    resetcanvas()
+    resetcanvas();
 
     select.onchange = function () {
         var myindex = select.selectedIndex;
@@ -105,7 +103,7 @@ function drawSpace(rawspaces) {
 
     function updatedata() {
         if (spacename !== "") {
-            let urlv = address + "/" + measurement.split("_")[0] + "/" + spacename + "/";
+            let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
             // console.log(allmeasurements)
             for (let i = 0; i < allmeasurements.length; i++) {
 
@@ -163,7 +161,7 @@ $(document).ready(function () {
     (function () {
         $.ajax({
             type: 'GET',
-            url: address + "/asys",
+            url: ip + "/asys",
             success: function (data) {
                 let jsObj = JSON.parse(data);
                 // console.log(jsObj)
@@ -190,7 +188,7 @@ $(document).ready(function () {
     (function () {
         $.ajax({
             type: 'GET',
-            url: address + "/info",
+            url: ip + "/info",
             success: function (data) {
                 let spaces = JSON.parse(data);
                 drawSpace(spaces)

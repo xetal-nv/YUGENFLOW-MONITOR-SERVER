@@ -1,6 +1,8 @@
 package support
 
 import (
+	"log"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -95,4 +97,17 @@ func inTimeSpan(start, end, check time.Time) bool {
 		return check.After(start)
 	}
 	return check.Before(start)
+}
+
+// Get preferred outbound ip of this machine
+func GetOutboundIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
 }

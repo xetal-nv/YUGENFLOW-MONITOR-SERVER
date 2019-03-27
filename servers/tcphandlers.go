@@ -38,7 +38,7 @@ func handlerTCPRequest(conn net.Conn) {
 	mac := make([]byte, 6)
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 
-	// Initially receive the MAC address
+	// Initially receive the MAC ip
 	if _, e := conn.Read(mac); e != nil {
 		log.Printf("servers.handlerTCPRequest: error reading from %v::%v : %v\n", ipc, mac, e)
 	} else {
