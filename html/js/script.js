@@ -2,6 +2,8 @@ let spacename = "";
 let measurement = "sample";
 let allmeasurements = [{"name": "current", "value": "0"}];
 let selel = null;
+let address = "http://192.168.1.180:8090";
+// let address = "http://localhost:8090";
 
 function timeConverter(UNIX_timestamp) {
     let a = new Date(UNIX_timestamp);
@@ -38,7 +40,7 @@ function drawSpace(rawspaces) {
     function readPlan(name, od) {
         $.ajax({
             type: 'GET',
-            url: "http://localhost:8090/plan/" + name,
+            url: address + "/plan/" + name,
             success: function (data) {
                 let jsObj = JSON.parse(data);
                 plan = draw.svg(jsObj["qualifier"]);
@@ -103,7 +105,7 @@ function drawSpace(rawspaces) {
 
     function updatedata() {
         if (spacename !== "") {
-            let urlv = "http://localhost:8090/" + measurement.split("_")[0] + "/" + spacename + "/";
+            let urlv = address + "/" + measurement.split("_")[0] + "/" + spacename + "/";
             // console.log(allmeasurements)
             for (let i = 0; i < allmeasurements.length; i++) {
 
@@ -161,7 +163,7 @@ $(document).ready(function () {
     (function () {
         $.ajax({
             type: 'GET',
-            url: "http://localhost:8090/asys",
+            url: address + "/asys",
             success: function (data) {
                 let jsObj = JSON.parse(data);
                 // console.log(jsObj)
@@ -188,7 +190,7 @@ $(document).ready(function () {
     (function () {
         $.ajax({
             type: 'GET',
-            url: "http://localhost:8090/info",
+            url: address + "/info",
             success: function (data) {
                 let spaces = JSON.parse(data);
                 drawSpace(spaces)
