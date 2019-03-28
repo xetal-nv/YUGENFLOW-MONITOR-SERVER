@@ -1,8 +1,12 @@
 package support
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -110,4 +114,23 @@ func GetOutboundIP() net.IP {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 
 	return localAddr.IP
+}
+
+// Get the root folder of the executable
+func GetCurrentExecDir() (dir string, err error) {
+	path, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		fmt.Printf("exec.LookPath(%s), err: %s\n", os.Args[0], err)
+		return "", err
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		fmt.Printf("filepath.Abs(%s), err: %s\n", path, err)
+		return "", err
+	}
+
+	dir = filepath.Dir(absPath)
+	return dir, nil
+
 }

@@ -7,6 +7,7 @@ import (
 	"countingserver/spaces"
 	"countingserver/storage"
 	"countingserver/support"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -14,6 +15,19 @@ import (
 )
 
 func main() {
+
+	folder, _ := support.GetCurrentExecDir()
+
+	folder = os.Getenv("GATESERVER")
+	fmt.Println(folder)
+
+	if folder != "" {
+		e := os.Chdir(folder)
+		log.Printf("Move to folder %v\n", folder)
+		if e != nil {
+			log.Fatal("Unable to move to folder %v, error reported:%v\n", folder, e)
+		}
+	}
 
 	cleanup := func() {
 		log.Println("System shutting down")

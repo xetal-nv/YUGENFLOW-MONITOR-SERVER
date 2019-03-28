@@ -126,7 +126,7 @@ func setupHTTP() error {
 		ip = support.GetOutboundIP().String()
 	}
 
-	f, err := os.Create(".\\html\\js\\ip.js")
+	f, err := os.Create("./html/js/ip.js")
 	if err != nil {
 		log.Fatal("Fatal error creating ip.js: ", err)
 	}
