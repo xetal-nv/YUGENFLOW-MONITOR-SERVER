@@ -1,8 +1,8 @@
 package gates
 
 import (
-	"countingserver/support"
 	"fmt"
+	"gateserver/support"
 	"github.com/pkg/errors"
 	"strconv"
 )

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"countingserver/gates"
-	"countingserver/spaces"
-	"countingserver/storage"
-	"countingserver/support"
 	"encoding/json"
 	"fmt"
+	"gateserver/gates"
+	"gateserver/spaces"
+	"gateserver/storage"
+	"gateserver/support"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"

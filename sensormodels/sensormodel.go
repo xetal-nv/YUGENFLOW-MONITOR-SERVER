@@ -1,8 +1,8 @@
 package sensormodels
 
 import (
-	"countingserver/codings"
 	"fmt"
+	"gateserver/codings"
 	"math/rand"
 	"net"
 	"os"
@@ -34,10 +34,10 @@ func SensorModel(id, iter, mxdelay int, vals []int) {
 	port := os.Getenv("TCPPORT")
 	conn, e := net.Dial(os.Getenv("TCPPROT"), "0.0.0.0:"+port)
 	//noinspection GoUnhandledErrorResult
-	defer conn.Close()
-	if e != nil {
+	if e != nil || conn == nil {
 		fmt.Println("Unable to connect")
 	} else {
+		defer conn.Close()
 		// sensor registers first
 		//noinspection GoUnhandledErrorResult
 		conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})

@@ -2,7 +2,7 @@ package servers
 
 import (
 	"context"
-	"countingserver/support"
+	"gateserver/support"
 	"log"
 	"net"
 	"os"

@@ -1,7 +1,7 @@
 package gates
 
 import (
-	"countingserver/support"
+	"gateserver/support"
 	"log"
 	"os"
 	"strconv"

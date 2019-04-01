@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"countingserver/support"
 	"encoding/binary"
 	"errors"
+	"gateserver/support"
 	"github.com/dgraph-io/badger"
 	"log"
 	"os"
@@ -62,7 +62,7 @@ func TimedIntDBSSetUp(fd bool) error {
 			if err == nil {
 				statsDB, err = badger.Open(optsStats)
 				if err != nil {
-					currentDB.Close()
+					_ = currentDB.Close()
 				}
 			}
 		})

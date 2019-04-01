@@ -1,11 +1,11 @@
 package servers
 
 import (
-	"countingserver/gates"
-	"countingserver/spaces"
-	"countingserver/support"
 	"encoding/json"
 	"fmt"
+	"gateserver/gates"
+	"gateserver/spaces"
+	"gateserver/support"
 	"io/ioutil"
 	"log"
 	"net/http"

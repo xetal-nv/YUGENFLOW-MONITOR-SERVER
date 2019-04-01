@@ -2,11 +2,11 @@ package servers
 
 import (
 	"context"
-	"countingserver/gates"
-	"countingserver/spaces"
-	"countingserver/storage"
-	"countingserver/support"
 	"fmt"
+	"gateserver/gates"
+	"gateserver/spaces"
+	"gateserver/storage"
+	"gateserver/support"
 	"math/rand"
 	"net"
 	"os"

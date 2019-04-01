@@ -2,9 +2,9 @@ package servers
 
 import (
 	"context"
-	"countingserver/spaces"
-	"countingserver/storage"
-	"countingserver/support"
+	"gateserver/spaces"
+	"gateserver/storage"
+	"gateserver/support"
 	"log"
 	"net/http"
 	"os"

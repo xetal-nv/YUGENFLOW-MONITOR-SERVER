@@ -1,7 +1,7 @@
 package spaces
 
 import (
-	"countingserver/support"
+	"gateserver/support"
 	"log"
 	"math"
 	"strconv"

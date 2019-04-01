@@ -1,10 +1,10 @@
 package servers
 
 import (
-	"countingserver/codings"
-	"countingserver/gates"
-	"countingserver/support"
 	"fmt"
+	"gateserver/codings"
+	"gateserver/gates"
+	"gateserver/support"
 	"io"
 	"log"
 	"net"

@@ -1,8 +1,8 @@
 package servers
 
 import (
-	"countingserver/support"
 	"encoding/json"
+	"gateserver/support"
 	"log"
 	"net/http"
 	"os"

@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"countingserver/support"
+	"gateserver/support"
 )
 
 // SafeReg implement a single input (n) single output (o)

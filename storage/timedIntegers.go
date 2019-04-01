@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"countingserver/support"
+	"gateserver/support"
 )
 
 type DataCt struct {
@@ -12,7 +12,7 @@ type DataCt struct {
 // IntCell implement a single input (n) single output (o)
 // non-blocking integer register.
 // d is its default value at start, if not given -1 will be used
-func TimedIntCell(_ string, in, out chan DataCt, d ...DataCt) { // is
+func _TimedIntCell(_ string, in, out chan DataCt, d ...DataCt) { // is
 	r := func() {
 		var data DataCt
 		if len(d) == 1 {

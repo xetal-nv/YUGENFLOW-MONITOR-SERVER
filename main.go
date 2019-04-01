@@ -1,13 +1,13 @@
 package main
 
 import (
-	"countingserver/gates"
-	"countingserver/sensormodels"
-	"countingserver/servers"
-	"countingserver/spaces"
-	"countingserver/storage"
-	"countingserver/support"
 	"fmt"
+	"gateserver/gates"
+	"gateserver/sensormodels"
+	"gateserver/servers"
+	"gateserver/spaces"
+	"gateserver/storage"
+	"gateserver/support"
 	"log"
 	"os"
 	"os/signal"

@@ -1,8 +1,8 @@
 package spaces
 
 import (
-	"countingserver/storage"
-	"countingserver/support"
+	"gateserver/storage"
+	"gateserver/support"
 	"log"
 	"os"
 	"sort"

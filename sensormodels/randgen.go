@@ -1,8 +1,8 @@
 package sensormodels
 
 import (
-	"countingserver/codings"
 	"fmt"
+	"gateserver/codings"
 	"math/rand"
 	"net"
 	"os"
@@ -11,7 +11,7 @@ import (
 
 // for testing purposes only
 
-func Randgen() {
+func _Randgen() {
 	iter := 20
 	vals := []int{-1, 0, 1, 2, 127}
 	devices := []int{0, 1}
@@ -42,13 +42,15 @@ func Randgen() {
 				msg := []byte{2}
 				msg = append(msg, codings.Crc8(msg))
 				fmt.Println("sending something else", msg)
-				conn.Write(msg)
+				_, _ = conn.Write(msg)
 				time.Sleep(1000 * time.Millisecond)
 			}
 
 		}
 	}
 	//noinspection GoUnhandledErrorResult
-	conn.Close()
+	if conn != nil {
+		conn.Close()
+	}
 	fmt.Println(" TEST -> Disconnect to TCP channel")
 }

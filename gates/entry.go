@@ -1,9 +1,9 @@
 package gates
 
 import (
-	"countingserver/spaces"
-	"countingserver/support"
 	"fmt"
+	"gateserver/spaces"
+	"gateserver/support"
 	"log"
 )
 
