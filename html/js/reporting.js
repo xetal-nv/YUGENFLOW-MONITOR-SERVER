@@ -73,18 +73,24 @@ $(document).ready(function () {
             $.ajax({
                 type: 'GET',
                 url: ip + apipath,
-                success: function (data) {
-                    let jsObj = JSON.parse(data);
-                    console.log("\"#space: ", space, " \"");
-                    console.log("\"#start: ", startDate, " \"");
-                    console.log("\"#end: ", endDate, " \"");
-                    console.log("ts, sample");
+                success: function (rawdata) {
+                    let jsObj = JSON.parse(rawdata);
+                    var data = "\"#space: " + space + " \"\n";
+                    data += "\"#dataset: " + asys + " \"\n";
+                    data += "\"#start: " + startDate + " \"\n";
+                    data += "\"#end: " + endDate + " \"\n";
+                    data += "timestamp (date), timestamp (s), counter\n";
                     for (let i = 0; i < jsObj.length; i++) {
                         if ((jsObj[i]["ts"] !== "") && (jsObj[i]["val"] !== "")) {
-                            let line = jsObj[i]["ts"] + ", " + jsObj[i]["val"];
-                            console.log(line)
+                            data += new Date(jsObj[i]["ts"]) + ", " + jsObj[i]["ts"] / 1000 + ", " + jsObj[i]["val"] + "\n";
                         }
                     }
+                    var blob = new Blob([data], {type: 'text/plain'}),
+                        anchor = document.createElement('a');
+                    anchor.download = space + "_" + asys + ".csv";
+                    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+                    anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+                    anchor.click();
                 },
                 error: function (error) {
                     alert("Error " + error);
