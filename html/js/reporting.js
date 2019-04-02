@@ -75,7 +75,16 @@ $(document).ready(function () {
                 url: ip + apipath,
                 success: function (data) {
                     let jsObj = JSON.parse(data);
-                    console.log(jsObj)
+                    console.log("\"#space: ", space, " \"");
+                    console.log("\"#start: ", startDate, " \"");
+                    console.log("\"#end: ", endDate, " \"");
+                    console.log("ts, sample");
+                    for (let i = 0; i < jsObj.length; i++) {
+                        if ((jsObj[i]["ts"] !== "") && (jsObj[i]["val"] !== "")) {
+                            let line = jsObj[i]["ts"] + ", " + jsObj[i]["val"];
+                            console.log(line)
+                        }
+                    }
                 },
                 error: function (error) {
                     alert("Error " + error);
