@@ -48,20 +48,40 @@ $(document).ready(function () {
 
     document.getElementById("gen").addEventListener("click", displayDate);
 
+    // TODO HERE
+
     function displayDate() {
-        if ((startDate !== undefined) && (endDate !== undefined)) {
-            console.log("start: " + startDate);
-            console.log("start: " + startDate.getUnixTime());
+        let select = document.getElementById("spacename");
+        var myindex = select.selectedIndex,
+            space = select.options[myindex].value;
+        select = document.getElementById("reptype");
+        myindex = select.selectedIndex;
+        var asys = select.options[myindex].value,
+            start, end;
+        if ((startDate !== undefined) && (endDate !== undefined)
+            && (space !== "Choose a space") && (asys !== "Choose a dataset")) {
+            start = startDate.getUnixTime();
             endDate.setHours(endDate.getHours() + 23);
             endDate.setMinutes(endDate.getMinutes() + 59);
-            // console.log("end: " + Date.now());
             if (endDate.getUnixTime() > Date.now()) {
-                console.log("end: Now");
-                console.log("end: " + Date.now());
+                end = Date.now();
             } else {
-                console.log("end: " + endDate);
-                console.log("end: " + endDate.getUnixTime());
+                end = endDate.getUnixTime();
             }
+            let apipath = "/series?type=sample?space=" + space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
+            console.log(apipath);
+            $.ajax({
+                type: 'GET',
+                url: ip + apipath,
+                success: function (data) {
+                    let jsObj = JSON.parse(data);
+                    console.log(jsObj)
+                },
+                error: function (error) {
+                    alert("Error " + error);
+                }
+
+            });
         }
     }
 });

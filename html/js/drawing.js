@@ -164,10 +164,16 @@ $(document).ready(function () {
             url: ip + "/asys",
             success: function (data) {
                 let jsObj = JSON.parse(data);
+                let rp = document.getElementById("reptype");
                 // console.log(jsObj)
-                for (let i = 0; i < jsObj.length; i++) {
+                let ch = document.createElement("option");
+                ch.textContent = "current";
+                rp.appendChild(ch);                for (let i = 0; i < jsObj.length; i++) {
                     let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
                     allmeasurements.push(el)
+                    let ch = document.createElement("option");
+                    ch.textContent = jsObj[i]["name"];
+                    rp.appendChild(ch);
                 }
                 let html = "";
                 for (let i = 0; i < allmeasurements.length; i++) {
