@@ -13,32 +13,35 @@ p { line-height: 1.5em; }
 
 
 label {
-    font-size: .75em;
     font-weight: bold;
 }
 
 input[type="text"] {
-    font-size: .75em;
-    margin: 0.5em 0 3em 0;
+    margin: 0.5em 0 1em 0;
     padding: 0.5em;
 }
 
 button#datepicker-button {
-    margin-bottom: 3em;
+    margin-bottom: 1em;
+    background: white;
 }
 
 .flow-element {
+    background: white;
     display: inline-block;
     margin-right: 3em;
     vertical-align: top;
 }
 .flow-element:last-child {
+    background: white;
     margin-right: 0;
 }
 .flow-element input {
+    background: white;
     margin-top: 0;
 }
 
 #container {
+    background: white;
     min-height: 10em;
 }

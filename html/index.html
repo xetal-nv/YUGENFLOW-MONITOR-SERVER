@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-GB">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-GB" lang="en-GB">
 <head>
     <title>Xetal Flow Monitor</title>
     <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
@@ -6,11 +6,13 @@
     <meta name="keywords" content=""/>
     <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" type="text/css" href="./css/css.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="./css/pikaday.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="./css/site.css" media="screen"/>
 
     <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="js/svg.min.js"></script>
     <script type="text/javascript" src="js/ip.js"></script>
-    <script type="text/javascript" src="js/drawing.js"></script>
+    <script src="js/pikaday.js"></script>
 
 </head>
 <body>
@@ -56,6 +58,27 @@
                 </tbody>
             </table>
             <!-- Data end -->
+            <!-- Report start -->
+            <hr>
+            <form id="spacesel">
+                <select id="reptype">
+                    <option>Choose a dataset</option>
+                </select>
+            </form>
+            <div>
+                <label for="start">Start:</label>
+                <br>
+                <input type="text" id="start">
+            </div>
+            <div>
+                <label for="end">End:</label>
+                <br>
+                <input type="text" id="end">
+            </div>
+            <div>
+                <input type="button" value="Generate report" id="gen">
+            </div>
+            <!-- Report end -->
         </div>
     </div>
 </div>
@@ -63,6 +86,8 @@
     <p>Powered by Xetal Yugen</p>
 </div>
 
+<script type="text/javascript" src="js/drawing.js"></script>
+<script type="text/javascript" src="js/reporting.js"></script>
 
 </body>
 </html>
