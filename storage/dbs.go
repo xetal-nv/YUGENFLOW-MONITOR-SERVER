@@ -53,9 +53,11 @@ func TimedIntDBSSetUp(fd bool) error {
 	if support.Debug < 3 {
 		once.Do(func() {
 			optsCurr := badger.DefaultOptions
+			optsCurr.Truncate = true
 			optsCurr.Dir = "dbs/current"
 			optsCurr.ValueDir = "dbs/current"
 			optsStats := badger.DefaultOptions
+			optsStats.Truncate = true
 			optsStats.Dir = "dbs/statsDB"
 			optsStats.ValueDir = "dbs/statsDB"
 			currentDB, err = badger.Open(optsCurr)
