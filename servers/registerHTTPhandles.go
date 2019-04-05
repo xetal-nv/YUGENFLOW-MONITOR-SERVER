@@ -32,9 +32,6 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
-	// TODO this is a race
-	//rt := Register{true, "", dataMap[ref]()}
-
 	cors := false
 	if os.Getenv("CORS") != "" {
 		cors = true

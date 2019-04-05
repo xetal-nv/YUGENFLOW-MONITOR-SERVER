@@ -297,13 +297,6 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(s0).String())
 		return
 	}
-	//var db badger.DB
-	//if sDB {
-	//	db = *statsDB
-	//} else {
-	//	db = *currentDB
-	//}
-	//fmt.Println(s0, s1)
 	tag = s0.Tag()
 	ts0 := s0.Ts()
 	ts1 := s1.Ts()
@@ -317,27 +310,21 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 			for i <= i1 {
 				lab := []byte(tag + strconv.Itoa(int(i)))
 				co := make(chan dbOutChan)
-				//var db badger.DB
 				if sDB {
-					//db = *statsDB
 					select {
 					case statsChanOut <- dbOutCommChan{lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
 					case <-time.After(time.Duration(timeout) * time.Second):
 						return tag, rts, rt, errors.New("ReadSeries " + tag + " stats time out")
 					}
 				} else {
-					//db = *currentDB
-					//fmt.Println("here")
 					select {
 					case currentChanOut <- dbOutCommChan{lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
 					case <-time.After(time.Duration(timeout) * time.Second):
 						return tag, rts, rt, errors.New("ReadSeries " + tag + " current time out")
 					}
 				}
-				//fmt.Println("going for receive", co)
 				select {
 				case ans := <-co:
-					//fmt.Print("received", ans)
 					if ans.err == nil {
 						nts := st[0] + i*st[1]*1000
 						rt = append(rt, ans.r)
@@ -346,11 +333,6 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 				case <-time.After(time.Duration(timeout) * time.Second):
 					return tag, rts, rt, errors.New("ReadSeries " + tag + " receive time out")
 				}
-				//if v, e := read(lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), db); e == nil {
-				//	nts := st[0] + i*st[1]*1000
-				//	rt = append(rt, v)
-				//	rts = append(rts, nts)
-				//}
 				i += 1
 			}
 		}
@@ -371,12 +353,6 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
 		return
 	}
-	//var db badger.DB
-	//if sDB {
-	//	db = *statsDB
-	//} else {
-	//	db = *currentDB
-	//}
 	tag = head.Tag()
 	ts1 := head.Ts()
 	if st, ok := tagStart[tag]; ok {
@@ -389,27 +365,21 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 				if i > 0 {
 					lab := []byte(tag + strconv.Itoa(int(i)))
 					co := make(chan dbOutChan)
-					//var db badger.DB
 					if sDB {
-						//db = *statsDB
 						select {
 						case statsChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
 						case <-time.After(time.Duration(timeout) * time.Second):
 							return tag, rts, rt, errors.New("ReadLastN " + tag + " stats time out")
 						}
 					} else {
-						//db = *currentDB
-						//fmt.Println("here")
 						select {
 						case currentChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
 						case <-time.After(time.Duration(timeout) * time.Second):
 							return tag, rts, rt, errors.New("ReadLastN " + tag + " current time out")
 						}
 					}
-					//fmt.Println("going for receive", co)
 					select {
 					case ans := <-co:
-						//fmt.Print("received", ans)
 						if ans.err == nil {
 							nts := st[0] + i*st[1]*1000
 							rt = append(rt, ans.r)
@@ -418,11 +388,6 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 					case <-time.After(time.Duration(timeout) * time.Second):
 						return tag, rts, rt, errors.New("ReadLastN " + tag + " receive time out")
 					}
-					//if v, e := read(lab, head.MarshalSize(), head.MarshalSizeModifiers(), db); e == nil {
-					//	nts := st[0] + i*st[1]*1000
-					//	rt = append(rt, v)
-					//	rts = append(rts, nts)
-					//}
 				}
 			}
 		}
@@ -521,41 +486,31 @@ func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 	}
 
 	for {
-		//fmt.Println("dbReadDriver waiting")
 		req := <-ch
-		//go func(req dbOutCommChan, db badger.DB) {
-		//fmt.Println("dbReadDriver starting", req)
-		var v []byte
-		var e error
-		if req.l > 0 {
-			v, e = read(req.id, req.l, db)
-			//select {
-			//case req.co <- dbOutChan{v, e}:
-			//case <-time.After(time.Duration(timeout) * time.Second):
-			//}
-		} else {
-			var r []byte
-			if req.l == 0 && len(req.offset) == 2 {
-				r, e = read(req.id, 2, db)
-				if e == nil {
-					vs := int(binary.LittleEndian.Uint16(r))*req.offset[0] + 2 + req.offset[1]
-					if r, e = read(req.id, vs, db); e == nil {
-						v = make([]byte, len(r))
-						copy(v, r)
-						//select {
-						//case req.co <- dbOutChan{v, e}:
-						//case <-time.After(time.Duration(timeout) * time.Second):
-						//}
+		go func(req dbOutCommChan, db badger.DB) {
+			var v []byte
+			var e error
+			if req.l > 0 {
+				v, e = read(req.id, req.l, db)
+				//}
+			} else {
+				var r []byte
+				if req.l == 0 && len(req.offset) == 2 {
+					r, e = read(req.id, 2, db)
+					if e == nil {
+						vs := int(binary.LittleEndian.Uint16(r))*req.offset[0] + 2 + req.offset[1]
+						if r, e = read(req.id, vs, db); e == nil {
+							v = make([]byte, len(r))
+							copy(v, r)
+						}
 					}
 				}
 			}
-		}
-		select {
-		case req.co <- dbOutChan{v, e}:
-		case <-time.After(time.Duration(timeout) * time.Second):
-		}
-		//fmt.Println("dbReadDriver ending", req)
-		//}(req, db)
+			select {
+			case req.co <- dbOutChan{v, e}:
+			case <-time.After(time.Duration(timeout) * time.Second):
+			}
+		}(req, db)
 	}
 }
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"gateserver/gates"
 	"gateserver/sensormodels"
 	"gateserver/servers"
@@ -19,14 +18,10 @@ func main() {
 	folder, _ := support.GetCurrentExecDir()
 
 	folder = os.Getenv("GATESERVER")
-	fmt.Println(folder)
 
+	var e error
 	if folder != "" {
-		e := os.Chdir(folder)
-		log.Printf("Move to folder %v\n", folder)
-		if e != nil {
-			log.Fatal("Unable to move to folder %v, error reported:%v\n", folder, e)
-		}
+		e = os.Chdir(folder)
 	}
 
 	cleanup := func() {
@@ -35,6 +30,14 @@ func main() {
 		storage.TimedIntDBSClose()
 	}
 	support.SupportSetUp("")
+
+	if folder != "" {
+		if e == nil {
+			log.Printf("Move to folder %v\n", folder)
+		} else {
+			log.Fatal("Unable to move to folder %v, error reported:%v\n", folder, e)
+		}
+	}
 
 	// Set-up databases
 	if err := storage.TimedIntDBSSetUp(false); err != nil {

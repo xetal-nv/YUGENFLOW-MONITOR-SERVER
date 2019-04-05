@@ -49,8 +49,6 @@ $(document).ready(function () {
 
     document.getElementById("gen").addEventListener("click", generateReport);
 
-    // TODO HERE
-
     function generateReport() {
 
         function sortentryEl0(a, b) {
@@ -69,7 +67,6 @@ $(document).ready(function () {
                 data += ", entry:" + entrieslist[i][0];
             }
             data += ", server_down\n";
-            // console.log(data);
             for (let i = 0; i < sampledata.length; i++) {
                 if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
                     rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
@@ -82,9 +79,6 @@ $(document).ready(function () {
                 }
             }
             rawdataEntries.sort(sortentryEl0);
-            // console.log(entrieslist);
-            // console.log(rawdataSample);
-            // console.log(rawdataEntries);
 
             let tslist = [];
             let tsstep = -1;
@@ -123,26 +117,6 @@ $(document).ready(function () {
                 finalData[sam[0]] = [sam[1], []];
                 for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
             }
-
-            // use tslist
-            // for (let i = 0; i < tslist.length; i++) {
-            //     console.log(tslist[i])
-            // }
-
-            // for (var i in finalData) {
-            //     console.log(finalData[i]);
-            // }
-
-            // for (let i = 0; i < 10; i++) {
-            //     console.log(finalData[tslist[i]]);
-            //     data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
-            //         + ", " + finalData[tslist[i]][0];
-            //     for (let j=0; j< finalData[tslist[i]][1].length; j++) {
-            //         data += ", " + finalData[tslist[i]][1][j][1];
-            //     }
-            //     data += "\n";
-            // }
-
             for (let i = 0; i < tslist.length; i++) {
                 if (i>0) {
                     if ((tslist[i]-tslist[i-1])> (2 * tsstep)) {
@@ -162,7 +136,6 @@ $(document).ready(function () {
                 }
                 data += ", no\n";
             }
-            // console.log(data);
             var blob = new Blob([data], {type: 'text/plain'}),
                 anchor = document.createElement('a');
             anchor.download = space + "_" + asys + ".csv";
@@ -224,7 +197,8 @@ $(document).ready(function () {
             } else {
                 end = copyendDate.getUnixTime();
             }
-            let header = "\"#space: " + space + " \"\n"
+            let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
+                + "\"#space: " + space + " \"\n"
                 + "\"#dataset: " + asys + " \"\n"
                 + "\"#start: " + startDate + " \"\n"
                 + "\"#end: " + copyendDate + " \"\n\n"

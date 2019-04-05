@@ -13,6 +13,7 @@ var LabelLength int
 
 const logfilename string = "logfile" // logfile name
 const TimeLayout = "15:04"           // time layout used to read the configuration file
+const version = "v. 1.0.0"           // version
 
 var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on temrination does not affect critical operations
 
@@ -38,13 +39,12 @@ func SupportSetUp(envf string) {
 			LabelLength = v
 		}
 	}
-	log.Println("Maximum label length set to", LabelLength)
+
 	if db := os.Getenv("DEBUGMODE"); db == "0" {
 		Debug = 0
 	} else {
 		if v, e := strconv.Atoi(db); e == nil {
 			Debug = v
-			log.Printf("DEBUG MODE %v ACTIVE\n", v)
 		} else {
 			panic("Fatal error:" + e.Error())
 		}
@@ -54,6 +54,11 @@ func SupportSetUp(envf string) {
 		setUpLog(logfilename)
 	}
 	setUpDevLogger()
+	log.Printf("Xetal Gate Server version: %v\n", version)
+	log.Println("Maximum label length set to", LabelLength)
+	if Debug != 0 {
+		log.Printf("DEBUG MODE %v ACTIVE\n", Debug)
+	}
 }
 
 func SupportTerminate() {

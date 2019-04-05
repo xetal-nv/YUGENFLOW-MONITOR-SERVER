@@ -22,12 +22,6 @@ import (
 func seriesHTTPhandler() http.Handler {
 	var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
 
-	// TODO this generates a race
-	//params := make(map[string]string)
-	//for _, i := range cmds {
-	//	params[i] = ""
-	//}
-
 	cors := false
 	if os.Getenv("CORS") != "" {
 		cors = true
@@ -49,7 +43,6 @@ func seriesHTTPhandler() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		// TODO this removes a race
 		params := make(map[string]string)
 		for _, i := range cmds {
 			params[i] = ""
@@ -116,12 +109,6 @@ func seriesHTTPhandler() http.Handler {
 				if tag, ts, vals, e := storage.ReadSeries(s0, s1, params["analysis"] != "current"); e == nil {
 					rt = s0.UnmarshalSliceSS(tag, ts, vals)
 				}
-				//} else {
-				//	//fmt.Println("pippo")
-				//	fmt.Println(e)
-				//	//fmt.Fprintf(w, "error")
-				//	return
-				//}
 				_ = json.NewEncoder(w).Encode(rt)
 			}
 		}
