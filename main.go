@@ -50,9 +50,9 @@ func main() {
 	case "1":
 		//go sensormodels.Randgen()
 		go sensormodels.SensorModel(0, 100, 20, []int{-1, 0, 1, 2, 127})
-		//go sensormodels.SensorModel(1, 100, 20, []int{-1, 0, 1, 2, 127})
-		//go sensormodels.SensorModel(2, 100, 20, []int{-1, 0, 1, 2, 127})
-		//go sensormodels.SensorModel(3, 100, 20, []int{-1, 0, 1, 2, 127})
+		go sensormodels.SensorModel(1, 100, 20, []int{-1, 0, 1, 2, 127})
+		go sensormodels.SensorModel(2, 100, 20, []int{-1, 0, 1, 2, 127})
+		go sensormodels.SensorModel(3, 100, 20, []int{-1, 0, 1, 2, 127})
 	default:
 	}
 

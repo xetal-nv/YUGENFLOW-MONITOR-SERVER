@@ -291,7 +291,6 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 // rts: list of timestamps
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
-// TODO behaves weirdly on timeout and change of gates
 func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
@@ -367,18 +366,17 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 // rts: list of timestamps
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
-// TODO make it with channels!
 func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	if head.MarshalSize() == 0 && len(head.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
 		return
 	}
-	var db badger.DB
-	if sDB {
-		db = *statsDB
-	} else {
-		db = *currentDB
-	}
+	//var db badger.DB
+	//if sDB {
+	//	db = *statsDB
+	//} else {
+	//	db = *currentDB
+	//}
 	tag = head.Tag()
 	ts1 := head.Ts()
 	if st, ok := tagStart[tag]; ok {
@@ -390,11 +388,41 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 				i := i1 - int64(j)
 				if i > 0 {
 					lab := []byte(tag + strconv.Itoa(int(i)))
-					if v, e := read(lab, head.MarshalSize(), head.MarshalSizeModifiers(), db); e == nil {
-						nts := st[0] + i*st[1]*1000
-						rt = append(rt, v)
-						rts = append(rts, nts)
+					co := make(chan dbOutChan)
+					//var db badger.DB
+					if sDB {
+						//db = *statsDB
+						select {
+						case statsChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
+						case <-time.After(time.Duration(timeout) * time.Second):
+							return tag, rts, rt, errors.New("ReadLastN " + tag + " stats time out")
+						}
+					} else {
+						//db = *currentDB
+						//fmt.Println("here")
+						select {
+						case currentChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
+						case <-time.After(time.Duration(timeout) * time.Second):
+							return tag, rts, rt, errors.New("ReadLastN " + tag + " current time out")
+						}
 					}
+					//fmt.Println("going for receive", co)
+					select {
+					case ans := <-co:
+						//fmt.Print("received", ans)
+						if ans.err == nil {
+							nts := st[0] + i*st[1]*1000
+							rt = append(rt, ans.r)
+							rts = append(rts, nts)
+						}
+					case <-time.After(time.Duration(timeout) * time.Second):
+						return tag, rts, rt, errors.New("ReadLastN " + tag + " receive time out")
+					}
+					//if v, e := read(lab, head.MarshalSize(), head.MarshalSizeModifiers(), db); e == nil {
+					//	nts := st[0] + i*st[1]*1000
+					//	rt = append(rt, v)
+					//	rts = append(rts, nts)
+					//}
 				}
 			}
 		}

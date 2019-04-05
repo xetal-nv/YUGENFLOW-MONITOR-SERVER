@@ -68,7 +68,7 @@ $(document).ready(function () {
             for (let i = 0; i < entrieslist.length; i++) {
                 data += ", entry:" + entrieslist[i][0];
             }
-            data += "\n";
+            data += ", server_down\n";
             // console.log(data);
             for (let i = 0; i < sampledata.length; i++) {
                 if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
@@ -87,10 +87,21 @@ $(document).ready(function () {
             // console.log(rawdataEntries);
 
             let tslist = [];
+            let tsstep = -1;
             while (rawdataSample.length > 0) {
                 let sam = rawdataSample.shift(),
                     entries = entrieslist.slice();
                 tslist.push(sam[0]);
+                if (tsstep < 0) {
+                    tsstep +=1
+                } else {
+                    let cds = tslist[tslist.length-1] - tslist[tslist.length-2];
+                    if (tsstep === 0) {
+                        tsstep = cds
+                    } else {
+                        tsstep = Math.min(tsstep,cds)
+                    }
+                }
 
                 if (rawdataEntries.length > 0) {
                     while (Math.abs(sam[0] - rawdataEntries[0][0]) < samplingWindow) {
@@ -122,7 +133,6 @@ $(document).ready(function () {
             //     console.log(finalData[i]);
             // }
 
-            // TODO HERE, need to add entries
             // for (let i = 0; i < 10; i++) {
             //     console.log(finalData[tslist[i]]);
             //     data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
@@ -134,12 +144,23 @@ $(document).ready(function () {
             // }
 
             for (let i = 0; i < tslist.length; i++) {
+                if (i>0) {
+                    if ((tslist[i]-tslist[i-1])> (2 * tsstep)) {
+                        let diff = Math.trunc((tslist[i]-tslist[i-1])/2);
+                        data += new Date(tslist[i]-diff) + ", " + Math.trunc((tslist[i]-diff) / 1000)
+                            + ", -1";
+                        for (let j=0; j< finalData[tslist[i]][1].length; j++) {
+                            data += ", -1";
+                        }
+                        data += ", yes\n";
+                    }
+                }
                 data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
                     + ", " + finalData[tslist[i]][0];
                 for (let j=0; j< finalData[tslist[i]][1].length; j++) {
                     data += ", " + finalData[tslist[i]][1][j][1];
                 }
-                data += "\n";
+                data += ", no\n";
             }
             // console.log(data);
             var blob = new Blob([data], {type: 'text/plain'}),

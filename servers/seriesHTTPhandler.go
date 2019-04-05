@@ -2,7 +2,6 @@ package servers
 
 import (
 	"encoding/json"
-	"fmt"
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
@@ -73,7 +72,6 @@ func seriesHTTPhandler() http.Handler {
 		label += support.StringLimit(params["space"], support.LabelLength)
 		label += support.StringLimit(params["analysis"], support.LabelLength)
 		if params["last"] != "" {
-			// TODO needs to be changed for races!!
 			var s storage.SampleData
 			if num, e := strconv.Atoi(params["last"]); e == nil {
 				switch params["type"] {
@@ -114,17 +112,16 @@ func seriesHTTPhandler() http.Handler {
 					return
 				}
 
-				// TODO in case of e !=nil it is not working!!
 				var rt []storage.SampleData
 				if tag, ts, vals, e := storage.ReadSeries(s0, s1, params["analysis"] != "current"); e == nil {
 					rt = s0.UnmarshalSliceSS(tag, ts, vals)
-					//}
-				} else {
-					//fmt.Println("pippo")
-					fmt.Println(e)
-					//fmt.Fprintf(w, "error")
-					return
 				}
+				//} else {
+				//	//fmt.Println("pippo")
+				//	fmt.Println(e)
+				//	//fmt.Fprintf(w, "error")
+				//	return
+				//}
 				_ = json.NewEncoder(w).Encode(rt)
 			}
 		}
