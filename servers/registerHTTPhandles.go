@@ -32,7 +32,8 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
-	rt := Register{true, "", dataMap[ref]()}
+	// TODO this is a race
+	//rt := Register{true, "", dataMap[ref]()}
 
 	cors := false
 	if os.Getenv("CORS") != "" {
@@ -55,7 +56,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-
+		rt := Register{true, "", dataMap[ref]()}
 		select {
 		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
 			if e := rt.Data.Extract(data); e != nil {

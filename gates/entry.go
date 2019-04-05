@@ -9,16 +9,18 @@ import (
 
 // set-up for the processing of sensor/gate data into flow values for the associated entry id
 // new sensor data is passed by means of the in channel snd send to the proper space via a spaces.SendData call
-func entryProcessingSetUp(id int, in chan sensorData) {
+func entryProcessingSetUp(id int, in chan sensorData, entrylist EntryDef) {
 	var scratchPad scratchData
 	sensorListEntry := make(map[int]sensorData)
-	gateListEntry := EntryList[id].Gates
+	//gateListEntry := EntryList[id].Gates
+	gateListEntry := entrylist.Gates
 
 	scratchPad.senData = make(map[int]sensorData)
 	scratchPad.unusedSampleSumIn = make(map[int]int)
 	scratchPad.unusedSampleSumOut = make(map[int]int)
 
-	for i := range EntryList[id].SenDef {
+	//for i := range EntryList[id].SenDef {
+	for i := range entrylist.SenDef {
 		scratchPad.senData[i] = sensorData{i, 0, 0}
 		sensorListEntry[i] = sensorData{i, 0, 0}
 	}

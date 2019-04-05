@@ -74,8 +74,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					// Calculate the confidence measurement (number wrong data / number data
 					if counter.val < 0 {
 						stats[0] += 1
-						support.DLog <- support.DevData{"counter " + spacename + " current",
-							support.Timestamp(), "negative counter wrong/tots", stats, true}
+						support.DLog <- support.DevData{Tag: "counter " + spacename + " current",
+							//support.Timestamp(), "negative counter wrong/tots", stats, true}
+							Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), stats...), Aggr: true}
 					}
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
@@ -123,8 +124,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 						// Extract all applicable seriesfor each entry
 						entries := make(map[int][]dataEntry)
-						ne := make(map[int]dataEntry)
-						var wg sync.WaitGroup
+						//var wg sync.WaitGroup
 
 						for i, v := range buffer {
 							for j, ent := range v.entries {
@@ -132,14 +132,29 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 								entries[j] = append(entries[j], ent)
 							}
 						}
+						//ne1 := make(map[int]dataEntry)
+						ne := make(map[int]dataEntry)
+						nec := make(chan struct {
+							id   int
+							data dataEntry
+						}, len(entries))
 						for i, v := range entries {
-							wg.Add(1)
+							//wg.Add(1)
 							go func(i int, v []dataEntry) {
-								defer wg.Done()
-								ne[i] = dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}
+								//defer wg.Done()
+								//ne1[i] = dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}
+								nec <- struct {
+									id   int
+									data dataEntry
+								}{i, dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}}
 							}(i, v)
 						}
-						wg.Wait()
+						//wg.Wait()
+						for range entries {
+							el := <-nec
+							ne[el.id] = el.data
+						}
+						//fmt.Println(ne,ne1)
 						counter.entries = ne
 						counter.ts = cTS
 						passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))

@@ -43,7 +43,7 @@ var cmdAPI = map[string]cmdspecs{ // provides length for legal server2gate comma
 // handles the commands to the sensors
 func commandHTTHandler() http.Handler {
 
-	params := make(map[string]string)
+	//params := make(map[string]string)
 
 	cors := false
 	if os.Getenv("CORS") != "" {
@@ -65,6 +65,7 @@ func commandHTTHandler() http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
+		params := make(map[string]string)
 		for _, i := range cmds {
 			params[i] = ""
 		}

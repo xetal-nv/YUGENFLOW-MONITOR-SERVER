@@ -124,7 +124,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 // set-up counters thread and data flow structure based on the provided configuration
 func setpUpCounter() {
-	sw := os.Getenv("SAMWINDOW")
+	//sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
 		instNegSkip = false
 	} else {
@@ -138,7 +138,7 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting flag for skipping negative averages to %v\n", avgNegSkip)
 
-	if sw == "" {
+	if sw := os.Getenv("SAMWINDOW"); sw == "" {
 		samplingWindow = 30
 	} else {
 		if v, e := strconv.Atoi(sw); e != nil {
@@ -147,6 +147,18 @@ func setpUpCounter() {
 			samplingWindow = v
 			//}
 		}
+	}
+	f, err := os.Create("./html/js/sw.js")
+	if err != nil {
+		log.Fatal("Fatal error creating sw.js: ", err)
+	}
+	js := "var samplingWindow = " + strconv.Itoa(samplingWindow) + " * 1000;"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to sw.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing sw.js: ", err)
 	}
 	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", samplingWindow)
 

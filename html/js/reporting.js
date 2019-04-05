@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    document.getElementById("loader").style.visibility = "hidden";
     Date.prototype.getUnixTime = function () {
         return (this.getTime() / 1000 | 0) * 1000
     };
@@ -46,51 +47,186 @@ $(document).ready(function () {
         updateEndDate();
     }
 
-    document.getElementById("gen").addEventListener("click", displayDate);
+    document.getElementById("gen").addEventListener("click", generateReport);
 
     // TODO HERE
 
-    function displayDate() {
+    function generateReport() {
+
+        function sortentryEl0(a, b) {
+
+            if (a[0] < b[0]) return -1;
+            if (a[0] > b[0]) return 1;
+            return 0;
+        }
+
+        function exportreport(header, entrieslist, sampledata, entrydata) {
+            let data = header,
+                rawdataSample = [],
+                rawdataEntries = [],
+                finalData = {};
+            for (let i = 0; i < entrieslist.length; i++) {
+                data += ", entry:" + entrieslist[i][0];
+            }
+            data += "\n";
+            // console.log(data);
+            for (let i = 0; i < sampledata.length; i++) {
+                if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
+                    rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
+                }
+            }
+            rawdataSample.sort(sortentryEl0);
+            for (let i = 0; i < entrydata.length; i++) {
+                if ((entrydata[i]["ts"] !== "") && (entrydata[i]["val"] !== "")) {
+                    rawdataEntries.push([entrydata[i]["ts"], entrydata[i]["val"]])
+                }
+            }
+            rawdataEntries.sort(sortentryEl0);
+            // console.log(entrieslist);
+            // console.log(rawdataSample);
+            // console.log(rawdataEntries);
+
+            let tslist = [];
+            while (rawdataSample.length > 0) {
+                let sam = rawdataSample.shift(),
+                    entries = entrieslist.slice();
+                tslist.push(sam[0]);
+
+                if (rawdataEntries.length > 0) {
+                    while (Math.abs(sam[0] - rawdataEntries[0][0]) < samplingWindow) {
+                        let ents = rawdataEntries.shift();
+                        for (let i = 0; i < ents[1].length; i++) {
+                            let ent = ents[1][i];
+                            for (let j = 0; j < entries.length; j++) {
+                                if (entries[j][0] === ent[0]) {
+                                    entries[j][1] = ent[1];
+                                    break;
+                                }
+                            }
+                        }
+                        if (rawdataEntries.length === 0) {
+                            break;
+                        }
+                    }
+                }
+                finalData[sam[0]] = [sam[1], []];
+                for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
+            }
+
+            // use tslist
+            // for (let i = 0; i < tslist.length; i++) {
+            //     console.log(tslist[i])
+            // }
+
+            // for (var i in finalData) {
+            //     console.log(finalData[i]);
+            // }
+
+            // TODO HERE, need to add entries
+            // for (let i = 0; i < 10; i++) {
+            //     console.log(finalData[tslist[i]]);
+            //     data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+            //         + ", " + finalData[tslist[i]][0];
+            //     for (let j=0; j< finalData[tslist[i]][1].length; j++) {
+            //         data += ", " + finalData[tslist[i]][1][j][1];
+            //     }
+            //     data += "\n";
+            // }
+
+            for (let i = 0; i < tslist.length; i++) {
+                data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+                    + ", " + finalData[tslist[i]][0];
+                for (let j=0; j< finalData[tslist[i]][1].length; j++) {
+                    data += ", " + finalData[tslist[i]][1][j][1];
+                }
+                data += "\n";
+            }
+            // console.log(data);
+            var blob = new Blob([data], {type: 'text/plain'}),
+                anchor = document.createElement('a');
+            anchor.download = space + "_" + asys + ".csv";
+            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+            anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+            anchor.click();
+            document.getElementById("loader").style.visibility = "hidden";
+
+        }
+
+        document.getElementById("loader").style.visibility = "visible";
+
+        function loadsamples(header, api, entrieslist) {
+            $.ajax({
+                type: 'GET',
+                url: ip + "/series?type=sample?space=" + api,
+                success: function (rawdata) {
+                    let sampledata = JSON.parse(rawdata);
+                    // console.log(sampledata)
+                    loadEntries(header, api, entrieslist, sampledata);
+                },
+                error: function (error) {
+                    alert("Error " + error);
+                }
+
+            });
+        }
+
+        function loadEntries(header, api, entrieslist, sampledata) {
+            $.ajax({
+                type: 'GET',
+                url: ip + "/series?type=entry?space=" + api,
+                success: function (rawdata) {
+                    let entrydata = JSON.parse(rawdata);
+                    exportreport(header, entrieslist, sampledata, entrydata);
+                },
+                error: function (error) {
+                    alert("Error " + error);
+                }
+
+            });
+        }
+
         let select = document.getElementById("spacename");
         var myindex = select.selectedIndex,
             space = select.options[myindex].value;
         select = document.getElementById("reptype");
         myindex = select.selectedIndex;
         var asys = select.options[myindex].value,
+            copyendDate = new Date(endDate),
             start, end;
         if ((startDate !== undefined) && (endDate !== undefined)
             && (space !== "Choose a space") && (asys !== "Choose a dataset")) {
             start = startDate.getUnixTime();
-            endDate.setHours(endDate.getHours() + 23);
-            endDate.setMinutes(endDate.getMinutes() + 59);
-            if (endDate.getUnixTime() > Date.now()) {
+            copyendDate.setHours(endDate.getHours() + 23);
+            copyendDate.setMinutes(endDate.getMinutes() + 59);
+            if (copyendDate.getUnixTime() > Date.now()) {
                 end = Date.now();
             } else {
-                end = endDate.getUnixTime();
+                end = copyendDate.getUnixTime();
             }
-            let apipath = "/series?type=sample?space=" + space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
-            console.log(apipath);
+            let header = "\"#space: " + space + " \"\n"
+                + "\"#dataset: " + asys + " \"\n"
+                + "\"#start: " + startDate + " \"\n"
+                + "\"#end: " + copyendDate + " \"\n\n"
+                + "timestamp (date), timestamp (s), counter";
+            let path = space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
+
             $.ajax({
                 type: 'GET',
-                url: ip + apipath,
+                url: ip + "/info",
                 success: function (rawdata) {
-                    let jsObj = JSON.parse(rawdata);
-                    var data = "\"#space: " + space + " \"\n";
-                    data += "\"#dataset: " + asys + " \"\n";
-                    data += "\"#start: " + startDate + " \"\n";
-                    data += "\"#end: " + endDate + " \"\n";
-                    data += "timestamp (date), timestamp (s), counter\n";
-                    for (let i = 0; i < jsObj.length; i++) {
-                        if ((jsObj[i]["ts"] !== "") && (jsObj[i]["val"] !== "")) {
-                            data += new Date(jsObj[i]["ts"]) + ", " + jsObj[i]["ts"] / 1000 + ", " + jsObj[i]["val"] + "\n";
+                    let info = JSON.parse(rawdata),
+                        currentplan = [];
+                    for (let i = 0; i < info.length; i++) {
+                        if (info[i]["spacename"] === space) {
+                            for (let j = 0; j < info[i]["entries"].length; j++) {
+                                currentplan.push([info[i]["entries"][j]["entryid"], 0])
+                            }
                         }
                     }
-                    var blob = new Blob([data], {type: 'text/plain'}),
-                        anchor = document.createElement('a');
-                    anchor.download = space + "_" + asys + ".csv";
-                    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-                    anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
-                    anchor.click();
+                    if (currentplan !== []) {
+                        currentplan.sort(sortentryEl0);
+                        loadsamples(header, path, currentplan)
+                    }
                 },
                 error: function (error) {
                     alert("Error " + error);

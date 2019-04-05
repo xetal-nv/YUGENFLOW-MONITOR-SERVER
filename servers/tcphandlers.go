@@ -86,9 +86,10 @@ func handlerTCPRequest(conn net.Conn) {
 						}
 
 						if valid {
-							// starts handlerCommandAnswer once wkith the proper ID
+							// starts handlerCommandAnswer once wiith the proper ID
 							if !idKnown {
 								deviceId = int(data[1]) | int(data[0])<<8
+								mutexSensorMaos.Lock()
 								sensorMac[deviceId] = mac
 								sensorChan[deviceId] = make(chan []byte)
 								SensorCmd[deviceId] = make(chan []byte)
@@ -96,6 +97,7 @@ func handlerTCPRequest(conn net.Conn) {
 								if resetbg.valid {
 									go handlerReset(deviceId)
 								}
+								mutexSensorMaos.Unlock()
 								idKnown = true
 							}
 							// first sample creates the command channels and handler if it does not exists

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 )
 
 var Debug int
@@ -12,6 +13,8 @@ var LabelLength int
 
 const logfilename string = "logfile" // logfile name
 const TimeLayout = "15:04"           // time layout used to read the configuration file
+
+var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on temrination does not affect critical operations
 
 // set-ups all support variables according to the configuration file .env
 

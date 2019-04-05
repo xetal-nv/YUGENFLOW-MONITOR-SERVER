@@ -63,7 +63,9 @@ func main() {
 		syscall.SIGQUIT, syscall.SIGABRT)
 	go func() {
 		<-c
+		support.CleanupLock.Lock()
 		cleanup()
+		support.CleanupLock.Unlock()
 		os.Exit(1)
 	}()
 

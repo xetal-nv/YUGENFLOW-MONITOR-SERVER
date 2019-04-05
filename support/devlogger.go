@@ -23,6 +23,8 @@ type DevData struct {
 var DLog chan DevData
 var ODLog chan string
 
+//var devLoggerMutex = &sync.Mutex{}
+
 const bufd = 50
 
 func setUpDevLogger() {

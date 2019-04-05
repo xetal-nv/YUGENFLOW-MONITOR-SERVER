@@ -111,8 +111,8 @@ func SetUp() {
 				}
 			}
 			EntryList[i] = t
-			go entryProcessingSetUp(i, entryChan)
-			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, EntryList[i])
+			go entryProcessingSetUp(i, entryChan, t)
+			log.Printf("gateList.SetUp: defined ENTRY %v as %v\n", i, t)
 			i += 1
 			data = os.Getenv("ENTRY_" + strconv.Itoa(i))
 		}
