@@ -199,6 +199,7 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 			}()
 			ci <- []byte("error")
 		case cmd := <-ce:
+			fmt.Println("CMDCH: readying command", cmd)
 			var rt []byte
 			// we return nil in case of error
 			// verify if the command exists and send it to the device
