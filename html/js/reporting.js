@@ -17,7 +17,7 @@ $(document).ready(function () {
         },
         startPicker = new Pikaday({
             field: document.getElementById('start'),
-            minDate: new Date(2000, 12, 31),
+            minDate: new Date(StartDat),
             maxDate: new Date(),
             onSelect: function () {
                 startDate = this.getDate();
@@ -26,7 +26,7 @@ $(document).ready(function () {
         }),
         endPicker = new Pikaday({
             field: document.getElementById('end'),
-            minDate: new Date(2000, 12, 31),
+            minDate: new Date(StartDat),
             maxDate: new Date(),
             onSelect: function () {
                 endDate = this.getDate();

@@ -24,6 +24,22 @@ func TimedIntDBSSetUp(fd bool) error {
 	}
 	force := false
 	_ = os.MkdirAll("dbs", os.ModePerm)
+
+	if _, err := os.Stat("dbs/dat"); os.IsNotExist(err) {
+		f, err := os.Create("dbs/dat")
+		if err != nil {
+			log.Fatal("Fatal error creating dbs/dat: ", err)
+		}
+		js := strconv.Itoa(int(support.Timestamp()))
+		if _, err := f.WriteString(js); err != nil {
+			_ = f.Close()
+			log.Fatal("Fatal error writing to ip.js: ", err)
+		}
+		if err = f.Close(); err != nil {
+			log.Fatal("Fatal error closing ip.js: ", err)
+		}
+	}
+
 	if !fd {
 		if os.Getenv("FORCEDBS") == "1" {
 			force = true

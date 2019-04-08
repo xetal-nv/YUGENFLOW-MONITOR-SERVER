@@ -4,6 +4,7 @@ import (
 	"context"
 	"gateserver/spaces"
 	"gateserver/support"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -51,6 +52,23 @@ var resetbg struct {
 }
 
 func setJSenvironment() {
+	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
+		f, err := os.Create("./html/js/dat.js")
+		if err != nil {
+			log.Fatal("Fatal error creating ip.js: ", err)
+		}
+		js := "var StartDat = " + string(dat) + ";"
+		if _, err := f.WriteString(js); err != nil {
+			_ = f.Close()
+			log.Fatal("Fatal error writing to dat.js: ", err)
+		}
+		if err = f.Close(); err != nil {
+			log.Fatal("Fatal error closing dat.js: ", err)
+		}
+	} else {
+		log.Fatal("servers.setJSenvironment: fatal error cannot retrieve dbs/dat")
+	}
+
 	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
 	for i, v := range ports {
 		if port := strings.Trim(v, " "); port != "" {
