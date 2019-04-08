@@ -97,6 +97,7 @@ func executeCommand(params map[string]string) (rv Jsoncmdrt) {
 	rv = Jsoncmdrt{"", false}
 	if params["cmd"] != "" || params["id"] != "" {
 		if params["cmd"] == "list" {
+			//fmt.Println("CMD: LIST")
 			keys := ""
 			for k := range cmdAPI {
 				keys += k + ", "
@@ -105,8 +106,11 @@ func executeCommand(params map[string]string) (rv Jsoncmdrt) {
 			rv.State = true
 			params["async"] = "0"
 		} else if id, e := strconv.Atoi(params["id"]); e == nil {
+			//fmt.Println("CMD: NOT LIST: ", params)
 			if _, ok := SensorCmd[id]; ok {
+				//fmt.Println("CMD: found CMD channel")
 				if v, ok := cmdAPI[params["cmd"]]; ok {
+					//fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
 					var to int
 					if to, e = strconv.Atoi(params["timeout"]); e != nil || params["timeout"] == "" {
 						to = timeout
@@ -115,6 +119,7 @@ func executeCommand(params map[string]string) (rv Jsoncmdrt) {
 					// need to execute the command on sensor with the given ID
 					if v.lgt != 0 && params["val"] != "" {
 						par := strings.Split(params["val"][1:len(params["val"])-1], ",")
+						//fmt.Println("CMD: found PARAMS",par)
 						if v.lgt == len(par) {
 							for _, val := range par {
 								if data, err := strconv.Atoi(strings.Trim(val, " ")); err != nil || data > 255 {
@@ -126,13 +131,11 @@ func executeCommand(params map[string]string) (rv Jsoncmdrt) {
 							}
 						} else {
 							cmd = nil
-							rv.Rt = "error"
+							rv.Rt = "insufficient parameters"
 						}
-					} else if params["val"] == "" {
-						cmd = nil
-						rv.Rt = "error"
 					}
 					if cmd != nil {
+						//fmt.Println("CMD: Executing command")
 						select {
 						case SensorCmd[id] <- cmd:
 							rv.State = true

@@ -67,83 +67,84 @@ $(document).ready(function () {
                 data += ", entry:" + entrieslist[i][0];
             }
             data += ", server_down\n";
-            for (let i = 0; i < sampledata.length; i++) {
-                if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
-                    rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
-                }
-            }
-            rawdataSample.sort(sortentryEl0);
-            for (let i = 0; i < entrydata.length; i++) {
-                if ((entrydata[i]["ts"] !== "") && (entrydata[i]["val"] !== "")) {
-                    rawdataEntries.push([entrydata[i]["ts"], entrydata[i]["val"]])
-                }
-            }
-            rawdataEntries.sort(sortentryEl0);
-
-            let tslist = [];
-            let tsstep = -1;
-            while (rawdataSample.length > 0) {
-                let sam = rawdataSample.shift(),
-                    entries = entrieslist.slice();
-                tslist.push(sam[0]);
-                if (tsstep < 0) {
-                    tsstep +=1
-                } else {
-                    let cds = tslist[tslist.length-1] - tslist[tslist.length-2];
-                    if (tsstep === 0) {
-                        tsstep = cds
-                    } else {
-                        tsstep = Math.min(tsstep,cds)
+            if (sampledata !== null){
+                for (let i = 0; i < sampledata.length; i++) {
+                    if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
+                        rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
                     }
                 }
+                rawdataSample.sort(sortentryEl0);
+                for (let i = 0; i < entrydata.length; i++) {
+                    if ((entrydata[i]["ts"] !== "") && (entrydata[i]["val"] !== "")) {
+                        rawdataEntries.push([entrydata[i]["ts"], entrydata[i]["val"]])
+                    }
+                }
+                rawdataEntries.sort(sortentryEl0);
 
-                if (rawdataEntries.length > 0) {
-                    while (Math.abs(sam[0] - rawdataEntries[0][0]) < samplingWindow) {
-                        let ents = rawdataEntries.shift();
-                        for (let i = 0; i < ents[1].length; i++) {
-                            let ent = ents[1][i];
-                            for (let j = 0; j < entries.length; j++) {
-                                if (entries[j][0] === ent[0]) {
-                                    entries[j][1] = ent[1];
-                                    break;
+                let tslist = [];
+                let tsstep = -1;
+                while (rawdataSample.length > 0) {
+                    let sam = rawdataSample.shift(),
+                        entries = entrieslist.slice();
+                    tslist.push(sam[0]);
+                    if (tsstep < 0) {
+                        tsstep += 1
+                    } else {
+                        let cds = tslist[tslist.length - 1] - tslist[tslist.length - 2];
+                        if (tsstep === 0) {
+                            tsstep = cds
+                        } else {
+                            tsstep = Math.min(tsstep, cds)
+                        }
+                    }
+
+                    if (rawdataEntries.length > 0) {
+                        while (Math.abs(sam[0] - rawdataEntries[0][0]) < samplingWindow) {
+                            let ents = rawdataEntries.shift();
+                            for (let i = 0; i < ents[1].length; i++) {
+                                let ent = ents[1][i];
+                                for (let j = 0; j < entries.length; j++) {
+                                    if (entries[j][0] === ent[0]) {
+                                        entries[j][1] = ent[1];
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        if (rawdataEntries.length === 0) {
-                            break;
+                            if (rawdataEntries.length === 0) {
+                                break;
+                            }
                         }
                     }
+                    finalData[sam[0]] = [sam[1], []];
+                    for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
                 }
-                finalData[sam[0]] = [sam[1], []];
-                for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
-            }
-            for (let i = 0; i < tslist.length; i++) {
-                if (i>0) {
-                    if ((tslist[i]-tslist[i-1])> (2 * tsstep)) {
-                        let diff = Math.trunc((tslist[i]-tslist[i-1])/2);
-                        data += new Date(tslist[i]-diff) + ", " + Math.trunc((tslist[i]-diff) / 1000)
-                            + ", -1";
-                        for (let j=0; j< finalData[tslist[i]][1].length; j++) {
-                            data += ", -1";
+                for (let i = 0; i < tslist.length; i++) {
+                    if (i > 0) {
+                        if ((tslist[i] - tslist[i - 1]) > (2 * tsstep)) {
+                            let diff = Math.trunc((tslist[i] - tslist[i - 1]) / 2);
+                            data += new Date(tslist[i] - diff) + ", " + Math.trunc((tslist[i] - diff) / 1000)
+                                + ", -1";
+                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                data += ", -1";
+                            }
+                            data += ", yes\n";
                         }
-                        data += ", yes\n";
                     }
+                    data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+                        + ", " + finalData[tslist[i]][0];
+                    for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                        data += ", " + finalData[tslist[i]][1][j][1];
+                    }
+                    data += ", no\n";
                 }
-                data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
-                    + ", " + finalData[tslist[i]][0];
-                for (let j=0; j< finalData[tslist[i]][1].length; j++) {
-                    data += ", " + finalData[tslist[i]][1][j][1];
-                }
-                data += ", no\n";
+                var blob = new Blob([data], {type: 'text/plain'}),
+                    anchor = document.createElement('a');
+                anchor.download = space + "_" + asys + ".csv";
+                anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+                anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+                anchor.click();
             }
-            var blob = new Blob([data], {type: 'text/plain'}),
-                anchor = document.createElement('a');
-            anchor.download = space + "_" + asys + ".csv";
-            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-            anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
-            anchor.click();
             document.getElementById("loader").style.visibility = "hidden";
-
         }
 
         document.getElementById("loader").style.visibility = "visible";
