@@ -139,35 +139,23 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting flag for skipping negative averages to %v\n", avgNegSkip)
 
 	if sw := os.Getenv("SAMWINDOW"); sw == "" {
-		samplingWindow = 30
+		SamplingWindow = 30
 	} else {
 		if v, e := strconv.Atoi(sw); e != nil {
 			log.Fatal("spaces.setpUpCounter: fatal error in definition of SAMWINDOW")
 		} else {
-			samplingWindow = v
+			SamplingWindow = v
 			//}
 		}
 	}
-	f, err := os.Create("./html/js/sw.js")
-	if err != nil {
-		log.Fatal("Fatal error creating sw.js: ", err)
-	}
-	js := "var samplingWindow = " + strconv.Itoa(samplingWindow) + " * 1000;"
-	if _, err := f.WriteString(js); err != nil {
-		_ = f.Close()
-		log.Fatal("Fatal error writing to sw.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing sw.js: ", err)
-	}
-	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", samplingWindow)
+	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", SamplingWindow)
 
 	avgw := strings.Trim(os.Getenv("SAVEWINDOW"), ";")
 	avgWindows := make(map[string]int)
 	tw := make(map[int]string)
 	curr := support.StringLimit("current", support.LabelLength)
-	avgWindows[curr] = samplingWindow
-	tw[samplingWindow] = curr
+	avgWindows[curr] = SamplingWindow
+	tw[SamplingWindow] = curr
 	if avgw != "" {
 		for _, v := range strings.Split(avgw, ";") {
 			data := strings.Split(strings.Trim(v, " "), " ")
@@ -177,7 +165,7 @@ func setpUpCounter() {
 			if v, e := strconv.Atoi(data[1]); e != nil {
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
 			} else {
-				if v > samplingWindow {
+				if v > SamplingWindow {
 					name := support.StringLimit(data[0], support.LabelLength)
 					avgWindows[name] = v
 					tw[v] = name

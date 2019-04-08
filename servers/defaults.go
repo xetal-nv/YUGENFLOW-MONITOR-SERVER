@@ -2,7 +2,13 @@ package servers
 
 import (
 	"context"
+	"gateserver/spaces"
+	"gateserver/support"
+	"log"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -42,4 +48,49 @@ var resetbg struct {
 	end      time.Time
 	interval time.Duration
 	valid    bool
+}
+
+func setJSenvironment() {
+	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
+	for i, v := range ports {
+		if port := strings.Trim(v, " "); port != "" {
+			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
+		} else {
+			log.Fatal("ServersSetup: fatal error: invalid addresses")
+		}
+		for j, c := range addServer {
+			if addServer[i] == c && i != j {
+				log.Fatal("ServersSetup: fatal error: invalid addresses")
+			}
+		}
+	}
+	ip := ""
+	if ip = os.Getenv("IP"); ip == "" {
+		ip = support.GetOutboundIP().String()
+	}
+
+	f, err := os.Create("./html/js/ip.js")
+	if err != nil {
+		log.Fatal("Fatal error creating ip.js: ", err)
+	}
+	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to ip.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing ip.js: ", err)
+	}
+	f, err = os.Create("./html/js/sw.js")
+	if err != nil {
+		log.Fatal("Fatal error creating sw.js: ", err)
+	}
+	js = "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to sw.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing sw.js: ", err)
+	}
 }

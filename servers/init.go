@@ -16,6 +16,8 @@ import (
 // set-up of HTTP serverd and handlers
 func setupHTTP() error {
 
+	setJSenvironment()
+
 	dataMap = make(map[string]datafunc)
 	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
 	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
@@ -85,23 +87,6 @@ func setupHTTP() error {
 				log.Fatal("ServersSetup: fatal error: invalid addresses")
 			}
 		}
-	}
-	ip := ""
-	if ip = os.Getenv("IP"); ip == "" {
-		ip = support.GetOutboundIP().String()
-	}
-
-	f, err := os.Create("./html/js/ip.js")
-	if err != nil {
-		log.Fatal("Fatal error creating ip.js: ", err)
-	}
-	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";"
-	if _, err := f.WriteString(js); err != nil {
-		_ = f.Close()
-		log.Fatal("Fatal error writing to ip.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing ip.js: ", err)
 	}
 	return nil
 }

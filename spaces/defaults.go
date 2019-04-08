@@ -30,7 +30,7 @@ var instNegSkip bool                                               // skips inst
 var avgNegSkip bool                                                // skips instantaneous negative counters
 var bufsize int                                                    // size of channel buffer among samplers
 var entrySpaceChannels map[int][]chan spaceEntries                 // channels form entry to associated space
-var samplingWindow int                                             // internal for the averaging of data
+var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
 var latestBankIn map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
