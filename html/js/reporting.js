@@ -123,9 +123,9 @@ $(document).ready(function () {
                         if ((tslist[i] - tslist[i - 1]) > (2 * tsstep)) {
                             let diff = Math.trunc((tslist[i] - tslist[i - 1]) / 2);
                             data += new Date(tslist[i] - diff) + ", " + Math.trunc((tslist[i] - diff) / 1000)
-                                + ", -1";
+                                + ", ";
                             for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                                data += ", -1";
+                                data += ", ";
                             }
                             data += ", yes\n";
                         }

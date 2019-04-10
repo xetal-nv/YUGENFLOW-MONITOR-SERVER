@@ -25,6 +25,12 @@ func setUpTCP() {
 		timeout = v
 	}
 
+	if v, e := strconv.Atoi(os.Getenv("MALTO")); e != nil {
+		maltimeout = 600
+	} else {
+		maltimeout = v
+	}
+
 	resetbg.start, resetbg.end, resetbg.interval, resetbg.valid = time.Time{}, time.Time{}, time.Duration(0), false
 	rng := strings.Split(strings.Trim(os.Getenv("RESETSLOT"), ";"), ";")
 	if len(rng) == 3 {
@@ -44,9 +50,17 @@ func setUpTCP() {
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
 
-	sensorChan = make(map[int]chan []byte)
-	SensorCmd = make(map[int]chan []byte)
-	sensorMac = make(map[int][]byte)
+	mutexUnknownMac.Lock()
+	mutexSensorMacs.Lock()
+	sensorChanID = make(map[int]chan []byte)
+	sensorChanUsedID = make(map[int]bool)
+	SensorCmdID = make(map[int]chan []byte)
+	sensorMacID = make(map[int][]byte)
+	sensorIdMAC = make(map[string]int)
+	unknownMacChan = make(map[string]chan []byte)
+	unusedDevice = make(map[int]string)
+	mutexSensorMacs.Unlock()
+	mutexUnknownMac.Unlock()
 }
 
 // start of the TCP server, including set-up

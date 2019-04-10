@@ -2,19 +2,18 @@ package servers
 
 import (
 	"context"
-	"gateserver/spaces"
-	"gateserver/support"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
 
 const SIZE int = 2
+
+// device commands describer for conversion from/to binary to/from param execution
+type cmdspecs struct {
+	cmd byte // command binary value
+	lgt int  // nuber of bytes of arguments exclusing cmd (1 byte) and the id (2 bytes)
+}
 
 type datafunc func() GenericData
 
@@ -23,12 +22,18 @@ var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
 var crcUsed bool                            // CRC used flag
 //var cmdBuffLen int                          // length of buffer for command channels
-var mutexSensorMaos = &sync.Mutex{} // this mutex is used to avoid concurrent writes at start-up on sensorMac, sensorMac,SensorCmd
-var sensorMac map[int][]byte        // map of sensor id to sensor MAC as provided by the sensor itself
-var sensorChan map[int]chan []byte  // channel to handler managing commands to each connected sensor
-var SensorCmd map[int]chan []byte   // externally visible channel to handler managing commands to each connected sensor
-var dataMap map[string]datafunc     // used for HTTP API handling of different data types
-var cmdAnswerLen = map[byte]int{    // provides length for legal server2gate commands
+var mutexSensorMacs = &sync.RWMutex{}     // this mutex is used to avoid concurrent writes on start-up on sensorMacID, sensorMacID,SensorCmdID
+var mutexUnknownMac = &sync.RWMutex{}     // this mutex is used to avoid concurrent writes on unknownMacChan
+var mutexUnusedDevices = &sync.RWMutex{}  // this mutex is used to avoid concurrent writes at start-up on sensorMacID, sensorMacID,SensorCmdID
+var unknownMacChan map[string]chan []byte // map of sensor id to sensor MAC as provided by the sensor itself
+var unusedDevice map[int]string           // map of id's of unused registered deviced (as in not in the .env file)
+var sensorMacID map[int][]byte            // map of sensor id to sensor MAC as provided by the sensor itself
+var sensorIdMAC map[string]int            // map of sensor MAC to sensor id as provided by the sensor itself
+var sensorChanID map[int]chan []byte      // channel to handler managing commands to each connected sensor
+var sensorChanUsedID map[int]bool         // flag indicating if thw channel is assigned to a TCP handler
+var SensorCmdID map[int]chan []byte       // externally visible channel to handler managing commands to each connected sensor
+var dataMap map[string]datafunc           // used for HTTP API handling of different data types
+var cmdAnswerLen = map[byte]int{          // provides length for legal server2gate commands
 	2:  1,
 	3:  1,
 	4:  1,
@@ -43,7 +48,7 @@ var cmdAnswerLen = map[byte]int{    // provides length for legal server2gate com
 	9:  3,
 	11: 3,
 }
-var timeout int
+var timeout, maltimeout int
 var resetbg struct {
 	start    time.Time
 	end      time.Time
@@ -51,64 +56,22 @@ var resetbg struct {
 	valid    bool
 }
 
-func setJSenvironment() {
-	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
-		f, err := os.Create("./html/js/dat.js")
-		if err != nil {
-			log.Fatal("Fatal error creating ip.js: ", err)
-		}
-		js := "var StartDat = " + string(dat) + ";"
-		if _, err := f.WriteString(js); err != nil {
-			_ = f.Close()
-			log.Fatal("Fatal error writing to dat.js: ", err)
-		}
-		if err = f.Close(); err != nil {
-			log.Fatal("Fatal error closing dat.js: ", err)
-		}
-	} else {
-		log.Fatal("servers.setJSenvironment: fatal error cannot retrieve dbs/dat")
-	}
+// index for the map[string]string argument of exeParamCommand
+var cmds = []string{"cmd", "val", "async", "id", "timeout"}
 
-	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
-	for i, v := range ports {
-		if port := strings.Trim(v, " "); port != "" {
-			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
-		} else {
-			log.Fatal("ServersSetup: fatal error: invalid addresses")
-		}
-		for j, c := range addServer {
-			if addServer[i] == c && i != j {
-				log.Fatal("ServersSetup: fatal error: invalid addresses")
-			}
-		}
-	}
-	ip := ""
-	if ip = os.Getenv("IP"); ip == "" {
-		ip = support.GetOutboundIP().String()
-	}
-
-	f, err := os.Create("./html/js/ip.js")
-	if err != nil {
-		log.Fatal("Fatal error creating ip.js: ", err)
-	}
-	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";"
-	if _, err := f.WriteString(js); err != nil {
-		_ = f.Close()
-		log.Fatal("Fatal error writing to ip.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing ip.js: ", err)
-	}
-	f, err = os.Create("./html/js/sw.js")
-	if err != nil {
-		log.Fatal("Fatal error creating sw.js: ", err)
-	}
-	js = "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;"
-	if _, err := f.WriteString(js); err != nil {
-		_ = f.Close()
-		log.Fatal("Fatal error writing to sw.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing sw.js: ", err)
-	}
+// provides length for legal server2gate commands
+var cmdAPI = map[string]cmdspecs{
+	"srate":     {2, 1},
+	"savg":      {3, 1},
+	"bgth":      {4, 2},
+	"occth":     {5, 2},
+	"rstbg":     {6, 0},
+	"readdiff":  {7, 0},
+	"resetdiff": {8, 0},
+	"readinc":   {9, 0},
+	"rstinc":    {10, 0},
+	"readoutc":  {11, 0},
+	"rstoutc":   {12, 0},
+	"readid":    {13, 0},
+	"setid":     {14, 2},
 }

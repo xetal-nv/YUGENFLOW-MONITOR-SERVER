@@ -205,6 +205,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	// sending new data to the proper registers/DBS
 	var wg sync.WaitGroup
 
+	latestChannelLock.RLock()
 	for n, dt := range dtypes {
 		wg.Add(1)
 		data := dt.pf(n+spacename+samplerName, cc)
@@ -230,6 +231,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 			}
 		}(n, data)
 	}
+	latestChannelLock.RUnlock()
 	if nextStageChan != nil {
 		select {
 		case nextStageChan <- cc:

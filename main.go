@@ -52,10 +52,17 @@ func main() {
 	switch os.Getenv("DEVMODE") {
 	case "1":
 		//go sensormodels.Randgen()
-		go sensormodels.SensorModel(0, 100, 20, []int{-1, 0, 1, 2, 127})
-		go sensormodels.SensorModel(1, 100, 20, []int{-1, 0, 1, 2, 127})
-		go sensormodels.SensorModel(2, 100, 20, []int{-1, 0, 1, 2, 127})
-		go sensormodels.SensorModel(3, 100, 20, []int{-1, 0, 1, 2, 127})
+		go sensormodels.SensorModel(0, 3, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', 1, 2, 1})
+		go sensormodels.SensorModel(1, 3, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', 1, 2, 2})
+		go sensormodels.SensorModel(2, 3, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', 1, 2, 3})
+		go sensormodels.SensorModel(3, 5, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', 1, 2, 4})
+		go sensormodels.SensorModel(7, 2, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', 1, 2, 5})
+		go sensormodels.SensorModel(65535, 3, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', 1, 2, 6})
+		//go func(){
+		//	sensormodels.SensorModel(3, 1, 2, []int{-1, 0, 1, 2, 127},[]byte{'a', 'b', 'c', 1, 2, 4})
+		//	time.Sleep(10*time.Second)
+		//	sensormodels.SensorModel(3, 1, 2, []int{-1, 0, 1, 2, 127},[]byte{'a', 'b', 'c', 1, 2, 3})
+		//}()
 	default:
 	}
 
@@ -75,4 +82,5 @@ func main() {
 	// comment below for TCP debug
 	// Set-up and start servers
 	servers.StartServers()
+
 }

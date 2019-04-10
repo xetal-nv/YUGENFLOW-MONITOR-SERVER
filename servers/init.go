@@ -5,13 +5,77 @@ import (
 	"gateserver/spaces"
 	"gateserver/storage"
 	"gateserver/support"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"time"
 )
+
+func setJSenvironment() {
+	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
+		f, err := os.Create("./html/js/dat.js")
+		if err != nil {
+			log.Fatal("Fatal error creating ip.js: ", err)
+		}
+		js := "var StartDat = " + string(dat) + ";"
+		if _, err := f.WriteString(js); err != nil {
+			_ = f.Close()
+			log.Fatal("Fatal error writing to dat.js: ", err)
+		}
+		if err = f.Close(); err != nil {
+			log.Fatal("Fatal error closing dat.js: ", err)
+		}
+	} else {
+		log.Fatal("servers.setJSenvironment: fatal error cannot retrieve dbs/dat")
+	}
+
+	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
+	for i, v := range ports {
+		if port := strings.Trim(v, " "); port != "" {
+			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
+		} else {
+			log.Fatal("ServersSetup: fatal error: invalid addresses")
+		}
+		for j, c := range addServer {
+			if addServer[i] == c && i != j {
+				log.Fatal("ServersSetup: fatal error: invalid addresses")
+			}
+		}
+	}
+	ip := ""
+	if ip = os.Getenv("IP"); ip == "" {
+		ip = support.GetOutboundIP().String()
+	}
+
+	f, err := os.Create("./html/js/ip.js")
+	if err != nil {
+		log.Fatal("Fatal error creating ip.js: ", err)
+	}
+	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to ip.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing ip.js: ", err)
+	}
+	f, err = os.Create("./html/js/sw.js")
+	if err != nil {
+		log.Fatal("Fatal error creating sw.js: ", err)
+	}
+	js = "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to sw.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing sw.js: ", err)
+	}
+}
 
 // set-up of HTTP serverd and handlers
 func setupHTTP() error {

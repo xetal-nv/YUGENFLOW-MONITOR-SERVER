@@ -26,7 +26,7 @@ var cmdargs = map[byte]int{
 
 // for testing purposes only
 
-func SensorModel(id, iter, mxdelay int, vals []int) {
+func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 
 	del := rand.Intn(mxdelay) + 1
 	time.Sleep(2 * time.Second)
@@ -40,12 +40,12 @@ func SensorModel(id, iter, mxdelay int, vals []int) {
 		defer conn.Close()
 		// sensor registers first
 		//noinspection GoUnhandledErrorResult
-		conn.Write([]byte{'a', 'b', 'c', 1, 2, 3})
-		data := vals[rand.Intn(len(vals))]
-		msg := []byte{1, 0, byte(id), byte(data)}
-		msg = append(msg, codings.Crc8(msg))
-		//noinspection GoUnhandledErrorResult
-		conn.Write(msg)
+		conn.Write(mac)
+		//data := vals[rand.Intn(len(vals))]
+		//msg := []byte{1, 0, byte(id), byte(data)}
+		//msg = append(msg, codings.Crc8(msg))
+		////noinspection GoUnhandledErrorResult
+		//conn.Write(msg)
 		// start a listener
 		c := make(chan []byte)
 		go func(c chan []byte) {
@@ -75,10 +75,11 @@ func SensorModel(id, iter, mxdelay int, vals []int) {
 		for i := 0; i < iter; i++ {
 			// sensor model loop starts with seding a data element
 			rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
-			data = vals[rand.Intn(len(vals))]
+			data := vals[rand.Intn(len(vals))]
 			//noinspection GoUnhandledErrorResult
-			msg = []byte{1, 0, byte(id), byte(data)}
+			msg := []byte{1, 0, byte(id), byte(data)}
 			msg = append(msg, codings.Crc8(msg))
+			//fmt.Println(id, msg)
 			if _, e = conn.Write(msg); e == nil {
 				// fork for either sending a new data value or receiving a command
 				select {

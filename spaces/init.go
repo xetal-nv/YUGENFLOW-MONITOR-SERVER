@@ -190,6 +190,7 @@ func setpUpCounter() {
 // set-up DBS thread and data flow structure based on the provided configuration
 func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
+	latestChannelLock.Lock()
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestBankIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestDBSIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
@@ -229,4 +230,5 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			log.Printf("spaces.setUpDataDBSBank: DataBank for space %v and data %v initialised\n", name, dl)
 		}
 	}
+	latestChannelLock.Unlock()
 }

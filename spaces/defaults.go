@@ -1,6 +1,9 @@
 package spaces
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // defines an averaging interval
 type avgInterval struct {
@@ -32,6 +35,7 @@ var bufsize int                                                    // size of ch
 var entrySpaceChannels map[int][]chan spaceEntries                 // channels form entry to associated space
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
+var latestChannelLock = &sync.RWMutex{}                            // this mutex is for a perceived race on the below slices
 var latestBankIn map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
 
