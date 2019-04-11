@@ -28,3 +28,7 @@ If the server does no have a svg for a given space, the space will be ignored
 
 **SYSTEM VARIABLES:**  
 GATESERVER is set to the application folder  
+
+**CONFIGURATION:**  
+See .env file for configuration  
+MAC to ID table must be provided as cv file and name given in the .env file  
