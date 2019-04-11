@@ -102,6 +102,12 @@ func setupHTTP() error {
 	hMap[1]["/cmd"] = commandHTTHandler()
 	// analysis information API
 	hMap[1]["/asys"] = asysHTTHandler()
+	// unused registered device API
+	hMap[1]["/und"] = unusedDeviceHTTPHandler()
+	// unknown registered device API
+	hMap[1]["/udef"] = undefinedDeviceHTTPHandler()
+	// unused registered device API
+	hMap[1]["/active"] = usedDeviceHTTPHandler()
 
 	// add SVG API for installation graphs
 	for spn := range spaces.SpaceDef {

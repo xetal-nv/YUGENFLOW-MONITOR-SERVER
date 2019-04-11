@@ -35,8 +35,10 @@ func handlerTCPRequest(conn net.Conn) {
 		}
 		// clean up foe eventual unknown device
 		mutexUnknownMac.Lock()
+		mutexUnusedDevices.Lock()
 		delete(unknownMacChan, string(mac))
 		delete(unusedDevice, deviceId)
+		mutexUnusedDevices.Unlock()
 		mutexUnknownMac.Unlock()
 		go func() {
 			support.DLog <- support.DevData{"handlerTCPRequest recover",
@@ -60,7 +62,7 @@ func handlerTCPRequest(conn net.Conn) {
 			if active, ok := sensorChanUsedID[id]; ok {
 				mutexSensorMacs.Unlock()
 				if active {
-					// We are in presence iof a malicious attack
+					// We are in presence of a possible malicious attack
 					// We wait maltimeout reading and throwing away periodically at timeout interval
 					log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
 					tsnow := support.Timestamp()
@@ -187,6 +189,7 @@ func handlerTCPRequest(conn net.Conn) {
 									s1 := make(chan bool, 1)
 									s2 := make(chan bool, 1)
 									unknownMacChan[string(mac)] = make(chan []byte, 1)
+									unkownDevice[string(mac)] = false
 									go assingID(s1, unknownMacChan[string(mac)], mac)
 									go func(terminate, stop chan bool) {
 										loop := true
@@ -203,6 +206,9 @@ func handlerTCPRequest(conn net.Conn) {
 												}
 											}
 										}
+										mutexUnknownMac.Lock()
+										unkownDevice[string(mac)] = true
+										mutexUnknownMac.Unlock()
 									}(s1, s2)
 									mutexUnknownMac.Unlock()
 									loop = <-s2

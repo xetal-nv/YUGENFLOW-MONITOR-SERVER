@@ -193,3 +193,119 @@ func planHTTPHandler(name string) http.Handler {
 
 	})
 }
+
+type Jsonund struct {
+	Id  int    `json:"id"`
+	Mac string `json:"mac"`
+}
+
+// returns the list of connected unused devices
+func unusedDeviceHTTPHandler() http.Handler {
+
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				go func() {
+					support.DLog <- support.DevData{"HandlerFunc",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("HandlerFunc: recovering from: ", e)
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		var und []Jsonund
+		mutexUnusedDevices.RLock()
+		for id, mac := range unusedDevice {
+			und = append(und, Jsonund{id, mac})
+		}
+		mutexUnusedDevices.RUnlock()
+
+		_ = json.NewEncoder(w).Encode(und)
+
+	})
+}
+
+type Jsonudef struct {
+	Mac   string `json:"mac"`
+	State bool   `json:"redefined"`
+}
+
+// returns the list of connected undefined devices
+func undefinedDeviceHTTPHandler() http.Handler {
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				go func() {
+					support.DLog <- support.DevData{"undefinedDeviceHTTPHandler",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("undefinedDeviceHTTPHandler: recovering from: ", e)
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		var und []Jsonudef
+		mutexUnknownMac.RLock()
+		for mac, st := range unkownDevice {
+			und = append(und, Jsonudef{mac, st})
+		}
+		mutexUnknownMac.RUnlock()
+
+		_ = json.NewEncoder(w).Encode(und)
+	})
+}
+
+// returns the list of connected used devices
+func usedDeviceHTTPHandler() http.Handler {
+
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				go func() {
+					support.DLog <- support.DevData{"HandlerFunc",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("HandlerFunc: recovering from: ", e)
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		var udev []Jsonund
+		mutexSensorMacs.RLock()
+		for id, mac := range sensorMacID {
+			udev = append(udev, Jsonund{id, string(mac)})
+		}
+		mutexSensorMacs.RUnlock()
+
+		_ = json.NewEncoder(w).Encode(udev)
+
+	})
+}

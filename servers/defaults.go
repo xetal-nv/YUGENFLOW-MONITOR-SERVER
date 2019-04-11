@@ -26,6 +26,7 @@ var mutexSensorMacs = &sync.RWMutex{}     // this mutex is used to avoid concurr
 var mutexUnknownMac = &sync.RWMutex{}     // this mutex is used to avoid concurrent writes on unknownMacChan
 var mutexUnusedDevices = &sync.RWMutex{}  // this mutex is used to avoid concurrent writes at start-up on sensorMacID, sensorMacID,SensorCmdID
 var unknownMacChan map[string]chan []byte // map of sensor id to sensor MAC as provided by the sensor itself
+var unkownDevice map[string]bool          // map of mac of devices registered with id equal to 0xff
 var unusedDevice map[int]string           // map of id's of unused registered deviced (as in not in the .env file)
 var sensorMacID map[int][]byte            // map of sensor id to sensor MAC as provided by the sensor itself
 var sensorIdMAC map[string]int            // map of sensor MAC to sensor id as provided by the sensor itself
