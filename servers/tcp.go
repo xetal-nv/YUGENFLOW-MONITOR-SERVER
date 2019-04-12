@@ -57,7 +57,7 @@ func setUpTCP() {
 	SensorCmdID = make(map[int]chan []byte)
 	sensorMacID = make(map[int][]byte)
 	sensorIdMAC = make(map[string]int)
-	unknownMacChan = make(map[string]chan []byte)
+	unknownMacChan = make(map[string]chan net.Conn)
 	unkownDevice = make(map[string]bool)
 	unusedDevice = make(map[int]string)
 	mutexSensorMacs.Unlock()

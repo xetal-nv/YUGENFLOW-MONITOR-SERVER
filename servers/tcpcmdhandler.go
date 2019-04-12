@@ -25,14 +25,49 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			for k := range cmdAPI {
 				keys += k + ", "
 			}
-			rv.Rt = keys[:len(keys)-2]
+			rv.Rt = keys + "list, macid"
 			rv.State = true
-			params["async"] = "0"
+			//params["async"] = "0"
 		} else if id, e := strconv.Atoi(params["id"]); e == nil {
-			if support.Debug != 0 {
-				fmt.Println("CMD: NOT LIST: ", params)
-			}
-			if _, ok := SensorCmdID[id]; ok {
+			//if support.Debug != 0 {
+			//	fmt.Println("CMD: NOT LIST: ", params)
+			//}
+			if params["cmd"] == "macid" {
+				mutexUnknownMac.RLock()
+				if ch, ok := unknownMacChan[params["val"]]; ok {
+					mutexUnknownMac.RUnlock()
+					mutexSensorMacs.RLock()
+					if oldMac, ok := sensorMacID[id]; ok {
+						mutexSensorMacs.RUnlock()
+						rv.Rt = "error: id assigned to " + string(oldMac)
+					} else {
+						mutexSensorMacs.RUnlock()
+						ch <- nil
+						conn := <-ch
+						v, _ := cmdAPI["setid"]
+						cmd := []byte{v.cmd}
+						cmd = append(cmd, byte(id))
+						cmd = append(cmd, codings.Crc8(cmd))
+						if _, err := conn.Write(cmd); err != nil {
+							rv.Rt = "error: command failed"
+						} else {
+							rv.State = true
+						}
+						ch <- nil
+					}
+				} else {
+					mutexUnknownMac.RUnlock()
+					mutexSensorMacs.RLock()
+					if v, ok := sensorIdMAC[params["val"]]; ok {
+						mutexSensorMacs.RUnlock()
+						rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
+					} else {
+						mutexSensorMacs.RUnlock()
+						rv.Rt = "error: absent"
+					}
+
+				}
+			} else if _, ok := SensorCmdID[id]; ok {
 				if support.Debug != 0 {
 					fmt.Println("CMD: found CMD channel")
 				}

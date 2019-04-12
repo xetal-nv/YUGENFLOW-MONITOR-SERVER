@@ -3,6 +3,7 @@ package servers
 import (
 	"gateserver/support"
 	"log"
+	"net"
 	"strconv"
 	"time"
 )
@@ -55,15 +56,13 @@ func handlerReset(id int) {
 	}
 }
 
-// TODO will handle the ID assignment to device connected with an unassigned ID via API
-func assingID(st chan bool, cmd chan []byte, mac []byte) {
+func assingID(st chan bool, conn net.Conn, com chan net.Conn, mac []byte) {
 	defer func() { st <- false }()
 	//fmt.Println("start command routine")
 	select {
-	case <-cmd:
-	// this will do the ID assignment
+	case <-com:
+		com <- conn
+		<-com
 	case <-time.After(time.Duration(maltimeout) * time.Second):
-		//fmt.Println("time out")
 	}
-	//fmt.Println("end command routine")
 }

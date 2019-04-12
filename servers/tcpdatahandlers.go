@@ -65,6 +65,10 @@ func handlerTCPRequest(conn net.Conn) {
 					// We are in presence of a possible malicious attack
 					// We wait maltimeout reading and throwing away periodically at timeout interval
 					log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
+					go func() {
+						support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
+							support.Timestamp(), "", []int{}, true}
+					}()
 					tsnow := support.Timestamp()
 					for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
 						if _, e := conn.Read(make([]byte, 256)); e != nil {
@@ -156,6 +160,10 @@ func handlerTCPRequest(conn net.Conn) {
 										// this is either a known device or an attack using a known/used ID
 										if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
 											log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
+											go func() {
+												support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
+													support.Timestamp(), "", []int{}, true}
+											}()
 											tsnow := support.Timestamp()
 											for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
 												if _, e := conn.Read(make([]byte, 256)); e != nil {
@@ -188,9 +196,9 @@ func handlerTCPRequest(conn net.Conn) {
 									log.Printf("servers.handlerTCPRequest: device with undefined id %v::%v\n", ipc, mac)
 									s1 := make(chan bool, 1)
 									s2 := make(chan bool, 1)
-									unknownMacChan[string(mac)] = make(chan []byte, 1)
+									unknownMacChan[string(mac)] = make(chan net.Conn, 1)
 									unkownDevice[string(mac)] = false
-									go assingID(s1, unknownMacChan[string(mac)], mac)
+									go assingID(s1, conn, unknownMacChan[string(mac)], mac)
 									go func(terminate, stop chan bool) {
 										loop := true
 										for loop {

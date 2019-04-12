@@ -87,6 +87,10 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 					fmt.Printf("sensor %v command accepted\n", id)
 					crc := codings.Crc8(v[:len(v)-1])
 					if crc == v[len(v)-1] {
+						if v[0] == 14 {
+							fmt.Printf("Sensor %v disconnecting with new id\n", id)
+							return
+						}
 						msg := []byte{v[0]}
 						if rt, ok := command[v[0]]; ok {
 							msg = append(msg, rt...)

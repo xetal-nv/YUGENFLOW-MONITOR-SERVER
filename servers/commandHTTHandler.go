@@ -57,10 +57,11 @@ func commandHTTHandler() http.Handler {
 			}
 		}
 
-		rv := exeParamCommand(params)
-
 		if params["async"] != "1" {
+			rv := exeParamCommand(params)
 			_ = json.NewEncoder(w).Encode(rv)
+		} else {
+			go func() { exeParamCommand(params) }()
 		}
 	})
 }
