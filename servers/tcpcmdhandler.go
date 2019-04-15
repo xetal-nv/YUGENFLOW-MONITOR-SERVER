@@ -19,7 +19,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 	if params["cmd"] != "" || params["id"] != "" {
 		if params["cmd"] == "list" {
 			if support.Debug != 0 {
-				fmt.Println("CMD: LIST")
+				//fmt.Println("CMD: LIST")
 			}
 			keys := ""
 			for k := range cmdAPI {

@@ -1,5 +1,7 @@
 package gates
 
+import "sync"
+
 // sensor data as identified id, timestampo ts and value val
 type sensorData struct {
 	id  int   // gate number
@@ -37,6 +39,8 @@ type scratchData struct {
 }
 
 // Internal variables - some might eb turned into local variables or removed if never used
-var sensorList map[int]SensorDef // all defined sensorList
-var gateList map[int][]int       // list of Gates by device Id, order is preserved from the configuration
-var EntryList map[int]EntryDef   // maps devices to entries
+var sensorList map[int]SensorDef           // all defined sensorList
+var gateList map[int][]int                 // list of Gates by device Id, order is preserved from the configuration
+var EntryList map[int]EntryDef             // maps devices to entries
+var MutexDeclaredDevices = &sync.RWMutex{} // this mutex is used to avoid concurrent DeclaredDevices
+var DeclaredDevices map[string]int         // maps the declared mac with the id of a used device

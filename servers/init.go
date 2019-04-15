@@ -144,7 +144,11 @@ func setupHTTP() error {
 		log.Println("ServersSetup: Serving API", p)
 		hMap[1][p] = datatypeRegisterHTTPhandler(p, keysSpaces)
 	}
-
+	if os.Getenv("MACSTRICT") != "0" {
+		strictFlag = true
+	} else {
+		strictFlag = false
+	}
 	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
 	for i, v := range ports {
 		if port := strings.Trim(v, " "); port != "" {

@@ -47,15 +47,20 @@ func SetUp() {
 	} else {
 		sensorList = make(map[int]SensorDef)
 		gateList = make(map[int][]int)
+		DeclaredDevices = make(map[string]int)
 		for data != "" {
 			t := strings.Split(strings.Trim(data, " "), " ")
 			if len(t) < devgate[0] || len(t) > devgate[1] {
 				log.Fatal("gateList.SetUp: fatal error, illegal number of deviced for gate ", i)
 			}
 			for _, v := range t {
-				if ind, ok := strconv.Atoi(v); ok != nil {
+				devdat := strings.Split(v, ":")
+				if ind, ok := strconv.Atoi(devdat[len(devdat)-1]); ok != nil {
 					log.Fatal("gateList.SetUp: fatal error in definition of GATE ", i)
 				} else {
+					if len(devdat) == 2 {
+						DeclaredDevices[devdat[0]] = ind
+					}
 					rev := false
 					if support.Contains(revdev, ind) {
 						rev = true
@@ -76,6 +81,11 @@ func SetUp() {
 			}
 			i += 1
 			data = os.Getenv("GATE_" + strconv.Itoa(i))
+		}
+	}
+	if data := os.Getenv("SPARES"); data != "" {
+		for _, mac := range strings.Split(strings.Trim(data, " "), " ") {
+			DeclaredDevices[mac] = 65535
 		}
 	}
 	i = 0

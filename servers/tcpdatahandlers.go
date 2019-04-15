@@ -16,8 +16,6 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 func handlerTCPRequest(conn net.Conn) {
-	// TODO use a MAC configuration file to check if MAC is allowed and assign ID internally and to devices
-
 	var deviceId int
 	loop := true            // control variable
 	idKnown := false        // flags to know if the device has been recognised and initialised
@@ -57,6 +55,34 @@ func handlerTCPRequest(conn net.Conn) {
 		time.Sleep(time.Duration(timeout) * time.Second)
 	} else {
 		// Start reading data
+
+		// define a malicious report function that, depending if on strict mode, also kills the connection
+		malf := func(strict bool) {
+			if strict {
+				log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
+				go func() {
+					support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
+						support.Timestamp(), "", []int{}, true}
+				}()
+				tsnow := support.Timestamp()
+				for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
+					if _, e := conn.Read(make([]byte, 256)); e != nil {
+						break
+					}
+					time.Sleep(time.Duration(timeout) * (time.Second))
+				}
+				loop = false
+			} else {
+				log.Printf("servers.handlerTCPRequest: connected to a device not declared %v::%v\n", ipc, mac)
+			}
+		}
+
+		gates.MutexDeclaredDevices.RLock()
+		if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
+			// Device is not allowed, behaviour depends if in strict mode
+			malf(strictFlag)
+		}
+		gates.MutexDeclaredDevices.RUnlock()
 		mutexSensorMacs.Lock()
 		if id, reged := sensorIdMAC[string(mac)]; reged {
 			if active, ok := sensorChanUsedID[id]; ok {
@@ -64,19 +90,7 @@ func handlerTCPRequest(conn net.Conn) {
 				if active {
 					// We are in presence of a possible malicious attack
 					// We wait maltimeout reading and throwing away periodically at timeout interval
-					log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
-					go func() {
-						support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
-							support.Timestamp(), "", []int{}, true}
-					}()
-					tsnow := support.Timestamp()
-					for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
-						if _, e := conn.Read(make([]byte, 256)); e != nil {
-							break
-						}
-						time.Sleep(time.Duration(timeout) * (time.Second))
-					}
-					loop = false
+					malf(true)
 				} else {
 					log.Printf("servers.handlerTCPRequest: connected to old device %v::%v\n", ipc, mac)
 				}
@@ -87,8 +101,8 @@ func handlerTCPRequest(conn net.Conn) {
 				mutexSensorMacs.Unlock()
 			}
 		} else {
-			log.Printf("servers.handlerTCPRequest: connected to new device %v::%v\n", ipc, mac)
 			mutexSensorMacs.Unlock()
+			log.Printf("servers.handlerTCPRequest: connected to new device %v::%v\n", ipc, mac)
 		}
 		for loop {
 			cmd := make([]byte, 1)
@@ -130,7 +144,6 @@ func handlerTCPRequest(conn net.Conn) {
 							}
 						}
 						if valid {
-							// TODO use mac configuration file to check validity of a device and its ID
 							// starts handlerCommandAnswer once wiith the proper ID
 							// if the device was already connected the channels are already made and valid
 
@@ -138,55 +151,59 @@ func handlerTCPRequest(conn net.Conn) {
 							if data[0] != 255 && data[1] != 255 {
 								// Connected device has valid ID
 								deviceId = int(data[1]) | int(data[0])<<8
-								mutexSensorMacs.Lock()
-								if !idKnown {
-									oldMac, ok1 := sensorMacID[deviceId]
-									oldId, ok2 := sensorIdMAC[string(mac)]
-									_, ok3 := sensorChanID[deviceId]
-									_, ok4 := SensorCmdID[deviceId]
-									//  We check all entries as redundant check vs possible crashes or ainjection attacks
-									if !(ok1 && ok2 && ok3 && ok4) {
-										// this is a new device not previously connected
-										sensorMacID[deviceId] = mac                // assign a mac to the id
-										sensorIdMAC[string(mac)] = deviceId        // assign an id to the mac
-										sensorChanID[deviceId] = make(chan []byte) // assign a channel to the id
-										SensorCmdID[deviceId] = make(chan []byte)  // assign a command channel to the id
-										sensorChanUsedID[deviceId] = true          // enable flag for TCP/Channel pair
-										go handlerCommandAnswer(conn, sensorChanID[deviceId], SensorCmdID[deviceId], stop, deviceId)
-										if resetbg.valid {
-											go handlerReset(deviceId)
-										}
-									} else {
-										// this is either a known device or an attack using a known/used ID
-										if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
-											log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
-											go func() {
-												support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
-													support.Timestamp(), "", []int{}, true}
-											}()
-											tsnow := support.Timestamp()
-											for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
-												if _, e := conn.Read(make([]byte, 256)); e != nil {
-													break
-												}
-												time.Sleep(time.Duration(timeout) * (time.Second))
-											}
-											loop = false
-										} else {
-											sensorChanUsedID[deviceId] = true
-										}
-									}
-									idKnown = true
+
+								// declared devicesd need to be checked accounting for non strict mode
+								// if mode is strict a request from a non registered device will never reach this point
+								// a non registered device in non  strict mode should not be ignored
+								ind := 65535
+								gates.MutexDeclaredDevices.RLock()
+								if v, ok := gates.DeclaredDevices[string(mac)]; ok {
+									ind = v
 								}
-								mutexSensorMacs.Unlock()
-								if e := gates.SendData(deviceId, int(data[2])); e != nil {
-									// when a not used (in the .env) device is found, it is placed in a list
-									mutexUnusedDevices.Lock()
-									if _, ok := unusedDevice[deviceId]; !ok {
-										unusedDevice[deviceId] = string(mac)
-										log.Println(e)
+								gates.MutexDeclaredDevices.RUnlock()
+
+								if ind != deviceId && ind != 65535 {
+									// Device is a malicious attack, connection is terminated
+									malf(true)
+								} else {
+									mutexSensorMacs.Lock()
+									if !idKnown {
+										oldMac, ok1 := sensorMacID[deviceId]
+										oldId, ok2 := sensorIdMAC[string(mac)]
+										_, ok3 := sensorChanID[deviceId]
+										_, ok4 := SensorCmdID[deviceId]
+										//  We check all entries as redundant check vs possible crashes or ainjection attacks
+										if !(ok1 && ok2 && ok3 && ok4) {
+											// this is a new device not previously connected
+											sensorMacID[deviceId] = mac                // assign a mac to the id
+											sensorIdMAC[string(mac)] = deviceId        // assign an id to the mac
+											sensorChanID[deviceId] = make(chan []byte) // assign a channel to the id
+											SensorCmdID[deviceId] = make(chan []byte)  // assign a command channel to the id
+											sensorChanUsedID[deviceId] = true          // enable flag for TCP/Channel pair
+											go handlerCommandAnswer(conn, sensorChanID[deviceId], SensorCmdID[deviceId], stop, deviceId)
+											if resetbg.valid {
+												go handlerReset(deviceId)
+											}
+										} else {
+											// this is either a known device or an attack using a known/used ID
+											if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
+												malf(true)
+											} else {
+												sensorChanUsedID[deviceId] = true
+											}
+										}
+										idKnown = true
 									}
-									mutexUnusedDevices.Unlock()
+									mutexSensorMacs.Unlock()
+									if e := gates.SendData(deviceId, int(data[2])); e != nil {
+										// when a not used (in the .env) device is found, it is placed in a list
+										mutexUnusedDevices.Lock()
+										if _, ok := unusedDevice[deviceId]; !ok {
+											unusedDevice[deviceId] = string(mac)
+											log.Println(e)
+										}
+										mutexUnusedDevices.Unlock()
+									}
 								}
 							} else {
 								mutexUnknownMac.Lock()
