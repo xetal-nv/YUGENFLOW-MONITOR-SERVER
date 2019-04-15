@@ -36,6 +36,6 @@ func SendData(dev int, val int) error {
 		}
 		return nil
 	} else {
-		return errors.New("Gates.SendData: received data from a not used devic, ID: " + strconv.Itoa(dev))
+		return errors.New("Gates.SendData: received data from a not used device, ID: " + strconv.Itoa(dev))
 	}
 }
