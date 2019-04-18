@@ -66,7 +66,7 @@ $(document).ready(function () {
             for (let i = 0; i < entrieslist.length; i++) {
                 data += ", entry:" + entrieslist[i][0];
             }
-            data += ", server_down\n";
+            data += ", invalid_entries\n";
             if (sampledata !== null){
                 for (let i = 0; i < sampledata.length; i++) {
                     if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
@@ -119,23 +119,23 @@ $(document).ready(function () {
                     for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
                 }
                 for (let i = 0; i < tslist.length; i++) {
-                    if (i > 0) {
-                        if ((tslist[i] - tslist[i - 1]) > (2 * tsstep)) {
-                            let diff = Math.trunc((tslist[i] - tslist[i - 1]) / 2);
-                            data += new Date(tslist[i] - diff) + ", " + Math.trunc((tslist[i] - diff) / 1000)
-                                + ", ";
-                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                                data += ", ";
-                            }
-                            data += ", yes\n";
-                        }
-                    }
                     data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
                         + ", " + finalData[tslist[i]][0];
+                    let offset = finalData[tslist[i]][0];
                     for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                        data += ", " + finalData[tslist[i]][1][j][1];
+                        offset -= finalData[tslist[i]][1][j][1]
                     }
-                    data += ", no\n";
+                    if (offset === 0) {
+                        for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                            data += ", " + finalData[tslist[i]][1][j][1];
+                        }
+                        data += ", false\n"
+                    } else {
+                        for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                            data += ", "
+                        }
+                        data += ", true\n"
+                    }
                 }
                 var blob = new Blob([data], {type: 'text/plain'}),
                     anchor = document.createElement('a');

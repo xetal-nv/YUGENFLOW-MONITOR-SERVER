@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -71,6 +72,35 @@ func TimedIntDBSSetUp(fd bool) error {
 			currentTTL = time.Hour * 24 * time.Duration(vd)
 		}
 	}
+
+	garbage.start, garbage.end, garbage.intervalMin = time.Time{}, time.Time{}, time.Duration(0)
+	rng := strings.Split(strings.Trim(os.Getenv("GARBINT"), ";"), ";")
+	if len(rng) == 3 {
+		if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+			garbage.start = v
+			if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+				garbage.end = v
+				if v, e := strconv.Atoi(strings.Trim(rng[2], " ")); e == nil {
+					if v != 0 {
+						garbage.intervalMin = time.Duration(v)
+					} else {
+						log.Fatal("storage.TimedIntDBSSetUp: GARBINT interval value is illegal")
+					}
+				} else {
+					log.Fatal("storage.TimedIntDBSSetUp: GARBINT interval value is illegal")
+				}
+			} else {
+				log.Fatal("storage.TimedIntDBSSetUp: GARBINT end time value is illegal")
+			}
+		} else {
+			log.Fatal("storage.TimedIntDBSSetUp: GARBINT start value value is illegal")
+		}
+	} else {
+		log.Fatal("storage.TimedIntDBSSetUp: GARBINT wrong nomber of parameters")
+	}
+
+	go handlerGarbage()
+
 	log.Printf("storage.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
 	if support.Debug < 3 {
 		once.Do(func() {
@@ -583,5 +613,32 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 				log.Printf("Error writing at address %v: %v\n", data.id, err)
 			}
 		}(data, db, ttl)
+	}
+}
+
+// handles the periodical database garbage collection
+func handlerGarbage() {
+	log.Printf("storage.handlerGarbage: databse garbage collection enabled\n")
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println(e)
+			go func() {
+				support.DLog <- support.DevData{"storage.handlerGarbage: recovering server",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+			handlerGarbage()
+		}
+	}()
+	for {
+		time.Sleep(garbage.intervalMin * time.Minute)
+		if doit, e := support.InClosureTime(garbage.start, garbage.end); e == nil {
+			if doit {
+				// We ignore errors since it is done periodically
+				_ = currentDB.RunValueLogGC(0.7)
+				_ = statsDB.RunValueLogGC(0.7)
+			}
+		} else {
+			log.Println("storage.handlerGarbage: garbage collection InClosureTime error")
+		}
 	}
 }

@@ -124,6 +124,10 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 // set-up counters thread and data flow structure based on the provided configuration
 func setpUpCounter() {
+	cmode = os.Getenv("CMODE")
+	if cmode == "" {
+		cmode = "0"
+	}
 	//sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
 		instNegSkip = false

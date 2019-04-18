@@ -30,8 +30,8 @@ func handlerReset(id int) {
 	done := false
 	for {
 		time.Sleep(resetbg.interval * time.Minute)
-		if skip, e := support.InClosureTime(resetbg.start, resetbg.end); e == nil {
-			if skip {
+		if doit, e := support.InClosureTime(resetbg.start, resetbg.end); e == nil {
+			if doit {
 				if !done {
 					rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
 					if rt.State {

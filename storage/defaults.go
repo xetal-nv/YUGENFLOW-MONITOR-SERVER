@@ -24,6 +24,12 @@ type dbOutCommChan struct {
 	co     chan dbOutChan
 }
 
+var garbage struct {
+	start       time.Time
+	end         time.Time
+	intervalMin time.Duration
+}
+
 var timeout int
 var currentDB, statsDB *badger.DB // databases
 var once sync.Once                // used fpr one time set-up function

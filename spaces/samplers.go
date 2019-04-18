@@ -31,9 +31,10 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 		timeoutInterval += time.Duration(avgAnalysis[avgID-1].interval) * time.Second
 	}
 	counter := spaceEntries{ts: support.Timestamp(), val: 0}
+	oldcounter := spaceEntries{ts: 0, val: 0}
 	counter.entries = make(map[int]dataEntry)
 	support.DLog <- support.DevData{"counter starting " + spacename + samplerName,
-		support.Timestamp(), "", stats, false}
+		support.Timestamp(), "", []int{stats[0], stats[1]}, false}
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spacename)
 	} else {
@@ -64,7 +65,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							if sp.val != 0 {
 								stats[0] += 1
 								support.DLog <- support.DevData{"counter " + spacename + " current",
-									support.Timestamp(), "negative counter wrong/tots", stats, true}
+									support.Timestamp(), "negative counter wrong/tots", []int{stats[0], stats[1]}, true}
 							}
 							sp.val = 0
 						}
@@ -76,7 +77,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						stats[0] += 1
 						support.DLog <- support.DevData{Tag: "counter " + spacename + " current",
 							//support.Timestamp(), "negative counter wrong/tots", stats, true}
-							Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), stats...), Aggr: true}
+							Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), []int{stats[0], stats[1]}...), Aggr: true}
 					}
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
@@ -93,7 +94,32 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
-					passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+					if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" {
+						oldcounter.val = counter.val
+						oldcounter.ts = counter.ts
+						oldcounter.entries = make(map[int]dataEntry)
+						for i, v := range counter.entries {
+							oldcounter.entries[i] = v
+						}
+						passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+					} else if cmode == "1" {
+						cd := 0
+						for i, v := range counter.entries {
+							if oldcounter.entries[i].val != v.val {
+								cd += 1
+							}
+						}
+						if cd >= 2 {
+							oldcounter.val = counter.val
+							oldcounter.ts = counter.ts
+							oldcounter.entries = make(map[int]dataEntry)
+							for i, v := range counter.entries {
+								oldcounter.entries[i] = v
+							}
+							passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						}
+					}
+					//passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
 				}
 			}
 		} else {
