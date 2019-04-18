@@ -66,8 +66,8 @@ $(document).ready(function () {
             for (let i = 0; i < entrieslist.length; i++) {
                 data += ", entry:" + entrieslist[i][0];
             }
-            data += ", invalid_entries\n";
-            if (sampledata !== null){
+            data += "\n";
+            if (sampledata !== null) {
                 for (let i = 0; i < sampledata.length; i++) {
                     if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
                         rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
@@ -125,17 +125,15 @@ $(document).ready(function () {
                     for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
                         offset -= finalData[tslist[i]][1][j][1]
                     }
-                    if (offset === 0) {
-                        for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                    // console.log(offset, finalData[tslist[i]][1]);
+                    for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                        if (offset === 0) {
                             data += ", " + finalData[tslist[i]][1][j][1];
+                        } else {
+                            data += ", [" + finalData[tslist[i]][1][j][1] + "]";
                         }
-                        data += ", false\n"
-                    } else {
-                        for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                            data += ", "
-                        }
-                        data += ", true\n"
                     }
+                    data += "\n"
                 }
                 var blob = new Blob([data], {type: 'text/plain'}),
                     anchor = document.createElement('a');

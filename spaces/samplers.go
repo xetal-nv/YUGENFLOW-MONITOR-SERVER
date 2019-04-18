@@ -95,6 +95,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
 					if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" {
+						//fmt.Println("different counter", counter)
 						oldcounter.val = counter.val
 						oldcounter.ts = counter.ts
 						oldcounter.entries = make(map[int]dataEntry)
@@ -117,6 +118,40 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 								oldcounter.entries[i] = v
 							}
 							passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						} else {
+							if cd == 1 {
+								support.DLog <- support.DevData{"counter " + spacename + " current",
+									support.Timestamp(), "inconsistent counter vs entries",
+									[]int{}, true}
+							}
+						}
+					} else if cmode == "2" {
+						//fmt.Println("same counter", counter)
+						cd := 0
+						count := counter.val
+						for i, v := range counter.entries {
+							count -= v.val
+							if oldcounter.entries[i].val != v.val {
+								cd += 1
+							}
+						}
+						if (cd >= 2) && (count == 0) {
+							oldcounter.val = counter.val
+							oldcounter.ts = counter.ts
+							oldcounter.entries = make(map[int]dataEntry)
+							for i, v := range counter.entries {
+								oldcounter.entries[i] = v
+							}
+							//fmt.Println("passed")
+							passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						} else {
+							//fmt.Println("skipped")
+							if count != 0 || cd == 1 {
+								support.DLog <- support.DevData{"counter " + spacename + " current",
+									support.Timestamp(), "inconsistent counter vs entries",
+									[]int{counter.val, count}, true}
+								//fmt.Println("error")
+							}
 						}
 					}
 					//passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
