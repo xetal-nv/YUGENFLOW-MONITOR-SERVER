@@ -147,7 +147,6 @@ $(document).ready(function () {
             document.getElementById("loader").style.visibility = "hidden";
         }
 
-        document.getElementById("loader").style.visibility = "visible";
 
         function loadsamples(header, api, entrieslist) {
             $.ajax({
@@ -160,6 +159,7 @@ $(document).ready(function () {
                 },
                 error: function (error) {
                     alert("Error " + error);
+                    document.getElementById("loader").style.visibility = "hidden";
                 }
 
             });
@@ -175,6 +175,7 @@ $(document).ready(function () {
                 },
                 error: function (error) {
                     alert("Error " + error);
+                    document.getElementById("loader").style.visibility = "hidden";
                 }
 
             });
@@ -190,6 +191,7 @@ $(document).ready(function () {
             start, end;
         if ((startDate !== undefined) && (endDate !== undefined)
             && (space !== "Choose a space") && (asys !== "Choose a dataset")) {
+            document.getElementById("loader").style.visibility = "visible";
             start = startDate.getUnixTime();
             copyendDate.setHours(endDate.getHours() + 23);
             copyendDate.setMinutes(endDate.getMinutes() + 59);
@@ -222,10 +224,13 @@ $(document).ready(function () {
                     if (currentplan !== []) {
                         currentplan.sort(sortentryEl0);
                         loadsamples(header, path, currentplan)
+                    } else {
+                        document.getElementById("loader").style.visibility = "hidden";
                     }
                 },
                 error: function (error) {
                     alert("Error " + error);
+                    document.getElementById("loader").style.visibility = "hidden";
                 }
 
             });
