@@ -54,6 +54,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 		if avgID == 0 {
 			// the first in the threads chain makes the counting
+			offset := 0
 			for {
 				select {
 				case sp := <-prevStageChan:
@@ -95,14 +96,46 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
 					if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" {
-						oldcounter.val = counter.val
-						oldcounter.ts = counter.ts
-						oldcounter.entries = make(map[int]dataEntry)
-						for i, v := range counter.entries {
-							oldcounter.entries[i] = v
+						// new counter
+						// depending on the compression mode it stores it or check for interpolation
+						sd := true
+						if cmode == "3" {
+							count := counter.val
+							for _, v := range counter.entries {
+								count -= v.val
+							}
+							if count != 0 {
+								// we distribute the errors only if it repeats and stays the same
+								if count == offset {
+									for i := 0; i < support.Abs(count); i++ {
+										tmp := counter.entries[i%len(counter.entries)]
+										if count > 0 {
+											tmp.val += 1
+										} else {
+											tmp.val -= 1
+										}
+										counter.entries[i%len(counter.entries)] = tmp
+									}
+								} else {
+									offset = count
+									sd = false
+								}
+							}
 						}
-						passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						//fmt.Println(samplerName, sd, counter)
+						if sd {
+							oldcounter.val = counter.val
+							oldcounter.ts = counter.ts
+							oldcounter.entries = make(map[int]dataEntry)
+							for i, v := range counter.entries {
+								oldcounter.entries[i] = v
+							}
+							//fmt.Println(counter)
+							passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						}
 					} else if cmode == "1" {
+						// counter did not change
+						// if at least two entries have changed the sample is stored
 						cd := 0
 						for i, v := range counter.entries {
 							if oldcounter.entries[i].val != v.val {
@@ -125,7 +158,10 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 									[]int{}, true}
 							}
 						}
-					} else if cmode == "2" {
+					} else if cmode == "2" || cmode == "3" {
+						// counter did not change
+						// verifies consistence of entry values in case of error
+						// rejects or interpolates
 						cd := 0
 						count := counter.val
 						for i, v := range counter.entries {
@@ -145,7 +181,37 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							}
 							passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
 						} else {
-							if count != 0 || cd == 1 {
+							e := count != 0 || cd == 1
+							if count != 0 && cd >= 2 && cmode == "3" {
+
+								if count == offset {
+									// we distribute the errors only if it repeats and stays the same
+									//fmt.Println("update", counter)
+									e = false
+									for i := 0; i < support.Abs(count); i++ {
+										tmp := counter.entries[i%len(counter.entries)]
+										if count > 0 {
+											tmp.val += 1
+										} else {
+											tmp.val -= 1
+										}
+										counter.entries[i%len(counter.entries)] = tmp
+									}
+									oldcounter.val = counter.val
+									oldcounter.ts = counter.ts
+									oldcounter.entries = make(map[int]dataEntry)
+									for i, v := range counter.entries {
+										oldcounter.entries[i] = v
+									}
+									passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+									//fmt.Println("updated", counter)
+								} else {
+									//fmt.Println("skip", counter)
+									offset = count
+									e = true
+								}
+							}
+							if e {
 								support.DLog <- support.DevData{"counter " + spacename + " current",
 									support.Timestamp(), "inconsistent counter vs entries",
 									[]int{counter.val, count}, true}
@@ -155,6 +221,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				}
 			}
 		} else {
+
+			// TODO HERE add the compression modes
+
 			// threads 2+ in the chain needs to make the average and pass it forward
 			var buffer []spaceEntries
 			for {
@@ -180,7 +249,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							counter.val = 0
 						}
 
-						// Extract all applicable seriesfor each entry
+						// Extract all applicable series for each entry
 						entries := make(map[int][]dataEntry)
 						//var wg sync.WaitGroup
 
