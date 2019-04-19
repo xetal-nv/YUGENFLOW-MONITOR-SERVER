@@ -45,3 +45,4 @@ var LatestBankOut map[string]map[string]map[string]chan interface{} // contains 
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var spaceTimes map[string]closureRange                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode
+var cstats string                                                   // data compression flag for stats

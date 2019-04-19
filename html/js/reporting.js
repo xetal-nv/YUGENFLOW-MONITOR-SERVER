@@ -169,15 +169,13 @@ $(document).ready(function () {
                             } else {
                                 adjust = Array(finalData[tslist[0]][1].length).fill(0);
                             }
-
-                            for (j = 0; j < finalData[tslist[i]][1].length; j++) {
-                                if (bracks === 0) {
+                            if ((rmode !== 3) || (bracks !== 0)) {
+                                for (j = 0; j < finalData[tslist[i]][1].length; j++) {
                                     data += ", " + (finalData[tslist[i]][1][j][1] + adjust[j]);
-                                } else {
-                                    if (rmode === 2) {
-                                        data += ", [" + finalData[tslist[i]][1][j][1] + "]";
-                                    }
                                 }
+                            }
+                            if ((bracks !== 0) && (rmode === 2)) {
+                                data += ", *"
                             }
                             data += "\n"
                         }
@@ -208,6 +206,7 @@ $(document).ready(function () {
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();
             }
+
             document.getElementById("loader").style.visibility = "hidden";
         }
 
@@ -268,8 +267,11 @@ $(document).ready(function () {
                 + "\"#space: " + space + " \"\n"
                 + "\"#dataset: " + asys + " \"\n"
                 + "\"#start: " + startDate + " \"\n"
-                + "\"#end: " + copyendDate + " \"\n\n"
-                + "timestamp (date), timestamp (s), counter";
+                + "\"#end: " + copyendDate + " \"\n\n";
+            if (rmode === 2) {
+                header += "* entry values are estimated \n\n"
+            }
+            header += "timestamp (date), timestamp (s), counter";
             let path = space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
 
             $.ajax({
@@ -300,4 +302,5 @@ $(document).ready(function () {
             });
         }
     }
-});
+})
+;

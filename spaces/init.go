@@ -130,6 +130,14 @@ func setpUpCounter() {
 	}
 	log.Printf("Compression mode set to %v\n", cmode)
 
+	cstats = os.Getenv("CSTATS")
+	if cstats == "" {
+		cstats = "0"
+	}
+	if cstats == "1" {
+		log.Printf("Compression mode enabled for statistics\n")
+	}
+
 	//sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
 		instNegSkip = false
