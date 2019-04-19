@@ -128,6 +128,8 @@ func setpUpCounter() {
 	if cmode == "" {
 		cmode = "0"
 	}
+	log.Printf("Compression mode set to %v\n", cmode)
+
 	//sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
 		instNegSkip = false

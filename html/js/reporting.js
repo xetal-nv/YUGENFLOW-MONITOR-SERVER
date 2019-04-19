@@ -118,23 +118,89 @@ $(document).ready(function () {
                     finalData[sam[0]] = [sam[1], []];
                     for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
                 }
-                for (let i = 0; i < tslist.length; i++) {
-                    data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
-                        + ", " + finalData[tslist[i]][0];
-                    let offset = finalData[tslist[i]][0];
-                    for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                        offset -= finalData[tslist[i]][1][j][1]
-                    }
-                    // console.log(offset, finalData[tslist[i]][1]);
-                    for (j = 0; j < finalData[tslist[i]][1].length; j++) {
-                        if (offset === 0) {
-                            data += ", " + finalData[tslist[i]][1][j][1];
-                        } else {
-                            data += ", [" + finalData[tslist[i]][1][j][1] + "]";
+
+                switch (rmode) {
+                    case 1:
+                        for (let i = 0; i < tslist.length; i++) {
+                            data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+                                + ", " + finalData[tslist[i]][0];
+                            let offset = finalData[tslist[i]][0];
+                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                offset -= finalData[tslist[i]][1][j][1]
+                            }
+                            for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                if (offset === 0) {
+                                    data += ", " + finalData[tslist[i]][1][j][1];
+                                } else {
+                                    data += ", [" + finalData[tslist[i]][1][j][1] + "]";
+                                }
+                            }
+                            data += "\n"
                         }
-                    }
-                    data += "\n"
+                        break;
+                    case 2:
+                    case 3:
+                        let adjust = [];
+                        adjust = Array(finalData[tslist[0]][1].length).fill(0);
+                        for (let i = 0; i < tslist.length; i++) {
+                            data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+                                + ", " + finalData[tslist[i]][0];
+                            let offset = finalData[tslist[i]][0];
+                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                offset -= finalData[tslist[i]][1][j][1]
+                            }
+                            let bracks = 0;
+                            if (offset !== 0) {
+                                let acc = 0;
+                                for (let i = 0; i < adjust.length; i++) {
+                                    acc += adjust[i]
+                                }
+                                if (offset !== acc) {
+                                    for (let i = 0; i < Math.abs(offset - acc); i++) {
+                                        let ind = i % adjust.length;
+                                        if ((offset - acc) > 0) {
+                                            adjust[ind] += 1
+                                        } else {
+                                            adjust[ind] -= 1
+                                        }
+                                    }
+                                    bracks = 1;
+                                }
+                            } else {
+                                adjust = Array(finalData[tslist[0]][1].length).fill(0);
+                            }
+
+                            for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                if (bracks === 0) {
+                                    data += ", " + (finalData[tslist[i]][1][j][1] + adjust[j]);
+                                } else {
+                                    if (rmode === 2) {
+                                        data += ", [" + finalData[tslist[i]][1][j][1] + "]";
+                                    }
+                                }
+                            }
+                            data += "\n"
+                        }
+
+                        break;
+                    default:
+                        for (let i = 0; i < tslist.length; i++) {
+                            data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+                                + ", " + finalData[tslist[i]][0];
+                            let offset = finalData[tslist[i]][0];
+                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                offset -= finalData[tslist[i]][1][j][1]
+                            }
+                            for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                if (offset === 0) {
+                                    data += ", " + finalData[tslist[i]][1][j][1];
+                                }
+                            }
+                            data += "\n"
+                        }
+                        break;
                 }
+
                 var blob = new Blob([data], {type: 'text/plain'}),
                     anchor = document.createElement('a');
                 anchor.download = space + "_" + asys + ".csv";
