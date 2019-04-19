@@ -75,7 +75,6 @@ func setJSenvironment() {
 	if err = f.Close(); err != nil {
 		log.Fatal("Fatal error closing sw.js: ", err)
 	}
-
 	var rmode string
 	if rmode = os.Getenv("RMODE"); rmode == "" {
 		rmode = "0"
