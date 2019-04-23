@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 )
 
@@ -50,6 +51,17 @@ func main() {
 
 	// testing
 	switch os.Getenv("DEVMODE") {
+	case "2":
+		for i := 100; i < 200; i++ {
+			mac := []byte{'a', 'b', 'c'}
+			mac = append(mac, []byte(strconv.Itoa(i))...)
+			go sensormodels.SensorModel(i-100, 100, 10, []int{-1, 0, 1, 2, 127}, mac)
+		}
+		for i := 200; i < 300; i++ {
+			mac := []byte{'a', 'b', 'c'}
+			mac = append(mac, []byte(strconv.Itoa(i))...)
+			go sensormodels.SensorModel(65535, 100, 10, []int{-1, 0, 1, 2, 127}, mac)
+		}
 	case "1":
 		//go sensormodels.Randgen()
 		go sensormodels.SensorModel(0, 110, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '1'})
