@@ -81,6 +81,6 @@ var cmdAPI = map[string]cmdspecs{
 }
 
 // maximum number of allowed processors
-const maxsensors = 400
+const maxsensors = 150
 
 var tcpTokens chan bool

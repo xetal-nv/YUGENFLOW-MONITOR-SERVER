@@ -58,7 +58,8 @@ func StartTCP(sd chan context.Context) {
 			// Handle connections in a new goroutine.
 			go handlerTCPRequest(conn)
 		default:
-			log.Printf("servers.StartTCP: reached maximum connection limit\n")
+			support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",
+				support.Timestamp(), "", []int{1}, true}
 		}
 
 	}
