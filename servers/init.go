@@ -7,6 +7,7 @@ import (
 	"gateserver/support"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -250,5 +251,63 @@ func StartServers() {
 			}
 			os.Exit(0)
 		}
+	}
+}
+
+// set-up of the TCP server
+func setUpTCP() {
+	if os.Getenv("CRC") == "1" {
+		crcUsed = true
+	} else {
+		crcUsed = false
+	}
+
+	if v, e := strconv.Atoi(os.Getenv("DEVICETO")); e != nil {
+		timeout = 5
+	} else {
+		timeout = v
+	}
+
+	if v, e := strconv.Atoi(os.Getenv("MALTO")); e != nil {
+		maltimeout = 600
+	} else {
+		maltimeout = v
+	}
+
+	resetbg.start, resetbg.end, resetbg.interval, resetbg.valid = time.Time{}, time.Time{}, time.Duration(0), false
+	rng := strings.Split(strings.Trim(os.Getenv("RESETSLOT"), ";"), ";")
+	if len(rng) == 3 {
+		if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+			resetbg.start = v
+			if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+				resetbg.end = v
+				if v, e := strconv.Atoi(strings.Trim(rng[2], " ")); e == nil {
+					if v != 0 {
+						resetbg.interval = time.Duration(v)
+						resetbg.valid = true
+					}
+				}
+			}
+		}
+	}
+
+	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
+
+	mutexUnknownMac.Lock()
+	mutexSensorMacs.Lock()
+	sensorChanID = make(map[int]chan []byte)
+	sensorChanUsedID = make(map[int]bool)
+	SensorCmdID = make(map[int]chan []byte)
+	sensorMacID = make(map[int][]byte)
+	sensorIdMAC = make(map[string]int)
+	unknownMacChan = make(map[string]chan net.Conn)
+	unkownDevice = make(map[string]bool)
+	unusedDevice = make(map[int]string)
+	mutexSensorMacs.Unlock()
+	mutexUnknownMac.Unlock()
+
+	tcpTokens = make(chan bool, maxsensors)
+	for i := 0; i < maxsensors; i++ {
+		tcpTokens <- true
 	}
 }

@@ -79,3 +79,8 @@ var cmdAPI = map[string]cmdspecs{
 	"readid":    {13, 0},
 	"setid":     {14, 2},
 }
+
+// maximum number of allowed processors
+const maxsensors = 400
+
+var tcpTokens chan bool

@@ -44,6 +44,10 @@ func handlerTCPRequest(conn net.Conn) {
 		}()
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
+		tcpTokens <- true
+		if support.Debug != 0 {
+			log.Println("Releasing TCP token, remaining:", len(tcpTokens))
+		}
 	}()
 
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
@@ -306,5 +310,6 @@ func handlerTCPRequest(conn net.Conn) {
 			mutexSensorMacs.Unlock()
 		}
 		log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
+
 	}
 }
