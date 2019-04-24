@@ -80,7 +80,6 @@ var cmdAPI = map[string]cmdspecs{
 	"setid":     {14, 2},
 }
 
-// maximum number of allowed processors
-const maxsensors = 150
-
-var tcpTokens chan bool
+const maxsensors = 150               // maximum number of allowed processors
+const mindelayrefusedconnection = 30 // mininum delay for refused connection
+var tcpTokens chan bool              // token for accepting a TCP erquest

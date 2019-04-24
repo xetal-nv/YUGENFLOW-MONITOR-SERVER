@@ -4,8 +4,10 @@ import (
 	"context"
 	"gateserver/support"
 	"log"
+	"math/rand"
 	"net"
 	"os"
+	"time"
 )
 
 // start of the TCP server, including set-up
@@ -60,6 +62,8 @@ func StartTCP(sd chan context.Context) {
 		default:
 			support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",
 				support.Timestamp(), "", []int{1}, true}
+			r := rand.Intn(mindelayrefusedconnection)
+			time.Sleep(time.Duration(mindelayrefusedconnection+r) * time.Second)
 		}
 
 	}
