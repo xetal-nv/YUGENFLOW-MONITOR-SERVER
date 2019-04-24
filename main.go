@@ -24,6 +24,7 @@ func main() {
 	// TODO add support foi command line options
 
 	var env = flag.String("env", "", "configuration filename")
+	var dbs = flag.String("dbs", "", "databases root folder")
 	flag.Parse()
 
 	folder = os.Getenv("GATESERVER")
@@ -49,7 +50,7 @@ func main() {
 	}
 
 	// Set-up databases
-	if err := storage.TimedIntDBSSetUp(false); err != nil {
+	if err := storage.TimedIntDBSSetUp(*dbs, false); err != nil {
 		log.Fatal(err)
 	}
 	defer cleanup()

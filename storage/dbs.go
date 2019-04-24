@@ -16,7 +16,7 @@ import (
 )
 
 // set-ups database
-func TimedIntDBSSetUp(fd bool) error {
+func TimedIntDBSSetUp(folder string, fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence
 	if v, e := strconv.Atoi(os.Getenv("DBSTO")); e != nil {
 		timeout = 5
@@ -24,10 +24,13 @@ func TimedIntDBSSetUp(fd bool) error {
 		timeout = v
 	}
 	force := false
-	_ = os.MkdirAll("dbs", os.ModePerm)
+	if folder == "" {
+		folder = "dbs"
+	}
+	_ = os.MkdirAll(folder, os.ModePerm)
 
-	if _, err := os.Stat("dbs/dat"); os.IsNotExist(err) {
-		f, err := os.Create("dbs/dat")
+	if _, err := os.Stat(folder + "/dat"); os.IsNotExist(err) {
+		f, err := os.Create(folder + "/dat")
 		if err != nil {
 			log.Fatal("Fatal error creating dbs/dat: ", err)
 		}
@@ -50,15 +53,15 @@ func TimedIntDBSSetUp(fd bool) error {
 	}
 	if force {
 		log.Printf("storage.TimedIntDBSClose: Force mode on, deleting lock files if present\n")
-		_ = os.Remove("dbs/current/LOCK")
-		_ = os.Remove("dbs/statsDB/LOCK")
+		_ = os.Remove(folder + "/current/LOCK")
+		_ = os.Remove(folder + "/statsDB/LOCK")
 
-		if files, e := filepath.Glob("dbs/current/*.vlog"); e == nil {
+		if files, e := filepath.Glob(folder + "/current/*.vlog"); e == nil {
 			for _, f := range files {
 				_ = os.Remove(f)
 			}
 		}
-		if files, e := filepath.Glob("dbs/statsDB/*.vlog"); e == nil {
+		if files, e := filepath.Glob(folder + "/statsDB/*.vlog"); e == nil {
 			for _, f := range files {
 				_ = os.Remove(f)
 			}
@@ -106,12 +109,12 @@ func TimedIntDBSSetUp(fd bool) error {
 		once.Do(func() {
 			optsCurr := badger.DefaultOptions
 			optsCurr.Truncate = true
-			optsCurr.Dir = "dbs/current"
-			optsCurr.ValueDir = "dbs/current"
+			optsCurr.Dir = folder + "/current"
+			optsCurr.ValueDir = folder + "/current"
 			optsStats := badger.DefaultOptions
 			optsStats.Truncate = true
-			optsStats.Dir = "dbs/statsDB"
-			optsStats.ValueDir = "dbs/statsDB"
+			optsStats.Dir = folder + "/statsDB"
+			optsStats.ValueDir = folder + "/statsDB"
 			currentDB, err = badger.Open(optsCurr)
 			if err == nil {
 				statsDB, err = badger.Open(optsStats)
