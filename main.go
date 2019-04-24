@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"gateserver/gates"
 	"gateserver/sensormodels"
 	"gateserver/servers"
@@ -8,15 +9,22 @@ import (
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 func main() {
 
 	folder, _ := support.GetCurrentExecDir()
+
+	// TODO add support foi command line options
+
+	var env = flag.String("env", "", "configuration filename")
+	flag.Parse()
 
 	folder = os.Getenv("GATESERVER")
 
@@ -30,7 +38,7 @@ func main() {
 		support.SupportTerminate()
 		storage.TimedIntDBSClose()
 	}
-	support.SupportSetUp("")
+	support.SupportSetUp(*env)
 
 	if folder != "" {
 		if e == nil {
@@ -52,17 +60,25 @@ func main() {
 	// testing
 	switch os.Getenv("DEVMODE") {
 	case "2":
-		for i := 100; i < 200; i++ {
+		log.Println("WARNING DEVELOPMENT MODE 2")
+		for i := 100; i < 300; i++ {
 			mac := []byte{'a', 'b', 'c'}
 			mac = append(mac, []byte(strconv.Itoa(i))...)
-			go sensormodels.SensorModel(i-100, 100, 10, []int{-1, 0, 1, 2, 127}, mac)
+			go func(i int, mac []byte) {
+				time.Sleep(time.Duration(rand.Intn(360)) * time.Second)
+				sensormodels.SensorModel(i-100, 500, 60, []int{-1, 0, 1, 2, 127}, mac)
+			}(i, mac)
 		}
-		for i := 200; i < 300; i++ {
+		for i := 300; i < 450; i++ {
 			mac := []byte{'a', 'b', 'c'}
 			mac = append(mac, []byte(strconv.Itoa(i))...)
-			go sensormodels.SensorModel(65535, 100, 10, []int{-1, 0, 1, 2, 127}, mac)
+			go func(i int, mac []byte) {
+				time.Sleep(time.Duration(rand.Intn(360)) * time.Second)
+				sensormodels.SensorModel(65535, 500, 60, []int{-1, 0, 1, 2, 127}, mac)
+			}(i, mac)
 		}
 	case "1":
+		log.Println("WARNING DEVELOPMENT MODE 1")
 		//go sensormodels.Randgen()
 		go sensormodels.SensorModel(0, 110, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '1'})
 		go sensormodels.SensorModel(1, 120, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '2'})
