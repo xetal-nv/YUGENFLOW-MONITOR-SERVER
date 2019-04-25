@@ -33,8 +33,15 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			//	fmt.Println("CMD: NOT LIST: ", params)
 			//}
 			if params["cmd"] == "macid" {
+				var mac []byte
+				if c, e := net.ParseMAC(params["val"]); e == nil {
+					for _, v := range c {
+						mac = append(mac, v)
+					}
+				}
 				mutexUnknownMac.RLock()
-				if ch, ok := unknownMacChan[params["val"]]; ok {
+				//if ch, ok := unknownMacChan[params["val"]]; ok {
+				if ch, ok := unknownMacChan[string(mac)]; ok {
 					mutexUnknownMac.RUnlock()
 					mutexSensorMacs.RLock()
 					if oldMac, ok := sensorMacID[id]; ok {
@@ -58,7 +65,8 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 				} else {
 					mutexUnknownMac.RUnlock()
 					mutexSensorMacs.RLock()
-					if v, ok := sensorIdMAC[params["val"]]; ok {
+					//if v, ok := sensorIdMAC[params["val"]]; ok {
+					if v, ok := sensorIdMAC[string(mac)]; ok {
 						mutexSensorMacs.RUnlock()
 						rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
 					} else {
