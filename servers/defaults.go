@@ -47,7 +47,6 @@ var cmdAnswerLen = map[byte]int{            // provides length for legal server2
 	12: 1,
 	13: 1,
 	14: 1,
-
 	7:  3,
 	9:  3,
 	11: 3,
@@ -64,6 +63,9 @@ var resetbg struct {
 var cmds = []string{"cmd", "val", "async", "id", "timeout"}
 
 // provides length for legal server2gate commands
+// server also has commands
+// list : lists all commands
+// macid " assigns the id at the device with mac specified in val
 var cmdAPI = map[string]cmdspecs{
 	"srate":     {2, 1},
 	"savg":      {3, 1},

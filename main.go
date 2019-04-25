@@ -17,15 +17,29 @@ import (
 	"time"
 )
 
+const version = "v. 1.0.0" // version
+
 func main() {
 
 	folder, _ := support.GetCurrentExecDir()
-
-	// TODO add support foi command line options
-
 	var env = flag.String("env", "", "configuration filename")
 	var dbs = flag.String("dbs", "", "databases root folder")
+	var dmode = flag.Int("dmode", 0, "activate and select a development mode")
+	var dbug = flag.Int("debug", 0, "activate and select a debug mode")
 	flag.Parse()
+
+	log.Printf("Xetal Gate Server version: %v\n", version)
+
+	if *dmode != 0 {
+		log.Printf("WARNING DEVELOPMENT MODE %v\n", *dmode)
+
+	}
+	if *dbug != 0 {
+		log.Printf("WARNING DEBUG MODE %v\n", *dbug)
+
+	}
+
+	support.Debug = *dbug
 
 	folder = os.Getenv("GATESERVER")
 
@@ -58,10 +72,10 @@ func main() {
 	gates.SetUp()
 	spaces.SetUp()
 
-	// testing
-	switch os.Getenv("DEVMODE") {
-	case "2":
-		log.Println("WARNING DEVELOPMENT MODE 2")
+	//switch os.Getenv("DEVMODE") {
+	switch *dmode {
+	//case "2":
+	case 2:
 		for i := 100; i < 300; i++ {
 			mac := []byte{'a', 'b', 'c'}
 			mac = append(mac, []byte(strconv.Itoa(i))...)
@@ -78,8 +92,8 @@ func main() {
 				sensormodels.SensorModel(65535, 500, 60, []int{-1, 0, 1, 2, 127}, mac)
 			}(i, mac)
 		}
-	case "1":
-		log.Println("WARNING DEVELOPMENT MODE 1")
+	//case "1":
+	case 1:
 		//go sensormodels.Randgen()
 		go sensormodels.SensorModel(0, 110, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '1'})
 		go sensormodels.SensorModel(1, 120, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '2'})

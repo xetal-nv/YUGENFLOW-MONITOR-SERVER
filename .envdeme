@@ -3,14 +3,12 @@
 ## DO NOT CHANGE
 ## HTTPSPORTS = app port, api port
 HTTPSPORTS = 8080, 8090
-IP = localhost
-#IP =
-TCPPORT = 3333
+IP = 192.168.254.53
+TCPPORT = 7777
 
 ## TCP PROTOCOL
 ## DO NOT CHANGE
 TCPPROT = tcp4
-
 
 ##### INTERNAL SETUP - DO NOT CHANGE #####
 ## DELETE LOGFILE
@@ -83,7 +81,7 @@ RMODE = 2
 ## 3: VERBOSE NO DBS
 ## 4: VERBOSE TRANSPARENT NO DBS
 ## -1: OFF TRANSPARENT
-# DEBUGMODE = -1
+DEBUGMODE = 0
 
 ## ENABLE CORS
 ## DO NOT CHANGE
@@ -91,11 +89,12 @@ CORS = 1
 
 ## DEVELOPMENT MODE - DEPRECATED
 ## DO NOT CHANGE
-# DEVMODE = 2
+DEVMODE =
 
 ##### GATE AND GROUPS #####
 ## GATE ORIENTATION
 ##REVERSE = id_gate ...
+#REVERSE = 0 1
 
 ## STRICT MODE ##
 ## If set, it does allow to connect only devices whose mac
@@ -106,6 +105,7 @@ MACSTRICT = 0
 ## Declares unused devices that are allowed to connect but currently not used
 ## It is required in strict mode
 #SPARES = mac1 mac2 ...
+#SPARES = abc125 abc126
 
 ## GATE COMPOSITION
 ## Gates are defined by at least two devices, number has to be cresent without gaps
@@ -113,33 +113,21 @@ MACSTRICT = 0
 ## IMPORTANT: Devices CANNOT be shared among gates and server DOES NOT SET the device ID
 #GATE_number = device_id device_id ...
 #GATE_number = device_mac:device_id device_id ...
+#GATE_0 = abc122:1 abc121:0
+#GATE_1 = abc123:2 abc124:3
 GATE_0 = 1 0
 GATE_1 = 2 3
 GATE_2 = 4 5
 GATE_3 = 6 7
-GATE_4 = 8 9
-GATE_5 = 10 11
-GATE_6 = 12 13
-GATE_7 = 14 15
-GATE_8 = 16 17
-GATE_9 = 18 19
-GATE_10 = 20 21
-GATE_11 = 22 23
-GATE_12 = 24 25
-GATE_13 = 26 27
-GATE_14 = 28 29
-GATE_15 = 30 31
-GATE_16 = 32 33
-GATE_17 = 34 35
-GATE_18 = 36 37
-GATE_19 = 38 39
 
 ## ENTRY COMPOSITION
 ## An Entry is a groups of gates defining the entry into a space, number has to increase from 0
 ## IMPORTANT: Gates CANNOT be shared among entries
 ##ENTRY_id = gate_id gate_id ...
-ENTRY_0 = 0 1 2 3 4 5 6 7 8 9
-ENTRY_1 = 10 11 12 13 14 15 16 17 18 19
+ENTRY_0 = 0
+ENTRY_1 = 1
+ENTRY_2 = 2
+ENTRY_3 = 3
 
 ## SPACES DECLARATIONS
 ## Define the region where gates are to be combined.
@@ -147,18 +135,20 @@ ENTRY_1 = 10 11 12 13 14 15 16 17 18 19
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##SPACES_NAMES = name_space name_space ...
-SPACES_NAMES = livlab
+SPACES_NAMES = d2 d3
 
 ## SPACE COMPOSITION
 ## Lists the entry points per space
 ##SPACE_x = id_entry  id_entry ...
-SPACE_livlab = 0 1
+SPACE_d2 = 0 1
+SPACE_d3 = 2 3
 
 ## CLOSURE DECLARATION
 ## Define the time when the space is always empty, this data is used to reset
 ## the space counter
 ##CLOSURE_x = start as xx:xx; end as xx:xx
-CLOSURE_livlab = 3:00; 05:00
+CLOSURE_d2 = 23:00; 04:00
+CLOSURE_d3 = 23:00; 04:00
 
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off
@@ -172,4 +162,5 @@ RESETSLOT = 23:30; 00:30; 0
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##SAVEWINDOW = name seconds; name seconds; ...
-SAVEWINDOW = 10sec 10; 20sec 20
+#SAVEWINDOW = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
+SAVEWINDOW = halfhour 1800; hour 3600; day 86400
