@@ -38,42 +38,44 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 					for _, v := range c {
 						mac = append(mac, v)
 					}
-				}
-				mutexUnknownMac.RLock()
-				//if ch, ok := unknownMacChan[params["val"]]; ok {
-				if ch, ok := unknownMacChan[string(mac)]; ok {
-					mutexUnknownMac.RUnlock()
-					mutexSensorMacs.RLock()
-					if oldMac, ok := sensorMacID[id]; ok {
-						mutexSensorMacs.RUnlock()
-						rv.Rt = "error: id assigned to " + string(oldMac)
-					} else {
-						mutexSensorMacs.RUnlock()
-						ch <- nil
-						conn := <-ch
-						v, _ := cmdAPI["setid"]
-						cmd := []byte{v.cmd}
-						cmd = append(cmd, byte(id))
-						cmd = append(cmd, codings.Crc8(cmd))
-						if _, err := conn.Write(cmd); err != nil {
-							rv.Rt = "error: command failed"
+					mutexUnknownMac.RLock()
+					//if ch, ok := unknownMacChan[params["val"]]; ok {
+					if ch, ok := unknownMacChan[string(mac)]; ok {
+						mutexUnknownMac.RUnlock()
+						mutexSensorMacs.RLock()
+						if oldMac, ok := sensorMacID[id]; ok {
+							mutexSensorMacs.RUnlock()
+							rv.Rt = "error: id assigned to " + string(oldMac)
 						} else {
-							rv.State = true
+							mutexSensorMacs.RUnlock()
+							ch <- nil
+							conn := <-ch
+							v, _ := cmdAPI["setid"]
+							cmd := []byte{v.cmd}
+							cmd = append(cmd, byte(id))
+							cmd = append(cmd, codings.Crc8(cmd))
+							if _, err := conn.Write(cmd); err != nil {
+								rv.Rt = "error: command failed"
+							} else {
+								rv.State = true
+							}
+							ch <- nil
 						}
-						ch <- nil
+					} else {
+						mutexUnknownMac.RUnlock()
+						mutexSensorMacs.RLock()
+						//if v, ok := sensorIdMAC[params["val"]]; ok {
+						if v, ok := sensorIdMAC[string(mac)]; ok {
+							mutexSensorMacs.RUnlock()
+							rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
+						} else {
+							mutexSensorMacs.RUnlock()
+							rv.Rt = "error: absent"
+						}
+
 					}
 				} else {
-					mutexUnknownMac.RUnlock()
-					mutexSensorMacs.RLock()
-					//if v, ok := sensorIdMAC[params["val"]]; ok {
-					if v, ok := sensorIdMAC[string(mac)]; ok {
-						mutexSensorMacs.RUnlock()
-						rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
-					} else {
-						mutexSensorMacs.RUnlock()
-						rv.Rt = "error: absent"
-					}
-
+					rv.Rt = "error: invalic mac address given"
 				}
 			} else if _, ok := SensorCmdID[id]; ok {
 				if support.Debug != 0 {
