@@ -1,11 +1,13 @@
 package sensormodels
 
 import (
+	"encoding/binary"
 	"fmt"
 	"gateserver/codings"
 	"math/rand"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -30,7 +32,8 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 
 	del := rand.Intn(mxdelay) + 1
 	time.Sleep(2 * time.Second)
-	fmt.Println(" TEST -> Connect to TCP channel")
+	mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
+	fmt.Printf(" FakeSensor %v // %v -> Connect to TCP channel\n", id, mach)
 	port := os.Getenv("TCPPORT")
 	conn, e := net.Dial(os.Getenv("TCPPROT"), "0.0.0.0:"+port)
 	//noinspection GoUnhandledErrorResult
@@ -76,8 +79,10 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 			// sensor model loop starts with seding a data element
 			rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 			data := vals[rand.Intn(len(vals))]
+			bs := make([]byte, 4)
+			binary.BigEndian.PutUint32(bs, uint32(id))
 			//noinspection GoUnhandledErrorResult
-			msg := []byte{1, 0, byte(id), byte(data)}
+			msg := []byte{1, bs[2], bs[3], byte(data)}
 			msg = append(msg, codings.Crc8(msg))
 			//fmt.Println(id, msg)
 			if _, e = conn.Write(msg); e == nil {
@@ -110,5 +115,5 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 		}
 	}
 
-	fmt.Printf("Sensor %v disconnecting\n", id)
+	fmt.Printf("FakeSensor %v // %v disconnecting\n", id, mach)
 }

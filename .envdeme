@@ -105,16 +105,13 @@ MACSTRICT = 0
 ## Declares unused devices that are allowed to connect but currently not used
 ## It is required in strict mode
 #SPARES = mac1 mac2 ...
-#SPARES = abc125 abc126
 
 ## GATE COMPOSITION
 ## Gates are defined by at least two devices, number has to be cresent without gaps
 ## Device order follows from the first device to the last while entering
 ## IMPORTANT: Devices CANNOT be shared among gates and server DOES NOT SET the device ID
 #GATE_number = device_id device_id ...
-#GATE_number = device_mac:device_id device_id ...
-#GATE_0 = abc122:1 abc121:0
-#GATE_1 = abc123:2 abc124:3
+#GATE_number = device_mac?device_id device_id ...
 GATE_0 = 1 0
 GATE_1 = 2 3
 GATE_2 = 4 5

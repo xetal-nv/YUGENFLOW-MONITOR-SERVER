@@ -99,7 +99,7 @@ func main() {
 		go sensormodels.SensorModel(1, 120, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '2'})
 		go sensormodels.SensorModel(2, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '3'})
 		go sensormodels.SensorModel(3, 70, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '4'})
-		go sensormodels.SensorModel(7, 90, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '5'})
+		go sensormodels.SensorModel(2340, 90, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '5'})
 		go sensormodels.SensorModel(65535, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '6'})
 		//go func(){
 		//	sensormodels.SensorModel(3, 1, 2, []int{-1, 0, 1, 2, 127},[]byte{'a', 'b', 'c', 1, 2, 4})

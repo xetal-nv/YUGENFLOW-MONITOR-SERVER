@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"fmt"
 	"gateserver/codings"
 	"gateserver/gates"
 	"gateserver/support"
@@ -54,16 +55,18 @@ func handlerTCPRequest(conn net.Conn) {
 
 	// Initially receive the MAC ip
 	if _, e := conn.Read(mac); e != nil {
-		log.Printf("servers.handlerTCPRequest: error on welcome message from %v::%v : %v\n", ipc, mac, e)
+		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":")
+		log.Printf("servers.handlerTCPRequest: error on welcome message from %v//%v : %v\n", ipc, mach, e)
 		// A delay is inserted in case this is a malicious attempt
 		time.Sleep(time.Duration(timeout) * time.Second)
 	} else {
+		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":")
 		// Start reading data
 
 		// define a malicious report function that, depending if on strict mode, also kills the connection
 		malf := func(strict bool) {
 			if strict {
-				log.Printf("servers.handlerTCPRequest: suspicious malicious device %v::%v\n", ipc, mac)
+				log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
 				go func() {
 					support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
 						support.Timestamp(), "", []int{}, true}
@@ -77,7 +80,7 @@ func handlerTCPRequest(conn net.Conn) {
 				}
 				loop = false
 			} else {
-				log.Printf("servers.handlerTCPRequest: connected to a device not declared %v::%v\n", ipc, mac)
+				log.Printf("servers.handlerTCPRequest: connected to a device not declared %v//%v\n", ipc, mach)
 			}
 		}
 
@@ -96,7 +99,7 @@ func handlerTCPRequest(conn net.Conn) {
 					// We wait maltimeout reading and throwing away periodically at timeout interval
 					malf(true)
 				} else {
-					log.Printf("servers.handlerTCPRequest: connected to old device %v::%v\n", ipc, mac)
+					log.Printf("servers.handlerTCPRequest: connected to old device %v//%v\n", ipc, mach)
 				}
 			} else {
 				// this should never happen
@@ -106,7 +109,7 @@ func handlerTCPRequest(conn net.Conn) {
 			}
 		} else {
 			mutexSensorMacs.Unlock()
-			log.Printf("servers.handlerTCPRequest: connected to new device %v::%v\n", ipc, mac)
+			log.Printf("servers.handlerTCPRequest: connected to new device %v//%v\n", ipc, mach)
 		}
 		for loop {
 			cmd := make([]byte, 1)
@@ -114,9 +117,9 @@ func handlerTCPRequest(conn net.Conn) {
 
 				if e == io.EOF {
 					// in case of channel closed (EOF) it gets logged and the handler terminated
-					log.Printf("servers.handlerTCPRequest: connection lost with device %v::%v\n", ipc, mac)
+					log.Printf("servers.handlerTCPRequest: connection lost with device %v//%v\n", ipc, mach)
 				} else {
-					log.Printf("servers.handlerTCPRequest: error reading from %v::%v : %v\n", ipc, mac, e)
+					log.Printf("servers.handlerTCPRequest: error reading from %v//%v : %v\n", ipc, mach, e)
 				}
 				loop = false
 			} else {
@@ -133,7 +136,7 @@ func handlerTCPRequest(conn net.Conn) {
 						// A delay is inserted in case this is a malicious attempt
 						time.Sleep(time.Duration(timeout) * time.Second)
 						loop = false
-						log.Printf("servers.handlerTCPRequest: error reading from %v::%v : %v\n", ipc, mac, e)
+						log.Printf("servers.handlerTCPRequest: error reading from %v//%v : %v\n", ipc, mach, e)
 					} else {
 						// Valid data
 						valid := true
@@ -148,14 +151,12 @@ func handlerTCPRequest(conn net.Conn) {
 							}
 						}
 						if valid {
-							// starts handlerCommandAnswer once wiith the proper ID
+							// starts handlerCommandAnswer once with the proper ID
 							// if the device was already connected the channels are already made and valid
-
 							// first sample creates the command channels and handles if it does not exists
 							if data[0] != 255 && data[1] != 255 {
 								// Connected device has valid ID
 								deviceId = int(data[1]) | int(data[0])<<8
-
 								// declared devicesd need to be checked accounting for non strict mode
 								// if mode is strict a request from a non registered device will never reach this point
 								// a non registered device in non  strict mode should not be ignored
@@ -214,7 +215,7 @@ func handlerTCPRequest(conn net.Conn) {
 								// Connected device has invalid ID, needs to be set
 								if _, ok := unknownMacChan[string(mac)]; !ok {
 									// st chan bool, cmd chan []byte
-									log.Printf("servers.handlerTCPRequest: device with undefined id %v::%v\n", ipc, mac)
+									log.Printf("servers.handlerTCPRequest: device with undefined id %v//%v\n", ipc, mach)
 									s1 := make(chan bool, 1)
 									s2 := make(chan bool, 1)
 									unknownMacChan[string(mac)] = make(chan net.Conn, 1)
@@ -235,16 +236,16 @@ func handlerTCPRequest(conn net.Conn) {
 												}
 											}
 										}
-										mutexUnknownMac.Lock()
-										unkownDevice[string(mac)] = true
-										mutexUnknownMac.Unlock()
+										//mutexUnknownMac.Lock()
+										//unkownDevice[string(mac)] = true
+										//mutexUnknownMac.Unlock()
 									}(s1, s2)
 									mutexUnknownMac.Unlock()
 									loop = <-s2
 								} else {
 									mutexUnknownMac.Unlock()
 								}
-								//log.Printf("servers.handlerTCPRequest: device with undefined id %v::%v disconnected\n", ipc, mac)
+								//log.Printf("servers.handlerTCPRequest: device with undefined id %v//%v disconnected\n", ipc, mach)
 							}
 						}
 					}
@@ -264,13 +265,13 @@ func handlerTCPRequest(conn net.Conn) {
 								// if the answer is incorrect the channel will be closed
 								if ans := <-sensorChanID[deviceId]; ans != nil {
 									loop = false
-									log.Printf("servers.handlerTCPRequest: illegal operation %v sent by %v::%v\n", cmd[0], ipc, mac)
+									log.Printf("servers.handlerTCPRequest: illegal operation %v sent by %v//%v\n", cmd[0], ipc, mach)
 								}
 							} else {
 								cmdd := make([]byte, v)
 								if _, e := conn.Read(cmdd); e != nil {
 									loop = false
-									log.Printf("servers.handlerTCPRequest: error reading answer from %v::%v "+
+									log.Printf("servers.handlerTCPRequest: error reading answer from %v//%v "+
 										"for command %v\n", ipc, deviceId, cmd)
 								} else {
 									cmd = append(cmd, cmdd...)
@@ -298,7 +299,7 @@ func handlerTCPRequest(conn net.Conn) {
 							}
 						} else {
 							loop = false
-							log.Printf("servers.handlerTCPRequest: illegal command %v sent by %v::%v\n", cmd[0], ipc, mac)
+							log.Printf("servers.handlerTCPRequest: illegal command %v sent by %v//%v\n", cmd[0], ipc, mach)
 						}
 					}
 				}
@@ -309,7 +310,7 @@ func handlerTCPRequest(conn net.Conn) {
 			sensorChanUsedID[deviceId] = false
 			mutexSensorMacs.Unlock()
 		}
-		log.Printf("servers.handlerTCPRequest: closing TCP channel to %v::%v\n", ipc, mac)
+		log.Printf("servers.handlerTCPRequest: closing TCP channel to %v//%v\n", ipc, mach)
 
 	}
 }

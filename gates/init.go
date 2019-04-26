@@ -3,6 +3,7 @@ package gates
 import (
 	"gateserver/support"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -54,25 +55,36 @@ func SetUp() {
 				log.Fatal("gateList.SetUp: fatal error, illegal number of deviced for gate ", i)
 			}
 			for _, v := range t {
-				devdat := strings.Split(v, ":")
+				devdat := strings.Split(v, "?")
 				if ind, ok := strconv.Atoi(devdat[len(devdat)-1]); ok != nil {
 					log.Fatal("gateList.SetUp: fatal error in definition of GATE ", i)
 				} else {
-					if len(devdat) == 2 {
-						DeclaredDevices[devdat[0]] = ind
-					}
-					rev := false
-					if support.Contains(revdev, ind) {
-						rev = true
-					}
-					if v, ok := sensorList[ind]; ok {
-						v.gate = append(v.gate, i)
-						sensorList[ind] = v
-					} else {
-						sensorList[ind] = SensorDef{id: ind, Reversed: rev, gate: []int{i}}
-					}
+					if len(devdat) <= 2 {
+						// add device declaration
+						if len(devdat) == 2 {
+							var mac []byte
+							if c, e := net.ParseMAC(devdat[0]); e == nil {
+								for _, v := range c {
+									mac = append(mac, v)
+								}
+							}
+							DeclaredDevices[string(mac)] = ind
+						}
+						// verify reverse status
+						rev := false
+						if support.Contains(revdev, ind) {
+							rev = true
+						}
+						// add sensor to sensor list
+						if v, ok := sensorList[ind]; ok {
+							v.gate = append(v.gate, i)
+							sensorList[ind] = v
+						} else {
+							sensorList[ind] = SensorDef{id: ind, Reversed: rev, gate: []int{i}}
+						}
 
-					gateList[i] = append(gateList[i], ind)
+						gateList[i] = append(gateList[i], ind)
+					}
 				}
 			}
 			log.Printf("gateList.SetUp: defined gate %v as [Id Reversed]:\n", i)
@@ -83,9 +95,16 @@ func SetUp() {
 			data = os.Getenv("GATE_" + strconv.Itoa(i))
 		}
 	}
+
 	if data := os.Getenv("SPARES"); data != "" {
-		for _, mac := range strings.Split(strings.Trim(data, " "), " ") {
-			DeclaredDevices[mac] = 65535
+		for _, macst := range strings.Split(strings.Trim(data, " "), " ") {
+			var mac []byte
+			if c, e := net.ParseMAC(macst); e == nil {
+				for _, v := range c {
+					mac = append(mac, v)
+				}
+			}
+			DeclaredDevices[macst] = 65535
 		}
 	}
 	i = 0

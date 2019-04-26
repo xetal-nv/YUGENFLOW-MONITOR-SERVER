@@ -226,7 +226,8 @@ func unusedDeviceHTTPHandler() http.Handler {
 		var und []Jsonund
 		mutexUnusedDevices.RLock()
 		for id, mac := range unusedDevice {
-			und = append(und, Jsonund{id, mac})
+			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
+			und = append(und, Jsonund{id, mach})
 		}
 		mutexUnusedDevices.RUnlock()
 
@@ -266,7 +267,8 @@ func undefinedDeviceHTTPHandler() http.Handler {
 		var und []Jsonudef
 		mutexUnknownMac.RLock()
 		for mac, st := range unkownDevice {
-			und = append(und, Jsonudef{mac, st})
+			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
+			und = append(und, Jsonudef{mach, st})
 		}
 		mutexUnknownMac.RUnlock()
 
@@ -297,11 +299,11 @@ func usedDeviceHTTPHandler() http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-
 		var udev []Jsonund
 		mutexSensorMacs.RLock()
 		for id, mac := range sensorMacID {
-			udev = append(udev, Jsonund{id, string(mac)})
+			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":")
+			udev = append(udev, Jsonund{id, mach})
 		}
 		mutexSensorMacs.RUnlock()
 
