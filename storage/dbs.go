@@ -622,6 +622,9 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 // handles the periodical database garbage collection
 func handlerGarbage() {
 	log.Printf("storage.handlerGarbage: databse garbage collection enabled\n")
+	log.Printf("storage.handlerGarbage: databse garbage collection start: %v\n", garbage.start)
+	log.Printf("storage.handlerGarbage: databse garbage collection end: %v\n", garbage.end)
+	log.Printf("storage.handlerGarbage: databse garbage collection interval: %v\n", garbage.intervalMin)
 	defer func() {
 		if e := recover(); e != nil {
 			fmt.Println(e)
@@ -641,7 +644,8 @@ func handlerGarbage() {
 				_ = statsDB.RunValueLogGC(0.7)
 			}
 		} else {
-			log.Println("storage.handlerGarbage: garbage collection InClosureTime error")
+			log.Printf("storage.handlerGarbage: garbage collection InClosureTime error: %v\n", e)
+			os.Exit(1)
 		}
 	}
 }

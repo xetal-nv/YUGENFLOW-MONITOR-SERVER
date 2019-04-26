@@ -74,9 +74,13 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 		return false, nil
 	}
 	now := time.Now()
+	nows := strconv.Itoa(now.Hour()) + ":"
+	mins := "00" + strconv.Itoa(now.Minute())
+	nows += mins[len(mins)-2:]
 	//TimeLayout := "15:04"
 	var ns time.Time
-	ns, err = time.Parse(TimeLayout, strconv.Itoa(now.Hour())+":"+strconv.Itoa(now.Minute()))
+	//ns, err = time.Parse(TimeLayout, strconv.Itoa(now.Hour())+":"+strconv.Itoa(now.Minute()))
+	ns, err = time.Parse(TimeLayout, nows)
 	//srt, e2 := time.Parse(TimeLayout, start)
 	//ed, e3 := time.Parse(TimeLayout, end)
 	if err != nil {
@@ -109,6 +113,7 @@ func GetOutboundIP() net.IP {
 	if err != nil {
 		log.Fatal(err)
 	}
+	//noinspection GoUnhandledErrorResult
 	defer conn.Close()
 
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
