@@ -150,7 +150,7 @@ CLOSURE_d3 = 23:00; 04:00
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off
 ## RESET = start as xx:xx; end as xx:xx; sampling interval in minutes
-RESETSLOT = 23:30; 00:30; 0
+RESETSLOT = 23:30; 00:30; 30
 
 ##### ANALYSIS #####
 

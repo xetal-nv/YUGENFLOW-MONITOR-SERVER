@@ -80,7 +80,7 @@ func handlerTCPRequest(conn net.Conn) {
 				}
 				loop = false
 			} else {
-				log.Printf("servers.handlerTCPRequest: connected to a device not declared %v//%v\n", ipc, mach)
+				log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
 			}
 		}
 

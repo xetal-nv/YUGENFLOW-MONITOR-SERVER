@@ -102,8 +102,6 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		log.Fatal("storage.TimedIntDBSSetUp: GARBINT wrong nomber of parameters")
 	}
 
-	go handlerGarbage()
-
 	log.Printf("storage.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
 	if support.Debug < 3 {
 		once.Do(func() {
@@ -135,6 +133,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 					go dbReadDriver(currentChanOut, *currentDB)
 				}
 			}
+			go handlerGarbage([]*badger.DB{currentDB, statsDB})
 		})
 	} else {
 		log.Printf("storage.TimedIntDBSClose: Databases not enables for current Debug mode\n")
@@ -620,32 +619,34 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 }
 
 // handles the periodical database garbage collection
-func handlerGarbage() {
-	log.Printf("storage.handlerGarbage: databse garbage collection enabled\n")
-	log.Printf("storage.handlerGarbage: databse garbage collection start: %v\n", garbage.start)
-	log.Printf("storage.handlerGarbage: databse garbage collection end: %v\n", garbage.end)
-	log.Printf("storage.handlerGarbage: databse garbage collection interval: %v\n", garbage.intervalMin)
+func handlerGarbage(dbs []*badger.DB) {
+	log.Printf("storage.handlerGarbage: database garbage collection enabled\n")
 	defer func() {
+		//fmt.Println("crashed")
 		if e := recover(); e != nil {
-			fmt.Println(e)
 			go func() {
 				support.DLog <- support.DevData{"storage.handlerGarbage: recovering server",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			handlerGarbage()
+			fmt.Println(e)
+			os.Exit(1)
+			handlerGarbage(dbs)
 		}
 	}()
 	for {
 		time.Sleep(garbage.intervalMin * time.Minute)
+		//fmt.Println("start")
 		if doit, e := support.InClosureTime(garbage.start, garbage.end); e == nil {
 			if doit {
 				// We ignore errors since it is done periodically
-				_ = currentDB.RunValueLogGC(0.7)
-				_ = statsDB.RunValueLogGC(0.7)
+				for _, el := range dbs {
+					_ = el.RunValueLogGC(0.7)
+				}
 			}
 		} else {
 			log.Printf("storage.handlerGarbage: garbage collection InClosureTime error: %v\n", e)
 			os.Exit(1)
 		}
+		//fmt.Println("end")
 	}
 }
