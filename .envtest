@@ -58,8 +58,8 @@ SELFFD = 1
 ## Define interval for the database garbage collection
 ## It cannot be null
 ## GARBIT = start time hh:mm; end time hh:mm; interval check in minutes
-#GARBINT = 23:30; 00:30; 20
-GARBINT = 16:00; 00:30; 1
+GARBINT = 23:30; 00:30; 20
+#GARBINT = 16:00; 00:30; 1
 
 
 ## COMPRESSION MODE
@@ -167,7 +167,7 @@ CLOSURE_livlab = 3:00; 05:00
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off
 ## RESET = start as xx:xx; end as xx:xx; sampling interval in minutes
-RESETSLOT = 23:30; 00:30; 0
+RESETSLOT = 23:30; 00:30; 30
 
 ##### ANALYSIS #####
 

@@ -55,7 +55,9 @@ func StartTCP(sd chan context.Context) {
 			conn, e := l.Accept()
 			if e != nil {
 				log.Printf("servers.StartTCP: Error accepting: %v\n", e)
-				os.Exit(1)
+				if l != nil {
+					_ = l.Close()
+				}
 			}
 			// Handle connections in a new goroutine.
 			go handlerTCPRequest(conn)

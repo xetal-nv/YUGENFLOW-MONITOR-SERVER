@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"gateserver/support"
 	"github.com/dgraph-io/badger"
 	"log"
@@ -504,7 +503,7 @@ func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 				support.DLog <- support.DevData{"storage.dbUpdateDriver: recovering server",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			fmt.Println("recovering")
+			//fmt.Println("recovering")
 			go dbReadDriver(ch, db)
 		}
 	}()
@@ -622,20 +621,16 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 func handlerGarbage(dbs []*badger.DB) {
 	log.Printf("storage.handlerGarbage: database garbage collection enabled\n")
 	defer func() {
-		//fmt.Println("crashed")
 		if e := recover(); e != nil {
 			go func() {
 				support.DLog <- support.DevData{"storage.handlerGarbage: recovering server",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			fmt.Println(e)
-			os.Exit(1)
 			handlerGarbage(dbs)
 		}
 	}()
 	for {
 		time.Sleep(garbage.intervalMin * time.Minute)
-		//fmt.Println("start")
 		if doit, e := support.InClosureTime(garbage.start, garbage.end); e == nil {
 			if doit {
 				// We ignore errors since it is done periodically
@@ -645,8 +640,6 @@ func handlerGarbage(dbs []*badger.DB) {
 			}
 		} else {
 			log.Printf("storage.handlerGarbage: garbage collection InClosureTime error: %v\n", e)
-			os.Exit(1)
 		}
-		//fmt.Println("end")
 	}
 }
