@@ -65,12 +65,16 @@ func devLogger(data chan DevData, out chan string) {
 			go devLogger(data, out)
 		}
 	}()
+	ct := time.Now().Local()
+	pwd, _ := os.Getwd()
+	_ = os.MkdirAll("log", os.ModePerm)
+	file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
 	for {
 		d := <-data
-		ct := time.Now().Local()
-		pwd, _ := os.Getwd()
-		_ = os.MkdirAll("log", os.ModePerm)
-		file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
+		//ct := time.Now().Local()
+		//pwd, _ := os.Getwd()
+		//_ = os.MkdirAll("log", os.ModePerm)
+		//file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
 		switch d.Tag {
 		case "skip":
 		case "read":

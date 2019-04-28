@@ -311,3 +311,39 @@ func usedDeviceHTTPHandler() http.Handler {
 
 	})
 }
+
+// returns logfile if present
+func logHandler() http.Handler {
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				go func() {
+					support.DLog <- support.DevData{"logHandler",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("logHandler: recovering from: ", e)
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		file, err := ioutil.ReadFile("logfile") // just pass the file name
+		if err != nil {
+			log.Println("logHandler: error opening logfile: ", err)
+			_, _ = fmt.Fprintf(w, "logHandler: error opening logfile: ", err)
+		} else {
+			_, _ = fmt.Fprintf(w, string(file))
+		}
+
+		//_ = json.NewEncoder(w).Encode(asys)
+
+	})
+}
