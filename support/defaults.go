@@ -12,8 +12,8 @@ import (
 var Debug int
 var LabelLength int
 
-const logfilename string = "logfile" // logfile name
-const TimeLayout = "15:04"           // time layout used to read the configuration file
+const logfilename string = "gnl" // logfile name
+const TimeLayout = "15:04"       // time layout used to read the configuration file
 
 var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on temrination does not affect critical operations
 
@@ -29,12 +29,13 @@ func SupportSetUp(envf string) {
 			panic("Fatal error:" + e.Error())
 		}
 	}
-	if os.Getenv("RESLOG") == "1" {
-		ct := time.Now().Local()
-		//noinspection GoUnhandledErrorResult
-		os.Remove(logfilename + "_" + ct.Format("2006-01-02"))
-		_ = os.Rename(logfilename, logfilename+"_"+ct.Format("2006-01-02"))
-	}
+
+	//if os.Getenv("RESLOG") == "1" {
+	//	ct := time.Now().Local()
+	//	//noinspection GoUnhandledErrorResult
+	//	os.Remove(logfilename + "_" + ct.Format("2006-01-02"))
+	//	_ = os.Rename(logfilename, logfilename+"_"+ct.Format("2006-01-02"))
+	//}
 	LabelLength = 8
 	if ll := os.Getenv("LENLABEL"); ll != "" {
 		if v, e := strconv.Atoi(ll); e == nil {
@@ -54,7 +55,9 @@ func SupportSetUp(envf string) {
 
 	// Set-up loggers
 	if Debug == 0 {
-		setUpLog(logfilename)
+		c := make(chan bool)
+		go setUpLog(logfilename, time.Now().Local(), c)
+		<-c
 	}
 	setUpDevLogger()
 	log.Println("Starting server ...")

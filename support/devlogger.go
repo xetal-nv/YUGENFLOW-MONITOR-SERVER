@@ -68,7 +68,7 @@ func devLogger(data chan DevData, out chan string) {
 	ct := time.Now().Local()
 	pwd, _ := os.Getwd()
 	_ = os.MkdirAll("log", os.ModePerm)
-	file := filepath.Join(pwd, "log", ct.Format("2006-01-02")+".log")
+	file := filepath.Join(pwd, "log", "dvl_"+ct.Format("2006-01-02")+".log")
 	for {
 		d := <-data
 		//ct := time.Now().Local()

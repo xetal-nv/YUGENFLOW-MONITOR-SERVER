@@ -26,6 +26,9 @@ func main() {
 	var dbs = flag.String("dbs", "", "databases root folder")
 	var dmode = flag.Int("dmode", 0, "activate and select a development mode")
 	var dbug = flag.Int("debug", 0, "activate and select a debug mode")
+	var dvl = flag.Bool("dvl", false, "activate dvl")
+	var ri = flag.Int("ri", 360, "set ri")
+	var rs = flag.Int64("rs", 10000000, "set rs")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -39,7 +42,10 @@ func main() {
 
 	}
 
+	servers.Dvl = *dvl
 	support.Debug = *dbug
+	support.RotInt = *ri
+	support.RotSize = *rs
 
 	folder = os.Getenv("GATESERVER")
 

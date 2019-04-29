@@ -16,6 +16,8 @@ import (
 	"time"
 )
 
+var Dvl bool = false
+
 func setJSenvironment() {
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
 		f, err := os.Create("./html/js/dat.js")
@@ -112,7 +114,10 @@ func setupHTTP() error {
 
 	hMap[1] = make(map[string]http.Handler)
 	// development log API
-	hMap[1]["/dvl"] = dvlHTTHandler()
+	if Dvl {
+		hMap[1]["/dvl"] = dvlHTTHandler()
+		log.Println("WARNING: Developer Logfile enabled")
+	}
 	// installation information API
 	hMap[1]["/info"] = infoHTTHandler()
 	// Series data retrieval API
@@ -127,8 +132,6 @@ func setupHTTP() error {
 	hMap[1]["/udef"] = undefinedDeviceHTTPHandler()
 	// unused registered device API
 	hMap[1]["/active"] = usedDeviceHTTPHandler()
-	// logfile
-	hMap[1]["/gnl"] = logHandler()
 
 	// add SVG API for installation graphs
 	for spn := range spaces.SpaceDef {
