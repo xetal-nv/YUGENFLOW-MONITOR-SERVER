@@ -5,7 +5,8 @@ Author: F. Pessolano
 
 
 **List API:**  
-HTTPSPORTS[1]/dvl -> developer log  
+HTTPSPORTS[1]/dvl -> latest developer log  
+HTTPSPORTS[1]/gnl -> current general logfile   
 HTTPSPORTS[1]/asys -> information on all current analyses  
 HTTPSPORTS[1]/info -> installation information  
 HTTPSPORTS[1]/active -> list all valid connected devices  

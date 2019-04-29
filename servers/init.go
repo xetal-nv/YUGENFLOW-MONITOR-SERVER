@@ -128,7 +128,7 @@ func setupHTTP() error {
 	// unused registered device API
 	hMap[1]["/active"] = usedDeviceHTTPHandler()
 	// logfile
-	hMap[1]["/logfile"] = logHandler()
+	hMap[1]["/gnl"] = logHandler()
 
 	// add SVG API for installation graphs
 	for spn := range spaces.SpaceDef {
