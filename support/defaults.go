@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var Debug int
@@ -28,9 +29,11 @@ func SupportSetUp(envf string) {
 			panic("Fatal error:" + e.Error())
 		}
 	}
-	if os.Getenv("DELLOG") == "1" {
+	if os.Getenv("RESLOG") == "1" {
+		ct := time.Now().Local()
 		//noinspection GoUnhandledErrorResult
-		os.Remove(logfilename)
+		os.Remove(logfilename + "_" + ct.Format("2006-01-02"))
+		_ = os.Rename(logfilename, logfilename+"_"+ct.Format("2006-01-02"))
 	}
 	LabelLength = 8
 	if ll := os.Getenv("LENLABEL"); ll != "" {

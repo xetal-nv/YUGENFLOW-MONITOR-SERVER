@@ -39,10 +39,10 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"Gates.entryProcessingSetUp",
+				support.DLog <- support.DevData{"Gates.entryProcessingCore",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			log.Printf("Gates.entryProcessingSetUp: recovering for entry thread %v due to %v\n ", id, e)
+			log.Printf("Gates.entryProcessingCore: recovering for entry %v due to %v\n ", id, e)
 			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
 		}
 	}()
@@ -65,12 +65,16 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 }
 
 // implements the algorithm logic od the gate data processing
-// NOTE extend to more than 2 devices per gate
+// TODO extend to more than 2 devices per gate
 func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int,
 	scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
 	rt := 0
 	// it might be needed to keep the flag in the scratchpad, to be tested
-	flag := make([]bool, len(sensorListEntry), len(sensorListEntry))
+	//flag := make([]bool, len(sensorListEntry), len(sensorListEntry))
+	flag := make(map[int]bool)
+	for i := range sensorListEntry {
+		flag[i] = false
+	}
 
 	// NOTE it might have an issue with extremely fast noise ona  device faster than 1 ms
 	for i, sen := range sensorListEntry {
