@@ -66,6 +66,7 @@ var cmds = []string{"cmd", "val", "async", "id", "timeout"}
 // server also has commands
 // list : lists all commands
 // macid " assigns the id at the device with mac specified in val
+// lgt is max 4 (bytes)
 var cmdAPI = map[string]cmdspecs{
 	"srate":     {2, 1},
 	"savg":      {3, 1},

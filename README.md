@@ -17,7 +17,8 @@ HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of typ
 HTTPSPORTS[1]//cmd?cmd=x?id=y?val=z -> execute command x on sensor y with data (in necessary) z whene z is an array  
 HTTPSPORTS[1]//cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z if the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]//cmd?cmdlist -> lists all available commands  
-
+  
+NOTE valuies in va or specified as x,y,n,..   
 
 **List HTTP pages:**  
 HTTPSPORTS[0]/ -> webapp

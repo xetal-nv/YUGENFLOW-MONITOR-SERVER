@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"gateserver/codings"
@@ -44,11 +45,14 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 							conn := <-ch
 							v, _ := cmdAPI["setid"]
 							cmd := []byte{v.cmd}
-							cmd = append(cmd, byte(id))
+							bs := make([]byte, 2)
+							binary.BigEndian.PutUint16(bs, uint16(id))
+							cmd = append(cmd, bs...)
 							cmd = append(cmd, codings.Crc8(cmd))
 							if _, err := conn.Write(cmd); err != nil {
 								rv.Rt = "error: command failed"
 							} else {
+								rv.Rt = "Device restating"
 								rv.State = true
 								mutexUnknownMac.Lock()
 								unkownDevice[string(mac)] = true
@@ -86,23 +90,20 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 					cmd := []byte{v.cmd}
 					// need to execute the command on sensor with the given ID
 					if v.lgt != 0 && params["val"] != "" {
-						par := strings.Split(params["val"][1:len(params["val"])-1], ",")
 						if support.Debug != 0 {
-							fmt.Println("CMD: found PARAMS", par)
+							fmt.Println("CMD: found PARAMS", params["val"])
 						}
-						if v.lgt == len(par) {
-							for _, val := range par {
-								if data, err := strconv.Atoi(strings.Trim(val, " ")); err != nil || data > 255 {
-									cmd = nil
-									break
-								} else {
-									cmd = append(cmd, byte(data))
-								}
-							}
-						} else {
+						if data, err := strconv.Atoi(strings.Trim(params["val"], " ")); err != nil {
 							cmd = nil
-							rv.Rt = "insufficient parameters"
+							rv.Rt = "wrong parameters"
+						} else {
+							bs := make([]byte, 4)
+							binary.BigEndian.PutUint32(bs, uint32(data))
+							cmd = append(cmd, bs[4-v.lgt:4]...)
 						}
+					} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
+						cmd = nil
+						rv.Rt = "insufficient parameters"
 					}
 					if cmd != nil {
 						if support.Debug != 0 {
@@ -177,7 +178,7 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 	for {
 		select {
 		case <-ci:
-			// unexpected command answer, illegal situation
+			// unexpected command answer
 			go func() {
 				support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
 					support.Timestamp(), "unsollcited command answer", []int{1}, true}
@@ -188,7 +189,6 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 			case <-stop:
 			}
 		case cmd := <-ce:
-			fmt.Println("CMDCH: readying command", cmd)
 			var rt []byte
 			// we return nil in case of error
 			// verify if the command exists and send it to the device

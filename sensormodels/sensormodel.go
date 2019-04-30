@@ -44,11 +44,6 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 		// sensor registers first
 		//noinspection GoUnhandledErrorResult
 		conn.Write(mac)
-		//data := vals[rand.Intn(len(vals))]
-		//msg := []byte{1, 0, byte(id), byte(data)}
-		//msg = append(msg, codings.Crc8(msg))
-		////noinspection GoUnhandledErrorResult
-		//conn.Write(msg)
 		// start a listener
 		c := make(chan []byte)
 		go func(c chan []byte) {
@@ -65,11 +60,11 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 						cmd = append(cmd, cmde...)
 					}
 					if e == nil {
-						fmt.Printf("Sensor %v has received data %v\n", id, cmd)
+						fmt.Printf("Sensor %v has received data %v\n", mach, cmd)
 						select {
 						case c <- cmd:
 						case <-time.After(5 * time.Second):
-							fmt.Printf("sensor %v timeout\n", id)
+							fmt.Printf("sensor %v timeout\n", mach)
 						}
 					}
 				}
@@ -89,21 +84,26 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 				// fork for either sending a new data value or receiving a command
 				select {
 				case v := <-c:
-					fmt.Printf("sensor %v command accepted\n", id)
+					fmt.Printf("sensor %v command accepted\n", mach)
 					crc := codings.Crc8(v[:len(v)-1])
 					if crc == v[len(v)-1] {
-						if v[0] == 14 {
-							fmt.Printf("Sensor %v disconnecting with new id\n", id)
-							return
-						}
 						msg := []byte{v[0]}
 						if rt, ok := command[v[0]]; ok {
 							msg = append(msg, rt...)
 						}
 						crc = codings.Crc8(msg)
 						msg = append(msg, crc)
-						fmt.Printf("Sensor %v answering command %v\n", id, msg)
+						fmt.Printf("Sensor %v answering command %v\n", mach, msg)
 						_, e = conn.Write(msg)
+						if v[0] == 14 {
+							fmt.Printf("Sensor %v disconnecting with new id\n", mach)
+							go func() {
+								time.Sleep(10 * time.Second)
+								id = int(v[2]) + int(v[1])*256
+								SensorModel(id, iter-i, mxdelay, vals, mac)
+							}()
+							return
+						}
 					}
 				case <-time.After(time.Duration(del+5) * 1000 * time.Millisecond):
 					// continue to send data

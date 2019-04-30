@@ -255,7 +255,6 @@ func handlerTCPRequest(conn net.Conn) {
 							}
 							if v == 0 {
 								// this will never happen when CRC8 is used
-								//fmt.Printf("Received something else %v\n", cmd)
 								sensorChanID[deviceId] <- cmd
 								// if the answer is incorrect the channel will be closed
 								if ans := <-sensorChanID[deviceId]; ans != nil {
