@@ -42,3 +42,4 @@ See .env file for configuration example
 -dvl : activate dvl  
 -ri Int : set log ri  
 -rs Int64 : set log rs  
+-dellogs : delete all existing logs  
