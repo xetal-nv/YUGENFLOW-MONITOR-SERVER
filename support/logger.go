@@ -33,10 +33,10 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 	}()
 
 	pwd, _ := os.Getwd()
-	_ = os.MkdirAll("log", os.ModePerm)
 	if Dellogs {
 		_ = os.RemoveAll(filepath.Join(pwd, "log"))
 	}
+	_ = os.MkdirAll("log", os.ModePerm)
 	rf := filepath.Join(pwd, "log", n+"_"+ct.Format("2006-01-02"))
 
 	// look for latest lof file
