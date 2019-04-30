@@ -25,7 +25,8 @@ func SendData(dev int, val int) error {
 			// convert to int from int8 with 127 as special value
 			if val == 127 {
 				val = 0
-				//support.DLog <- support.DevData{"device " + strconv.Itoa(dev), support.Timestamp(), "127 reported", nil}
+				support.DLog <- support.DevData{"device " + strconv.Itoa(dev), support.Timestamp(),
+					"127 reported", []int{1}, true}
 			} else {
 				val = int(int8(val & 255))
 			}

@@ -15,23 +15,6 @@ var RotSize int64 = 10000000
 var logf *os.File
 var e error
 
-//var once sync.Once
-
-//func setUpLog_old(n string) {
-//
-//	ct := time.Now().Local()
-//	pwd, _ := os.Getwd()
-//	_ = os.MkdirAll("log", os.ModePerm)
-//	file := filepath.Join(pwd, "log", n+"_"+ct.Format("2006-01-02")+".log")
-//
-//	once.Do(func() {
-//		if logf, e = os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); e != nil {
-//			log.Fatal(e)
-//		}
-//		log.SetOutput(logf)
-//	})
-//}
-
 func closeLog() {
 	if logf != nil {
 		_ = logf.Close()
@@ -51,6 +34,9 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 
 	pwd, _ := os.Getwd()
 	_ = os.MkdirAll("log", os.ModePerm)
+	if Dellogs {
+		_ = os.RemoveAll(filepath.Join(pwd, "log"))
+	}
 	rf := filepath.Join(pwd, "log", n+"_"+ct.Format("2006-01-02"))
 
 	// look for latest lof file

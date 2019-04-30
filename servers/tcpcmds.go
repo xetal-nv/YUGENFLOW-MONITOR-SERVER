@@ -58,7 +58,6 @@ func handlerReset(id int) {
 
 func assingID(st chan bool, conn net.Conn, com chan net.Conn, mac []byte) {
 	defer func() { st <- false }()
-	//fmt.Println("start command routine")
 	select {
 	case <-com:
 		com <- conn

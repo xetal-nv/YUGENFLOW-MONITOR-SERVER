@@ -154,16 +154,9 @@ func TimedIntDBSClose() {
 // set-ups a series and/or retrieve its definition from the database
 func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 	found = true
-	//var db badger.DB
-	//if sDB {
-	//	db = *statsDB
-	//} else {
-	//	db = *currentDB
-	//}
 	if _, ok := tagStart[tag]; !ok {
 		// if not initialised it creates a new series
 		// sets the entry in tagStart
-		//fmt.Println(nt, step, sDB)
 		if c, e := ReadHeader(tag, sDB); e != nil {
 			nt := []byte(tag + "header")
 			found = false
@@ -173,7 +166,6 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 			a.lastUpdt = a.fromRst
 			a.created = a.fromRst
 			b := a.Marshal()
-			//err = update(b, nt, db, false)
 			if sDB {
 				select {
 				case statsChanIn <- dbInChan{nt, b, true}:
@@ -194,36 +186,20 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 			log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
 		}
 	}
-	//fmt.Println(support.Timestamp() - tagStart[tag][0])
-	//os.Exit(1)
 	return found, err
 }
 
 // reads the header of a series
 func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
-	//type dbOutCommChan struct {
-	//	id     []byte
-	//	l      int;
-	//	offset []int;
-	//	co     chan struct {
-	//		r   []byte
-	//		err error
-	//	}
-	//}
-	//if _, ok := tagStart[tag]; !ok {
-	//	err = errors.New("Header not found")
-	//} else {
+
 	co := make(chan dbOutChan)
-	//var db badger.DB
 	if sDB {
-		//db = *statsDB
 		select {
 		case statsChanOut <- dbOutCommChan{[]byte(tag + "header"), 28, []int{}, co}:
 		case <-time.After(time.Duration(timeout) * time.Second):
 			return hd, errors.New("ReadHeader " + tag + " stats time out")
 		}
 	} else {
-		//db = *currentDB
 		select {
 		case currentChanOut <- dbOutCommChan{[]byte(tag + "header"), 28, []int{}, co}:
 		case <-time.After(time.Duration(timeout) * time.Second):
@@ -240,16 +216,6 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	case <-time.After(time.Duration(timeout) * time.Second):
 		err = errors.New("ReadHeader timeout")
 	}
-	//}
-	//if _, ok := tagStart[tag]; !ok {
-	//	err = errors.New("Header not found")
-	//} else {
-	//if c, e := read([]byte(tag+"header"), 28, []int{}, db); e != nil {
-	//	err = e
-	//} else {
-	//	err = hd.Unmarshal(c)
-	//}
-	//}
 	return
 }
 
@@ -257,12 +223,6 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
 	var ts int64
 	var hd Headerdata
-	//var db badger.DB
-	//if sDB {
-	//	db = *statsDB
-	//} else {
-	//	db = *currentDB
-	//}
 	if len(gts) != 1 {
 		ts = support.Timestamp()
 	} else {
@@ -271,7 +231,6 @@ func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
 	if hd, err = ReadHeader(tag, sDB); err == nil {
 		hd.lastUpdt = uint64(ts)
 		b := hd.Marshal()
-		//err = update(b, []byte(tag+"0"), db, false)
 		if sDB {
 			select {
 			case statsChanIn <- dbInChan{[]byte(tag + "0"), b, true}:
@@ -294,32 +253,22 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	ts := d.Ts()
 	tag := d.Tag()
 	val := d.Marshal()
-	//var db badger.DB
-	//sampleMutex.Lock()
-	//if sDB {
-	//	db = *statsDB
-	//} else {
-	//	db = *currentDB
-	//}
 	if st, ok := tagStart[tag]; ok {
 		i := (ts - st[0]) / (st[1] * 1000)
 		lab := tag + strconv.Itoa(int(i))
 		if sDB {
-			//err = update(val, []byte(lab), *statsDB, false)
 			select {
 			case statsChanIn <- dbInChan{[]byte(lab), val, false}:
 			case <-time.After(time.Duration(timeout) * time.Second):
 				return errors.New("StoreSample " + tag + " stats time out")
 			}
 		} else {
-			//err = update(val, []byte(lab), *currentDB, false)
 			select {
 			case currentChanIn <- dbInChan{[]byte(lab), val, false}:
 			case <-time.After(time.Duration(timeout) * time.Second):
 				return errors.New("StoreSample " + tag + " current time out")
 			}
 		}
-		//err = update(val, []byte(lab), db, false)
 	} else {
 		err = errors.New("Serie " + tag + " not found")
 	}
@@ -328,7 +277,6 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 			err = updateHeader(d.Tag(), sDB, ts)
 		}
 	}
-	//sampleMutex.Unlock()
 	return err
 }
 

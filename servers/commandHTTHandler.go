@@ -28,10 +28,10 @@ func commandHTTHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"commandHTTHandler",
+					support.DLog <- support.DevData{"servers.commandHTTHandler",
 						support.Timestamp(), "", []int{1}, true}
 				}()
-				log.Println("commandHTTHandler: recovering from: ", e)
+				log.Println("servers.commandHTTHandler: recovering from: ", e)
 			}
 		}()
 

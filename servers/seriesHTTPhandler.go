@@ -31,10 +31,10 @@ func seriesHTTPhandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"seriesHTTPhandler",
+					support.DLog <- support.DevData{"servers,seriesHTTPhandler",
 						support.Timestamp(), "", []int{1}, true}
 				}()
-				log.Println("seriesHTTPhandler: recovering from: ", e)
+				log.Println("servers.seriesHTTPhandler: recovering from: ", e)
 			}
 		}()
 

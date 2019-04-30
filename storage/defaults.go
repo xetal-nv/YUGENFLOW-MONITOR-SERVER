@@ -31,11 +31,10 @@ var garbage struct {
 }
 
 var timeout int
-var currentDB, statsDB *badger.DB // databases
-var once sync.Once                // used fpr one time set-up function
-var currentTTL time.Duration      // provides the TTL value to be used
-var tagStart map[string][]int64   // map of definition for all series currently in use
-//var sampleMutex = &sync.Mutex{}   // mutex for badger update function, to be checked if necessary apart from suppressing race warnings
+var currentDB, statsDB *badger.DB     // databases
+var once sync.Once                    // used fpr one time set-up function
+var currentTTL time.Duration          // provides the TTL value to be used
+var tagStart map[string][]int64       // map of definition for all series currently in use
 var statsChanIn chan dbInChan         // channel for storing to the statistical DB
 var currentChanIn chan dbInChan       // channel for storing to the current DB
 var statsChanOut chan dbOutCommChan   // channel for reading to the statistical DB

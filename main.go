@@ -29,6 +29,7 @@ func main() {
 	var dvl = flag.Bool("dvl", false, "activate dvl")
 	var ri = flag.Int("ri", 360, "set ri")
 	var rs = flag.Int64("rs", 10000000, "set rs")
+	var dl = flag.Bool("dellogs", false, "delete all logs")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -41,11 +42,15 @@ func main() {
 		log.Printf("WARNING DEBUG MODE %v\n", *dbug)
 
 	}
+	if *dl {
+		log.Printf("WARNING DELETING ALL LOGS \n")
+	}
 
 	servers.Dvl = *dvl
 	support.Debug = *dbug
 	support.RotInt = *ri
 	support.RotSize = *rs
+	support.Dellogs = *dl
 
 	folder = os.Getenv("GATESERVER")
 

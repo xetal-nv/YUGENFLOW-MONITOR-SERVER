@@ -14,23 +14,24 @@ import (
 func SetUp() {
 	var revdev []int
 	devgate := [2]int{2, 2}
-	if data := os.Getenv("DEVPERGATE"); data != "" {
-		v := strings.Split(strings.Trim(data, " "), " ")
-		if len(v) != 2 {
-			log.Fatal("gateList.SetUp: fatal error, illegal number of parameters in DEVPERGATE")
-		} else {
-			if ind, ok := strconv.Atoi(v[0]); ok != nil {
-				log.Fatal("gateList.SetUp: fatal error,  illegal parameter in DEVPERGATE", v[0])
-			} else {
-				devgate[0] = ind
-			}
-			if ind, ok := strconv.Atoi(v[1]); ok != nil {
-				log.Fatal("gateList.SetUp: fatal error,  illegal parameter in DEVPERGATE ", v[1])
-			} else {
-				devgate[1] = ind
-			}
-		}
-	}
+	// Disabled since no other configuration is allowed
+	//if data := os.Getenv("DEVPERGATE"); data != "" {
+	//	v := strings.Split(strings.Trim(data, " "), " ")
+	//	if len(v) != 2 {
+	//		log.Fatal("gateList.SetUp: fatal error, illegal number of parameters in DEVPERGATE")
+	//	} else {
+	//		if ind, ok := strconv.Atoi(v[0]); ok != nil {
+	//			log.Fatal("gateList.SetUp: fatal error,  illegal parameter in DEVPERGATE", v[0])
+	//		} else {
+	//			devgate[0] = ind
+	//		}
+	//		if ind, ok := strconv.Atoi(v[1]); ok != nil {
+	//			log.Fatal("gateList.SetUp: fatal error,  illegal parameter in DEVPERGATE ", v[1])
+	//		} else {
+	//			devgate[1] = ind
+	//		}
+	//	}
+	//}
 	log.Println("gateList.SetUp: defined gate composition range in devices as", devgate)
 	if data := os.Getenv("REVERSE"); data != "" {
 		for _, v := range strings.Split(data, " ") {

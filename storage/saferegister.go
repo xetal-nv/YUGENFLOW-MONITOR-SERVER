@@ -17,9 +17,7 @@ func SafeReg(in, out chan interface{}, init ...interface{}) {
 		for {
 			select {
 			case data = <-in:
-				//fmt.Println("received:", data)
 			case out <- data:
-				//fmt.Println("sent:", data)
 			}
 		}
 	}

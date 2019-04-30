@@ -18,20 +18,13 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 	rv = Jsoncmdrt{"", false}
 	if params["cmd"] != "" || params["id"] != "" {
 		if params["cmd"] == "list" {
-			if support.Debug != 0 {
-				//fmt.Println("CMD: LIST")
-			}
 			keys := ""
 			for k := range cmdAPI {
 				keys += k + ", "
 			}
 			rv.Rt = keys + "list, macid"
 			rv.State = true
-			//params["async"] = "0"
 		} else if id, e := strconv.Atoi(params["id"]); e == nil {
-			//if support.Debug != 0 {
-			//	fmt.Println("CMD: NOT LIST: ", params)
-			//}
 			if params["cmd"] == "macid" {
 				var mac []byte
 				if c, e := net.ParseMAC(params["val"]); e == nil {
@@ -39,7 +32,6 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 						mac = append(mac, v)
 					}
 					mutexUnknownMac.RLock()
-					//if ch, ok := unknownMacChan[params["val"]]; ok {
 					if ch, ok := unknownMacChan[string(mac)]; ok {
 						mutexUnknownMac.RUnlock()
 						mutexSensorMacs.RLock()
@@ -67,7 +59,6 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 					} else {
 						mutexUnknownMac.RUnlock()
 						mutexSensorMacs.RLock()
-						//if v, ok := sensorIdMAC[params["val"]]; ok {
 						if v, ok := sensorIdMAC[string(mac)]; ok {
 							mutexSensorMacs.RUnlock()
 							rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
@@ -158,7 +149,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 	params["cmd"] = cmd
 	params["id"] = id
 	if support.Debug != 0 {
-		log.Printf("exeBinaryCommand received and executing %v\n", params)
+		log.Printf("servers.exeBinaryCommand received and executing %v\n", params)
 	}
 	return exeParamCommand(params)
 }
@@ -188,7 +179,7 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 		case <-ci:
 			// unexpected command answer, illegal situation
 			go func() {
-				support.DLog <- support.DevData{"handlerCommandAnswer device " + strconv.Itoa(id[0]),
+				support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
 					support.Timestamp(), "unsollcited command answer", []int{1}, true}
 			}()
 			select {

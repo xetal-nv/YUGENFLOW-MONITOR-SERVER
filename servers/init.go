@@ -153,19 +153,19 @@ func setupHTTP() error {
 				keysType = append(keysType, alsn)
 
 				if _, ok := dataMap[ref]; ok {
-					log.Println("ServersSetup: Serving API", path)
+					log.Println("servers.ServersSetup: Serving API", path)
 					hMap[1][path] = singleRegisterHTTPhandler(path, ref)
 				}
 			}
 			ref := strings.Trim(dtn, "_")
 			if _, ok := dataMap[ref]; ok {
-				log.Println("ServersSetup: Serving API", subpath)
+				log.Println("servers.ServersSetup: Serving API", subpath)
 				hMap[1][subpath] = spaceRegisterHTTPhandler(subpath, keysType, ref)
 			}
 			keysSpaces[spn] = keysType
 		}
 		p := "/" + strings.Trim(dtn, "_")
-		log.Println("ServersSetup: Serving API", p)
+		log.Println("servers.ServersSetup: Serving API", p)
 		hMap[1][p] = datatypeRegisterHTTPhandler(p, keysSpaces)
 	}
 	if os.Getenv("MACSTRICT") != "0" {
@@ -178,11 +178,11 @@ func setupHTTP() error {
 		if port := strings.Trim(v, " "); port != "" {
 			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
 		} else {
-			log.Fatal("ServersSetup: fatal error: invalid addresses")
+			log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
 		}
 		for j, c := range addServer {
 			if addServer[i] == c && i != j {
-				log.Fatal("ServersSetup: fatal error: invalid addresses")
+				log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
 			}
 		}
 	}

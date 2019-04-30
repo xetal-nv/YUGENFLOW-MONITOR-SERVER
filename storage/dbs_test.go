@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Setup(t *testing.T) {
-	if err := TimedIntDBSSetUp(true); err != nil {
+	if err := TimedIntDBSSetUp("", true); err != nil {
 		t.Fatal(err)
 	}
 	TimedIntDBSClose()
@@ -73,7 +73,7 @@ func Test_SerieSample(t *testing.T) {
 
 func Test_SerieEntries(t *testing.T) {
 	support.LabelLength = 8
-	if err := TimedIntDBSSetUp(true); err != nil {
+	if err := TimedIntDBSSetUp("", true); err != nil {
 		t.Fatal(err)
 	}
 	defer TimedIntDBSClose()
@@ -135,7 +135,7 @@ func Test_SerieEntries(t *testing.T) {
 }
 
 func Test_DBSraw(t *testing.T) {
-	if err := TimedIntDBSSetUp(true); err != nil {
+	if err := TimedIntDBSSetUp("", true); err != nil {
 		t.Fatal(err)
 	}
 	defer TimedIntDBSClose()
@@ -149,7 +149,7 @@ func Test_DBSraw(t *testing.T) {
 }
 
 func Test_DBS(t *testing.T) {
-	if err := TimedIntDBSSetUp(true); err != nil {
+	if err := TimedIntDBSSetUp("", true); err != nil {
 		t.Fatal(err)
 	}
 	defer TimedIntDBSClose()

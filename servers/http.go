@@ -35,10 +35,10 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"startHTTP: recovering server",
+					support.DLog <- support.DevData{"servers.startHTTP: recovering server",
 						support.Timestamp(), "", []int{1}, true}
 				}()
-				log.Println("startHTTP: recovering server", add, " from:\n ", e)
+				log.Println("servers.startHTTP: recovering server", add, " from:\n ", e)
 				sd <- context.Background() // close running shutdown goroutine
 				startHTTP(add, sd, mh)
 			}
@@ -56,7 +56,7 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 			mx.PathPrefix("/").Handler(http.FileServer(http.Dir(stc)))
 		}
 
-		log.Println("startHTTP: Listening on server server: ", add)
-		log.Panic("startHTTP: serve error: ", server.ListenAndServe())
+		log.Println("servers.startHTTP: Listening on server server: ", add)
+		log.Panic("servers.startHTTP: serve error: ", server.ListenAndServe())
 	}()
 }

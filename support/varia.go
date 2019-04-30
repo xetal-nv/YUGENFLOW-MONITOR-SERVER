@@ -77,12 +77,8 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 	nows := strconv.Itoa(now.Hour()) + ":"
 	mins := "00" + strconv.Itoa(now.Minute())
 	nows += mins[len(mins)-2:]
-	//TimeLayout := "15:04"
 	var ns time.Time
-	//ns, err = time.Parse(TimeLayout, strconv.Itoa(now.Hour())+":"+strconv.Itoa(now.Minute()))
 	ns, err = time.Parse(TimeLayout, nows)
-	//srt, e2 := time.Parse(TimeLayout, start)
-	//ed, e3 := time.Parse(TimeLayout, end)
 	if err != nil {
 		return
 	} else {
@@ -93,7 +89,6 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 
 // used by InClosureTime
 func inTimeSpan(start, end, check time.Time) bool {
-	//fmt.Println(start, end, check )
 	if check.After(end) {
 		if end.After(start) {
 			return false

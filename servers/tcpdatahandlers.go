@@ -40,7 +40,7 @@ func handlerTCPRequest(conn net.Conn) {
 		mutexUnusedDevices.Unlock()
 		mutexUnknownMac.Unlock()
 		go func() {
-			support.DLog <- support.DevData{"handlerTCPRequest recover",
+			support.DLog <- support.DevData{"servers.handlerTCPRequest recover",
 				support.Timestamp(), "", []int{1}, true}
 		}()
 		//noinspection GoUnhandledErrorResult
@@ -214,7 +214,6 @@ func handlerTCPRequest(conn net.Conn) {
 								mutexUnknownMac.Lock()
 								// Connected device has invalid ID, needs to be set
 								if _, ok := unknownMacChan[string(mac)]; !ok {
-									// st chan bool, cmd chan []byte
 									log.Printf("servers.handlerTCPRequest: device with undefined id %v//%v\n", ipc, mach)
 									s1 := make(chan bool, 1)
 									s2 := make(chan bool, 1)
@@ -236,16 +235,12 @@ func handlerTCPRequest(conn net.Conn) {
 												}
 											}
 										}
-										//mutexUnknownMac.Lock()
-										//unkownDevice[string(mac)] = true
-										//mutexUnknownMac.Unlock()
 									}(s1, s2)
 									mutexUnknownMac.Unlock()
 									loop = <-s2
 								} else {
 									mutexUnknownMac.Unlock()
 								}
-								//log.Printf("servers.handlerTCPRequest: device with undefined id %v//%v disconnected\n", ipc, mach)
 							}
 						}
 					}
