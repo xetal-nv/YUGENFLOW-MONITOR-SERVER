@@ -57,6 +57,16 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 								mutexUnknownMac.Lock()
 								unkownDevice[string(mac)] = true
 								mutexUnknownMac.Unlock()
+								// read and discard answer
+								c := make(chan bool)
+								go func(c chan bool) {
+									_, _ = conn.Read(make([]byte, 256))
+									c <- true
+								}(c)
+								select {
+								case <-c:
+								case <-time.After(time.Duration(timeout) * time.Second):
+								}
 							}
 							ch <- nil
 						}
