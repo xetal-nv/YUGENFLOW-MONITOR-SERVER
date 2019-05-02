@@ -17,6 +17,7 @@ import (
 // see cmds definition for what parameters are allowed
 func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 	rv = Jsoncmdrt{"", false}
+	mutexSensorMacs.RLock()
 	if params["cmd"] != "" || params["id"] != "" {
 		if params["cmd"] == "list" {
 			keys := ""
@@ -41,34 +42,46 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 							rv.Rt = "error: id assigned to " + string(oldMac)
 						} else {
 							mutexSensorMacs.RUnlock()
-							ch <- nil
-							conn := <-ch
-							v, _ := cmdAPI["setid"]
-							cmd := []byte{v.cmd}
-							bs := make([]byte, 2)
-							binary.BigEndian.PutUint16(bs, uint16(id))
-							cmd = append(cmd, bs...)
-							cmd = append(cmd, codings.Crc8(cmd))
-							if _, err := conn.Write(cmd); err != nil {
-								rv.Rt = "error: command failed"
-							} else {
-								rv.Rt = "Device restating"
-								rv.State = true
-								mutexUnknownMac.Lock()
-								unkownDevice[string(mac)] = true
-								mutexUnknownMac.Unlock()
-								// read and discard answer
-								c := make(chan bool)
-								go func(c chan bool) {
-									_, _ = conn.Read(make([]byte, 256))
-									c <- true
-								}(c)
+							select {
+							case ch <- nil:
 								select {
-								case <-c:
+								case conn := <-ch:
+									v, _ := cmdAPI["setid"]
+									cmd := []byte{v.cmd}
+									bs := make([]byte, 2)
+									binary.BigEndian.PutUint16(bs, uint16(id))
+									cmd = append(cmd, bs...)
+									cmd = append(cmd, codings.Crc8(cmd))
+									if _, err := conn.Write(cmd); err != nil {
+										rv.Rt = "error: command failed"
+									} else {
+										rv.Rt = "Device restating"
+										rv.State = true
+										mutexUnknownMac.Lock()
+										unkownDevice[string(mac)] = true
+										mutexUnknownMac.Unlock()
+										// read and discard answer
+										c := make(chan bool)
+										go func(c chan bool) {
+											_, _ = conn.Read(make([]byte, 256))
+											c <- true
+										}(c)
+										select {
+										case <-c:
+										case <-time.After(time.Duration(timeout) * time.Second):
+										}
+									}
+									select {
+									case ch <- nil:
+									case <-time.After(time.Duration(timeout) * time.Second):
+										rv.Rt = "warning: command probably failed"
+									}
 								case <-time.After(time.Duration(timeout) * time.Second):
+									rv.Rt = "error: command failed"
 								}
+							case <-time.After(time.Duration(timeout) * time.Second):
+								rv.Rt = "error: command failed"
 							}
-							ch <- nil
 						}
 					} else {
 						mutexUnknownMac.RUnlock()
@@ -107,9 +120,20 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 							cmd = nil
 							rv.Rt = "wrong parameters"
 						} else {
-							bs := make([]byte, 4)
-							binary.BigEndian.PutUint32(bs, uint32(data))
-							cmd = append(cmd, bs[4-v.lgt:4]...)
+							// check if the command is a setid and if the id is valid
+							if params["cmd"] == "setid" {
+								mutexSensorMacs.RLock()
+								if sensorChanUsedID[data] {
+									rv.Rt = "ID already in use"
+									cmd = nil
+								}
+								mutexSensorMacs.RUnlock()
+							}
+							if cmd != nil {
+								bs := make([]byte, 4)
+								binary.BigEndian.PutUint32(bs, uint32(data))
+								cmd = append(cmd, bs[4-v.lgt:4]...)
+							}
 						}
 					} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
 						cmd = nil
@@ -143,6 +167,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			}
 		}
 	}
+	mutexSensorMacs.RUnlock()
 	return
 }
 

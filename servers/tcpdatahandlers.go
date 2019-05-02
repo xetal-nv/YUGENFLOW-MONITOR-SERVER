@@ -68,7 +68,7 @@ func handlerTCPRequest(conn net.Conn) {
 			if strict {
 				log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
 				go func() {
-					support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + string(mac) + "@" + ipc,
+					support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
 						support.Timestamp(), "", []int{}, true}
 				}()
 				tsnow := support.Timestamp()
@@ -177,7 +177,7 @@ func handlerTCPRequest(conn net.Conn) {
 										oldId, ok2 := sensorIdMAC[string(mac)]
 										_, ok3 := sensorChanID[deviceId]
 										_, ok4 := SensorCmdID[deviceId]
-										//  We check all entries as redundant check vs possible crashes or ainjection attacks
+										//  We check all entries as redundant check vs possible crashes or injection attacks
 										if !(ok1 && ok2 && ok3 && ok4) {
 											// this is a new device not previously connected
 											sensorMacID[deviceId] = mac                // assign a mac to the id
@@ -213,34 +213,35 @@ func handlerTCPRequest(conn net.Conn) {
 							} else {
 								mutexUnknownMac.Lock()
 								// Connected device has invalid ID, needs to be set
+								unkownDevice[string(mac)] = false
 								if _, ok := unknownMacChan[string(mac)]; !ok {
-									log.Printf("servers.handlerTCPRequest: device with undefined id %v//%v\n", ipc, mach)
-									s1 := make(chan bool, 1)
-									s2 := make(chan bool, 1)
-									unknownMacChan[string(mac)] = make(chan net.Conn, 1)
-									unkownDevice[string(mac)] = false
-									go assingID(s1, conn, unknownMacChan[string(mac)], mac)
-									go func(terminate, stop chan bool) {
-										loop := true
-										for loop {
-											select {
-											case fl := <-terminate:
-												stop <- fl
+									log.Printf("servers.handlerTCPRequest: new device with undefined id %v//%v\n", ipc, mach)
+									unknownMacChan[string(mac)] = make(chan net.Conn)
+									//unkownDevice[string(mac)] = false
+								} else {
+									log.Printf("servers.handlerTCPRequest: old device with undefined id %v//%v\n", ipc, mach)
+								}
+								s1 := make(chan bool, 1)
+								s2 := make(chan bool, 1)
+								go assingID(s1, conn, unknownMacChan[string(mac)], mac)
+								mutexUnknownMac.Unlock()
+								go func(terminate, stop chan bool) {
+									loop := true
+									for loop {
+										select {
+										case fl := <-terminate:
+											stop <- fl
+											loop = false
+										case <-time.After(time.Duration(timeout) * time.Second):
+											if _, e := conn.Read(make([]byte, 256)); e != nil {
+												go func() { <-terminate }()
+												stop <- false
 												loop = false
-											case <-time.After(time.Duration(timeout) * time.Second):
-												if _, e := conn.Read(make([]byte, 256)); e != nil {
-													go func() { <-terminate }()
-													stop <- false
-													loop = false
-												}
 											}
 										}
-									}(s1, s2)
-									mutexUnknownMac.Unlock()
-									loop = <-s2
-								} else {
-									mutexUnknownMac.Unlock()
-								}
+									}
+								}(s1, s2)
+								loop = <-s2
 							}
 						}
 					}
@@ -282,6 +283,10 @@ func handlerTCPRequest(conn net.Conn) {
 									if valid {
 										select {
 										case sensorChanID[deviceId] <- cmd[:len(cmd)-1]:
+											// in case we receive a valid answer to setid, we close the channel
+											if cmd[0] == 14 {
+												loop = false
+											}
 										case <-time.After(time.Duration(timeout) * time.Second):
 											// internal issue, all goroutines will close on time out including the channel
 											go func() { sensorChanID[deviceId] <- cmd }()
