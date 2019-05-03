@@ -28,7 +28,6 @@ func entryProcessingSetUp(id int, in chan sensorData, entrylist EntryDef) {
 		scratchPad.unusedSampleSumIn[i] = 0
 		scratchPad.unusedSampleSumOut[i] = 0
 	}
-
 	entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
 
 }

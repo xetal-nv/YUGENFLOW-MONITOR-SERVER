@@ -10,7 +10,11 @@ HTTPSPORTS[1]/asys -> information on all current analyses
 HTTPSPORTS[1]/info -> installation information  
 HTTPSPORTS[1]/active -> list all valid connected devices  
 HTTPSPORTS[1]/und -> list all connected devices not used in the installation  
-HTTPSPORTS[1]/udef -> list all connected devices with undefined id 0xff  
+HTTPSPORTS[1]/udef -> list all devices with undefined id 0xff that have been connected  
+HTTPSPORTS[1]/udef/active -> list all connected devices with initial id 0xff  
+HTTPSPORTS[1]/udef/notactive -> list all not connected devices with initial id 0xff  
+HTTPSPORTS[1]/udef/defined -> list all defined devices with initial id 0xff  
+HTTPSPORTS[1]/udef/undefined -> list all not yet defined devices with initial id 0xff  
 HTTPSPORTS[1]/x/y/z -> actual value for data x in space y on averaging z  
 HTTPSPORTS[1]/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
 HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  

@@ -128,8 +128,12 @@ func setupHTTP() error {
 	hMap[1]["/asys"] = asysHTTHandler()
 	// unused registered device API
 	hMap[1]["/und"] = unusedDeviceHTTPHandler()
-	// unknown registered device API
-	hMap[1]["/udef"] = undefinedDeviceHTTPHandler()
+	// unknown registered device API and its variants
+	hMap[1]["/udef"] = undefinedDeviceHTTPHandler("")
+	hMap[1]["/udef/active"] = undefinedDeviceHTTPHandler("active")
+	hMap[1]["/udef/defined"] = undefinedDeviceHTTPHandler("defined")
+	hMap[1]["/udef/undefined"] = undefinedDeviceHTTPHandler("undefined")
+	hMap[1]["/udef/notactive"] = undefinedDeviceHTTPHandler("notactive")
 	// unused registered device API
 	hMap[1]["/active"] = usedDeviceHTTPHandler()
 

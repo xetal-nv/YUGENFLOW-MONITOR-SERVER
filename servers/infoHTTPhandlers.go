@@ -237,12 +237,13 @@ func unusedDeviceHTTPHandler() http.Handler {
 }
 
 type Jsonudef struct {
-	Mac   string `json:"mac"`
-	State bool   `json:"redefined"`
+	Mac       string `json:"mac"`
+	State     bool   `json:"redefined"`
+	Connected bool   `json:"connected"`
 }
 
 // returns the list of connected undefined devices
-func undefinedDeviceHTTPHandler() http.Handler {
+func undefinedDeviceHTTPHandler(opt string) http.Handler {
 	cors := false
 	if os.Getenv("CORS") != "" {
 		cors = true
@@ -268,7 +269,27 @@ func undefinedDeviceHTTPHandler() http.Handler {
 		mutexUnknownMac.RLock()
 		for mac, st := range unkownDevice {
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
-			und = append(und, Jsonudef{mach, st})
+			_, cn := unknownMacChan[mac]
+			switch opt {
+			case "undefined":
+				if !st {
+					und = append(und, Jsonudef{mach, st, cn})
+				}
+			case "defined":
+				if st {
+					und = append(und, Jsonudef{mach, st, cn})
+				}
+			case "active":
+				if cn {
+					und = append(und, Jsonudef{mach, st, cn})
+				}
+			case "notactive":
+				if !cn {
+					und = append(und, Jsonudef{mach, st, cn})
+				}
+			default:
+				und = append(und, Jsonudef{mach, st, cn})
+			}
 		}
 		mutexUnknownMac.RUnlock()
 
