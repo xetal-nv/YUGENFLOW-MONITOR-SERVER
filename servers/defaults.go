@@ -23,7 +23,6 @@ var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
 var crcUsed bool                            // CRC used flag
 var strictFlag bool                         // indicate is MAC strict mode is being used
-//var cmdBuffLen int                          // length of buffer for command channels
 var mutexSensorMacs = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on start-up on sensorMacID, sensorMacID,SensorCmdID
 var mutexUnknownMac = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on unknownMacChan
 var mutexUnusedDevices = &sync.RWMutex{}    // this mutex is used to avoid concurrent writes at start-up on sensorMacID, sensorMacID,SensorCmdID

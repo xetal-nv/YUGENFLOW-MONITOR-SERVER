@@ -92,7 +92,6 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 				}
 			}
 			spaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
-			//if sts := os.Getenv("SPACE_" + strconv.Itoa(i)); sts != "" {
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				name = support.StringLimit(name, support.LabelLength)
 				spaceChannels[name] = make(chan spaceEntries, bufsize)

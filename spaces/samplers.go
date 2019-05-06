@@ -81,7 +81,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 						}
 					}
 				}
-				//fmt.Println(samplerName, sd, counter)
 				if sd {
 					oldcounter.val = counter.val
 					oldcounter.ts = counter.ts
@@ -89,7 +88,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					for i, v := range counter.entries {
 						oldcounter.entries[i] = v
 					}
-					//fmt.Println(counter)
 					passData(spacename, samplerName, counter, nextStageChan, chantimeout, to)
 				}
 			} else if cmode == "1" {
@@ -145,7 +143,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 						if count == offset {
 							// we distribute the errors only if it repeats and stays the same
-							//fmt.Println("update", counter)
 							e = false
 							for i := 0; i < support.Abs(count); i++ {
 								tmp := counter.entries[i%len(counter.entries)]
@@ -163,9 +160,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 								oldcounter.entries[i] = v
 							}
 							passData(spacename, samplerName, counter, nextStageChan, chantimeout, to)
-							//fmt.Println("updated", counter)
 						} else {
-							//fmt.Println("skip", counter)
 							offset = count
 							e = true
 						}
@@ -185,7 +180,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				select {
 				case sp := <-prevStageChan:
 					if skip, e := support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
-						//fmt.Println(skip)
 						if skip {
 							counter.val = 0
 							// Calculate the confidence measurement (number wrong data / number data
@@ -203,7 +197,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					if counter.val < 0 {
 						stats[0] += 1
 						support.DLog <- support.DevData{Tag: "spaces.samplers counter " + spacename + " current",
-							//support.Timestamp(), "negative counter wrong/tots", stats, true}
 							Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), []int{stats[0], stats[1]}...), Aggr: true}
 					}
 					if counter.val < 0 && instNegSkip {
@@ -215,7 +208,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					} else {
 						counter.entries[sp.id] = dataEntry{val: sp.val}
 					}
-					//fmt.Println("current step new sample", counter)
 				case <-time.After(timeoutInterval):
 				}
 				cTS := support.Timestamp()
@@ -232,7 +224,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				avgsp := spaceEntries{ts: 0}
 				select {
 				case avgsp = <-prevStageChan:
-					//fmt.Println("received", samplerName, avgsp)
 				case <-time.After(timeoutInterval):
 				}
 				cTS := support.Timestamp()
@@ -252,7 +243,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 						// Extract all applicable series for each entry
 						entries := make(map[int][]dataEntry)
-						//var wg sync.WaitGroup
 
 						for i, v := range buffer {
 							for j, ent := range v.entries {
@@ -260,29 +250,23 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 								entries[j] = append(entries[j], ent)
 							}
 						}
-						//ne1 := make(map[int]dataEntry)
 						ne := make(map[int]dataEntry)
 						nec := make(chan struct {
 							id   int
 							data dataEntry
 						}, len(entries))
 						for i, v := range entries {
-							//wg.Add(1)
 							go func(i int, v []dataEntry) {
-								//defer wg.Done()
-								//ne1[i] = dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}
 								nec <- struct {
 									id   int
 									data dataEntry
 								}{i, dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}}
 							}(i, v)
 						}
-						//wg.Wait()
 						for range entries {
 							el := <-nec
 							ne[el.id] = el.data
 						}
-						//fmt.Println(ne,ne1)
 						counter.entries = ne
 						counter.ts = cTS
 						if cstats == "1" {

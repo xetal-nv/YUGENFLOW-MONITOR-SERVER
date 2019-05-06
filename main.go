@@ -83,9 +83,7 @@ func main() {
 	gates.SetUp()
 	spaces.SetUp()
 
-	//switch os.Getenv("DEVMODE") {
 	switch *dmode {
-	//case "2":
 	case 2:
 		for i := 100; i < 300; i++ {
 			mac := []byte{'a', 'b', 'c'}
@@ -103,20 +101,13 @@ func main() {
 				sensormodels.SensorModel(65535, 500, 60, []int{-1, 0, 1, 2, 127}, mac)
 			}(i, mac)
 		}
-	//case "1":
 	case 1:
-		//go sensormodels.Randgen()
 		go sensormodels.SensorModel(0, 110, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '1'})
 		go sensormodels.SensorModel(1, 120, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '2'})
 		go sensormodels.SensorModel(2, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '3'})
 		go sensormodels.SensorModel(3, 70, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '4'})
 		go sensormodels.SensorModel(2340, 90, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '5'})
 		go sensormodels.SensorModel(65535, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '6'})
-		//go func(){
-		//	sensormodels.SensorModel(3, 1, 2, []int{-1, 0, 1, 2, 127},[]byte{'a', 'b', 'c', 1, 2, 4})
-		//	time.Sleep(10*time.Second)
-		//	sensormodels.SensorModel(3, 1, 2, []int{-1, 0, 1, 2, 127},[]byte{'a', 'b', 'c', 1, 2, 3})
-		//}()
 	default:
 	}
 

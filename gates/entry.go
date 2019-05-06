@@ -12,7 +12,6 @@ import (
 func entryProcessingSetUp(id int, in chan sensorData, entrylist EntryDef) {
 	var scratchPad scratchData
 	sensorListEntry := make(map[int]sensorData)
-	//gateListEntry := EntryList[id].Gates
 	gateListEntry := entrylist.Gates
 
 	scratchPad.senData = make(map[int]sensorData)
@@ -68,14 +67,12 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int,
 	scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
 	rt := 0
-	// it might be needed to keep the flag in the scratchpad, to be tested
-	//flag := make([]bool, len(sensorListEntry), len(sensorListEntry))
 	flag := make(map[int]bool)
 	for i := range sensorListEntry {
 		flag[i] = false
 	}
 
-	// NOTE it might have an issue with extremely fast noise ona  device faster than 1 ms
+	// NOTE it might have an issue with noise or a device faster than 1ms
 	for i, sen := range sensorListEntry {
 		smem := scratchPad.senData[i]
 		if smem.ts != sen.ts || smem.val != sen.val { //new sample detected
@@ -124,13 +121,13 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 	}
 
 	for _, gate := range gateListEntry {
-		// in not detected by sensor 1
+		// in - not detected by sensor 1
 		if flag[gate[1]] && scratchPad.senData[gate[1]].val == 0 && scratchPad.unusedSampleSumIn[gate[0]] > 0 {
 			// if flag in the scratchPad it needs to ne reset
 			rt++
 			scratchPad.unusedSampleSumIn[gate[0]]--
 		}
-		// out not detected by sensor 0
+		// out - not detected by sensor 0
 		if flag[gate[0]] && scratchPad.senData[gate[0]].val == 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 {
 			// if flag in the scratchPad it needs to ne reset
 			rt--

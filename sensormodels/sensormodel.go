@@ -26,7 +26,7 @@ var cmdargs = map[byte]int{
 	[]byte("\x0e")[0]: 2,
 }
 
-// for testing purposes only
+// gate sensor model for testing purposes only
 
 func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 
@@ -79,7 +79,6 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 			//noinspection GoUnhandledErrorResult
 			msg := []byte{1, bs[2], bs[3], byte(data)}
 			msg = append(msg, codings.Crc8(msg))
-			//fmt.Println(id, msg)
 			if _, e = conn.Write(msg); e == nil {
 				// fork for either sending a new data value or receiving a command
 				select {

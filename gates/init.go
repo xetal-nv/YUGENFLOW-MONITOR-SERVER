@@ -14,7 +14,7 @@ import (
 func SetUp() {
 	var revdev []int
 	devgate := [2]int{2, 2}
-	// Disabled since no other configuration is allowed
+	// Commented since currently no other configuration is allowed
 	//if data := os.Getenv("DEVPERGATE"); data != "" {
 	//	v := strings.Split(strings.Trim(data, " "), " ")
 	//	if len(v) != 2 {
@@ -124,7 +124,6 @@ func SetUp() {
 				} else {
 					t.Gates[ind] = gateList[ind]
 					for _, d := range gateList[ind] {
-						//EntryList[i] = append(EntryList[i], d)
 						tm := sensorList[d]
 						kp := true
 						for _, v := range tm.entry {
