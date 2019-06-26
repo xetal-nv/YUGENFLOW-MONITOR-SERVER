@@ -332,3 +332,38 @@ func usedDeviceHTTPHandler() http.Handler {
 
 	})
 }
+
+// returns list of connected devices pending approval
+
+func pendingDeviceHTTPHandler() http.Handler {
+	cors := false
+	if os.Getenv("CORS") != "" {
+		cors = true
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				go func() {
+					support.DLog <- support.DevData{"pendingDeviceHTTPHandler",
+						support.Timestamp(), "", []int{1}, true}
+				}()
+				log.Println("pendingDeviceHTTPHandler: recovering from: ", e)
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if cors {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		// TODO core API
+		mutexPendingDevices.Lock()
+		for el := range pendingDevice {
+			_, _ = fmt.Fprintf(w, el)
+			_, _ = fmt.Fprintf(w, "\n")
+		}
+		mutexPendingDevices.Unlock()
+
+	})
+}

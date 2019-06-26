@@ -2,7 +2,7 @@ package gates
 
 import "sync"
 
-// sensor data as identified id, timestampo ts and value val
+// sensor data as identified id, timestamp ts and value val
 type sensorData struct {
 	id  int   // gate number
 	ts  int64 // timestamp

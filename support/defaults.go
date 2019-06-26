@@ -16,7 +16,7 @@ var Dellogs = false
 const logfilename string = "gnl" // logfile name
 const TimeLayout = "15:04"       // time layout used to read the configuration file
 
-var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on temrination does not affect critical operations
+var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination does not affect critical operations
 
 // set-ups all support variables according to the configuration file .env
 

@@ -17,7 +17,7 @@ import (
 // analysis : analysis name
 // start : initial time stamp of the range
 // end : last time stamp of the range
-// last : number of lsst samples to return
+// last : number of last samples to return
 // last and (start.end) are mutually exclusive with last having priority in case they are all specified
 func seriesHTTPhandler() http.Handler {
 	var cmds = []string{"last", "type", "space", "analysis", "start", "end"}

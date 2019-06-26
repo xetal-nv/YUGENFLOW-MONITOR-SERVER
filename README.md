@@ -8,8 +8,9 @@ Author: F. Pessolano
 HTTPSPORTS[1]/dvl -> latest developer log (DISABLED)  
 HTTPSPORTS[1]/asys -> information on all current analyses  
 HTTPSPORTS[1]/info -> installation information  
+HTTPSPORTS[1]/pending -> list all devices pending for connection approval (only current connections)    
 HTTPSPORTS[1]/active -> list all valid connected devices  
-HTTPSPORTS[1]/und -> list all connected devices not used in the installation  
+HTTPSPORTS[1]/und -> list all connected devices that are not used in the installation  
 HTTPSPORTS[1]/udef -> list all devices with undefined id 0xff that have been connected  
 HTTPSPORTS[1]/udef/active -> list all connected devices with initial id 0xff  
 HTTPSPORTS[1]/udef/notactive -> list all not connected devices with initial id 0xff  
@@ -18,11 +19,11 @@ HTTPSPORTS[1]/udef/undefined -> list all not yet defined devices with initial id
 HTTPSPORTS[1]/x/y/z -> actual value for data x in space y on averaging z  
 HTTPSPORTS[1]/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
 HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
-HTTPSPORTS[1]//cmd?cmd=x?id=y?val=z -> execute command x on sensor y with data (in necessary) z whene z is an array  
-HTTPSPORTS[1]//cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z if the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
-HTTPSPORTS[1]//cmd?cmdlist -> lists all available commands  
+HTTPSPORTS[1]/cmd?cmd=x?id=y?val=z -> execute command x on sensor y with data (in necessary) z when z is an array  
+HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
+HTTPSPORTS[1]/cmd?list -> lists all available commands  
   
-NOTE valuies in val are specified as x,y,n,..   
+NOTE values in val are specified as x,y,n,..   
 
 **List HTTP pages:**  
 HTTPSPORTS[0]/ -> webapp
@@ -41,9 +42,9 @@ See .env file for configuration example
 
 **COMMAND LINE OPTIONS:**  
 -env String : specifies the configuration file, uses .env if not specified  
--dbs Path : specifies path where to stopre the database, './DBS' used if not specified  
--dmode Int : speficies an execution mode (0 default)  
--debug Int : speficies a debug mode (0 default)  
+-dbs Path : specifies path where to store the database, './DBS' used if not specified  
+-dmode Int : specifies an execution mode (0 default)  
+-debug Int : specifies a debug mode (0 default)  
 -dvl : activate dvl  
 -ri Int : set log ri  
 -rs Int64 : set log rs  

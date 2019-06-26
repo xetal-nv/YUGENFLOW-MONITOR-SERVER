@@ -98,7 +98,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 			log.Fatal("storage.TimedIntDBSSetUp: GARBINT start value value is illegal")
 		}
 	} else {
-		log.Fatal("storage.TimedIntDBSSetUp: GARBINT wrong nomber of parameters")
+		log.Fatal("storage.TimedIntDBSSetUp: GARBINT wrong number of parameters")
 	}
 
 	log.Printf("storage.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
@@ -281,7 +281,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 }
 
 // reads a series, all values between the timestamos included in s0 and s1 are reads
-// values are returnes as a set of values
+// values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
 // rt: list of the series values ordered according to rts
@@ -338,7 +338,7 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 }
 
 // It returns the values for the last N timestamps
-// values are returnes as a set of values
+// values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
 // rt: list of the series values ordered according to rts
@@ -443,7 +443,7 @@ func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 
 // View read an entry, when l==0, it assumes it is a variable length element
 // and it retrieves the length from the element first (maximum number of fields in 16 bit)
-// this version acts as a buffered thread to a database, requires time-out and closure on the receicing end
+// this version acts as a buffered thread to a database, requires time-out and closure on the receiving end
 func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 	defer func() {
 		if e := recover(); e != nil {

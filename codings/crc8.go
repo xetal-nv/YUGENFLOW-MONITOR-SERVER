@@ -1,6 +1,6 @@
 package codings
 
-// Module for simple hardcoded CRC8 implementation for serial comunication check
+// Module for simple hardcoded CRC8 implementation for serial communication check
 
 var crcTable = []byte{
 	0x00, 0x07, 0x0e, 0x09, 0x1c, 0x1b, 0x12, 0x15, 0x38,

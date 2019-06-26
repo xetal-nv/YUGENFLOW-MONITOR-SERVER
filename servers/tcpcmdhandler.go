@@ -190,7 +190,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 	return exeParamCommand(params)
 }
 
-// handles all command received internall from channel CE and interacts with the associated device and
+// handles all command received internal from channel CE and interacts with the associated device and
 // handlerTCPRequest (via ci channel) for proper execution.
 func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id ...int) {
 	//loop := true
@@ -216,7 +216,7 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 			// unexpected command answer
 			go func() {
 				support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
-					support.Timestamp(), "unsollcited command answer", []int{1}, true}
+					support.Timestamp(), "unsolicited command answer", []int{1}, true}
 			}()
 			select {
 			case ci <- []byte("error"):

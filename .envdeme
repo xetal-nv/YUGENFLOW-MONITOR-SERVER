@@ -93,7 +93,7 @@ DEVMODE =
 ##### GATE AND GROUPS #####
 ## GATE ORIENTATION
 ##REVERSE = id_gate ...
-#REVERSE = 0 1
+REVERSE = 0 1 6 7
 
 ## STRICT MODE ##
 ## If set, it does allow to connect only devices whose mac
@@ -106,14 +106,18 @@ MACSTRICT = 0
 #SPARES = mac1 mac2 ...
 
 ## GATE COMPOSITION
-## Gates are defined by at least two devices, number has to be cresent without gaps
+## Gates are defined by at least two devices, number has to be crescent without gaps
 ## Device order follows from the first device to the last while entering
 ## IMPORTANT: Devices CANNOT be shared among gates and server DOES NOT SET the device ID
 #GATE_number = device_id device_id ...
 #GATE_number = device_mac?device_id device_id ...
+#IPINFO 172.18.15.40 172.18.15.42
 GATE_0 = 80:7d:3a:6e:79:05?1 80:7d:3a:6e:74:5e?0
+#IPINFO 172.18.15.43 172.18.15.44
 GATE_1 = 80:7d:3a:6e:79:1a?2 80:7d:3a:6e:6d:bd?3
+#IPINFO xx 172.18.15.38
 GATE_2 = 80:7d:3a:6e:6e:e8?4 80:7d:3a:6e:78:f1?5
+#IPINFO 172.18.15.39 172.18.15.45
 GATE_3 = 80:7d:3a:6e:79:7a?6 80:7d:3a:6e:79:2d?7
 
 ## ENTRY COMPOSITION

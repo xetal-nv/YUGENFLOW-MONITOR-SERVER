@@ -16,9 +16,13 @@ import (
 // handlers all TCP requests from a device
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
+
+// TODO add command for declared devices also via mac address
+
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
 	loop := true            // control variable
+	pending := true         // control variable
 	idKnown := false        // flags to know if the device has been recognised and initialised
 	stop := make(chan bool) // channels used to reset the assocoated command thread
 	mac := make([]byte, 6)  // received amc address
@@ -36,6 +40,7 @@ func handlerTCPRequest(conn net.Conn) {
 		mutexUnknownMac.Lock()
 		mutexUnusedDevices.Lock()
 		delete(unknownMacChan, string(mac))
+		delete(pendingDevice, string(mac))
 		delete(unusedDevice, deviceId)
 		mutexUnusedDevices.Unlock()
 		mutexUnknownMac.Unlock()
@@ -89,6 +94,12 @@ func handlerTCPRequest(conn net.Conn) {
 			// Device is not allowed, behaviour depends if in strict mode
 			malf(strictFlag)
 		}
+		// check mac replication on pending devices for malicious attack
+		mutexPendingDevices.RLock()
+		if _, pr := pendingDevice[string(mac)]; pr {
+			malf(true)
+		}
+		mutexPendingDevices.RUnlock()
 		gates.MutexDeclaredDevices.RUnlock()
 		mutexSensorMacs.Lock()
 		if id, reged := sensorIdMAC[string(mac)]; reged {
@@ -110,6 +121,58 @@ func handlerTCPRequest(conn net.Conn) {
 		} else {
 			mutexSensorMacs.Unlock()
 			log.Printf("servers.handlerTCPRequest: connected to new device %v//%v\n", ipc, mach)
+		}
+		if loop {
+
+			// Update the list of pending devices
+			mutexPendingDevices.Lock()
+			pendingDevice[string(mac)] = true
+			mutexPendingDevices.Unlock()
+
+			// reset the sensor if it its first connection
+			// malicious devices will keep receiving this command as always rejected
+			mutexSensorMacs.RLock()
+			_, ok1 := sensorIdMAC[string(mac)]
+			_, ok2 := unkownDevice[string(mac)]
+			mutexSensorMacs.RUnlock()
+			if !(ok1 || ok2) {
+				// this is a completely new device
+				c := make(chan bool)
+				// execute via goroutine to use timeout on the connection
+				go func(c chan bool) {
+					retval := true
+					msg := []byte{cmdAPI["rstbg"].cmd}
+					msg = append(msg, codings.Crc8(msg))
+					if _, e = conn.Write(msg); e == nil {
+						ans := make([]byte, 2)
+						if _, e := conn.Read(ans); e != nil {
+							// close connection in case of error
+							retval = false
+						} else if ans[0] != cmdAPI["rstbg"].cmd {
+							retval = false
+							if support.Debug != 0 {
+								log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
+							}
+						} else {
+							if support.Debug != 0 {
+								log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
+							}
+						}
+					} else {
+						// close connection in case of error
+						retval = false
+					}
+					c <- retval
+				}(c)
+				select {
+				case loop = <-c:
+				case <-time.After(time.Duration(maltimeout) * time.Second):
+					if support.Debug != 0 {
+						log.Printf("servers.handlerTCPRequest: timeout on reset of device %v//%v\n", ipc, mach)
+					}
+					loop = false
+				}
+			}
 		}
 		for loop {
 			cmd := make([]byte, 1)
@@ -151,13 +214,20 @@ func handlerTCPRequest(conn net.Conn) {
 							}
 						}
 						if valid {
+							// remove device from the pending list
+							if pending {
+								mutexPendingDevices.Lock()
+								delete(pendingDevice, string(mac))
+								mutexPendingDevices.Unlock()
+								pending = false
+							}
 							// starts handlerCommandAnswer once with the proper ID
 							// if the device was already connected the channels are already made and valid
 							// first sample creates the command channels and handles if it does not exists
 							if data[0] != 255 && data[1] != 255 {
 								// Connected device has valid ID
 								deviceId = int(data[1]) | int(data[0])<<8
-								// declared devicesd need to be checked accounting for non strict mode
+								// declared devices need to be checked accounting for non strict mode
 								// if mode is strict a request from a non registered device will never reach this point
 								// a non registered device in non  strict mode should not be ignored
 								ind := 65535

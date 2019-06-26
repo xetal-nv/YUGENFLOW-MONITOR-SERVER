@@ -38,4 +38,4 @@ var tagStart map[string][]int64       // map of definition for all series curren
 var statsChanIn chan dbInChan         // channel for storing to the statistical DB
 var currentChanIn chan dbInChan       // channel for storing to the current DB
 var statsChanOut chan dbOutCommChan   // channel for reading to the statistical DB
-var currentChanOut chan dbOutCommChan // channel for readin to the current DB
+var currentChanOut chan dbOutCommChan // channel for reading to the current DB

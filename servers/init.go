@@ -98,7 +98,7 @@ func setJSenvironment() {
 	log.Printf("Reporting mode set to %v\n", rmode)
 }
 
-// set-up of HTTP serverd and handlers
+// set-up of HTTP servers and handlers
 func setupHTTP() error {
 
 	setJSenvironment()
@@ -128,6 +128,8 @@ func setupHTTP() error {
 	hMap[1]["/asys"] = asysHTTHandler()
 	// unused registered device API
 	hMap[1]["/und"] = unusedDeviceHTTPHandler()
+	// pending registered device API
+	hMap[1]["/pending"] = pendingDeviceHTTPHandler()
 	// unknown registered device API and its variants
 	hMap[1]["/udef"] = undefinedDeviceHTTPHandler("")
 	hMap[1]["/udef/active"] = undefinedDeviceHTTPHandler("active")
@@ -310,6 +312,7 @@ func setUpTCP() {
 	sensorMacID = make(map[int][]byte)
 	sensorIdMAC = make(map[string]int)
 	unknownMacChan = make(map[string]chan net.Conn)
+	pendingDevice = make(map[string]bool)
 	unkownDevice = make(map[string]bool)
 	unusedDevice = make(map[int]string)
 	mutexSensorMacs.Unlock()
