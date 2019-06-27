@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+// Uses Badger version < 2.0
+
 // set-ups database
 func TimedIntDBSSetUp(folder string, fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence

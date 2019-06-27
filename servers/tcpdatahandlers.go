@@ -17,7 +17,8 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 
-// TODO add command for declared devices also via mac address
+// TODO add command for declared devices also via mac address\
+// TODO add check on connection alive before deeming malicious attack
 
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
@@ -26,6 +27,9 @@ func handlerTCPRequest(conn net.Conn) {
 	idKnown := false        // flags to know if the device has been recognised and initialised
 	stop := make(chan bool) // channels used to reset the assocoated command thread
 	mac := make([]byte, 6)  // received amc address
+	ci := make(chan []byte) // channel for the API command
+	ce := make(chan []byte) // channel for the API command
+	devid := make(chan int) // channel for the API command
 
 	defer func() {
 		if idKnown {
@@ -140,16 +144,17 @@ func handlerTCPRequest(conn net.Conn) {
 				c := make(chan bool)
 				// execute via goroutine to use timeout on the connection
 				go func(c chan bool) {
-					retval := true
 					msg := []byte{cmdAPI["rstbg"].cmd}
 					msg = append(msg, codings.Crc8(msg))
 					if _, e = conn.Write(msg); e == nil {
 						ans := make([]byte, 2)
 						if _, e := conn.Read(ans); e != nil {
 							// close connection in case of error
-							retval = false
+							fmt.Println("read error")
+							c <- false
 						} else if ans[0] != cmdAPI["rstbg"].cmd {
-							retval = false
+							fmt.Println("answer is wroong")
+							c <- false
 							if support.Debug != 0 {
 								log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
 							}
@@ -160,9 +165,9 @@ func handlerTCPRequest(conn net.Conn) {
 						}
 					} else {
 						// close connection in case of error
-						retval = false
+						fmt.Println("connection error")
+						c <- false
 					}
-					c <- retval
 				}(c)
 				select {
 				case loop = <-c:
@@ -172,6 +177,13 @@ func handlerTCPRequest(conn net.Conn) {
 					}
 					loop = false
 				}
+			}
+			// updates SensorCmdMac if loop is still true
+			if loop {
+				mutexSensorMacs.Lock()
+				SensorCmdMac[string(mac)] = ce
+				go handlerCommandAnswer(conn, ci, ce, stop, devid)
+				mutexSensorMacs.Unlock()
 			}
 		}
 		for loop {
@@ -250,12 +262,15 @@ func handlerTCPRequest(conn net.Conn) {
 										//  We check all entries as redundant check vs possible crashes or injection attacks
 										if !(ok1 && ok2 && ok3 && ok4) {
 											// this is a new device not previously connected
-											sensorMacID[deviceId] = mac                // assign a mac to the id
-											sensorIdMAC[string(mac)] = deviceId        // assign an id to the mac
-											sensorChanID[deviceId] = make(chan []byte) // assign a channel to the id
-											SensorCmdID[deviceId] = make(chan []byte)  // assign a command channel to the id
-											sensorChanUsedID[deviceId] = true          // enable flag for TCP/Channel pair
-											go handlerCommandAnswer(conn, sensorChanID[deviceId], SensorCmdID[deviceId], stop, deviceId)
+											sensorMacID[deviceId] = mac         // assign a mac to the id
+											sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
+											//sensorChanID[deviceId] = make(chan []byte) // assign a channel to the id
+											sensorChanID[deviceId] = ci // assign a channel to the id
+											//SensorCmdID[deviceId] = make(chan []byte)  // assign a command channel to the id
+											SensorCmdID[deviceId] = ce        // assign a command channel to the id
+											sensorChanUsedID[deviceId] = true // enable flag for TCP/Channel pair
+											//go handlerCommandAnswer(conn, sensorChanID[deviceId], SensorCmdID[deviceId], stop, deviceId)
+											go func(id int) { devid <- id }(deviceId)
 											if resetbg.valid {
 												go handlerReset(deviceId)
 											}

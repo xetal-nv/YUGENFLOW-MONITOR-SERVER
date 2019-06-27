@@ -17,7 +17,9 @@ import (
 	"time"
 )
 
-const version = "v. 1.0.0" // version
+const version = "v. 1.1.0" // version
+
+// TODO add load last current values in case of server closure if time difference is minimal
 
 func main() {
 

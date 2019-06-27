@@ -23,10 +23,10 @@ var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
 var crcUsed bool                            // CRC used flag
 var strictFlag bool                         // indicate is MAC strict mode is being used
-var mutexSensorMacs = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on start-up on sensorMacID, sensorMacID,SensorCmdID
+var mutexSensorMacs = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on start-up on sensorMacID, sensorMacID, SensorCmdID, SensorCmdMac
 var mutexUnknownMac = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on unknownMacChan
 var mutexPendingDevices = &sync.RWMutex{}   // this mutex is used to avoid concurrent writes on mutexPendingDevices
-var mutexUnusedDevices = &sync.RWMutex{}    // this mutex is used to avoid concurrent writes at start-up on sensorMacID, sensorMacID,SensorCmdID
+var mutexUnusedDevices = &sync.RWMutex{}    // this mutex is used to avoid concurrent writes on unusedDevice
 var unknownMacChan map[string]chan net.Conn // map of sensor id to sensor MAC as provided by the sensor itself
 var pendingDevice map[string]bool           // map of mac of devices pending registration
 var unkownDevice map[string]bool            // map of mac of devices registered with id equal to 0xff
@@ -35,7 +35,8 @@ var sensorMacID map[int][]byte              // map of sensor id to sensor MAC as
 var sensorIdMAC map[string]int              // map of sensor MAC to sensor id as provided by the sensor itself
 var sensorChanID map[int]chan []byte        // channel to handler managing commands to each connected sensor
 var sensorChanUsedID map[int]bool           // flag indicating if thw channel is assigned to a TCP handler
-var SensorCmdID map[int]chan []byte         // externally visible channel to handler managing commands to each connected sensor
+var SensorCmdID map[int]chan []byte         // externally visible channel to handler managing commands to each connected sensor via ID
+var SensorCmdMac map[string]chan []byte     // externally visible channel to handler managing commands to each connected sensor via mac
 var dataMap map[string]datafunc             // used for HTTP API handling of different data types
 var cmdAnswerLen = map[byte]int{            // provides length for legal server2gate commands
 	2:  1,
@@ -61,7 +62,7 @@ var resetbg struct {
 }
 
 // index for the map[string]string argument of exeParamCommand
-var cmds = []string{"cmd", "val", "async", "id", "timeout"}
+var cmds = []string{"cmd", "val", "async", "id", "timeout", "mac"}
 
 // provides length for legal server2gate commands
 // server also has commands

@@ -26,141 +26,148 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			}
 			rv.Rt = keys + "list, macid"
 			rv.State = true
-		} else if id, e := strconv.Atoi(params["id"]); e == nil {
-			if params["cmd"] == "macid" {
-				var mac []byte
-				if c, e := net.ParseMAC(params["val"]); e == nil {
-					for _, v := range c {
-						mac = append(mac, v)
-					}
-					mutexUnknownMac.RLock()
-					if ch, ok := unknownMacChan[string(mac)]; ok {
-						mutexUnknownMac.RUnlock()
-						mutexSensorMacs.RLock()
-						if oldMac, ok := sensorMacID[id]; ok {
-							mutexSensorMacs.RUnlock()
-							rv.Rt = "error: id assigned to " + string(oldMac)
-						} else {
-							mutexSensorMacs.RUnlock()
-							select {
-							case ch <- nil:
+		} else {
+			id, eid := strconv.Atoi(params["id"])
+			_, emc := strconv.Atoi(params["mac"])
+			//if id, e := strconv.Atoi(params["id"]); e == nil {
+			// TODO HERE add support for channel via mac
+			if eid == nil || emc == nil {
+				if params["cmd"] == "macid" {
+					var mac []byte
+					if c, e := net.ParseMAC(params["val"]); e == nil {
+						for _, v := range c {
+							mac = append(mac, v)
+						}
+						mutexUnknownMac.RLock()
+						if ch, ok := unknownMacChan[string(mac)]; ok {
+							mutexUnknownMac.RUnlock()
+							mutexSensorMacs.RLock()
+							if oldMac, ok := sensorMacID[id]; ok {
+								mutexSensorMacs.RUnlock()
+								rv.Rt = "error: id assigned to " + string(oldMac)
+							} else {
+								mutexSensorMacs.RUnlock()
 								select {
-								case conn := <-ch:
-									v, _ := cmdAPI["setid"]
-									cmd := []byte{v.cmd}
-									bs := make([]byte, 2)
-									binary.BigEndian.PutUint16(bs, uint16(id))
-									cmd = append(cmd, bs...)
-									cmd = append(cmd, codings.Crc8(cmd))
-									if _, err := conn.Write(cmd); err != nil {
-										rv.Rt = "error: command failed"
-									} else {
-										rv.Rt = "Device restating"
-										rv.State = true
-										mutexUnknownMac.Lock()
-										unkownDevice[string(mac)] = true
-										mutexUnknownMac.Unlock()
-										// read and discard answer
-										c := make(chan bool)
-										go func(c chan bool) {
-											_, _ = conn.Read(make([]byte, 256))
-											c <- true
-										}(c)
-										select {
-										case <-c:
-										case <-time.After(time.Duration(timeout) * time.Second):
-										}
-									}
+								case ch <- nil:
 									select {
-									case ch <- nil:
+									case conn := <-ch:
+										v, _ := cmdAPI["setid"]
+										cmd := []byte{v.cmd}
+										bs := make([]byte, 2)
+										binary.BigEndian.PutUint16(bs, uint16(id))
+										cmd = append(cmd, bs...)
+										cmd = append(cmd, codings.Crc8(cmd))
+										if _, err := conn.Write(cmd); err != nil {
+											rv.Rt = "error: command failed"
+										} else {
+											rv.Rt = "Device restating"
+											rv.State = true
+											mutexUnknownMac.Lock()
+											unkownDevice[string(mac)] = true
+											mutexUnknownMac.Unlock()
+											// read and discard answer
+											c := make(chan bool)
+											go func(c chan bool) {
+												_, _ = conn.Read(make([]byte, 256))
+												c <- true
+											}(c)
+											select {
+											case <-c:
+											case <-time.After(time.Duration(timeout) * time.Second):
+											}
+										}
+										select {
+										case ch <- nil:
+										case <-time.After(time.Duration(timeout) * time.Second):
+											rv.Rt = "warning: command probably failed"
+										}
 									case <-time.After(time.Duration(timeout) * time.Second):
-										rv.Rt = "warning: command probably failed"
+										rv.Rt = "error: command failed"
 									}
 								case <-time.After(time.Duration(timeout) * time.Second):
 									rv.Rt = "error: command failed"
 								}
-							case <-time.After(time.Duration(timeout) * time.Second):
-								rv.Rt = "error: command failed"
 							}
+						} else {
+							mutexUnknownMac.RUnlock()
+							mutexSensorMacs.RLock()
+							if v, ok := sensorIdMAC[string(mac)]; ok {
+								mutexSensorMacs.RUnlock()
+								rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
+							} else {
+								mutexSensorMacs.RUnlock()
+								rv.Rt = "error: absent"
+							}
+
 						}
 					} else {
-						mutexUnknownMac.RUnlock()
-						mutexSensorMacs.RLock()
-						if v, ok := sensorIdMAC[string(mac)]; ok {
-							mutexSensorMacs.RUnlock()
-							rv.Rt = "error: mac assigned to " + strconv.Itoa(v)
-						} else {
-							mutexSensorMacs.RUnlock()
-							rv.Rt = "error: absent"
-						}
-
+						rv.Rt = "error: invalic mac address given"
 					}
-				} else {
-					rv.Rt = "error: invalic mac address given"
-				}
-			} else if _, ok := SensorCmdID[id]; ok {
-				if support.Debug != 0 {
-					fmt.Println("CMD: found CMD channel")
-				}
-				if v, ok := cmdAPI[params["cmd"]]; ok {
+				} else if _, ok := SensorCmdID[id]; ok {
 					if support.Debug != 0 {
-						fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
+						fmt.Println("CMD: found CMD channel")
 					}
-					var to int
-					if to, e = strconv.Atoi(params["timeout"]); e != nil || params["timeout"] == "" {
-						to = timeout
-					}
-					cmd := []byte{v.cmd}
-					// need to execute the command on sensor with the given ID
-					if v.lgt != 0 && params["val"] != "" {
+					if v, ok := cmdAPI[params["cmd"]]; ok {
 						if support.Debug != 0 {
-							fmt.Println("CMD: found PARAMS", params["val"])
+							fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
 						}
-						if data, err := strconv.Atoi(strings.Trim(params["val"], " ")); err != nil {
-							cmd = nil
-							rv.Rt = "wrong parameters"
-						} else {
-							// check if the command is a setid and if the id is valid
-							if params["cmd"] == "setid" {
-								mutexSensorMacs.RLock()
-								if sensorChanUsedID[data] {
-									rv.Rt = "ID already in use"
-									cmd = nil
-								}
-								mutexSensorMacs.RUnlock()
-							}
-							if cmd != nil {
-								bs := make([]byte, 4)
-								binary.BigEndian.PutUint32(bs, uint32(data))
-								cmd = append(cmd, bs[4-v.lgt:4]...)
-							}
+						var to int
+						var e error
+						if to, e = strconv.Atoi(params["timeout"]); e != nil || params["timeout"] == "" {
+							to = timeout
 						}
-					} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
-						cmd = nil
-						rv.Rt = "insufficient parameters"
-					}
-					if cmd != nil {
-						if support.Debug != 0 {
-							fmt.Println("CMD: Executing command")
-						}
-						select {
-						case SensorCmdID[id] <- cmd:
+						cmd := []byte{v.cmd}
+						// need to execute the command on sensor with the given ID
+						if v.lgt != 0 && params["val"] != "" {
 							if support.Debug != 0 {
-								fmt.Println("CMD: sent command", cmd)
+								fmt.Println("CMD: found PARAMS", params["val"])
 							}
-							rv.State = true
-							select {
-							case rt := <-SensorCmdID[id]:
-								if support.Debug != 0 {
-									fmt.Println("CMD: received", rt)
+							if data, err := strconv.Atoi(strings.Trim(params["val"], " ")); err != nil {
+								cmd = nil
+								rv.Rt = "wrong parameters"
+							} else {
+								// check if the command is a setid and if the id is valid
+								if params["cmd"] == "setid" {
+									mutexSensorMacs.RLock()
+									if sensorChanUsedID[data] {
+										rv.Rt = "ID already in use"
+										cmd = nil
+									}
+									mutexSensorMacs.RUnlock()
 								}
-								rv.Rt = string(rt)
+								if cmd != nil {
+									bs := make([]byte, 4)
+									binary.BigEndian.PutUint32(bs, uint32(data))
+									cmd = append(cmd, bs[4-v.lgt:4]...)
+								}
+							}
+						} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
+							cmd = nil
+							rv.Rt = "insufficient parameters"
+						}
+						if cmd != nil {
+							if support.Debug != 0 {
+								fmt.Println("CMD: Executing command")
+							}
+							select {
+							case SensorCmdID[id] <- cmd:
+								if support.Debug != 0 {
+									fmt.Println("CMD: sent command", cmd)
+								}
+								rv.State = true
+								select {
+								case rt := <-SensorCmdID[id]:
+									if support.Debug != 0 {
+										fmt.Println("CMD: received", rt)
+									}
+									rv.Rt = string(rt)
+								case <-time.After(time.Duration(to) * time.Second):
+									rv.Rt = "to"
+									// timeout to be used on the sending side to remove a possible hanging goroutine
+								}
 							case <-time.After(time.Duration(to) * time.Second):
 								rv.Rt = "to"
-								// timeout to be used on the sending side to remove a possible hanging goroutine
 							}
-						case <-time.After(time.Duration(to) * time.Second):
-							rv.Rt = "to"
 						}
 					}
 				}
@@ -192,7 +199,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 
 // handles all command received internal from channel CE and interacts with the associated device and
 // handlerTCPRequest (via ci channel) for proper execution.
-func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id ...int) {
+func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, devid chan int, id ...int) {
 	//loop := true
 	if len(id) == 0 {
 		id = []int{-1}
@@ -204,14 +211,16 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 					support.Timestamp(), "", []int{1}, true}
 			}()
 			if len(id) == 1 {
-				handlerCommandAnswer(conn, ci, ce, stop, id[0])
+				handlerCommandAnswer(conn, ci, ce, stop, devid, id[0])
 			} else {
-				handlerCommandAnswer(conn, ci, ce, stop)
+				handlerCommandAnswer(conn, ci, ce, stop, devid)
 			}
 		}
 	}()
 	for {
 		select {
+		case newid := <-devid:
+			id = []int{newid}
 		case <-ci:
 			// unexpected command answer
 			go func() {
@@ -229,7 +238,13 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, id 
 			// verify if the command exists and send it to the device
 			if _, ok := cmdAnswerLen[cmd[0]]; ok {
 				if support.Debug > 0 {
-					fmt.Printf("Received %v from user for device %v\n", cmd, strconv.Itoa(id[0]))
+					fmt.Printf("Received %v by user for device %v\n", cmd, strconv.Itoa(id[0]))
+				}
+				if cmd[0] == cmdAPI["setid"].cmd {
+					if support.Debug > 0 {
+						fmt.Printf("Changed id to %v from %v by user\n", int(cmd[2]), strconv.Itoa(id[0]))
+					}
+					id = []int{int(cmd[2])}
 				}
 				cmd = append(cmd, codings.Crc8(cmd))
 				ready := make(chan bool)

@@ -2,6 +2,7 @@ package servers
 
 import (
 	"encoding/json"
+	"fmt"
 	"gateserver/support"
 	"log"
 	"net/http"
@@ -55,6 +56,10 @@ func commandHTTHandler() http.Handler {
 				}()
 				return
 			}
+		}
+
+		if params["id"] != "" && params["mac"] != "" {
+			_, _ = fmt.Fprintf(w, "error: illegal command providing both mac and id")
 		}
 
 		if params["async"] != "1" {

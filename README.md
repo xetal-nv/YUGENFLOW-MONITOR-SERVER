@@ -19,7 +19,7 @@ HTTPSPORTS[1]/udef/undefined -> list all not yet defined devices with initial id
 HTTPSPORTS[1]/x/y/z -> actual value for data x in space y on averaging z  
 HTTPSPORTS[1]/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
 HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
-HTTPSPORTS[1]/cmd?cmd=x?id=y?val=z -> execute command x on sensor y with data (in necessary) z when z is an array  
+HTTPSPORTS[1]/cmd?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
   
