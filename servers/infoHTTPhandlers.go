@@ -357,10 +357,9 @@ func pendingDeviceHTTPHandler() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		// TODO core API
 		mutexPendingDevices.Lock()
-		for el := range pendingDevice {
-			_, _ = fmt.Fprintf(w, el)
+		for mac := range pendingDevice {
+			_, _ = fmt.Fprintf(w, strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":"))
 			_, _ = fmt.Fprintf(w, "\n")
 		}
 		mutexPendingDevices.Unlock()

@@ -46,6 +46,13 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 		conn.Write(mac)
 		// test pending
 		// start a listener
+
+		// test wrong malicious error
+		//conn.Close()
+		//conn, e := net.Dial(os.Getenv("TCPPROT"), "0.0.0.0:"+port)
+		//conn.Write(mac)
+		// test end
+
 		c := make(chan []byte)
 		go func(c chan []byte) {
 			var e error

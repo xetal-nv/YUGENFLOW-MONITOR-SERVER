@@ -23,7 +23,8 @@ HTTPSPORTS[1]/cmd?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w 
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
   
-NOTE values in val are specified as x,y,n,..   
+NOTE: values in val are specified as x,y,n,..   
+NOTE: all commands need to be fully tested via mac and id  
 
 **List HTTP pages:**  
 HTTPSPORTS[0]/ -> webapp

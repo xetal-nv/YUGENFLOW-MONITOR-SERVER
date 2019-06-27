@@ -28,10 +28,8 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			rv.State = true
 		} else {
 			id, eid := strconv.Atoi(params["id"])
-			_, emc := strconv.Atoi(params["mac"])
-			//if id, e := strconv.Atoi(params["id"]); e == nil {
-			// TODO HERE add support for channel via mac
-			if eid == nil || emc == nil {
+			mace := params["mac"]
+			if eid == nil || mace != "" {
 				if params["cmd"] == "macid" {
 					var mac []byte
 					if c, e := net.ParseMAC(params["val"]); e == nil {
@@ -103,70 +101,80 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 					} else {
 						rv.Rt = "error: invalic mac address given"
 					}
-				} else if _, ok := SensorCmdID[id]; ok {
-					if support.Debug != 0 {
-						fmt.Println("CMD: found CMD channel")
+				} else {
+					var ch chan []byte
+					var ok bool
+					if mace == "" {
+						ch, ok = SensorCmdID[id]
+					} else {
+						ok = true
+						ch = SensorCmdMac[mace]
 					}
-					if v, ok := cmdAPI[params["cmd"]]; ok {
+					if ok {
 						if support.Debug != 0 {
-							fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
+							fmt.Println("CMD: found CMD channel")
 						}
-						var to int
-						var e error
-						if to, e = strconv.Atoi(params["timeout"]); e != nil || params["timeout"] == "" {
-							to = timeout
-						}
-						cmd := []byte{v.cmd}
-						// need to execute the command on sensor with the given ID
-						if v.lgt != 0 && params["val"] != "" {
+						if v, ok := cmdAPI[params["cmd"]]; ok {
 							if support.Debug != 0 {
-								fmt.Println("CMD: found PARAMS", params["val"])
+								fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
 							}
-							if data, err := strconv.Atoi(strings.Trim(params["val"], " ")); err != nil {
-								cmd = nil
-								rv.Rt = "wrong parameters"
-							} else {
-								// check if the command is a setid and if the id is valid
-								if params["cmd"] == "setid" {
-									mutexSensorMacs.RLock()
-									if sensorChanUsedID[data] {
-										rv.Rt = "ID already in use"
-										cmd = nil
-									}
-									mutexSensorMacs.RUnlock()
-								}
-								if cmd != nil {
-									bs := make([]byte, 4)
-									binary.BigEndian.PutUint32(bs, uint32(data))
-									cmd = append(cmd, bs[4-v.lgt:4]...)
-								}
+							var to int
+							var e error
+							if to, e = strconv.Atoi(params["timeout"]); e != nil || params["timeout"] == "" {
+								to = timeout
 							}
-						} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
-							cmd = nil
-							rv.Rt = "insufficient parameters"
-						}
-						if cmd != nil {
-							if support.Debug != 0 {
-								fmt.Println("CMD: Executing command")
-							}
-							select {
-							case SensorCmdID[id] <- cmd:
+							cmd := []byte{v.cmd}
+							// need to execute the command on sensor with the given ID
+							if v.lgt != 0 && params["val"] != "" {
 								if support.Debug != 0 {
-									fmt.Println("CMD: sent command", cmd)
+									fmt.Println("CMD: found PARAMS", params["val"])
 								}
-								rv.State = true
-								select {
-								case rt := <-SensorCmdID[id]:
-									if support.Debug != 0 {
-										fmt.Println("CMD: received", rt)
+								if data, err := strconv.Atoi(strings.Trim(params["val"], " ")); err != nil {
+									cmd = nil
+									rv.Rt = "wrong parameters"
+								} else {
+									// check if the command is a setid and if the id is valid
+									if params["cmd"] == "setid" {
+										mutexSensorMacs.RLock()
+										if sensorChanUsedID[data] {
+											rv.Rt = "ID already in use"
+											cmd = nil
+										}
+										mutexSensorMacs.RUnlock()
 									}
-									rv.Rt = string(rt)
+									if cmd != nil {
+										bs := make([]byte, 4)
+										binary.BigEndian.PutUint32(bs, uint32(data))
+										cmd = append(cmd, bs[4-v.lgt:4]...)
+									}
+								}
+							} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
+								cmd = nil
+								rv.Rt = "insufficient parameters"
+							}
+							if cmd != nil {
+								if support.Debug != 0 {
+									fmt.Println("CMD: Executing command")
+								}
+								select {
+								case ch <- cmd:
+									if support.Debug != 0 {
+										fmt.Println("CMD: sent command", cmd)
+									}
+									rv.State = true
+									select {
+									case rt := <-ch:
+										if support.Debug != 0 {
+											fmt.Println("CMD: received", rt)
+										}
+										rv.Rt = string(rt)
+									case <-time.After(time.Duration(to) * time.Second):
+										rv.Rt = "to"
+										// timeout to be used on the sending side to remove a possible hanging goroutine
+									}
 								case <-time.After(time.Duration(to) * time.Second):
 									rv.Rt = "to"
-									// timeout to be used on the sending side to remove a possible hanging goroutine
 								}
-							case <-time.After(time.Duration(to) * time.Second):
-								rv.Rt = "to"
 							}
 						}
 					}
