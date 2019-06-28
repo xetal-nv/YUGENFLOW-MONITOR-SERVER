@@ -27,16 +27,19 @@ var mutexSensorMacs = &sync.RWMutex{}       // this mutex is used to avoid concu
 var mutexUnknownMac = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on unknownMacChan
 var mutexPendingDevices = &sync.RWMutex{}   // this mutex is used to avoid concurrent writes on mutexPendingDevices
 var mutexUnusedDevices = &sync.RWMutex{}    // this mutex is used to avoid concurrent writes on unusedDevice
+var mutexConnMAC = &sync.RWMutex{}          // this mutex is used to avoid concurrent writes on sensorConnMAC
 var unknownMacChan map[string]chan net.Conn // map of sensor id to sensor MAC as provided by the sensor itself
 var pendingDevice map[string]bool           // map of mac of devices pending registration
 var unkownDevice map[string]bool            // map of mac of devices registered with id equal to 0xff
 var unusedDevice map[int]string             // map of id's of unused registered devices (as in not in the .env file)
 var sensorMacID map[int][]byte              // map of sensor id to sensor MAC as provided by the sensor itself
 var sensorIdMAC map[string]int              // map of sensor MAC to sensor id as provided by the sensor itself
+var sensorConnMAC map[string]net.Conn       // map of sensor MAC to the tcp channel
 var sensorChanID map[int]chan []byte        // channel to handler managing commands to each connected sensor
 var sensorChanUsedID map[int]bool           // flag indicating if thw channel is assigned to a TCP handler
 var SensorCmdID map[int]chan []byte         // externally visible channel to handler managing commands to each connected sensor via ID
-var SensorCmdMac map[string]chan []byte     // externally visible channel to handler managing commands to each connected sensor via mac
+var SensorCmdMac map[string][]chan []byte   // externally visible channel to handler managing commands to each connected sensor via mac
+var SensorIDCMDMac map[string]chan int      // externally visible channel to handler managing commands to each connected sensor via mac
 var dataMap map[string]datafunc             // used for HTTP API handling of different data types
 var cmdAnswerLen = map[byte]int{            // provides length for legal server2gate commands
 	2:  1,
@@ -87,4 +90,5 @@ var cmdAPI = map[string]cmdspecs{
 
 const maxsensors = 200               // maximum number of allowed processors
 const mindelayrefusedconnection = 30 // mininum delay for refused connection
+const maxconsecutiveerrors = 5       //maximum number of consecutive illegal commands
 var tcpTokens chan bool              // token for accepting a TCP erquest

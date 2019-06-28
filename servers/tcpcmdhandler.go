@@ -108,7 +108,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 						ch, ok = SensorCmdID[id]
 					} else {
 						ok = true
-						ch = SensorCmdMac[mace]
+						ch = SensorCmdMac[mace][1]
 					}
 					if ok {
 						if support.Debug != 0 {
