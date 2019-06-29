@@ -12,6 +12,7 @@ import (
 var Debug int
 var LabelLength int
 var Dellogs = false
+var MalOn = true
 
 const logfilename string = "gnl" // logfile name
 const TimeLayout = "15:04"       // time layout used to read the configuration file

@@ -17,8 +17,6 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 
-// TODO add check on connection alive before deeming malicious attack (see TODO below)
-
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
 	loop := true            // control variable
@@ -79,22 +77,24 @@ func handlerTCPRequest(conn net.Conn) {
 
 		// define a malicious report function that, depending if on strict mode, also kills the connection
 		malf := func(strict bool) {
-			if strict {
-				log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
-				go func() {
-					support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
-						support.Timestamp(), "", []int{}, true}
-				}()
-				tsnow := support.Timestamp()
-				for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
-					if _, e := conn.Read(make([]byte, 256)); e != nil {
-						break
+			if support.MalOn {
+				if strict {
+					log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
+					go func() {
+						support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
+							support.Timestamp(), "", []int{}, true}
+					}()
+					tsnow := support.Timestamp()
+					for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
+						if _, e := conn.Read(make([]byte, 256)); e != nil {
+							break
+						}
+						time.Sleep(time.Duration(timeout) * (time.Second))
 					}
-					time.Sleep(time.Duration(timeout) * (time.Second))
+					loop = false
+				} else {
+					log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
 				}
-				loop = false
-			} else {
-				log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
 			}
 		}
 
@@ -112,16 +112,15 @@ func handlerTCPRequest(conn net.Conn) {
 		//gates.MutexDeclaredDevices.RUnlock()
 
 		// START redo with different check
-		// TODO here - WORKS needs to be finished and code cleaned!
 
 		//fmt.Println("start")
 		mutexConnMAC.RLock()
 		if oldcn, ts := sensorConnMAC[string(mac)]; ts {
 			mutexConnMAC.RUnlock()
 			//fmt.Println("entered")
-			// the current device is returning faster than its olf channel is closed
+			// the current device is returning faster than its old channel is closed
 			// or we are in presence of a malicious attack
-			// checking is is the old connection is alive will be used to decide the situation
+			// checking if the old connection is alive will be used to decide the situation
 			//time.Sleep(time.Duration(timeout) * time.Second)
 			ch := make(chan bool)
 			go func() {
@@ -173,11 +172,14 @@ func handlerTCPRequest(conn net.Conn) {
 			mutexConnMAC.RUnlock()
 			log.Printf("servers.handlerTCPRequest: connected to new device %v//%v\n", ipc, mach)
 		}
-		//fmt.Println("passed")
-		mutexConnMAC.Lock()
-		sensorConnMAC[string(mac)] = conn
-		mutexConnMAC.Unlock()
-		//fmt.Println("finished")
+		if loop {
+			// in case the device is legit the connection table is updated
+			//fmt.Println("passed")
+			mutexConnMAC.Lock()
+			sensorConnMAC[string(mac)] = conn
+			mutexConnMAC.Unlock()
+			//fmt.Println("finished")
+		}
 
 		//mutexSensorMacs.Lock()
 		//if id, reged := sensorIdMAC[string(mac)]; reged {
@@ -212,7 +214,7 @@ func handlerTCPRequest(conn net.Conn) {
 			mutexPendingDevices.Unlock()
 
 			// reset the sensor if it its first connection
-			// malicious devices will keep receiving this command as always rejected
+			// malicious devices will also be receiving this command
 			mutexSensorMacs.RLock()
 			_, ok1 := sensorIdMAC[string(mac)]
 			_, ok2 := unkownDevice[string(mac)]

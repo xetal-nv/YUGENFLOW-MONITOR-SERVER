@@ -32,6 +32,7 @@ func main() {
 	var ri = flag.Int("ri", 360, "set ri")
 	var rs = flag.Int64("rs", 10000000, "set rs")
 	var dl = flag.Bool("dellogs", false, "delete all logs")
+	var noml = flag.Bool("nomal", false, "disable malicious check")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -47,12 +48,16 @@ func main() {
 	if *dl {
 		log.Printf("WARNING DELETING ALL LOGS \n")
 	}
+	if *noml {
+		log.Printf("!!! WARNING MALICIOUS CHECKS DISABLED !!!\n")
+	}
 
 	servers.Dvl = *dvl
 	support.Debug = *dbug
 	support.RotInt = *ri
 	support.RotSize = *rs
 	support.Dellogs = *dl
+	support.MalOn = !*noml
 
 	folder = os.Getenv("GATESERVER")
 
