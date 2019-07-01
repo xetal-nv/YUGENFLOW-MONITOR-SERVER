@@ -205,6 +205,8 @@ $(document).ready(function () {
                 anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();
+            } else {
+                alert("No data available for the selected time.")
             }
 
             document.getElementById("loader").style.visibility = "hidden";
@@ -291,6 +293,7 @@ $(document).ready(function () {
                         currentplan.sort(sortentryEl0);
                         loadsamples(header, path, currentplan)
                     } else {
+                       alert("Network connection has been lost. Try to reload.")
                         document.getElementById("loader").style.visibility = "hidden";
                     }
                 },
