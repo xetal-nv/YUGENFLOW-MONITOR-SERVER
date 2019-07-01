@@ -120,22 +120,22 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 		}
 
 		// TODO cleaning in case or large asymmetries due to defected sensor
-		if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
-			rt += 1
-			scratchPad.unusedSampleSumIn[gate[0]] -= 1
-		}
-		if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
-			rt += 1
-			scratchPad.unusedSampleSumIn[gate[1]] -= 1
-		}
-		if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
-			rt -= 1
-			scratchPad.unusedSampleSumOut[gate[0]] += 1
-		}
-		if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
-			rt -= 1
-			scratchPad.unusedSampleSumOut[gate[1]] += 1
-		}
+		//if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
+		//	rt += 1
+		//	scratchPad.unusedSampleSumIn[gate[0]] -= 1
+		//}
+		//if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
+		//	rt += 1
+		//	scratchPad.unusedSampleSumIn[gate[1]] -= 1
+		//}
+		//if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
+		//	rt -= 1
+		//	scratchPad.unusedSampleSumOut[gate[0]] += 1
+		//}
+		//if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
+		//	rt -= 1
+		//	scratchPad.unusedSampleSumOut[gate[1]] += 1
+		//}
 	}
 
 	for _, gate := range gateListEntry {
