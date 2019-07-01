@@ -59,3 +59,4 @@ See .env file for configuration example
 3. Unclear why sometimes JS received wrong entry values (solved)
 4. Unclear why sometimes reporting hangs on /info or later calls
 5. Algorithm suffers when one sensor is not present in a gate
+6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved
