@@ -114,7 +114,8 @@ MACSTRICT = 0
 GATE_0 = 80:7d:3a:6e:79:05?1 80:7d:3a:6e:74:5e?0
 GATE_1 = 80:7d:3a:6e:79:1a?2 80:7d:3a:6e:6d:bd?3
 GATE_2 = 80:7d:3a:6e:75:32?4 80:7d:3a:6e:78:f1?5
-GATE_3 = 80:7d:3a:6e:79:7a?6 80:7d:3a:6e:79:2d?7
+#GATE_3 = 80:7d:3a:6e:79:7a?6 80:7d:3a:6e:79:2d?7
+GATE_3 = 80:7d:3a:6e:79:7a?6 80:7d:3a:6e:70:bf?7
 
 ## ENTRY COMPOSITION
 ## An Entry is a groups of gates defining the entry into a space, number has to increase from 0

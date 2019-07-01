@@ -113,23 +113,28 @@ function drawSpace(rawspaces) {
                         url: urlv + allmeasurements[i].name,
                         success: function (data) {
                             let spaces = JSON.parse(data);
-                            // console.log(spaces)
+                            // console.log(data);
                             if (spaces["valid"]) {
                                 if (allmeasurements[i].name === "current") {
                                     document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
                                 }
                                 let dt = "n/a";
+                                // console.log(measurement)
                                 let ms = measurement.split("_");
+                                // console.log(ms);
                                 switch (ms[0]) {
                                     case "sample":
                                         dt = spaces["counter"]["val"];
                                         // console.log("sample");
                                         break;
                                     case "entry":
-                                        for (let i = 0; i < spaces["counter"]["val"].length; i++) {
-                                            if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
-                                                dt = spaces["counter"]["val"][i][1];
-                                                break;
+                                        // console.log(data);
+                                        if (spaces["counter"]["val"] !== null) {
+                                            for (let i = 0; i < spaces["counter"]["val"].length; i++) {
+                                                if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
+                                                    dt = spaces["counter"]["val"][i][1];
+                                                    break;
+                                                }
                                             }
                                         }
                                         // console.log("entry");
@@ -140,6 +145,8 @@ function drawSpace(rawspaces) {
                                 // in case of corrupted JSON we skip uodating the page
                                 if (/^\d+$/.test(dt)) {
                                     document.getElementById(allmeasurements[i].name).innerText = dt;
+                                } else {
+                                    console.log(spaces)
                                 }
                             }
                         },
@@ -174,7 +181,7 @@ $(document).ready(function () {
                 rp.appendChild(ch);
                 for (let i = 0; i < jsObj.length; i++) {
                     let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                    allmeasurements.push(el)
+                    allmeasurements.push(el);
                     let ch = document.createElement("option");
                     ch.textContent = jsObj[i]["name"];
                     rp.appendChild(ch);

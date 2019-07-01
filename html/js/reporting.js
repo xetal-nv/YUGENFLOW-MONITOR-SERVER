@@ -207,7 +207,7 @@ $(document).ready(function () {
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();
             } else {
-                alert("No data available for the selected time.")
+                alert("No data available for the selected time.");
             }
 
             document.getElementById("loader").style.visibility = "hidden";
@@ -225,7 +225,7 @@ $(document).ready(function () {
                     loadEntries(header, api, entrieslist, sampledata);
                 },
                 error: function (error) {
-                    alert ("Server or network error.\n Try again later.")
+                    alert ("Server or network error.\n Please try again later.");
                     console.log("Error samples:" + error);
                     document.getElementById("loader").style.visibility = "hidden";
                 }
@@ -243,7 +243,7 @@ $(document).ready(function () {
                     exportreport(header, entrieslist, sampledata, entrydata);
                 },
                 error: function (error) {
-                    alert ("Server or network error.\n Try again later.")
+                    alert ("Server or network error.\n Please try again later.");
                     console.log("Error enrtries:" + error);
                     document.getElementById("loader").style.visibility = "hidden";
                 }
@@ -299,12 +299,12 @@ $(document).ready(function () {
                         currentplan.sort(sortentryEl0);
                         loadsamples(header, path, currentplan)
                     } else {
-                       alert("Network connection has been lost. Try to reload.")
+                        alert ("Server or network error.\n Please try again later.");
                         document.getElementById("loader").style.visibility = "hidden";
                     }
                 },
                 error: function (error) {
-                    alert ("Server or network error.\n Try again later.")
+                    alert ("Server or network error.\n Please try again later.");
                     console.log("Error info:" + error);
                     document.getElementById("loader").style.visibility = "hidden";
                 }
