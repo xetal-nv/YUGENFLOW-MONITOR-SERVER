@@ -90,5 +90,5 @@ var cmdAPI = map[string]cmdspecs{
 
 const maxsensors = 200               // maximum number of allowed processors
 const mindelayrefusedconnection = 30 // mininum delay for refused connection
-const maxconsecutiveerrors = 5       //maximum number of consecutive illegal commands
+const maxconsecutiveerrors = 15      //maximum number of consecutive illegal commands
 var tcpTokens chan bool              // token for accepting a TCP erquest

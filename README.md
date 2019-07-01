@@ -58,4 +58,4 @@ See .env file for configuration example
 2. Server debug needs additional modes only for the algorithm  
 3. Unclear why sometimes JS received wrong entry values (solved)
 4. Unclear why sometimes reporting hangs on /info or later calls
-5. Algorithm suffers when one sensor is skipped
+5. Algorithm suffers when one sensor is not present in a gate

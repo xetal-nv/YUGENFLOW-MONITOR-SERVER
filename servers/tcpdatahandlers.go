@@ -17,8 +17,6 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 
-// TODO reset start up goes into loop in real life
-
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
 	loop := true            // control variable
@@ -272,6 +270,10 @@ func handlerTCPRequest(conn net.Conn) {
 			//time.Sleep(5 * time.Second)
 			// TODO end dev
 
+			if support.Debug != 0 {
+				log.Printf("servers.handlerTCPRequest: status of device %v//%v is %v\n", ipc, mach, loop)
+			}
+
 			//fmt.Println(mach, "3")
 
 			// updates SensorCmdMac if loop is still true checking if it already exists
@@ -453,7 +455,8 @@ func handlerTCPRequest(conn net.Conn) {
 					cks = maxconsecutiveerrors
 				default:
 					if !idKnown {
-						loop = false
+						log.Printf("servers.handlerTCPRequest: rejected data from a device %v//%v with no valid ID yet\n", ipc, mach)
+						//loop = false
 					} else {
 						// verify it is a command answer, if not closes the TCP channel
 						if v, ok := cmdAnswerLen[cmd[0]]; ok {
