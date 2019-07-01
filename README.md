@@ -56,3 +56,6 @@ See .env file for configuration example
 **KNOWN BUGS OR NEEDED CHANGES:**  
 1. Server does not use latest current value in case of restart from crash, need to be depended on restart time  
 2. Server debug needs additional modes only for the algorithm  
+3. Unclear why sometimes JS received wrong entry values
+4. Unclear why sometimes reporting hangs on /info or later calls
+5. Algorithm suffers when one sensor is skipped
