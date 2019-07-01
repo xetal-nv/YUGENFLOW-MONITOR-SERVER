@@ -32,24 +32,28 @@ func main() {
 	var ri = flag.Int("ri", 360, "set ri")
 	var rs = flag.Int64("rs", 10000000, "set rs")
 	var dl = flag.Bool("dellogs", false, "delete all logs")
-	var noml = flag.Bool("nomal", false, "disable malicious check")
+	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
+	var norst = flag.Bool("norst", false, "disable start-up device reset")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
 
 	if *dmode != 0 {
-		log.Printf("WARNING DEVELOPMENT MODE %v\n", *dmode)
+		log.Printf("!!! WARNING DEVELOPMENT MODE %v !!!\n", *dmode)
 
 	}
 	if *dbug != 0 {
-		log.Printf("WARNING DEBUG MODE %v\n", *dbug)
+		log.Printf("!!! WARNING DEBUG MODE %v !!!\n", *dbug)
 
 	}
 	if *dl {
-		log.Printf("WARNING DELETING ALL LOGS \n")
+		log.Printf("!!! WARNING DELETING ALL LOGS !!!\n")
 	}
 	if *noml {
 		log.Printf("!!! WARNING MALICIOUS CHECKS DISABLED !!!\n")
+	}
+	if *norst {
+		log.Printf("!!! WARNING START-UP DEVICE RESET DISABLED !!!\n")
 	}
 
 	servers.Dvl = *dvl
@@ -58,6 +62,7 @@ func main() {
 	support.RotSize = *rs
 	support.Dellogs = *dl
 	support.MalOn = !*noml
+	support.RstON = !*norst
 
 	folder = os.Getenv("GATESERVER")
 

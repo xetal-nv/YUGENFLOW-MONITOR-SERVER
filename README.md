@@ -5,7 +5,7 @@ Author: F. Pessolano
 
 
 **List API:**  
-HTTPSPORTS[1]/dvl -> latest developer log (DISABLED)  
+HTTPSPORTS[1]/dvl -> latest developer log (IF ENABLED via -dvl)  
 HTTPSPORTS[1]/asys -> information on all current analyses  
 HTTPSPORTS[1]/info -> installation information  
 HTTPSPORTS[1]/pending -> list all devices pending for connection approval (only current connections)    
@@ -50,3 +50,5 @@ See .env file for configuration example
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -dellogs : delete all existing logs  
+-nomal : disable malicious attack control
+-norst : disable start-up device reset

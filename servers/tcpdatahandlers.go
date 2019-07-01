@@ -188,7 +188,6 @@ func handlerTCPRequest(conn net.Conn) {
 		//		if active {
 		//			// We are in presence of a possible malicious attack
 		//			// We wait maltimeout reading and throwing away periodically at timeout interval
-		//			// TODO check for live connection as it might be a device coming back faster than the connection being close.
 		//			malf(true)
 		//		} else {
 		//			log.Printf("servers.handlerTCPRequest: connected to old device %v//%v\n", ipc, mach)
@@ -215,53 +214,55 @@ func handlerTCPRequest(conn net.Conn) {
 
 			// reset the sensor if it its first connection
 			// malicious devices will also be receiving this command
-			mutexSensorMacs.RLock()
-			_, ok1 := sensorIdMAC[string(mac)]
-			_, ok2 := unkownDevice[string(mac)]
-			mutexSensorMacs.RUnlock()
-			if !(ok1 || ok2) {
-				// this is a completely new device
-				c := make(chan bool)
-				// execute via goroutine to use timeout on the connection
-				go func(c chan bool) {
-					msg := []byte{cmdAPI["rstbg"].cmd}
-					msg = append(msg, codings.Crc8(msg))
-					if _, e = conn.Write(msg); e == nil {
-						ans := make([]byte, 2)
-						if _, e := conn.Read(ans); e != nil {
-							// close connection in case of error
-							c <- false
-						} else if ans[0] != cmdAPI["rstbg"].cmd {
-							c <- false
-							if support.Debug != 0 {
-								log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
+			if support.RstON {
+				mutexSensorMacs.RLock()
+				_, ok1 := sensorIdMAC[string(mac)]
+				_, ok2 := unkownDevice[string(mac)]
+				mutexSensorMacs.RUnlock()
+				if !(ok1 || ok2) {
+					// this is a completely new device
+					c := make(chan bool)
+					// execute via goroutine to use timeout on the connection
+					go func(c chan bool) {
+						msg := []byte{cmdAPI["rstbg"].cmd}
+						msg = append(msg, codings.Crc8(msg))
+						if _, e = conn.Write(msg); e == nil {
+							ans := make([]byte, 2)
+							if _, e := conn.Read(ans); e != nil {
+								// close connection in case of error
+								c <- false
+							} else if ans[0] != cmdAPI["rstbg"].cmd {
+								c <- false
+								if support.Debug != 0 {
+									log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
+								}
+							} else {
+								c <- true
+								if support.Debug != 0 {
+									log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
+								}
 							}
 						} else {
-							c <- true
-							if support.Debug != 0 {
-								log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
-							}
+							// close connection in case of error
+							fmt.Println("connection error")
+							c <- false
 						}
-					} else {
-						// close connection in case of error
-						fmt.Println("connection error")
-						c <- false
+					}(c)
+					select {
+					case loop = <-c:
+					case <-time.After(time.Duration(maltimeout) * time.Second):
+						if support.Debug != 0 {
+							log.Printf("servers.handlerTCPRequest: timeout on reset of device %v//%v\n", ipc, mach)
+						}
+						loop = false
 					}
-				}(c)
-				select {
-				case loop = <-c:
-				case <-time.After(time.Duration(maltimeout) * time.Second):
-					if support.Debug != 0 {
-						log.Printf("servers.handlerTCPRequest: timeout on reset of device %v//%v\n", ipc, mach)
-					}
-					loop = false
 				}
+
+				//fmt.Println(mach, "2")
 			}
 
-			//fmt.Println(mach, "2")
-
 			// TODO dev  - to be removed
-			time.Sleep(5 * time.Second)
+			//time.Sleep(5 * time.Second)
 			// TODO end dev
 
 			//fmt.Println(mach, "3")
