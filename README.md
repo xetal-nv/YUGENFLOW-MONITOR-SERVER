@@ -52,3 +52,7 @@ See .env file for configuration example
 -dellogs : delete all existing logs  
 -nomal : disable malicious attack control
 -norst : disable start-up device reset
+
+**KNOWN BUGS OR NEEDED CHANGES:**  
+1. Server does not use latest current value in case of restart from crash, need to be depended on restart time  
+2. Server debug needs additional modes only for the algorithm  

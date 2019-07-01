@@ -1,3 +1,4 @@
+
 $(document).ready(function () {
     document.getElementById("loader").style.visibility = "hidden";
     Date.prototype.getUnixTime = function () {
@@ -216,6 +217,7 @@ $(document).ready(function () {
         function loadsamples(header, api, entrieslist) {
             $.ajax({
                 type: 'GET',
+                timeout: 10000,
                 url: ip + "/series?type=sample?space=" + api,
                 success: function (rawdata) {
                     let sampledata = JSON.parse(rawdata);
@@ -223,7 +225,8 @@ $(document).ready(function () {
                     loadEntries(header, api, entrieslist, sampledata);
                 },
                 error: function (error) {
-                    alert("Error " + error);
+                    alert ("Server or network error.\n Try again later.")
+                    console.log("Error samples:" + error);
                     document.getElementById("loader").style.visibility = "hidden";
                 }
 
@@ -233,13 +236,15 @@ $(document).ready(function () {
         function loadEntries(header, api, entrieslist, sampledata) {
             $.ajax({
                 type: 'GET',
+                timeout: 10000,
                 url: ip + "/series?type=entry?space=" + api,
                 success: function (rawdata) {
                     let entrydata = JSON.parse(rawdata);
                     exportreport(header, entrieslist, sampledata, entrydata);
                 },
                 error: function (error) {
-                    alert("Error " + error);
+                    alert ("Server or network error.\n Try again later.")
+                    console.log("Error enrtries:" + error);
                     document.getElementById("loader").style.visibility = "hidden";
                 }
 
@@ -278,6 +283,7 @@ $(document).ready(function () {
 
             $.ajax({
                 type: 'GET',
+                timeout: 10000,
                 url: ip + "/info",
                 success: function (rawdata) {
                     let info = JSON.parse(rawdata),
@@ -298,7 +304,8 @@ $(document).ready(function () {
                     }
                 },
                 error: function (error) {
-                    alert("Error " + error);
+                    alert ("Server or network error.\n Try again later.")
+                    console.log("Error info:" + error);
                     document.getElementById("loader").style.visibility = "hidden";
                 }
 

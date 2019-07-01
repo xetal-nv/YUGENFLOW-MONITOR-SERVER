@@ -100,9 +100,15 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			scratchPad.unusedSampleSumIn[gate[1]] -= tmp
 			if scratchPad.unusedSampleSumIn[gate[0]] < 0 {
 				scratchPad.unusedSampleSumIn[gate[0]] = 0
+			} else if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
+				rt +=1
+				scratchPad.unusedSampleSumIn[gate[0]] -= 1
 			}
 			if scratchPad.unusedSampleSumIn[gate[1]] < 0 {
 				scratchPad.unusedSampleSumIn[gate[1]] = 0
+			} else if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
+				rt +=1
+				scratchPad.unusedSampleSumIn[gate[1]] -= 1
 			}
 		}
 		if scratchPad.unusedSampleSumOut[gate[0]] < 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 { //out
@@ -113,9 +119,15 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			scratchPad.unusedSampleSumOut[gate[1]] += tmp
 			if scratchPad.unusedSampleSumOut[gate[0]] > 0 {
 				scratchPad.unusedSampleSumOut[gate[0]] = 0
+			} else if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
+				rt -=1
+				scratchPad.unusedSampleSumOut[gate[0]] += 1
 			}
 			if scratchPad.unusedSampleSumOut[gate[1]] > 0 {
 				scratchPad.unusedSampleSumOut[gate[1]] = 0
+			} else if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
+				rt -=1
+				scratchPad.unusedSampleSumOut[gate[1]] += 1
 			}
 		}
 	}
@@ -135,11 +147,11 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 		}
 	}
 
-	if support.Debug > 0 {
-		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", Id, sensorListEntry)
-		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", Id, gateListEntry)
-		fmt.Printf("Entry %v has scratchPad:\n\t%v\n", id, scratchPad)
-	}
+	//if support.Debug > 0 {
+	//	//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", Id, sensorListEntry)
+	//	//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", Id, gateListEntry)
+	//	fmt.Printf("Entry %v has scratchPad:\n\t%v\n", id, scratchPad)
+	//}
 
 	return sensorListEntry, gateListEntry, scratchPad, rt
 }

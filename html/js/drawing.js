@@ -137,7 +137,10 @@ function drawSpace(rawspaces) {
                                     default:
                                         break;
                                 }
-                                document.getElementById(allmeasurements[i].name).innerText = dt;
+                                // in case of corrupted JSON we skip uodating the page
+                                if (/^\d+$/.test(dt)) {
+                                    document.getElementById(allmeasurements[i].name).innerText = dt;
+                                }
                             }
                         },
                         error: function (error) {
@@ -150,7 +153,7 @@ function drawSpace(rawspaces) {
         }
     }
 
-    setInterval(updatedata, 500)
+    setInterval(updatedata, 300)
 
 }
 
@@ -168,7 +171,8 @@ $(document).ready(function () {
                 // console.log(jsObj)
                 let ch = document.createElement("option");
                 ch.textContent = "current";
-                rp.appendChild(ch);                for (let i = 0; i < jsObj.length; i++) {
+                rp.appendChild(ch);
+                for (let i = 0; i < jsObj.length; i++) {
                     let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
                     allmeasurements.push(el)
                     let ch = document.createElement("option");

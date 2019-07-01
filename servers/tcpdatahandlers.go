@@ -17,6 +17,8 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 
+// TODO reset start up goes into loop in real life
+
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
 	loop := true            // control variable
@@ -230,21 +232,26 @@ func handlerTCPRequest(conn net.Conn) {
 							ans := make([]byte, 2)
 							if _, e := conn.Read(ans); e != nil {
 								// close connection in case of error
+								if support.Debug != 0 {
+									log.Printf("servers.handlerTCPRequest: failed reset communication of device %v//%v\n", ipc, mach)
+								}
 								c <- false
 							} else if ans[0] != cmdAPI["rstbg"].cmd {
-								c <- false
 								if support.Debug != 0 {
 									log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
 								}
+								c <- false
 							} else {
-								c <- true
 								if support.Debug != 0 {
 									log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
 								}
+								c <- true
 							}
 						} else {
 							// close connection in case of error
-							fmt.Println("connection error")
+							if support.Debug != 0 {
+								log.Printf("servers.handlerTCPRequest: connection error during reset of device %v//%v\n", ipc, mach)
+							}
 							c <- false
 						}
 					}(c)
@@ -516,6 +523,5 @@ func handlerTCPRequest(conn net.Conn) {
 			mutexSensorMacs.Unlock()
 		}
 		log.Printf("servers.handlerTCPRequest: closing TCP channel to %v//%v\n", ipc, mach)
-
 	}
 }

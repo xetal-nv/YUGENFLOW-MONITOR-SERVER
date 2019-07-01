@@ -58,7 +58,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 										if _, err := conn.Write(cmd); err != nil {
 											rv.Rt = "error: command failed"
 										} else {
-											rv.Rt = "Device restating"
+											rv.Rt = "Device restarting"
 											rv.State = true
 											mutexUnknownMac.Lock()
 											unkownDevice[string(mac)] = true

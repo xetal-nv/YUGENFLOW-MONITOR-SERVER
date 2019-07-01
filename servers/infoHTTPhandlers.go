@@ -1,5 +1,8 @@
 package servers
 
+// TODO check if pending deletes always
+// TODO lock-up request for report?
+
 import (
 	"encoding/json"
 	"fmt"
