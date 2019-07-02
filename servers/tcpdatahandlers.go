@@ -267,10 +267,6 @@ func handlerTCPRequest(conn net.Conn) {
 				//fmt.Println(mach, "2")
 			}
 
-			// TODO dev  - to be removed
-			//time.Sleep(5 * time.Second)
-			// TODO end dev
-
 			if support.Debug != 0 {
 				log.Printf("servers.handlerTCPRequest: status of device %v//%v is %v\n", ipc, mach, loop)
 			}

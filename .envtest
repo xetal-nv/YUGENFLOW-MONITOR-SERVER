@@ -3,8 +3,8 @@
 ## DO NOT CHANGE
 ## HTTPSPORTS = app port, api port
 HTTPSPORTS = 8080, 8090
-#IP = localhost
-IP = 192.168.0.2
+IP = localhost
+#IP = 192.168.0.2
 TCPPORT = 3333
 
 ## TCP PROTOCOL

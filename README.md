@@ -53,10 +53,12 @@ See .env file for configuration example
 -nomal : disable malicious attack control
 -norst : disable start-up device reset
 
-**KNOWN BUGS OR NEEDED CHANGES:**  
+**REVISION NOTES:**  
+0. Clean code  
 1. Server does not use latest current value in case of restart from crash, need to be depended on restart time  
 2. Server debug needs additional modes only for the algorithm  
-3. Unclear why sometimes JS received wrong entry values (solved)
-4. Unclear why sometimes reporting hangs on /info or later calls
-5. Algorithm suffers when one sensor is not present in a gate
-6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved
+3. Unclear why sometimes JS received wrong entry values (closed, bug found)  
+4. Unclear why sometimes reporting hangs on /info or later calls (closed, network related)  
+5. Algorithm suffers when one sensor is not present in a gate  
+6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved (closed, user error)  
+7. Add redundancy calls in JS reporting  

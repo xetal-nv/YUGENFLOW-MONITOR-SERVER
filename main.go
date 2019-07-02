@@ -20,6 +20,7 @@ import (
 const version = "v. 1.1.0" // version
 
 // TODO add load last current values in case of server closure if time difference is minimal
+// TODO redundant report.js
 
 func main() {
 
