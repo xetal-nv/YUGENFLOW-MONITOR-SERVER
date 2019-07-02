@@ -1,10 +1,10 @@
-
 $(document).ready(function () {
     document.getElementById("loader").style.visibility = "hidden";
     Date.prototype.getUnixTime = function () {
         return (this.getTime() / 1000 | 0) * 1000
     };
-    var startDate,
+    var maxtries,
+        startDate,
         endDate,
         updateStartDate = function () {
             startPicker.setStartRange(startDate);
@@ -36,6 +36,8 @@ $(document).ready(function () {
         }),
         _startDate = startPicker.getDate(),
         _endDate = endPicker.getDate();
+
+    maxtries = 10
 
 
     if (_startDate) {
@@ -216,26 +218,30 @@ $(document).ready(function () {
         }
 
 
-        function loadsamples(header, api, entrieslist) {
+        function loadsamples(header, api, entrieslist, tries) {
             $.ajax({
                 type: 'GET',
-                timeout: 10000,
+                timeout: 5000,
                 url: ip + "/series?type=sample?space=" + api,
                 success: function (rawdata) {
                     let sampledata = JSON.parse(rawdata);
                     // console.log(sampledata)
-                    loadEntries(header, api, entrieslist, sampledata);
+                    loadEntries(header, api, entrieslist, sampledata, 0);
                 },
                 error: function (error) {
-                    alert ("Server or network error.\n Please try again later.");
-                    console.log("Error samples:" + error);
-                    document.getElementById("loader").style.visibility = "hidden";
+                    if (tries === maxtries) {
+                        alert("Server or network error.\n Please try again later.");
+                        console.log("Error samples:" + error);
+                        document.getElementById("loader").style.visibility = "hidden";
+                    } else {
+                        loadsamples(header, api, entrieslist, tries + 1)
+                    }
                 }
 
             });
         }
 
-        function loadEntries(header, api, entrieslist, sampledata) {
+        function loadEntries(header, api, entrieslist, sampledata, tries) {
             $.ajax({
                 type: 'GET',
                 timeout: 10000,
@@ -245,9 +251,49 @@ $(document).ready(function () {
                     exportreport(header, entrieslist, sampledata, entrydata);
                 },
                 error: function (error) {
-                    alert ("Server or network error.\n Please try again later.");
-                    console.log("Error enrtries:" + error);
-                    document.getElementById("loader").style.visibility = "hidden";
+                    if (tries === maxtries) {
+                        alert("Server connection lost.\n Please try again later.");
+                        console.log("Error enrtries:" + error);
+                        document.getElementById("loader").style.visibility = "hidden";
+                    } else {
+                        loadEntries(header, api, entrieslist, sampledata, tries + 1)
+                    }
+                }
+
+            });
+        }
+
+        function start_report(header, path, tries) {
+            $.ajax({
+                type: 'GET',
+                timeout: 2000,
+                url: ip + "/info",
+                success: function (rawdata) {
+                    let info = JSON.parse(rawdata),
+                        currentplan = [];
+                    for (let i = 0; i < info.length; i++) {
+                        if (info[i]["spacename"] === space) {
+                            for (let j = 0; j < info[i]["entries"].length; j++) {
+                                currentplan.push([info[i]["entries"][j]["entryid"], 0])
+                            }
+                        }
+                    }
+                    if (currentplan !== []) {
+                        currentplan.sort(sortentryEl0);
+                        loadsamples(header, path, currentplan, 0)
+                    } else {
+                        alert("Server connection lost.\n Please try again later.");
+                        document.getElementById("loader").style.visibility = "hidden";
+                    }
+                },
+                error: function (error) {
+                    if (tries === maxtries) {
+                        alert("Server connection lost.\n Please try again later.");
+                        console.log("Error info:" + error);
+                        document.getElementById("loader").style.visibility = "hidden";
+                    } else {
+                        start_report(header, path, tries + 1);
+                    }
                 }
 
             });
@@ -283,36 +329,9 @@ $(document).ready(function () {
             header += "timestamp (date), timestamp (s), counter";
             let path = space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
 
-            $.ajax({
-                type: 'GET',
-                timeout: 10000,
-                url: ip + "/info",
-                success: function (rawdata) {
-                    let info = JSON.parse(rawdata),
-                        currentplan = [];
-                    for (let i = 0; i < info.length; i++) {
-                        if (info[i]["spacename"] === space) {
-                            for (let j = 0; j < info[i]["entries"].length; j++) {
-                                currentplan.push([info[i]["entries"][j]["entryid"], 0])
-                            }
-                        }
-                    }
-                    if (currentplan !== []) {
-                        currentplan.sort(sortentryEl0);
-                        loadsamples(header, path, currentplan)
-                    } else {
-                        alert ("Server or network error.\n Please try again later.");
-                        document.getElementById("loader").style.visibility = "hidden";
-                    }
-                },
-                error: function (error) {
-                    alert ("Server or network error.\n Please try again later.");
-                    console.log("Error info:" + error);
-                    document.getElementById("loader").style.visibility = "hidden";
-                }
+            start_report(header, path, 0);
 
-            });
+
         }
     }
-})
-;
+});
