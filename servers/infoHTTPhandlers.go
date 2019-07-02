@@ -107,12 +107,16 @@ func infoHTTHandler() http.Handler {
 			}
 		}()
 
+		fmt.Println("request info")
+
 		//Allow CORS here By * or specific origin
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
 		_ = json.NewEncoder(w).Encode(inst)
+
+		fmt.Println("provided info")
 	})
 }
 

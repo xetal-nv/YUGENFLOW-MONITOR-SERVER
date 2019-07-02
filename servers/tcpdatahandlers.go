@@ -26,7 +26,7 @@ func handlerTCPRequest(conn net.Conn) {
 	mac := make([]byte, 6)  // received amc address
 	var ci, ce chan []byte  // channel for the API command
 	var devid chan int      // channel for the API command
-	cks := maxconsecutiveerrors
+	cks := errormngt[2]
 
 	defer func() {
 		if idKnown {
@@ -214,6 +214,7 @@ func handlerTCPRequest(conn net.Conn) {
 
 			// reset the sensor if it its first connection
 			// malicious devices will also be receiving this command
+			// TODO need to still  check CRC on answer
 			if support.RstON {
 				mutexSensorMacs.RLock()
 				_, ok1 := sensorIdMAC[string(mac)]
@@ -452,10 +453,10 @@ func handlerTCPRequest(conn net.Conn) {
 							}
 						}
 					}
-					cks = maxconsecutiveerrors
+					cks = errormngt[2]
 				default:
 					if !idKnown {
-						log.Printf("servers.handlerTCPRequest: rejected data from a device %v//%v with no valid ID yet\n", ipc, mach)
+						log.Printf("servers.handlerTCPRequest: rejected data %v from a device %v//%v with no valid ID yet\n", cmd[0], ipc, mach)
 						//loop = false
 					} else {
 						// verify it is a command answer, if not closes the TCP channel
@@ -468,7 +469,7 @@ func handlerTCPRequest(conn net.Conn) {
 								sensorChanID[deviceId] <- cmd
 								// if the answer is incorrect the channel will be closed
 								if ans := <-sensorChanID[deviceId]; ans != nil {
-									if cks = cks - 1; cks == 0 {
+									if cks = cks - 1; cks <= 0 {
 										loop = false
 										log.Printf("servers.handlerTCPRequest: too many illegal commands %v sent by %v//%v\n", cmd[0], ipc, mach)
 									}
@@ -508,9 +509,9 @@ func handlerTCPRequest(conn net.Conn) {
 									}
 								}
 							}
-							cks = maxconsecutiveerrors
+							cks = errormngt[2]
 						} else {
-							if cks = cks - 1; cks == 0 {
+							if cks = cks - 1; cks <= 0 {
 								loop = false
 								log.Printf("servers.handlerTCPRequest: too many illegal commands %v sent by %v//%v\n", cmd[0], ipc, mach)
 

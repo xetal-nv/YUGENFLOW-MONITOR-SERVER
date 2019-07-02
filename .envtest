@@ -3,8 +3,8 @@
 ## DO NOT CHANGE
 ## HTTPSPORTS = app port, api port
 HTTPSPORTS = 8080, 8090
-IP = localhost
-#IP =
+#IP = localhost
+IP = 192.168.0.2
 TCPPORT = 3333
 
 ## TCP PROTOCOL
@@ -76,6 +76,7 @@ RMODE = 2
 ## ENABLE CORS
 ## DO NOT CHANGE
 CORS = 1
+#CORS = 0
 
 ##### GATE AND GROUPS #####
 ## GATE ORIENTATION

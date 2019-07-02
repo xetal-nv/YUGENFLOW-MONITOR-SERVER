@@ -75,12 +75,14 @@ $(document).ready(function () {
                     }
                 }
                 rawdataSample.sort(sortentryEl0);
-                for (let i = 0; i < entrydata.length; i++) {
-                    if ((entrydata[i]["ts"] !== "") && (entrydata[i]["val"] !== "")) {
-                        rawdataEntries.push([entrydata[i]["ts"], entrydata[i]["val"]])
+                if (entrydata !== null) {
+                    for (let i = 0; i < entrydata.length; i++) {
+                        if ((entrydata[i]["ts"] !== "") && (entrydata[i]["val"] !== "")) {
+                            rawdataEntries.push([entrydata[i]["ts"], entrydata[i]["val"]])
+                        }
                     }
+                    rawdataEntries.sort(sortentryEl0);
                 }
-                rawdataEntries.sort(sortentryEl0);
 
                 let tslist = [];
                 let tsstep = -1;

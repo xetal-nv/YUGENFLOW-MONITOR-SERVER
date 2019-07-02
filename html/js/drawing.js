@@ -145,14 +145,13 @@ function drawSpace(rawspaces) {
                                 // in case of corrupted JSON we skip uodating the page
                                 if (/^\d+$/.test(dt)) {
                                     document.getElementById(allmeasurements[i].name).innerText = dt;
-                                } else {
-                                    console.log(spaces)
                                 }
                             }
                         },
-                        error: function (error) {
+                        error: function (jqXhr, textStatus, error) {
+                            console.log("Failed to connect to update data");
+                            console.log(jqXhr);
                         }
-
                     });
                 })();
 
@@ -194,8 +193,12 @@ $(document).ready(function () {
                 }
                 $("#analysis").html(html);
             },
-            error: function (error) {
-                alert("Error " + error);
+            error: function (jqXhr, textStatus, error) {
+                // console.log("here");
+                alert("Failed to connect to ASYS API");
+                console.log(jqXhr);
+                // console.log(textStatus);
+                // console.log(error);
             }
 
         });
@@ -210,8 +213,9 @@ $(document).ready(function () {
                 let spaces = JSON.parse(data);
                 drawSpace(spaces)
             },
-            error: function (error) {
-                alert("Error " + error);
+            error: function (jqXhr, textStatus, error) {
+                alert("Failed to connect to INFO API");
+                console.log(jqXhr);
             }
 
         });
