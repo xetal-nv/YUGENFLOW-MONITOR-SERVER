@@ -236,10 +236,9 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 								c <- false
 							} else {
-								log.Printf("Sensor %v answer to reset command (decimal) is %v\n", mach, ans)
 								if ans[0] != cmdAPI["rstbg"].cmd {
 									if support.Debug != 0 {
-										log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
+										log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v with answer %v\n", ipc, mach, ans)
 									}
 									c <- false
 								} else {

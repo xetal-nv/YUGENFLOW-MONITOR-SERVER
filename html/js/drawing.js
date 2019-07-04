@@ -57,6 +57,9 @@ function drawSpace(rawspaces) {
                                         if (selel != null) selel.setAttribute("class", "st1");
                                         el.setAttribute("class", "st2");
                                         selel = el;
+                                        for (let i=0; i<allmeasurements.length; i++) {
+                                            document.getElementById(allmeasurements[i].name).innerText = "";
+                                        }
                                     };
                                 }
                             }
@@ -72,6 +75,9 @@ function drawSpace(rawspaces) {
                         if (selel != null) selel.setAttribute("class", "st1");
                         total.setAttribute("class", "st2");
                         selel = total;
+                        for (let i=0; i<allmeasurements.length; i++) {
+                            document.getElementById(allmeasurements[i].name).innerText = "";
+                        }
                     };
                 }
             },
@@ -104,7 +110,7 @@ function drawSpace(rawspaces) {
     function updatedata() {
         if (spacename !== "") {
             let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
-            // console.log(allmeasurements)
+            // console.log(measurement)
             for (let i = 0; i < allmeasurements.length; i++) {
 
                 (function () {
@@ -129,11 +135,14 @@ function drawSpace(rawspaces) {
                                         break;
                                     case "entry":
                                         // console.log(data);
-                                        if (spaces["counter"]["val"] !== null) {
-                                            for (let i = 0; i < spaces["counter"]["val"].length; i++) {
-                                                if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
-                                                    dt = spaces["counter"]["val"][i][1];
-                                                    break;
+                                        // console.log(allmeasurements[i].name =="current");
+                                        if (allmeasurements[i].name === "current") {
+                                            if (spaces["counter"]["val"] !== null) {
+                                                for (let i = 0; i < spaces["counter"]["val"].length; i++) {
+                                                    if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
+                                                        dt = spaces["counter"]["val"][i][1];
+                                                        break;
+                                                    }
                                                 }
                                             }
                                         }

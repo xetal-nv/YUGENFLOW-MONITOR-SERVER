@@ -4,7 +4,6 @@ import (
 	"gateserver/support"
 	"log"
 	"math"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -13,6 +12,7 @@ import (
 // the sampler threads for a given space are started in a recursive manner
 // The algorithm is built on the ordered arrival of samples that is preserved in a slice.
 // It means that x[i] is newer than x[i-1] and older than x[i+1]
+// NOTE: for samples we take the time weighted averages, for entries the total only on the analysis period
 func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
@@ -56,9 +56,11 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 		updateCount := func(to int) {
 			if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" {
 				// new counter
-				// depending on the compression mode it stores it or check for interpolation
+				// data is stored according to selected compression mode CMODE
+				// implements also CMODE 0 that onlt removes replicated values
 				sd := true
 				if cmode == "3" {
+					// Experimental interpolation mode, not to use in release
 					count := counter.val
 					for _, v := range counter.entries {
 						count -= v.val
@@ -176,10 +178,15 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 		if avgID == 0 {
 			// the first in the threads chain makes the counting
+			// implements the current value as in sum over the period of time samplerInterval
 			for {
 				select {
 				case sp := <-prevStageChan:
-					if skip, e := support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+					var skip bool
+					var e error
+					// in closure time the value is forced to zero
+					if skip, e = support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+						//fmt.Println(skip)
 						if skip {
 							counter.val = 0
 							// Calculate the confidence measurement (number wrong data / number data
@@ -193,7 +200,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					}
 					stats[1] += 1
 					counter.val += sp.val
-					// Calculate the confidence measurement (number wrong data / number data
+					// Calculate the confidence measurement (number wrong data / number data for DVL only
 					if counter.val < 0 {
 						stats[0] += 1
 						support.DLog <- support.DevData{Tag: "spaces.samplers counter " + spacename + " current",
@@ -202,11 +209,16 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
 					}
-					if v, ok := counter.entries[sp.id]; ok {
-						v.val += sp.val
-						counter.entries[sp.id] = v
+					// in closure time the value is forced to zero
+					if e == nil && skip {
+						counter.entries[sp.id] = dataEntry{val: 0}
 					} else {
-						counter.entries[sp.id] = dataEntry{val: sp.val}
+						if v, ok := counter.entries[sp.id]; ok {
+							v.val += sp.val
+							counter.entries[sp.id] = v
+						} else {
+							counter.entries[sp.id] = dataEntry{val: sp.val}
+						}
 					}
 				case <-time.After(timeoutInterval):
 				}
@@ -229,8 +241,10 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
+					// TODO modify so that samples are average and only the last entry is kept
 					if buffer != nil {
-						// when new samples have arrived we need to calculate the new state
+						//fmt.Println(avgID, buffer)
+						// a weighted average is calculate based on sample permanence
 						acc := float64(0)
 						for i := 0; i < len(buffer)-1; i++ {
 							acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
@@ -241,32 +255,49 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							counter.val = 0
 						}
 
+						// TODO We retain only the latest entry
 						// Extract all applicable series for each entry
 						entries := make(map[int][]dataEntry)
-
 						for i, v := range buffer {
 							for j, ent := range v.entries {
 								ent.ts = buffer[i].ts
 								entries[j] = append(entries[j], ent)
 							}
 						}
+
+						// find latest value per entry
 						ne := make(map[int]dataEntry)
-						nec := make(chan struct {
-							id   int
-							data dataEntry
-						}, len(entries))
-						for i, v := range entries {
-							go func(i int, v []dataEntry) {
-								nec <- struct {
-									id   int
-									data dataEntry
-								}{i, dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}}
-							}(i, v)
+
+						for i, entv := range entries {
+							for j, ent := range entv {
+								if j == 0 {
+									ne[i] = ent
+								} else {
+									if ne[i].ts < ent.ts {
+										ne[i] = ent
+									}
+								}
+							}
 						}
-						for range entries {
-							el := <-nec
-							ne[el.id] = el.data
-						}
+
+						//fmt.Println(entries, ne)
+
+						//nec := make(chan struct {
+						//	id   int
+						//	data dataEntry
+						//}, len(entries))
+						//for i, v := range entries {
+						//	go func(i int, v []dataEntry) {
+						//		nec <- struct {
+						//			id   int
+						//			data dataEntry
+						//		}{i, dataEntry{id: strconv.Itoa(i), ts: cTS, val: avgDataVector(v, cTS)}}
+						//	}(i, v)
+						//}
+						//for range entries {
+						//	el := <-nec
+						//	ne[el.id] = el.data
+						//}
 						counter.entries = ne
 						counter.ts = cTS
 						if cstats == "1" {
@@ -299,16 +330,16 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 }
 
 // calculates the average data from a vector conteining value and timestamps
-func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
-
-	acc := float64(0)
-	for i := 0; i < len(entries)-1; i++ {
-		acc += float64(entries[i].val) * float64(entries[i+1].ts-entries[i].ts) / float64(cTS-entries[0].ts)
-	}
-	acc += float64(entries[len(entries)-1].val) * float64(cTS-entries[len(entries)-1].ts) / float64(cTS-entries[0].ts)
-	avg = int(math.RoundToEven(acc))
-	return
-}
+//func avgDataVector(entries []dataEntry, cTS int64) (avg int) {
+//
+//	acc := float64(0)
+//	for i := 0; i < len(entries)-1; i++ {
+//		acc += float64(entries[i].val) * float64(entries[i+1].ts-entries[i].ts) / float64(cTS-entries[0].ts)
+//	}
+//	acc += float64(entries[len(entries)-1].val) * float64(cTS-entries[len(entries)-1].ts) / float64(cTS-entries[0].ts)
+//	avg = int(math.RoundToEven(acc))
+//	return
+//}
 
 // used internally in the sampler to pass data among threads.
 func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
