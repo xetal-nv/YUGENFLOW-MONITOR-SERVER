@@ -241,7 +241,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
-					// TODO modify so that samples are average and only the last entry is kept
 					if buffer != nil {
 						//fmt.Println(avgID, buffer)
 						// a weighted average is calculate based on sample permanence
@@ -255,7 +254,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 							counter.val = 0
 						}
 
-						// TODO We retain only the latest entry
 						// Extract all applicable series for each entry
 						entries := make(map[int][]dataEntry)
 						for i, v := range buffer {

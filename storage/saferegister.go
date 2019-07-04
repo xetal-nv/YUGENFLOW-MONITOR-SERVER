@@ -7,8 +7,6 @@ import (
 // SafeReg implement a single input (n) single output (o)
 // non-blocking register. It blocks only when it is not initialised
 
-// TODO add identifier in order to load latest values if timing allows it
-
 func SafeReg(in, out chan interface{}, init ...interface{}) {
 	var data interface{}
 	r := func() {

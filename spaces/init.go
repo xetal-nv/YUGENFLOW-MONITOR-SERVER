@@ -204,7 +204,6 @@ func setpUpCounter() {
 // set-up DBS thread and data flow structure based on the provided configuration
 func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
-	// TODO START
 	// load initial values is present (note maximum line size 64k characters)
 	recovery := make(map[string]map[string]map[string][]string)
 	now := support.Timestamp()
@@ -234,7 +233,6 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 		log.Printf("spaces.setUpDataDBSBank: recovery file imported\n")
 	}
 
-	// TODO END
 	//os.Exit(1)
 
 	latestChannelLock.Lock()
@@ -263,9 +261,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			for _, v := range avgAnalysis {
 				LatestBankOut[dl][name][v.name] = make(chan interface{})
 				latestBankIn[dl][name][v.name] = make(chan interface{})
-				// TODO add here initialisation of data
 				// formatting of initialisation data
-				// HERE
 				if len(recovery[dl][name][v.name]) == 2 {
 					tag := dl + name + v.name
 					if ts, err := strconv.ParseInt(recovery[dl][name][v.name][0], 10, 64); err == nil {
@@ -329,7 +325,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 					//fmt.Println(dl + name + v.name, "starts with no init")
 					go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 				}
-				// TODO end
+
 				// start of distributed data passing structure
 				//go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 				if support.Debug < 3 {
