@@ -144,8 +144,8 @@ SPACE_d3 = 2 3
 ## Define the time when the space is always empty, this data is used to reset
 ## the space counter
 ##CLOSURE_x = start as xx:xx; end as xx:xx
-CLOSURE_d2 = 23:00; 04:00
-CLOSURE_d3 = 23:00; 04:00
+CLOSURE_d2 = 21:00; 23:00
+CLOSURE_d3 = 21:00; 23:00
 
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off

@@ -60,9 +60,20 @@ See .env file for configuration example
 **CHANGELOGS FOR v0.5.0:**  
 0. Overall code cleaning  
 1. Server does not use latest current value in case of restart from crash, need to be depended on restart time (closed, done)  
-2. Server debug needs additional modes only for the algorithm  
+2. Server debug needs additional modes only for the algorithm (skipped)  
 3. Unclear why sometimes JS received wrong entry values (closed, bug found)  
 4. Unclear why sometimes reporting hangs on /info or later calls (closed, network related)  
-5. Algorithm suffers when one sensor is not present in a gate  
+5. Algorithm suffers when one sensor is not present in a gate (next version)  
 6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved (closed, user error)  
 7. Add redundancy calls in JS reporting (closed, done)  
+8. Entry to total, not average  
+9. Analysis period and start hour  
+10. Give JS analysis specs for proper reporting and simplify code  
+11. Eliminate * and entry in report  (done)
+12. Add API (removable at compile time) for databased analysis  
+13. Entry split in and out  
+14. log binary (optional) dump data per day  
+15. Remove interpolation from js  
+16. Check sample to 0 in closure  
+17. Check reset at start-up again (add CRC check)
+

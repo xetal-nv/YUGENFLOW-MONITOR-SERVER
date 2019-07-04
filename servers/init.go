@@ -78,24 +78,24 @@ func setJSenvironment() {
 	if err = f.Close(); err != nil {
 		log.Fatal("Fatal error closing sw.js: ", err)
 	}
-	var rmode string
-	if rmode = os.Getenv("RMODE"); rmode == "" {
-		rmode = "0"
-	}
-
-	f, err = os.Create("./html/js/rmode.js")
-	if err != nil {
-		log.Fatal("Fatal error creating rmode.js: ", err)
-	}
-	js = "var rmode = " + rmode + ";"
-	if _, err := f.WriteString(js); err != nil {
-		_ = f.Close()
-		log.Fatal("Fatal error writing to rmode.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing rmode.js: ", err)
-	}
-	log.Printf("Reporting mode set to %v\n", rmode)
+	//var rmode string
+	//if rmode = os.Getenv("RMODE"); rmode == "" {
+	//	rmode = "0"
+	//}
+	//
+	//f, err = os.Create("./html/js/rmode.js")
+	//if err != nil {
+	//	log.Fatal("Fatal error creating rmode.js: ", err)
+	//}
+	//js = "var rmode = " + rmode + ";"
+	//if _, err := f.WriteString(js); err != nil {
+	//	_ = f.Close()
+	//	log.Fatal("Fatal error writing to rmode.js: ", err)
+	//}
+	//if err = f.Close(); err != nil {
+	//	log.Fatal("Fatal error closing rmode.js: ", err)
+	//}
+	//log.Printf("Reporting mode set to %v\n", rmode)
 }
 
 // set-up of HTTP servers and handlers

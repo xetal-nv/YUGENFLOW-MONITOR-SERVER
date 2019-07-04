@@ -235,16 +235,19 @@ func handlerTCPRequest(conn net.Conn) {
 									log.Printf("servers.handlerTCPRequest: failed reset communication of device %v//%v\n", ipc, mach)
 								}
 								c <- false
-							} else if ans[0] != cmdAPI["rstbg"].cmd {
-								if support.Debug != 0 {
-									log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
-								}
-								c <- false
 							} else {
-								if support.Debug != 0 {
-									log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
+								log.Printf("Sensor %v answer to reset command (decimal) is %v\n", mach, ans)
+								if ans[0] != cmdAPI["rstbg"].cmd {
+									if support.Debug != 0 {
+										log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v\n", ipc, mach)
+									}
+									c <- false
+								} else {
+									if support.Debug != 0 {
+										log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
+									}
+									c <- true
 								}
-								c <- true
 							}
 						} else {
 							// close connection in case of error
