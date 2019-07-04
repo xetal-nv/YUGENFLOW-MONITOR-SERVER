@@ -3,6 +3,9 @@
 Copyright Xetal @ 2019  
 Author: F. Pessolano  
 
+**Requirements:**  
+64-bit architecture  
+Badger version 1.5.5  
 
 **List API:**  
 HTTPSPORTS[1]/dvl -> latest developer log (IF ENABLED via -dvl)  
@@ -44,18 +47,19 @@ See .env file for configuration example
 **COMMAND LINE OPTIONS:**  
 -env String : specifies the configuration file, uses .env if not specified  
 -dbs Path : specifies path where to store the database, './DBS' used if not specified  
--dmode Int : specifies an execution mode (0 default)  
--debug Int : specifies a debug mode (0 default)  
+-dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
+-debug Int : specifies a debug mode (0: off, -1: short noalgo, 1: verbose, 2: verbose no algo, 3: verbose no dbs, 4: verbose no algo no dbs)  
 -dvl : activate dvl  
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -dellogs : delete all existing logs  
 -nomal : disable malicious attack control
 -norst : disable start-up device reset
+-cdelay int : specifies the maximum delay for recovery data usage
 
-**REVISION NOTES FOR v0.5.0:**  
+**CHANGELOGS FOR v0.5.0:**  
 0. Overall code cleaning  
-1. Server does not use latest current value in case of restart from crash, need to be depended on restart time  
+1. Server does not use latest current value in case of restart from crash, need to be depended on restart time (closed, done)  
 2. Server debug needs additional modes only for the algorithm  
 3. Unclear why sometimes JS received wrong entry values (closed, bug found)  
 4. Unclear why sometimes reporting hangs on /info or later calls (closed, network related)  

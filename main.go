@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -35,6 +36,7 @@ func main() {
 	var dl = flag.Bool("dellogs", false, "delete all logs")
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset")
+	var cdelay = flag.Int("cdelay", 30000, "recovery delay")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -56,6 +58,9 @@ func main() {
 	if *norst {
 		log.Printf("!!! WARNING START-UP DEVICE RESET DISABLED !!!\n")
 	}
+	if *cdelay != 5000 {
+		log.Printf("!!! WARNING RECOVERY DELAY CHANGED !!!\n")
+	}
 
 	servers.Dvl = *dvl
 	support.Debug = *dbug
@@ -64,6 +69,7 @@ func main() {
 	support.Dellogs = *dl
 	support.MalOn = !*noml
 	support.RstON = !*norst
+	spaces.Crashmaxdelay = int64(*cdelay)
 
 	folder = os.Getenv("GATESERVER")
 
@@ -73,6 +79,51 @@ func main() {
 	}
 
 	cleanup := func() {
+		log.Println("Saving latest values for recovery")
+		if f, err := os.Create(".recovery"); err != nil {
+			log.Printf("RECOVERY DATA ERROR %v \n", err.Error())
+		} else {
+			//noinspection GoUnhandledErrorResult
+			defer f.Close()
+			for sam, el0 := range spaces.LatestBankOut {
+				for sp, el1 := range el0 {
+					for ms, ch := range el1 {
+						var ok bool
+						data := sam + "," + sp + "," + ms + ","
+						switch strings.Trim(sam, "_") {
+						case "entry":
+							dt := new(storage.SerieEntries)
+							_ = dt.Extract(<-ch)
+							ok = dt.Tag() != "" && dt.Ts() != 0
+							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
+								data += strconv.FormatInt(dt.Ts(), 10) + ","
+								if ok = len(dt.Sval) != 0; ok {
+									data += "["
+									val := dt.Sval
+									for i := 0; i < len(val); i++ {
+										data += "[" + strconv.Itoa(val[i][0]) + " " + strconv.Itoa(val[i][1]) + "]"
+									}
+									data += "]\n"
+								}
+							}
+						case "sample":
+							dt := new(storage.SerieSample)
+							_ = dt.Extract(<-ch)
+							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
+								data += strconv.FormatInt(dt.Ts(), 10) + ","
+								data += strconv.Itoa(dt.Val()) + "\n"
+							}
+						default:
+						}
+						if ok {
+							if _, err := f.WriteString(data); err != nil {
+								log.Printf("RECOVERY DATA ERROR %v \n", err.Error())
+							}
+						}
+					}
+				}
+			}
+		}
 		log.Println("System shutting down")
 		support.SupportTerminate()
 		storage.TimedIntDBSClose()
@@ -117,8 +168,8 @@ func main() {
 	case 1:
 		go sensormodels.SensorModel(0, 110, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '1'})
 		go sensormodels.SensorModel(1, 120, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '2'})
-		go sensormodels.SensorModel(2, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '3'})
-		go sensormodels.SensorModel(3, 70, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '4'})
+		go sensormodels.SensorModel(20, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '3'})
+		go sensormodels.SensorModel(21, 70, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '4'})
 		go sensormodels.SensorModel(2340, 90, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '5'})
 		go sensormodels.SensorModel(65535, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '6'})
 	default:

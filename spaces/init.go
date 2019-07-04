@@ -1,6 +1,7 @@
 package spaces
 
 import (
+	"bufio"
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
@@ -203,6 +204,39 @@ func setpUpCounter() {
 // set-up DBS thread and data flow structure based on the provided configuration
 func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
+	// TODO START
+	// load initial values is present (note maximum line size 64k characters)
+	recovery := make(map[string]map[string]map[string][]string)
+	now := support.Timestamp()
+
+	for i, _ := range dtypes {
+		recovery[i] = make(map[string]map[string][]string)
+		for j := range spaceChannels {
+			recovery[i][j] = make(map[string][]string)
+		}
+	}
+	file, err := os.Open(".recovery")
+	if err != nil {
+		log.Printf("spaces.setUpDataDBSBank: recovery file absent or corrupted\n")
+	} else {
+		//noinspection GoUnhandledErrorResult
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			data := strings.Split(scanner.Text(), ",")
+			if len(data) == 5 {
+				// any other length implies a wrong data and will be ignored
+				recovery[data[0]][data[1]][data[2]] = []string{data[3], data[4]}
+			}
+		}
+		//fmt.Println(recovery)
+		log.Printf("spaces.setUpDataDBSBank: recovery file imported\n")
+	}
+
+	// TODO END
+	//os.Exit(1)
+
 	latestChannelLock.Lock()
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestBankIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
@@ -229,7 +263,75 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			for _, v := range avgAnalysis {
 				LatestBankOut[dl][name][v.name] = make(chan interface{})
 				latestBankIn[dl][name][v.name] = make(chan interface{})
-				go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+				// TODO add here initialisation of data
+				// formatting of initialisation data
+				// HERE
+				if len(recovery[dl][name][v.name]) == 2 {
+					tag := dl + name + v.name
+					if ts, err := strconv.ParseInt(recovery[dl][name][v.name][0], 10, 64); err == nil {
+						if (now - ts) < Crashmaxdelay {
+							//fmt.Println("accepted", now-ts, recovery)
+							switch dl {
+							case "sample__":
+								if va, e := strconv.Atoi(recovery[dl][name][v.name][1]); e == nil {
+									// HERE make and send proper init data
+									//fmt.Println("e ", dataEntry{tag, ts, va})
+									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], dataEntry{tag, ts, va})
+								} else {
+									log.Printf("spaces.setUpDataDBSBank: invalid recovery data for %v\n", tag)
+									//fmt.Println(dl + name + v.name, "starts with no init")
+									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+								}
+							case "entry___":
+								vas := strings.Split(recovery[dl][name][v.name][1][2:len(recovery[dl][name][v.name][1])-2], "][")
+								va := [][]int{}
+								for _, el := range vas {
+									sd := strings.Split(el, " ")
+									if len(sd) == 2 {
+										sd0, e0 := strconv.Atoi(sd[0])
+										sd1, e1 := strconv.Atoi(sd[1])
+										if e0 == nil && e1 == nil {
+											va = append(va, []int{sd0, sd1})
+										} else {
+											log.Printf("spaces.setUpDataDBSBank: invalid recovery data for %v\n", tag)
+										}
+									} else {
+										log.Printf("spaces.setUpDataDBSBank: invalid recovery data for %v\n", tag)
+									}
+								}
+								if len(va) > 0 {
+									// HERE make and send proper init data
+									data := struct {
+										id      string
+										ts      int64
+										length  int
+										entries [][]int
+									}{id: tag, ts: 0, length: len(va), entries: va}
+									//fmt.Println("e ", tag, ts, va)
+									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
+								} else {
+									log.Printf("spaces.setUpDataDBSBank: invalid recovery data for %v\n", tag)
+									//fmt.Println(dl + name + v.name, "starts with no init")
+									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+								}
+							default:
+								log.Printf("spaces.setUpDataDBSBank: invalid recovery data type for %v\n", tag)
+								//fmt.Println(dl + name + v.name, "starts with no init")
+								go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+							}
+						}
+					} else {
+						log.Printf("spaces.setUpDataDBSBank: invalid recovery ts for %v\n", tag)
+						//fmt.Println(dl + name + v.name, "starts with no init")
+						go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+					}
+				} else {
+					//fmt.Println(dl + name + v.name, "starts with no init")
+					go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+				}
+				// TODO end
+				// start of distributed data passing structure
+				//go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 				if support.Debug < 3 {
 					ResetDBS[dl][name][v.name] = make(chan bool)
 					latestDBSIn[dl][name][v.name] = make(chan interface{})
@@ -244,4 +346,5 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 		}
 	}
 	latestChannelLock.Unlock()
+	//os.Exit(1)
 }

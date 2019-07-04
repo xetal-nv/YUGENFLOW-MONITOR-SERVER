@@ -22,6 +22,8 @@ type RegisterBank struct {
 	Data []Register `json:"counters"`
 }
 
+const ito = 1500
+
 // handles single register requests
 func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 
@@ -56,13 +58,18 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		rt := Register{true, "", dataMap[ref]()}
 		select {
 		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
-			if e := rt.Data.Extract(data); e != nil {
-				rt.Valid = false
-				rt.Error = "ID"
+			if data != nil {
+				if e := rt.Data.Extract(data); e != nil {
+					rt.Valid = false
+					rt.Error = "ID"
+				} else {
+					rt.Data.SetTag(tag)
+				}
 			} else {
-				rt.Data.SetTag(tag)
+				rt.Valid = false
+				rt.Error = "NIL"
 			}
-		case <-time.After(2000 * time.Millisecond):
+		case <-time.After(ito * time.Millisecond):
 			rt.Valid = false
 			rt.Error = "TO"
 		}
@@ -158,13 +165,18 @@ func retrieveSpace(tag string, sp []string, als []string, ref string) (rt Regist
 			tmp.Data.SetTag(tag + "_" + strings.Replace(nm, "_", "", -1))
 			select {
 			case data := <-spaces.LatestBankOut[sp[0]][sp[1]][nm]:
-				if e := tmp.Data.Extract(data); e != nil {
-					tmp.Valid = false
-					tmp.Error = "ID"
+				if data != nil {
+					if e := tmp.Data.Extract(data); e != nil {
+						tmp.Valid = false
+						tmp.Error = "ID"
+					} else {
+						tmp.Valid = true
+					}
 				} else {
-					tmp.Valid = true
+					tmp.Valid = false
+					tmp.Error = "NIL"
 				}
-			case <-time.After(2000 * time.Millisecond):
+			case <-time.After(ito * time.Millisecond):
 				tmp.Valid = false
 				tmp.Error = "TO"
 			}

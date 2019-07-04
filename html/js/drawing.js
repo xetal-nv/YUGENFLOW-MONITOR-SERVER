@@ -159,7 +159,7 @@ function drawSpace(rawspaces) {
         }
     }
 
-    setInterval(updatedata, 300)
+    setInterval(updatedata, 4000)
 
 }
 

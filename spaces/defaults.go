@@ -27,6 +27,9 @@ type dtfuncs struct {
 // Constants
 const chantimeout = 100
 
+// variables defined via options/configuration file
+var Crashmaxdelay int64
+
 // Internal variables - some might be turned into local variables
 var dtypes map[string]dtfuncs                                      // holds the datatypes and the associated prep functions for space.passData
 var instNegSkip bool                                               // skips instantaneous negative counters
@@ -41,7 +44,7 @@ var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains a
 
 // external variables
 var ResetDBS map[string]map[string]map[string]chan bool             // reset channel for the DBS's
-var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
+var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all output channels to the data bank
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var spaceTimes map[string]closureRange                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode

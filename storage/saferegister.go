@@ -6,17 +6,32 @@ import (
 
 // SafeReg implement a single input (n) single output (o)
 // non-blocking register. It blocks only when it is not initialised
+
+// TODO add identifier in order to load latest values if timing allows it
+
 func SafeReg(in, out chan interface{}, init ...interface{}) {
 	var data interface{}
 	r := func() {
 		if len(init) != 1 {
-			data = <-in
+			start := true
+			for start {
+				select {
+				case data = <-in:
+					start = false
+				case out <- nil:
+					//fmt.Println("nil")
+				}
+			}
+			//data = <-in
 		} else {
-			data = init
+			data = init[0]
 		}
+		//fmt.Println("end of nil")
+		//fmt.Println(data)
 		for {
 			select {
 			case data = <-in:
+				//fmt.Println(data)
 			case out <- data:
 			}
 		}
