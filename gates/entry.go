@@ -73,6 +73,8 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 	}
 
 	// NOTE it might have an issue with noise or a device faster than 1ms
+
+	// bget new samples and clean scratchpad from not allowed pos and negs
 	for i, sen := range sensorListEntry {
 		smem := scratchPad.senData[i]
 		if smem.ts != sen.ts || smem.val != sen.val { //new sample detected
@@ -119,37 +121,38 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			}
 		}
 
-		// TODO cleaning in case or large asymmetries due to defected sensor
-		//if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
-		//	rt += 1
-		//	scratchPad.unusedSampleSumIn[gate[0]] -= 1
-		//}
-		//if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
-		//	rt += 1
-		//	scratchPad.unusedSampleSumIn[gate[1]] -= 1
-		//}
-		//if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
-		//	rt -= 1
-		//	scratchPad.unusedSampleSumOut[gate[0]] += 1
-		//}
-		//if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
-		//	rt -= 1
-		//	scratchPad.unusedSampleSumOut[gate[1]] += 1
-		//}
 	}
 
 	for _, gate := range gateListEntry {
 		// in - not detected by sensor 1
 		if flag[gate[1]] && scratchPad.senData[gate[1]].val == 0 && scratchPad.unusedSampleSumIn[gate[0]] > 0 {
-			// if flag in the scratchPad it needs to ne reset
+			// if flag in the scratchPad it needs to be reset
 			rt++
 			scratchPad.unusedSampleSumIn[gate[0]]--
 		}
 		// out - not detected by sensor 0
 		if flag[gate[0]] && scratchPad.senData[gate[0]].val == 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 {
-			// if flag in the scratchPad it needs to ne reset
+			// if flag in the scratchPad it needs to be reset
 			rt--
 			scratchPad.unusedSampleSumOut[gate[1]]++
+		}
+
+		// TODO cleaning in case or large asymmetries due to defected sensor
+		if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
+			rt += 1
+			scratchPad.unusedSampleSumIn[gate[0]] -= 1
+		}
+		if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
+			rt += 1
+			scratchPad.unusedSampleSumIn[gate[1]] -= 1
+		}
+		if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
+			rt -= 1
+			scratchPad.unusedSampleSumOut[gate[0]] += 1
+		}
+		if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
+			rt -= 1
+			scratchPad.unusedSampleSumOut[gate[1]] += 1
 		}
 	}
 

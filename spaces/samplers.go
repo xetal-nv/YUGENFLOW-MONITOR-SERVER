@@ -10,6 +10,7 @@ import (
 )
 
 // TODO add usage of time schedule for averages ONLY!
+// TODO ERROR in debug all goes to zero sometimes, check changes!
 
 // it implements the counters, both the current one as well as the analysis averages.
 // the sampler threads for a given space are started in a recursive manner
@@ -355,12 +356,13 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	// sending new data to the proper registers/DBS
 	var wg sync.WaitGroup
 
+	fmt.Println(spacename, samplerName, "pass data:", cc)
+
 	latestChannelLock.RLock()
 	for n, dt := range dtypes {
 		wg.Add(1)
 		data := dt.pf(n+spacename+samplerName, cc)
 		// new sample sent to the output register
-		fmt.Println(spacename, samplerName, "pass data:", cc)
 		go func(dtn string, data interface{}) {
 			defer wg.Done()
 			select {

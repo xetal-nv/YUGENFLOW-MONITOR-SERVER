@@ -63,7 +63,7 @@ See .env file for configuration example
 2. Server debug needs additional modes only for the algorithm (skipped)  
 3. Unclear why sometimes JS received wrong entry values (closed, bug found)  
 4. Unclear why sometimes reporting hangs on /info or later calls (closed, network related)  
-5. Algorithm suffers when one sensor is not present in a gate (next version)  
+5. Algorithm suffers when one sensor is not present in a gate (to be tested)  
 6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved (closed, user error)  
 7. Add redundancy calls in JS reporting (closed, done)  
 8. Entry to total, not average, and adjust interface (no sense to show non current) (done)  

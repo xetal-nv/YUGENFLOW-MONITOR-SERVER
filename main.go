@@ -55,7 +55,7 @@ func main() {
 	if *norst {
 		log.Printf("!!! WARNING START-UP DEVICE RESET DISABLED !!!\n")
 	}
-	if *cdelay != 5000 {
+	if *cdelay != 30000 {
 		log.Printf("!!! WARNING RECOVERY DELAY CHANGED !!!\n")
 	}
 
