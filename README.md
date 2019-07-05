@@ -77,4 +77,5 @@ See .env file for configuration example
 16. Check sample to 0 in closure  (done, seems to work)
 17. Check reset at start-up again (add CRC check)
 18. Removed bug not forcing entries to zero in closure time (done)  
+19. Make report on current optional
 

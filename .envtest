@@ -154,8 +154,8 @@ RESETSLOT = 23:30; 00:30; 30
 ##### ANALYSIS #####
 
 ## ANALYSIS DEFINITION
-## Defines a given storage interval
+## Defines a given storage interval with optional 'start' and 'end' daily hours
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##SAVEWINDOW = name seconds; name seconds; ...
-SAVEWINDOW = 10sec 10; 20sec 20
+##SAVEWINDOW = name seconds start end; name seconds start end; ...
+SAVEWINDOW = 10sec 10; 20sec 20 9:00 18:00

@@ -1,12 +1,15 @@
 package spaces
 
 import (
+	"fmt"
 	"gateserver/support"
 	"log"
 	"math"
 	"sync"
 	"time"
 )
+
+// TODO add usage of time schedule for averages ONLY!
 
 // it implements the counters, both the current one as well as the analysis averages.
 // the sampler threads for a given space are started in a recursive manner
@@ -238,6 +241,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				case avgsp = <-prevStageChan:
 				case <-time.After(timeoutInterval):
 				}
+				fmt.Println(avgsp)
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {

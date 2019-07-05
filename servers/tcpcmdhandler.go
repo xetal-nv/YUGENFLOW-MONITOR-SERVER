@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// TODO check if it can locks
+
 // execute a command towards a sensor as specified by the params map
 // see cmds definition for what parameters are allowed
 func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {

@@ -60,7 +60,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	spaceChannels = make(map[string]chan spaceEntries)
 	entrySpaceChannels = make(map[int][]chan spaceEntries)
 	SpaceDef = make(map[string][]int)
-	spaceTimes = make(map[string]closureRange)
+	spaceTimes = make(map[string]timeSchedule)
 
 	if data := os.Getenv("SPACES_NAMES"); data != "" {
 		spaces := strings.Split(data, " ")
@@ -75,7 +75,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 		// initialise the processing threads for each space
 		for _, name := range spaces {
-			var sprange closureRange
+			var sprange timeSchedule
 			nl, _ := time.Parse(support.TimeLayout, "00:00")
 			rng := strings.Split(strings.Trim(os.Getenv("CLOSURE_"+name), ";"), ";")
 			sprange.start, sprange.end = nl, nl
@@ -166,6 +166,7 @@ func setpUpCounter() {
 
 	avgw := strings.Trim(os.Getenv("SAVEWINDOW"), ";")
 	avgWindows := make(map[string]int)
+	avgAnalysisSchedule := make(map[string]timeSchedule)
 	tw := make(map[int]string)
 	curr := support.StringLimit("current", support.LabelLength)
 	avgWindows[curr] = SamplingWindow
@@ -173,9 +174,28 @@ func setpUpCounter() {
 	if avgw != "" {
 		for _, v := range strings.Split(avgw, ";") {
 			data := strings.Split(strings.Trim(v, " "), " ")
-			if (len(data)) != 2 {
+
+			switch len(data) {
+			case 2:
+				// analysis defined with period only, nothing extra to be done
+			case 4:
+				// analysis defined with start and end
+				if st, e := time.Parse(support.TimeLayout, data[2]); e == nil {
+					//fmt.Println("start", v)
+					if en, e := time.Parse(support.TimeLayout, data[3]); e == nil {
+						//fmt.Println("end", v)
+						avgAnalysisSchedule[support.StringLimit(data[0], support.LabelLength)] = timeSchedule{st, en}
+					} else {
+						log.Println("spaces.setpUpCounter: illegal end SAVEWINDOW value", data)
+					}
+				} else {
+					log.Println("spaces.setpUpCounter: illegal end SAVEWINDOW value", data)
+				}
+			default:
+				// error
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
 			}
+
 			if v, e := strconv.Atoi(data[1]); e != nil {
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
 			} else {
@@ -187,8 +207,26 @@ func setpUpCounter() {
 					log.Printf("spaces.setpUpCounter: averaging window %v skipped since equal to \"current\"\n", data[0])
 				}
 			}
+
+			//if (len(data)) != 2 {
+			//	log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
+			//}
+			//if v, e := strconv.Atoi(data[1]); e != nil {
+			//	log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
+			//} else {
+			//	if v > SamplingWindow {
+			//		name := support.StringLimit(data[0], support.LabelLength)
+			//		avgWindows[name] = v
+			//		tw[v] = name
+			//	} else {
+			//		log.Printf("spaces.setpUpCounter: averaging window %v skipped since equal to \"current\"\n", data[0])
+			//	}
+			//}
 		}
 	}
+
+	// TODO not appearing in js ...
+
 	keys := make([]int, 0, len(tw))
 	avgAnalysis = make([]avgInterval, len(tw))
 	for k := range tw {
@@ -199,6 +237,15 @@ func setpUpCounter() {
 		avgAnalysis[i] = avgInterval{tw[v], v}
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
+	if len(avgAnalysisSchedule) > 0 {
+		tmp := ""
+		for i, _ := range avgAnalysisSchedule {
+			tmp += i
+		}
+		log.Printf("spaces.setpUpCounter: setting averaging time schedule for \n  [%v]\n", tmp)
+	}
+
+	//os.Exit(1)
 }
 
 // set-up DBS thread and data flow structure based on the provided configuration
