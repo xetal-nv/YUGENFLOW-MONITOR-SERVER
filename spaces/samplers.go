@@ -57,6 +57,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 
 		offset := 0
 		updateCount := func(to int) {
+			fmt.Println(spacename, "current processing in ", cmode, " data ", counter)
 			if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" {
 				// new counter
 				// data is stored according to selected compression mode CMODE
@@ -239,9 +240,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 				avgsp := spaceEntries{ts: 0}
 				select {
 				case avgsp = <-prevStageChan:
+					fmt.Println(spacename, samplerName, "received", avgsp)
 				case <-time.After(timeoutInterval):
 				}
-				fmt.Println(avgsp)
 				cTS := support.Timestamp()
 				// if the time interval has passed a new sample is calculated and passed over
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
@@ -359,7 +360,7 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 		wg.Add(1)
 		data := dt.pf(n+spacename+samplerName, cc)
 		// new sample sent to the output register
-		//fmt.Println("sending:", cc)
+		fmt.Println(spacename, samplerName, "pass data:", cc)
 		go func(dtn string, data interface{}) {
 			defer wg.Done()
 			select {
