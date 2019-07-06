@@ -239,7 +239,7 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 	if len(avgAnalysisSchedule) > 0 {
 		tmp := ""
-		for i, _ := range avgAnalysisSchedule {
+		for i := range avgAnalysisSchedule {
 			tmp += i
 		}
 		log.Printf("spaces.setpUpCounter: setting averaging time schedule for \n  [%v]\n", tmp)
@@ -255,7 +255,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 	recovery := make(map[string]map[string]map[string][]string)
 	now := support.Timestamp()
 
-	for i, _ := range dtypes {
+	for i := range dtypes {
 		recovery[i] = make(map[string]map[string][]string)
 		for j := range spaceChannels {
 			recovery[i][j] = make(map[string][]string)
@@ -310,24 +310,26 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 				latestBankIn[dl][name][v.name] = make(chan interface{})
 				// formatting of initialisation data
 				if len(recovery[dl][name][v.name]) == 2 {
+					// possibly valid recovery data found
 					tag := dl + name + v.name
 					if ts, err := strconv.ParseInt(recovery[dl][name][v.name][0], 10, 64); err == nil {
+						// found valid recovery data
 						if (now - ts) < Crashmaxdelay {
+							// data is fresh enough
 							//fmt.Println("accepted", now-ts, recovery)
 							switch dl {
 							case "sample__":
 								if va, e := strconv.Atoi(recovery[dl][name][v.name][1]); e == nil {
-									// HERE make and send proper init data
 									//fmt.Println("e ", dataEntry{tag, ts, va})
-									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], dataEntry{tag, ts, va})
+									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], dataEntry{tag, ts, va})
 								} else {
 									log.Printf("spaces.setUpDataDBSBank: invalid recovery data for %v\n", tag)
 									//fmt.Println(dl + name + v.name, "starts with no init")
-									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 								}
 							case "entry___":
 								vas := strings.Split(recovery[dl][name][v.name][1][2:len(recovery[dl][name][v.name][1])-2], "][")
-								va := [][]int{}
+								var va [][]int
 								for _, el := range vas {
 									sd := strings.Split(el, " ")
 									if len(sd) == 2 {
@@ -343,7 +345,6 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 									}
 								}
 								if len(va) > 0 {
-									// HERE make and send proper init data
 									data := struct {
 										id      string
 										ts      int64
@@ -351,26 +352,32 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 										entries [][]int
 									}{id: tag, ts: 0, length: len(va), entries: va}
 									//fmt.Println("e ", tag, ts, va)
-									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
+									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
 								} else {
 									log.Printf("spaces.setUpDataDBSBank: invalid recovery data for %v\n", tag)
 									//fmt.Println(dl + name + v.name, "starts with no init")
-									go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 								}
 							default:
 								log.Printf("spaces.setUpDataDBSBank: invalid recovery data type for %v\n", tag)
 								//fmt.Println(dl + name + v.name, "starts with no init")
-								go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+								go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 							}
+						} else {
+							// data is not fresh enough
+							log.Printf("spaces.setUpDataDBSBank: too old recovery ts for %v\n", tag)
+							//fmt.Println(dl + name + v.name, "starts with no init since recovery is old")
+							go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 						}
 					} else {
 						log.Printf("spaces.setUpDataDBSBank: invalid recovery ts for %v\n", tag)
 						//fmt.Println(dl + name + v.name, "starts with no init")
-						go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+						go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 					}
 				} else {
+					// register started with no recovery data (not available)
 					//fmt.Println(dl + name + v.name, "starts with no init")
-					go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+					go storage.SafeReg(dl+name+v.name, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 				}
 
 				// start of distributed data passing structure
@@ -389,5 +396,4 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 		}
 	}
 	latestChannelLock.Unlock()
-	//os.Exit(1)
 }

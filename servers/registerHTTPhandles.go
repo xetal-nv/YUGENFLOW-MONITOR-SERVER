@@ -2,6 +2,7 @@ package servers
 
 import (
 	"encoding/json"
+	"fmt"
 	"gateserver/spaces"
 	"gateserver/support"
 	"log"
@@ -22,7 +23,7 @@ type RegisterBank struct {
 	Data []Register `json:"counters"`
 }
 
-const ito = 1500
+const ito = 4000
 
 // handles single register requests
 func singleRegisterHTTPhandler(path string, ref string) http.Handler {
@@ -56,6 +57,9 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 		rt := Register{true, "", dataMap[ref]()}
+		if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
+			fmt.Println("HTTP got a nil channel")
+		}
 		select {
 		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
 			if data != nil {
@@ -70,12 +74,17 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 				rt.Error = "NIL"
 			}
 		case <-time.After(ito * time.Millisecond):
+			if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
+				fmt.Println("HTTP got a nil channel")
+			}
 			rt.Valid = false
 			rt.Error = "TO"
 		}
 
 		//noinspection GoUnhandledErrorResult
 		json.NewEncoder(w).Encode(rt)
+		//fmt.Println("http sent", rt, r.URL)
+
 	})
 }
 

@@ -48,16 +48,18 @@ See .env file for configuration example
 -env String : specifies the configuration file, uses .env if not specified  
 -dbs Path : specifies path where to store the database, './DBS' used if not specified  
 -dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
--debug Int : specifies a debug mode (0: off, -1: short noalgo, 1: verbose, 2: verbose no algo, 3: verbose no dbs, 4: verbose no algo no dbs)  
+-debug Int : specifies a debug mode (0: off, -1: short flow noalgo, 1: verbose, 2: verbose no algo, 3: verbose no dbs, 4: verbose no algo no dbs)  
 -dvl : activate dvl  
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -dellogs : delete all existing logs  
--nomal : disable malicious attack control
--norst : disable start-up device reset
--cdelay int : specifies the maximum delay for recovery data usage
+-nomal : disable malicious attack control  
+-norst : disable start-up device reset  
+-cdelay int : specifies the maximum delay for recovery data usage  
+-ks : enable killswitch API  
 
 **CHANGELOGS FOR v0.5.0:**  
+
 0. Overall code cleaning  
 1. Server does not use latest current value in case of restart from crash, need to be depended on restart time (closed, done)  
 2. Server debug needs additional modes only for the algorithm (skipped)  
@@ -67,7 +69,7 @@ See .env file for configuration example
 6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved (closed, user error)  
 7. Add redundancy calls in JS reporting (closed, done)  
 8. Entry to total, not average, and adjust interface (no sense to show non current) (done)  
-9. Analysis period and start hour  
+9. Analysis period and start hour (in progress)  
 10. Give JS analysis specs for proper reporting and simplify code  
 11. Eliminate * and entry in report  (done)
 12. Add API (removable at compile time) for databased analysis  
@@ -77,5 +79,6 @@ See .env file for configuration example
 16. Check sample to 0 in closure  (done, seems to work)
 17. Check reset at start-up again (add CRC check)
 18. Removed bug not forcing entries to zero in closure time (done)  
-19. Make report on current optional
+19. Make report on current optional  
+20. Added kill switch (done)  
 

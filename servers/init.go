@@ -138,6 +138,10 @@ func setupHTTP() error {
 	hMap[1]["/udef/notactive"] = undefinedDeviceHTTPHandler("notactive")
 	// unused registered device API
 	hMap[1]["/active"] = usedDeviceHTTPHandler()
+	// if enabled it register the kill switch API
+	if Kswitch {
+		hMap[1]["/ks"] = killswitchHTTPHandler()
+	}
 
 	// add SVG API for installation graphs
 	for spn := range spaces.SpaceDef {

@@ -34,6 +34,7 @@ func main() {
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset")
 	var cdelay = flag.Int("cdelay", 30000, "recovery delay")
+	var ks = flag.Bool("ks", false, "enable kill switch")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -48,6 +49,9 @@ func main() {
 	}
 	if *dl {
 		log.Printf("!!! WARNING DELETING ALL LOGS !!!\n")
+	}
+	if *ks {
+		log.Printf("!!! WARNING KILL SWITCH ENABLED !!!\n")
 	}
 	if *noml {
 		log.Printf("!!! WARNING MALICIOUS CHECKS DISABLED !!!\n")
@@ -67,6 +71,7 @@ func main() {
 	support.MalOn = !*noml
 	support.RstON = !*norst
 	spaces.Crashmaxdelay = int64(*cdelay)
+	servers.Kswitch = *ks
 
 	folder = os.Getenv("GATESERVER")
 

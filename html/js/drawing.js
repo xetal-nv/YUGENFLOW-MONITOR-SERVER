@@ -28,9 +28,9 @@ function drawSpace(rawspaces) {
     function resetcanvas() {
         spacename = "";
         readPlan("logo", true);
-        document.getElementById("lastts").innerText = "n/a";
+        document.getElementById("lastts").innerText = "";
         for (let i = 0; i < allmeasurements.length; i++) {
-            document.getElementById(allmeasurements[i].name).innerText = "n/a"
+            document.getElementById(allmeasurements[i].name).innerText = ""
         }
         selel = null;
     }
@@ -57,8 +57,11 @@ function drawSpace(rawspaces) {
                                         if (selel != null) selel.setAttribute("class", "st1");
                                         el.setAttribute("class", "st2");
                                         selel = el;
-                                        for (let i=0; i<allmeasurements.length; i++) {
+                                        for (let i = 0; i < allmeasurements.length; i++) {
                                             document.getElementById(allmeasurements[i].name).innerText = "";
+                                            if (allmeasurements[i].name !== "current") {
+                                                document.getElementById(allmeasurements[i].name + "_").style.color="lightgray";
+                                            }
                                         }
                                     };
                                 }
@@ -75,8 +78,11 @@ function drawSpace(rawspaces) {
                         if (selel != null) selel.setAttribute("class", "st1");
                         total.setAttribute("class", "st2");
                         selel = total;
-                        for (let i=0; i<allmeasurements.length; i++) {
+                        for (let i = 0; i < allmeasurements.length; i++) {
                             document.getElementById(allmeasurements[i].name).innerText = "";
+                            if (allmeasurements[i].name !== "current") {
+                                document.getElementById(allmeasurements[i].name + "_").style.color="black";
+                            }
                         }
                     };
                 }
@@ -151,7 +157,8 @@ function drawSpace(rawspaces) {
                                     default:
                                         break;
                                 }
-                                // in case of corrupted JSON we skip uodating the page
+                                console.log(dt);
+                                // in case of corrupted JSON we skip uopating the page
                                 if (/^\d+$/.test(dt)) {
                                     document.getElementById(allmeasurements[i].name).innerText = dt;
                                 }
@@ -197,7 +204,7 @@ $(document).ready(function () {
                 let html = "";
                 for (let i = 0; i < allmeasurements.length; i++) {
                     html += "<tr>" +
-                        "<td>" + allmeasurements[i].name + "</td>" +
+                        "<td id=\'" + allmeasurements[i].name + "_" + "\'>" + allmeasurements[i].name + "</td>" +
                         "<td id=\'" + allmeasurements[i].name + "\'> n/a </td>";
                 }
                 $("#analysis").html(html);
