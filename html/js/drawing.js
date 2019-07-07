@@ -157,9 +157,9 @@ function drawSpace(rawspaces) {
                                     default:
                                         break;
                                 }
-                                console.log(dt);
+                                // console.log(dt);
                                 // in case of corrupted JSON we skip uopating the page
-                                if (/^\d+$/.test(dt)) {
+                                if (/^-{0,1}\d+$/.test(dt)) {
                                     document.getElementById(allmeasurements[i].name).innerText = dt;
                                 }
                             }

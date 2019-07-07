@@ -81,5 +81,6 @@ See .env file for configuration example
 18. Removed bug not forcing entries to zero in closure time (done)  
 19. Make report on current optional  
 20. Added kill switch (done)  
-21. Removed rdundant mutex and added few more in exeParamCommand (done)
-
+21. Removed rdundant mutex and added few more in exeParamCommand (done)  
+22. Resolved lock bug in the TCP management causing memory leak (done)  
+23. resolved major bug in drawing.js causing skipping negative entry values (done)  

@@ -103,13 +103,14 @@ func handlerTCPRequest(conn net.Conn) {
 			// Device is not allowed, behaviour depends if in strict mode
 			malf(strictFlag)
 		}
+		gates.MutexDeclaredDevices.RUnlock()
+
 		//// check mac replication on pending devices for malicious attack
 		//mutexPendingDevices.RLock()
 		//if _, pr := pendingDevice[string(mac)]; pr {
 		//	malf(true)
 		//}
 		//mutexPendingDevices.RUnlock()
-		//gates.MutexDeclaredDevices.RUnlock()
 
 		// START redo with different check
 
