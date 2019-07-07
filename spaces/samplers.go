@@ -5,6 +5,8 @@ import (
 	"gateserver/support"
 	"log"
 	"math"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -28,6 +30,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	stats := []int{tn, ntn}
 	statsb := []int{0}
 	samplerName := avgAnalysis[avgID].name
+
+	// recover init values if existing
+	MutexInitData.RLock()
+	initC := InitData["sample__"][spacename][samplerName]
+	initE := InitData["entry___"][spacename][samplerName]
+	MutexInitData.RUnlock()
+
 	samplerInterval := avgAnalysis[avgID].interval
 	timeoutInterval := chantimeout * time.Millisecond
 	if avgID > 0 {
@@ -36,6 +45,45 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 	counter := spaceEntries{ts: support.Timestamp(), val: 0}
 	oldcounter := spaceEntries{ts: 0, val: 0}
 	counter.entries = make(map[int]dataEntry)
+
+	// update start values if init values apply
+	if initC != nil {
+		if ts, err := strconv.ParseInt(initC[0], 10, 64); err == nil {
+			if (counter.ts - ts) < Crashmaxdelay {
+				if va, e := strconv.Atoi(initC[1]); e == nil {
+					counter.ts = ts
+					oldcounter.ts = ts
+					counter.val = va
+					oldcounter.val = va
+					log.Printf("spaces.sampler: space %v loading sample recovery data for analysis %v\n", spacename, samplerName)
+				}
+			}
+		}
+	}
+
+	if initE != nil {
+		if ts, err := strconv.ParseInt(initE[0], 10, 64); err == nil {
+			if (counter.ts - ts) < Crashmaxdelay {
+				vas := strings.Split(initE[1][2:len(initE[1])-2], "][")
+				var va [][]int
+				for _, el := range vas {
+					sd := strings.Split(el, " ")
+					if len(sd) == 2 {
+						sd0, e0 := strconv.Atoi(sd[0])
+						sd1, e1 := strconv.Atoi(sd[1])
+						if e0 == nil && e1 == nil {
+							va = append(va, []int{sd0, sd1})
+						}
+					}
+				}
+				for _, j := range va {
+					counter.entries[j[0]] = dataEntry{val: j[1]}
+				}
+				log.Printf("spaces.sampler: space %v loading entry recovery data for analysis %v\n", spacename, samplerName)
+			}
+		}
+	}
+
 	support.DLog <- support.DevData{"counter starting " + spacename + samplerName,
 		support.Timestamp(), "", []int{stats[0], stats[1]}, false}
 	if prevStageChan == nil {
@@ -230,6 +278,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, a
 					}
 				case <-time.After(timeoutInterval):
 				}
+				//fmt.Println(counter)
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS

@@ -50,3 +50,5 @@ var SpaceDef map[string][]int                                       // maps a sp
 var spaceTimes map[string]timeSchedule                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode
 var cstats string                                                   // data compression flag for stats
+var MutexInitData = &sync.RWMutex{}                                 // mutex for InitData
+var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recovery
