@@ -13,13 +13,11 @@ import (
 	"time"
 )
 
-// TODO check if it can locks
-
 // execute a command towards a sensor as specified by the params map
 // see cmds definition for what parameters are allowed
 func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 	rv = Jsoncmdrt{"", false}
-	mutexSensorMacs.RLock()
+	//mutexSensorMacs.RLock()
 	if params["cmd"] != "" || params["id"] != "" {
 		if params["cmd"] == "list" {
 			keys := ""
@@ -107,10 +105,14 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 					var ch chan []byte
 					var ok bool
 					if mace == "" {
+						mutexSensorMacs.RLock()
 						ch, ok = SensorCmdID[id]
+						mutexSensorMacs.RUnlock()
 					} else {
+						mutexSensorMacs.RLock()
 						ok = true
 						ch = SensorCmdMac[mace][1]
+						mutexSensorMacs.RUnlock()
 					}
 					if ok {
 						if support.Debug != 0 {
@@ -184,7 +186,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			}
 		}
 	}
-	mutexSensorMacs.RUnlock()
+	//mutexSensorMacs.RUnlock()
 	return
 }
 

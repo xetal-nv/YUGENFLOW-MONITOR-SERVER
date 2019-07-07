@@ -181,9 +181,9 @@ func setpUpCounter() {
 			case 4:
 				// analysis defined with start and end
 				if st, e := time.Parse(support.TimeLayout, data[2]); e == nil {
-					//fmt.Println("start", v)
+					//fmt.Println("start", st)
 					if en, e := time.Parse(support.TimeLayout, data[3]); e == nil {
-						//fmt.Println("end", v)
+						//fmt.Println("end", en)
 						avgAnalysisSchedule[support.StringLimit(data[0], support.LabelLength)] = timeSchedule{st, en}
 					} else {
 						log.Println("spaces.setpUpCounter: illegal end SAVEWINDOW value", data)
@@ -225,8 +225,6 @@ func setpUpCounter() {
 		}
 	}
 
-	// TODO not appearing in js ...
-
 	keys := make([]int, 0, len(tw))
 	avgAnalysis = make([]avgInterval, len(tw))
 	for k := range tw {
@@ -244,6 +242,9 @@ func setpUpCounter() {
 		}
 		log.Printf("spaces.setpUpCounter: setting averaging time schedule for \n  [%v]\n", tmp)
 	}
+
+	//fmt.Println(avgAnalysis)
+	//fmt.Println(avgAnalysisSchedule)
 
 	//os.Exit(1)
 }

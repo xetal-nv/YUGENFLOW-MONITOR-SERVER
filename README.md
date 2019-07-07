@@ -81,4 +81,5 @@ See .env file for configuration example
 18. Removed bug not forcing entries to zero in closure time (done)  
 19. Make report on current optional  
 20. Added kill switch (done)  
+21. Removed rdundant mutex and added few more in exeParamCommand (done)
 

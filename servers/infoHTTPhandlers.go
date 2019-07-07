@@ -1,7 +1,5 @@
 package servers
 
-// TODO check if pending deletes always
-
 import (
 	"encoding/json"
 	"fmt"
@@ -129,11 +127,13 @@ func asysHTTHandler() http.Handler {
 		cors = true
 	}
 
+	//TODO replace with a dynamicaly created JS at start?
+
 	var asys []Jsonrt
 	if dt := os.Getenv("SAVEWINDOW"); dt != "" {
 		for _, v := range strings.Split(strings.Trim(dt, ";"), ";") {
 			vc := strings.Split(strings.Trim(v, " "), " ")
-			if len(vc) == 2 {
+			if len(vc) == 2 || len(vc) == 4 {
 				el := Jsonrt{strings.Trim(vc[0], " "), strings.Trim(vc[1], " ")}
 				asys = append(asys, el)
 			}
@@ -363,8 +363,10 @@ func pendingDeviceHTTPHandler() http.Handler {
 
 		mutexPendingDevices.Lock()
 		for mac := range pendingDevice {
-			_, _ = fmt.Fprintf(w, strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":"))
-			_, _ = fmt.Fprintf(w, "\n")
+			if pendingDevice[mac] {
+				_, _ = fmt.Fprintf(w, strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":"))
+				_, _ = fmt.Fprintf(w, "\n")
+			}
 		}
 		mutexPendingDevices.Unlock()
 

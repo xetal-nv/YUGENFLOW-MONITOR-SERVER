@@ -137,7 +137,7 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			scratchPad.unusedSampleSumOut[gate[1]]++
 		}
 
-		// TODO cleaning in case or large asymmetries due to defected sensor
+		// TODO test cleaning in case or large asymmetries due to defected sensor
 		if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
 			rt += 1
 			scratchPad.unusedSampleSumIn[gate[0]] -= 1

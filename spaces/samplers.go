@@ -10,7 +10,6 @@ import (
 )
 
 // TODO add usage of time schedule for averages ONLY!
-// TODO ERROR in debug all goes to zero sometimes, check changes!
 
 // it implements the counters, both the current one as well as the analysis averages.
 // the sampler threads for a given space are started in a recursive manner
@@ -371,25 +370,44 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 		wg.Add(1)
 		data := dt.pf(n+spacename+samplerName, cc)
 		// new sample sent to the output register
-		go func(dtn string, data interface{}) {
+		//go func(dtn string, data interface{}) {
+		//	defer wg.Done()
+		//	select {
+		//	case latestBankIn[dtn][spacename][samplerName] <- data:
+		//	case <-time.After(time.Duration(stimeout) * time.Millisecond):
+		//		log.Printf("spaces.samplers: Timeout writing to register for %v:%v\n", spacename, samplerName)
+		//	}
+		//}(n, data)
+		//// new sample sent to the database
+		//go func(dtn string, data interface{}) {
+		//	// We do not need to wait for this goroutine
+		//	select {
+		//	case latestDBSIn[dtn][spacename][samplerName] <- data:
+		//	case <-time.After(time.Duration(ltimeout) * time.Millisecond):
+		//		if support.Debug != 3 && support.Debug != 4 {
+		//			log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spacename, samplerName)
+		//		}
+		//	}
+		//}(n, data)
+		go func(data interface{}, ch chan interface{}) {
 			defer wg.Done()
 			select {
-			case latestBankIn[dtn][spacename][samplerName] <- data:
+			case ch <- data:
 			case <-time.After(time.Duration(stimeout) * time.Millisecond):
 				log.Printf("spaces.samplers: Timeout writing to register for %v:%v\n", spacename, samplerName)
 			}
-		}(n, data)
+		}(data, latestBankIn[n][spacename][samplerName])
 		// new sample sent to the database
-		go func(dtn string, data interface{}) {
+		go func(data interface{}, ch chan interface{}) {
 			// We do not need to wait for this goroutine
 			select {
-			case latestDBSIn[dtn][spacename][samplerName] <- data:
+			case ch <- data:
 			case <-time.After(time.Duration(ltimeout) * time.Millisecond):
 				if support.Debug != 3 && support.Debug != 4 {
 					log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spacename, samplerName)
 				}
 			}
-		}(n, data)
+		}(data, latestDBSIn[n][spacename][samplerName])
 	}
 	latestChannelLock.RUnlock()
 	if nextStageChan != nil {
