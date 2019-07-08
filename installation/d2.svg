@@ -33,6 +33,6 @@
 <line class="st0" x1="246.8" y1="212.6" x2="304" y2="213.6"/>
 <line class="st0" x1="231" y1="280.1" x2="231" y2="382.6"/>
 <text transform="matrix(1 0 0 1 375 220)" class="st2 st3">Kantoor D2</text>
-<text transform="matrix(1 0 0 1 598.8 232.9)" class="st2 st3">Entry_1</text>
-<text transform="matrix(1 0 0 1 184.8002 246.6995)" class="st2 st3">Entry_2</text>
+<!--<text transform="matrix(1 0 0 1 598.8 232.9)" class="st2 st3">Entry_1</text>-->
+<!--<text transform="matrix(1 0 0 1 184.8002 246.6995)" class="st2 st3">Entry_2</text>-->
 </svg>
