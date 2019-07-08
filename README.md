@@ -60,7 +60,7 @@ See .env file for configuration example
 -cdelay int : specifies the maximum delay for recovery data usage  
 -ks : enable killswitch API  
 
-**CHANGELOGS TO v0.5.0:**  
+**CHANGELOG TO v0.5.0:**  
 
 - Improved algorithm for entry sampling in case of failure of one of the two sensors  
 - Removed bug in counter resets that prevented entry values to be reset  
