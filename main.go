@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const version = "v. 1.1.0" // version
+const version = "v. 0.5.0" // version
 
 func main() {
 

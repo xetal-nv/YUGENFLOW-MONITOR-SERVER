@@ -4,10 +4,12 @@ Copyright Xetal @ 2019
 Author: F. Pessolano  
 
 **Requirements:**  
+GO 1.12 or similar  
 64-bit architecture  
-Badger version 1.5.5  
+Badger version 1.5.5 or similar  
 
 **List API:**  
+HTTPSPORTS[1]/ks -> if enabled, kills the server  
 HTTPSPORTS[1]/dvl -> latest developer log (IF ENABLED via -dvl)  
 HTTPSPORTS[1]/asys -> information on all current analyses  
 HTTPSPORTS[1]/info -> installation information  
@@ -58,29 +60,18 @@ See .env file for configuration example
 -cdelay int : specifies the maximum delay for recovery data usage  
 -ks : enable killswitch API  
 
-**CHANGELOGS FOR v0.5.0:**  
+**CHANGELOGS TO v0.5.0:**  
 
-0. Overall code cleaning  
-1. Server does not use latest current value in case of restart from crash, need to be depended on restart time (closed, done)  
-2. Server debug needs additional modes only for the algorithm (skipped)  
-3. Unclear why sometimes JS received wrong entry values (closed, bug found)  
-4. Unclear why sometimes reporting hangs on /info or later calls (closed, network related)  
-5. Algorithm suffers when one sensor is not present in a gate (to be tested)  
-6. Tablets not supported yet, Explorer not supported, issues with chrome to be resolved (closed, user error)  
-7. Add redundancy calls in JS reporting (closed, done)  
-8. Entry to total, not average, and adjust interface (no sense to show non current) (done)  
-9. Analysis period and start hour (in progress)  
-10. Give JS analysis specs for proper reporting and simplify code  
-11. Eliminate * and entry in report  (done)
-12. Add API (removable at compile time) for databased analysis  
-13. Entry split in and out (postponed to (0.6.0)  
-14. log binary (command line) dump data per day  
-15. Remove interpolation from js (done)  
-16. Check sample to 0 in closure  (done, seems to work)
-17. Check reset at start-up again (add CRC check)
-18. Removed bug not forcing entries to zero in closure time (done)  
-19. Make report on current optional  
-20. Added kill switch (done)  
-21. Removed rdundant mutex and added few more in exeParamCommand (done)  
-22. Resolved lock bug in the TCP management causing memory leak (done)  
-23. resolved major bug in drawing.js causing skipping negative entry values (done)  
+- Improved algorithm for entry sampling in case of failure of one of the two sensors  
+- Removed bug in counter resets that prevented entry values to be reset  
+- Solved memory leaks on several mutex elements  
+- Added start-up background reset of sensors (first connection from server start only)  
+- In case of server crash, the data is stored in a file called .recovery and used if no older than what specified with the  command line option cdelay (std 30s)  
+- Removed averaging of entry values, cumulative are given instead  
+- Added command line options ks (kill switch), norst (skip start-up reset of sensors), cdelay (see recovery file) and nomal (disable malicious attack monitoring)  
+- Resolved issue with web app reporting illegal values when in real time monitoring  
+- Resolved issue causing negative entries not to be displayed in the real time web app  
+- Removal of interpolation in reporting sue to large errors it introduces  
+- Reduced network load when preparing the report via web app including removal of entry values in the report  
+- In case of network issues, the web app will try again a given number of times before reporting an issue to the user  
+
