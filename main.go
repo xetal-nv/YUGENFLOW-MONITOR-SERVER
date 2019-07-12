@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const version = "v. 0.5.0" // version
+const version = "v. 0.6.0" // version
 
 func main() {
 
@@ -33,7 +33,7 @@ func main() {
 	var dl = flag.Bool("dellogs", false, "delete all logs")
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset")
-	var cdelay = flag.Int("cdelay", 30, "recovery delay in secs")
+	var cdelay = flag.Int("cdelay", 300, "recovery delay in secs")
 	var ks = flag.Bool("ks", false, "enable kill switch")
 	flag.Parse()
 
@@ -59,7 +59,7 @@ func main() {
 	if *norst {
 		log.Printf("!!! WARNING START-UP DEVICE RESET DISABLED !!!\n")
 	}
-	if *cdelay != 30 {
+	if *cdelay != 300 {
 		log.Printf("!!! WARNING RECOVERY DELAY CHANGED !!!\n")
 	}
 
@@ -70,7 +70,7 @@ func main() {
 	support.Dellogs = *dl
 	support.MalOn = !*noml
 	support.RstON = !*norst
-	spaces.Crashmaxdelay = int64(*cdelay) * 10000
+	spaces.Crashmaxdelay = int64(*cdelay) * 1000
 	servers.Kswitch = *ks
 
 	folder = os.Getenv("GATESERVER")

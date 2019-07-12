@@ -60,11 +60,9 @@ GARBINT = 23:30; 00:30; 20
 ## COMPRESSION MODE
 ## 0: OFF
 ## 1: DIFFERENTIAL
-## 2: DIFFERENTIAL WITH CLEANING ON CONSTANT COUNTER
-## 3: DIFFERENTIAL WITH INTERPOLATION (NOT VALIDATED)
+## 2: DIFFERENTIAL WITH CLEANING ON CONSTANT COUNTER (DEFAULT)
+## 3: DIFFERENTIAL WITH INTERPOLATION (EXPERIMENTAL, NOT SAFE)
 CMODE = 2
-## Set to 1 to apply compression also to statistical data
-CSTATS = 0
 
 ## ENABLE CORS
 ## DO NOT CHANGE
@@ -138,6 +136,6 @@ RESETSLOT = 23:30; 00:30; 30
 ## Defines a given storage interval
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##SAVEWINDOW = name seconds; name seconds; ...
-#SAVEWINDOW = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
-SAVEWINDOW = halfhour 1800; hour 3600; day 86400
+##ANALISYSPERIOD = name seconds; name seconds; ...
+#ANALISYSPERIOD = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
+ANALISYSPERIOD = halfhour 1800; hour 3600; day 86400

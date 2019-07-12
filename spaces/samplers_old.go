@@ -20,7 +20,7 @@ import (
 // prevStage channels are used for data flow
 // the sync channels are used to control the operation period and its synchronisation
 // NOTE: for samples we take the time weighted averages, for entries the total only on the analysis period
-func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
+func sampler0(spacename string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
 		if avgID < (len(avgAnalysis) - 1) {
@@ -243,10 +243,6 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 			// the first in the threads chain makes the counting
 			// implements the current value as in sum over the period of time samplerInterval
 			for {
-				// TODO
-				// wait till period starts and discard all values received
-				// send sync
-				// while in the period do as always
 				select {
 				case sp := <-prevStageChan:
 					var skip bool
@@ -297,20 +293,72 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					counter.ts = cTS
 					updateCount(chantimeout)
 				}
-				// when the period is over send the sync ang back to the start
 			}
 		} else {
 			// threads 2+ in the chain needs to make the average and pass it forward
 			var buffer []spaceEntries
+			//timeLeftInCycle := int64(samplerInterval) * 1000
+			//inCycle := false
+			//fmt.Println(spacename, samplerName, timeLeftInCycle, duration)
 			for {
-				// TODO
-				// wait till sync arrives, no samples will be received until then
-				// store time of sync arrival
-				// receive samples
-				// when it is time for average, consider only de ative hours
-				// when sync for period arrives consider if sample will happen between periods (calculate and send now) or later
-				// (adjust sample periodicity length). if periodicity sample smaller than period, simple reset and restart
-				// it is needed to use a 2D structure with a line of data for every period to be considered for the average
+
+				// TODO HERE
+				// TODO issue, this does not work because of how the timehow is handled
+				// maybe it needs two times outs one for period one for sampling?
+				// TODO need to be done from current and using start and terminate channels
+				//if duration != 0 {
+				//	// a schedule is defined
+				//	if insch, e := support.InClosureTime(start, end); !insch || e != nil {
+				//		// data is outside of the schedule or an error happened
+				//		if !insch {
+				//			// data is outside of schedule
+				//			if inCycle {
+				//				inCycle = false
+				//				// check if analysis will end out of schedule or not
+				//				if timeLeftInCycle < duration {
+				//					diff := duration - timeLeftInCycle
+				//					if timeLeftInCycle < duration {
+				//						timeLeftInCycle = int64(samplerInterval) * 1000
+				//						fmt.Println(spacename, samplerName, "Exiting schedule and clean counters", timeLeftInCycle)
+				//					} else {
+				//						timeLeftInCycle = timeLeftInCycle - diff - (86400000 - duration)
+				//						if timeLeftInCycle < 0 {
+				//							fmt.Println(spacename, samplerName, "Exiting schedule and does not clean counters, reduce cycle and wait for next cycle", timeLeftInCycle)
+				//						} else {
+				//							timeLeftInCycle = int64(samplerInterval) * 1000
+				//							fmt.Println(spacename, samplerName, "Exiting schedule and need to store a sample with proper averages and resets values. Wait next sync start.", timeLeftInCycle)
+				//						}
+				//					}
+				//				} else {
+				//					// TODO HEHE not working
+				//					timeLeftInCycle = timeLeftInCycle - 86400000
+				//					if timeLeftInCycle <= 0 {
+				//						timeLeftInCycle = int64(samplerInterval) * 1000
+				//						fmt.Println(spacename, samplerName, "Exiting schedule and need to store a sample with proper averages and resets values", timeLeftInCycle)
+				//					} else {
+				//						fmt.Println(spacename, samplerName, "Exiting schedule and waiting for next cycle without reseting values", timeLeftInCycle)
+				//					}
+				//				}
+				//			} else {
+				//				fmt.Println(spacename, samplerName, "out of schedule")
+				//			}
+				//		}
+				//	} else {
+				//		// data belongs tog the schedule
+				//		// check if this is first valid analysis in schedule or continuing a previous one
+				//		if !inCycle {
+				//			fmt.Println(spacename, samplerName, "entering in schedule")
+				//			inCycle = true
+				//		} else {
+				//			fmt.Println(spacename, samplerName, "in schedule")
+				//		}
+				//	}
+				//} else {
+				//	// no schedule is defined
+				//	fmt.Println(spacename, samplerName, "no schedule proceed as before")
+				//}
+
+				// TODO END
 
 				// get new data or timeout
 				avgsp := spaceEntries{ts: 0}
@@ -326,21 +374,11 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					if buffer != nil {
 						//fmt.Println(avgID, buffer)
+						// a weighted average is calculate based on sample permanence
 						acc := float64(0)
-						if avgID == 1 {
-							//fmt.Println("first")
-							// first sampler need to consider sample permanence
-							for i := 0; i < len(buffer)-1; i++ {
-								acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
-							}
-						} else {
-							//fmt.Println("the rest")
-							// second and later sampler need to consider presence from past average
-							for i := 1; i < len(buffer); i++ {
-								acc += float64(buffer[i].val) * float64(buffer[i].ts-buffer[i-1].ts) / float64(cTS-buffer[0].ts)
-							}
+						for i := 0; i < len(buffer)-1; i++ {
+							acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
 						}
-						// the following statement is also used for second and later samplers to account for possible missing information
 						acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(cTS-buffer[0].ts)
 						counter.val = int(math.RoundToEven(acc))
 						if counter.val < 0 && avgNegSkip {
@@ -399,7 +437,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 }
 
 // used internally in the sampler to pass data among threads.
-func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
+func passData0(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
 	cc.entries = make(map[int]dataEntry)

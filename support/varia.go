@@ -1,6 +1,7 @@
 package support
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -133,4 +134,32 @@ func GetCurrentExecDir() (dir string, err error) {
 	dir = filepath.Dir(absPath)
 	return dir, nil
 
+}
+
+// provides the difference in ms between to hours provided as strings in the format hh:mm
+// when start is later than end, it returns 0
+func TimeDifferenceInSecs(start, end string) (int64, error) {
+	if _, e := time.Parse(TimeLayout, start); e != nil {
+		return 0, e
+	}
+	if _, e := time.Parse(TimeLayout, end); e != nil {
+		return 0, e
+	}
+	t0 := strings.Split(strings.Trim(start, " "), ":")
+	t1 := strings.Split(strings.Trim(end, " "), ":")
+	if h0, e := strconv.Atoi(t0[0]); e == nil {
+		if m0, e := strconv.Atoi(t0[1]); e == nil {
+			if h1, e := strconv.Atoi(t1[0]); e == nil {
+				if m1, e := strconv.Atoi(t1[1]); e == nil {
+					t0s := (h0*3600 + m0*60) * 1000
+					t1s := (h1*3600 + m1*60) * 1000
+					if t0s > t1s {
+						return 0, errors.New("End later than start")
+					}
+					return int64(t1s - t0s), nil
+				}
+			}
+		}
+	}
+	return 0, errors.New("Invalid data")
 }

@@ -60,6 +60,13 @@ See .env file for configuration example
 -cdelay int : specifies the maximum delay for recovery data usage  
 -ks : enable killswitch API  
 
+**CHANGELOG TO v0.5.1:**  
+
+ - !!! Renamed SAVEWINDOW to ANALISYSPERIOD in configuration file !!!  
+ - Removed CSTAT option from configuration file as not useful  
+ - Modified the averaging algorithm to suppport forthcoming ANALISYSWINDOW implementation  
+
+
 **CHANGELOG TO v0.5.0:**  
 
 - Improved algorithm for entry sampling in case of failure of one of the two sensors  

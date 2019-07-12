@@ -13,10 +13,11 @@ type avgInterval struct {
 
 // define the interval when every counter needs to be forced to zero
 type timeSchedule struct {
-	start time.Time
-	end   time.Time
-	//offset bool
+	start    time.Time
+	end      time.Time
+	duration int64
 }
+
 type pfunc func(string, spaceEntries) interface{}
 type cfunc func(string, chan interface{}, chan bool)
 type dtfuncs struct {
@@ -38,7 +39,7 @@ var bufsize int                                                    // size of ch
 var entrySpaceChannels map[int][]chan spaceEntries                 // channels form entry to associated space
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
-var avgAnalysisSchedule map[string]timeSchedule                    // specifies the activity range of the analysis
+var avgAnalysisSchedule timeSchedule                               // specifies the activity range of the analysis
 var latestChannelLock = &sync.RWMutex{}                            // this mutex is for a perceived race on the below slices
 var latestBankIn map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
@@ -49,6 +50,6 @@ var LatestBankOut map[string]map[string]map[string]chan interface{} // contains 
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var spaceTimes map[string]timeSchedule                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode
-var cstats string                                                   // data compression flag for stats
-var MutexInitData = &sync.RWMutex{}                                 // mutex for InitData
-var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recovery
+//var cstats string                                                   // data compression flag for stats
+var MutexInitData = &sync.RWMutex{}                    // mutex for InitData
+var InitData map[string]map[string]map[string][]string // holds values from a previous run loaded from file .recovery

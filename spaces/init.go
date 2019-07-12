@@ -136,7 +136,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 				name = support.StringLimit(name, support.LabelLength)
 				spaceChannels[name] = make(chan spaceEntries, bufsize)
 				// the go routine below is the processing thread.
-				go sampler(name, spaceChannels[name], nil, 0, sync.Once{}, 0, 0)
+				go sampler(name, spaceChannels[name], nil, nil, nil, 0, sync.Once{}, 0, 0)
 				var sg []int
 				for _, val := range strings.Split(sts, " ") {
 					vt := strings.Trim(val, " ")
@@ -171,13 +171,13 @@ func setpUpCounter() {
 	}
 	log.Printf("Compression mode set to %v\n", cmode)
 
-	cstats = os.Getenv("CSTATS")
-	if cstats == "" {
-		cstats = "0"
-	}
-	if cstats == "1" {
-		log.Printf("Compression mode enabled for statistics\n")
-	}
+	//cstats = os.Getenv("CSTATS")
+	//if cstats == "" {
+	//	cstats = "0"
+	//}
+	//if cstats == "1" {
+	//	log.Printf("Compression mode enabled for statistics\n")
+	//}
 
 	//sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
@@ -205,9 +205,9 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", SamplingWindow)
 
-	avgw := strings.Trim(os.Getenv("SAVEWINDOW"), ";")
+	avgw := strings.Trim(os.Getenv("ANALISYSPERIOD"), ";")
 	avgWindows := make(map[string]int)
-	avgAnalysisSchedule := make(map[string]timeSchedule)
+	//avgAnalysisSchedule = make(map[string]timeSchedule)
 	tw := make(map[int]string)
 	curr := support.StringLimit("current", support.LabelLength)
 	avgWindows[curr] = SamplingWindow
@@ -216,29 +216,30 @@ func setpUpCounter() {
 		for _, v := range strings.Split(avgw, ";") {
 			data := strings.Split(strings.Trim(v, " "), " ")
 
+			// switch is used instead of if statement for future extensions
 			switch len(data) {
 			case 2:
 				// analysis defined with period only, nothing extra to be done
-			case 4:
-				// analysis defined with start and end
-				if st, e := time.Parse(support.TimeLayout, data[2]); e == nil {
-					//fmt.Println("start", st)
-					if en, e := time.Parse(support.TimeLayout, data[3]); e == nil {
-						//fmt.Println("end", en)
-						avgAnalysisSchedule[support.StringLimit(data[0], support.LabelLength)] = timeSchedule{st, en}
-					} else {
-						log.Println("spaces.setpUpCounter: illegal end SAVEWINDOW value", data)
-					}
-				} else {
-					log.Println("spaces.setpUpCounter: illegal end SAVEWINDOW value", data)
-				}
+			//case 4:
+			// analysis defined with start and end
+			//if st, e := time.Parse(support.TimeLayout, data[2]); e == nil {
+			//	//fmt.Println("start", st)
+			//	if en, e := time.Parse(support.TimeLayout, data[3]); e == nil {
+			//		//fmt.Println("end", en)
+			//		avgAnalysisSchedule[support.StringLimit(data[0], support.LabelLength)] = timeSchedule{st, en}
+			//	} else {
+			//		log.Println("spaces.setpUpCounter: illegal end ANALISYSPERIOD value", data)
+			//	}
+			//} else {
+			//	log.Println("spaces.setpUpCounter: illegal start ANALISYSPERIOD value", data)
+			//}
 			default:
 				// error
-				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
+				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALISYSPERIOD values", data)
 			}
 
 			if v, e := strconv.Atoi(data[1]); e != nil {
-				log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
+				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALISYSPERIOD values", data)
 			} else {
 				if v > SamplingWindow {
 					name := support.StringLimit(data[0], support.LabelLength)
@@ -248,21 +249,6 @@ func setpUpCounter() {
 					log.Printf("spaces.setpUpCounter: averaging window %v skipped since equal to \"current\"\n", data[0])
 				}
 			}
-
-			//if (len(data)) != 2 {
-			//	log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
-			//}
-			//if v, e := strconv.Atoi(data[1]); e != nil {
-			//	log.Fatal("spaces.setpUpCounter: fatal error for illegal SAVEWINDOW values", data)
-			//} else {
-			//	if v > SamplingWindow {
-			//		name := support.StringLimit(data[0], support.LabelLength)
-			//		avgWindows[name] = v
-			//		tw[v] = name
-			//	} else {
-			//		log.Printf("spaces.setpUpCounter: averaging window %v skipped since equal to \"current\"\n", data[0])
-			//	}
-			//}
 		}
 	}
 
@@ -276,16 +262,34 @@ func setpUpCounter() {
 		avgAnalysis[i] = avgInterval{tw[v], v}
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
-	if len(avgAnalysisSchedule) > 0 {
-		tmp := ""
-		for i := range avgAnalysisSchedule {
-			tmp += i
-		}
-		log.Printf("spaces.setpUpCounter: setting averaging time schedule for \n  [%v]\n", tmp)
-	}
+	//if len(avgAnalysisSchedule) > 0 {
+	//	tmp := ""
+	//	for i := range avgAnalysisSchedule {
+	//		tmp += i
+	//	}
+	//	log.Printf("spaces.setpUpCounter: setting averaging time schedule for \n  [%v]\n", tmp)
+	//}
 
 	//fmt.Println(avgAnalysis)
 	//fmt.Println(avgAnalysisSchedule)
+
+	//os.Exit(1)
+
+	if val := strings.Split(strings.Trim(os.Getenv("ANALISYSWINDOW"), " "), " "); len(val) == 2 {
+		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
+			//fmt.Println("start", st)
+			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
+				//fmt.Println("end", en)
+				avgAnalysisSchedule = timeSchedule{st, en, 0}
+				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
+				log.Printf("spaces.setpUpCounter: Analysis window is set from %v to %v\n", val[0], val[1])
+			} else {
+				log.Fatal("spaces.setpUpCounter: illegal end ANALISYSWINDOW value", val)
+			}
+		} else {
+			log.Fatal("spaces.setpUpCounter: illegal start ANALISYSWINDOW value", val)
+		}
+	}
 
 	//os.Exit(1)
 }
