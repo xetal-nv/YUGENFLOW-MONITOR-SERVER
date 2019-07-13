@@ -62,7 +62,6 @@ GARBINT = 23:30; 00:30; 20
 ## 0: OFF
 ## 1: DIFFERENTIAL
 ## 2: DIFFERENTIAL WITH CLEANING ON CONSTANT COUNTER (DEFAULT)
-## 3: DIFFERENTIAL WITH INTERPOLATION (EXPERIMENTAL, NOT SAFE)
 CMODE = 2
 
 ## ENABLE CORS
@@ -149,10 +148,11 @@ RESETSLOT = 23:30; 00:30; 30
 ## Defines a given storage interval with optional 'start' and 'end' daily hours
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##ANALISYSPERIOD = name seconds; name seconds; ...
-ANALISYSPERIOD = 10sec 10; 20sec 20; day 36000; day2 100000
+##ANALYSISPERIOD = name seconds; name seconds; ...
+ANALYSISPERIOD = 20sec 20; 30sec 30; 5mins 300; day 36000; day2 100000
+#ANALYSISPERIOD = 5mins 300; day 36000; day2 100000
 
 ## ANALYSIS WINDOW
-## Defines the period in which analisys will be executed (24h format hh:mm)
-##ANALISYSWINDOW = start end
-ANALISYSWINDOW = 09:00 14:19
+## Defines the period in which analysis will be executed (24h format hh:mm)
+##ANALYSISWINDOW = start end
+ANALYSISWINDOW = 10:50 10:52

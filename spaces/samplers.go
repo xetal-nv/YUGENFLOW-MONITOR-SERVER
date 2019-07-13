@@ -31,12 +31,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 	})
 
 	stats := []int{tn, ntn}
-	statsb := []int{0}
+	//statsb := []int{0}
 	samplerName := avgAnalysis[avgID].name
-	//start := avgAnalysisSchedule.start
-	//end := avgAnalysisSchedule.end
-	//duration := avgAnalysisSchedule.duration
+	start := avgAnalysisSchedule.start
+	end := avgAnalysisSchedule.end
+	duration := avgAnalysisSchedule.duration
 	//schedule := !(start == time.Time{})
+	//fmt.Println(duration, avgID, avgAnalysis[avgID].interval)
 
 	//fmt.Println(samplerName, avgAnalysisSchedule.duration/(int64(avgAnalysis[avgID].interval)*1000))
 
@@ -47,7 +48,8 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 	MutexInitData.RUnlock()
 
 	samplerInterval := avgAnalysis[avgID].interval
-	timeoutInterval := chantimeout * time.Millisecond
+	samplerIntervalMM := int64(samplerInterval) * 1000
+	timeoutInterval := 5 * chantimeout * time.Millisecond
 	if avgID > 0 {
 		timeoutInterval += time.Duration(avgAnalysis[avgID-1].interval) * time.Second
 	}
@@ -112,138 +114,24 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 
 		log.Printf("spaces.sampler: setting sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spacename)
 
-		offset := 0
-		updateCount := func(to int) {
-			if support.Debug == -1 {
-				fmt.Println(spacename, "current processing in ", cmode, " data ", counter)
-			}
-			if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" {
-				// new counter
-				// data is stored according to selected compression mode CMODE
-				// implements also CMODE 0 that only removes replicated values
-				sd := true
-				if cmode == "3" {
-					// Experimental interpolation mode, not to use in release
-					count := counter.val
-					for _, v := range counter.entries {
-						count -= v.val
-					}
-					if count != 0 {
-						// we distribute the errors only if it repeats and stays the same
-						if count == offset {
-							for i := 0; i < support.Abs(count); i++ {
-								tmp := counter.entries[i%len(counter.entries)]
-								if count > 0 {
-									tmp.val += 1
-								} else {
-									tmp.val -= 1
-								}
-								counter.entries[i%len(counter.entries)] = tmp
-							}
-						} else {
-							offset = count
-							sd = false
-						}
-					}
-				}
-				if sd {
-					oldcounter.val = counter.val
-					oldcounter.ts = counter.ts
-					oldcounter.entries = make(map[int]dataEntry)
-					for i, v := range counter.entries {
-						oldcounter.entries[i] = v
-					}
-					passData(spacename, samplerName, counter, nextStageChan, chantimeout, to)
-				}
-			} else if cmode == "1" {
-				// counter did not change
-				// if at least two entries have changed the sample is stored
-				cd := 0
-				for i, v := range counter.entries {
-					if oldcounter.entries[i].val != v.val {
-						cd += 1
-					}
-				}
-				// at least two entries must have changed value
-				if cd >= 2 {
-					oldcounter.val = counter.val
-					oldcounter.ts = counter.ts
-					oldcounter.entries = make(map[int]dataEntry)
-					for i, v := range counter.entries {
-						oldcounter.entries[i] = v
-					}
-					passData(spacename, samplerName, counter, nextStageChan, chantimeout, to)
-				} else {
-					if cd == 1 {
-						support.DLog <- support.DevData{"spaces.samplers counter " + spacename + " current",
-							support.Timestamp(), "inconsistent counter vs entries",
-							[]int{}, true}
-					}
-				}
-			} else if cmode == "2" || cmode == "3" {
-				// counter did not change
-				// verifies consistence of entry values in case of error
-				// rejects or interpolates
-				cd := 0
-				count := counter.val
-				for i, v := range counter.entries {
-					count -= v.val
-					if oldcounter.entries[i].val != v.val {
-						cd += 1
-					}
-				}
-				// at least two entries must have changed value
-				// and the counter is properly given by the entry values
-				if (cd >= 2) && (count == 0) {
-					oldcounter.val = counter.val
-					oldcounter.ts = counter.ts
-					oldcounter.entries = make(map[int]dataEntry)
-					for i, v := range counter.entries {
-						oldcounter.entries[i] = v
-					}
-					passData(spacename, samplerName, counter, nextStageChan, chantimeout, to)
-				} else {
-					e := count != 0 || cd == 1
-					if count != 0 && cd >= 2 && cmode == "3" {
-
-						if count == offset {
-							// we distribute the errors only if it repeats and stays the same
-							e = false
-							for i := 0; i < support.Abs(count); i++ {
-								tmp := counter.entries[i%len(counter.entries)]
-								if count > 0 {
-									tmp.val += 1
-								} else {
-									tmp.val -= 1
-								}
-								counter.entries[i%len(counter.entries)] = tmp
-							}
-							oldcounter.val = counter.val
-							oldcounter.ts = counter.ts
-							oldcounter.entries = make(map[int]dataEntry)
-							for i, v := range counter.entries {
-								oldcounter.entries[i] = v
-							}
-							passData(spacename, samplerName, counter, nextStageChan, chantimeout, to)
-						} else {
-							offset = count
-							e = true
-						}
-					}
-					if e {
-						support.DLog <- support.DevData{"spaces.samplers counter " + spacename + " current",
-							support.Timestamp(), "inconsistent counter vs entries",
-							[]int{counter.val, count}, true}
-					}
-				}
-			}
-		}
-
 		if avgID == 0 {
 			// the first in the threads chain makes the counting
 			// implements the current value as in sum over the period of time samplerInterval
+			// it will always calculate the new sample, but only send it to the next stages in valid period (if defined)
+			// or always.
+			// It is also responsible to synchronising staged on start and end period, if defined
+
+			var cyclein bool
+			firstDataOfCycle := true
+			// when there is no valid ANALYSISWINDOW, se let the samplers always run
+			if duration == 0 {
+				//fmt.Println("no duration is defined")
+				syncNext <- true
+				cyclein = true
+			} else {
+				cyclein = false // this assignment is redundant but placed for readability
+			}
 			for {
-				// TODO
 				// wait till period starts and discard all values received
 				// send sync
 				// while in the period do as always
@@ -292,106 +180,441 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 				case <-time.After(timeoutInterval):
 				}
 				//fmt.Println(counter)
+				if duration != 0 {
+					if incyc, e := support.InClosureTime(start, end); e != nil {
+						//fmt.Println(" !!! error on InClosureTime")
+						log.Printf("spaces.sampler: error on InClosureTime for sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spacename)
+					} else {
+						if !incyc && !cyclein {
+							//fmt.Println("was out, stays out")
+							// does nothing, remove
+						} else if !incyc && cyclein {
+							//fmt.Println("was in, goes out")
+							// stops recording data and sendNext false
+							syncNext <- false
+							cyclein = false
+						} else if incyc && cyclein {
+							//fmt.Println("was in, stays in")
+							// does nothing, remove
+						} else {
+							//fmt.Println("was out, goes in")
+							// starts reconding and sends syncNext true
+							syncNext <- true
+							cyclein = true
+							firstDataOfCycle = true
+						}
+					}
+				}
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
-					updateCount(chantimeout)
+					//offset := 0
+					//updateCount := func(chantimeout int) {
+					if support.Debug == -1 {
+						fmt.Println(spacename, "current processing in ", cmode, " data ", counter)
+					}
+					if counter.val != oldcounter.val || oldcounter.ts == 0 || cmode == "0" || firstDataOfCycle {
+						// new counter
+						// data is stored according chantimeout selected compression mode CMODE
+						// implements also CMODE 0 that only removes replicated values
+						//sd := true
+						//if cmode == "3" {
+						//	// Experimental interpolation mode, not chantimeout use in release
+						//	count := counter.val
+						//	for _, v := range counter.entries {
+						//		count -= v.val
+						//	}
+						//	if count != 0 {
+						//		// we distribute the errors only if it repeats and stays the same
+						//		if count == offset {
+						//			for i := 0; i < support.Abs(count); i++ {
+						//				tmp := counter.entries[i%len(counter.entries)]
+						//				if count > 0 {
+						//					tmp.val += 1
+						//				} else {
+						//					tmp.val -= 1
+						//				}
+						//				counter.entries[i%len(counter.entries)] = tmp
+						//			}
+						//		} else {
+						//			offset = count
+						//			sd = false
+						//		}
+						//	}
+						//}
+						//if sd {
+						firstDataOfCycle = false
+						oldcounter.val = counter.val
+						oldcounter.ts = counter.ts
+						oldcounter.entries = make(map[int]dataEntry)
+						for i, v := range counter.entries {
+							oldcounter.entries[i] = v
+						}
+						if cyclein {
+							//fmt.Println("sending data in period")
+							passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						} else {
+							//fmt.Println("skipping data out of period")
+						}
+						//}
+					} else if cmode == "1" {
+						// counter did not change
+						// if at least two entries have changed the sample is stored
+						cd := 0
+						for i, v := range counter.entries {
+							if oldcounter.entries[i].val != v.val {
+								cd += 1
+							}
+						}
+						// at least two entries must have changed value
+						if cd >= 2 {
+							oldcounter.val = counter.val
+							oldcounter.ts = counter.ts
+							oldcounter.entries = make(map[int]dataEntry)
+							for i, v := range counter.entries {
+								oldcounter.entries[i] = v
+							}
+							if cyclein {
+								//fmt.Println("sending data in period")
+								passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+							} else {
+								//fmt.Println("skipping data out of period")
+							}
+							//passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						} else {
+							if cd == 1 {
+								support.DLog <- support.DevData{"spaces.samplers counter " + spacename + " current",
+									support.Timestamp(), "inconsistent counter vs entries",
+									[]int{}, true}
+							}
+						}
+						//} else if cmode == "2" || cmode == "3" {
+					} else if cmode == "2" {
+						// counter did not change
+						// verifies consistence of entry values in case of error
+						// rejects or interpolates
+						cd := 0
+						count := counter.val
+						for i, v := range counter.entries {
+							count -= v.val
+							if oldcounter.entries[i].val != v.val {
+								cd += 1
+							}
+						}
+						// at least two entries must have changed value
+						// and the counter is properly given by the entry values
+						if (cd >= 2) && (count == 0) {
+							oldcounter.val = counter.val
+							oldcounter.ts = counter.ts
+							oldcounter.entries = make(map[int]dataEntry)
+							for i, v := range counter.entries {
+								oldcounter.entries[i] = v
+							}
+							if cyclein {
+								//fmt.Println("sending data in period")
+								passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+							} else {
+								//fmt.Println("skipping data out of period")
+							}
+							//passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+						} else {
+							e := count != 0 || cd == 1
+							//if count != 0 && cd >= 2 && cmode == "3" {
+							//
+							//	if count == offset {
+							//		// we distribute the errors only if it repeats and stays the same
+							//		e = false
+							//		for i := 0; i < support.Abs(count); i++ {
+							//			tmp := counter.entries[i%len(counter.entries)]
+							//			if count > 0 {
+							//				tmp.val += 1
+							//			} else {
+							//				tmp.val -= 1
+							//			}
+							//			counter.entries[i%len(counter.entries)] = tmp
+							//		}
+							//		oldcounter.val = counter.val
+							//		oldcounter.ts = counter.ts
+							//		oldcounter.entries = make(map[int]dataEntry)
+							//		for i, v := range counter.entries {
+							//			oldcounter.entries[i] = v
+							//		}
+							//		if cyclein {
+							//			//fmt.Println("sending data in period")
+							//			passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+							//		} else {
+							//			//fmt.Println("skipping data out of period")
+							//		}
+							//		//passData(spacename, samplerName, counter, nextStageChan, chantimeout, chantimeout)
+							//	} else {
+							//		offset = count
+							//		e = true
+							//	}
+							//}
+							if e {
+								support.DLog <- support.DevData{"spaces.samplers counter " + spacename + " current",
+									support.Timestamp(), "inconsistent counter vs entries",
+									[]int{counter.val, count}, true}
+							}
+						}
+					}
+					//}
+
+					//updateCount(chantimeout)
 				}
 				// when the period is over send the sync ang back to the start
 			}
 		} else {
 			// threads 2+ in the chain needs to make the average and pass it forward
-			var buffer []spaceEntries
+			var buffer []spaceEntries  // holds a cycle value
+			var multiCycle []dataEntry // holds averages of various cycles, ts if not 0 gives a partial cycle
+			//currentCycle := samplerIntervalMM // current cycle duration of a multicycle
+			leftincycle := samplerIntervalMM // keep track of a multicycle
+
+			//average := func(buffer []spaceEntries, cTS int64, period int64) {
+			average := func(ct spaceEntries, buffer []spaceEntries, cTS int64, modifier int64) spaceEntries {
+				//fmt.Println(period, cTS-buffer[0].ts)
+				//if buffer != nil {
+				//fmt.Println(avgID, buffer)
+				period := float64(cTS - buffer[0].ts + modifier)
+				acc := float64(0)
+				if avgID == 1 {
+					fmt.Println(samplerName, buffer)
+					// first sampler need to consider sample permanence
+					for i := 0; i < len(buffer)-1; i++ {
+						//acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
+						acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(period)
+						fmt.Println(samplerName, acc)
+					}
+				} else {
+					// second and later sampler need to consider presence from past average
+					fmt.Println(samplerName, buffer)
+					for i := 1; i < len(buffer); i++ {
+						//acc += float64(buffer[i].val) * float64(buffer[i].ts-buffer[i-1].ts) / float64(cTS-buffer[0].ts)
+						acc += float64(buffer[i].val) * float64(buffer[i].ts-buffer[i-1].ts) / float64(period)
+						fmt.Println(samplerName, acc)
+					}
+				}
+				// introduces an error in stages after the first. Its relevance depends on the ration between analysis periods
+				//acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(cTS-buffer[0].ts)
+				acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(period)
+				ct.val = int(math.RoundToEven(acc))
+				//if avgID == 1 {
+				fmt.Println(samplerName, ct.val)
+				//}
+				if ct.val < 0 && avgNegSkip {
+					ct.val = 0
+				}
+
+				// Extract all applicable series for each entry
+				entries := make(map[int][]dataEntry)
+				for i, v := range buffer {
+					for j, ent := range v.entries {
+						ent.ts = buffer[i].ts
+						entries[j] = append(entries[j], ent)
+					}
+				}
+
+				// find latest value per entry
+				ne := make(map[int]dataEntry)
+
+				for i, entv := range entries {
+					for j, ent := range entv {
+						if j == 0 {
+							ne[i] = ent
+						} else {
+							if ne[i].ts < ent.ts {
+								ne[i] = ent
+							}
+						}
+					}
+				}
+
+				ct.entries = ne
+				ct.ts = cTS
+				return ct
+				//passData(spacename, samplerName, ct, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
+				//buffer = nil
+				//} else {
+				//	statsb[0] += 1
+				//	support.DLog <- support.DevData{"spaces.samplers ct " + spacename + samplerName, support.Timestamp(),
+				//		"no samples branch count", statsb, true}
+				//	// the following code will force the state to persist, it should not be reachable except
+				//	// at the beginning of time
+				//	ct.ts = cTS
+				//	passData(spacename, samplerName, ct, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
+				//}
+			}
+
 			for {
-				// TODO
 				// wait till sync arrives, no samples will be received until then
 				// store time of sync arrival
 				// receive samples
-				// when it is time for average, consider only de ative hours
+				// when it is time for average, consider only de active hours
 				// when sync for period arrives consider if sample will happen between periods (calculate and send now) or later
 				// (adjust sample periodicity length). if periodicity sample smaller than period, simple reset and restart
 				// it is needed to use a 2D structure with a line of data for every period to be considered for the average
 
 				// get new data or timeout
-				avgsp := spaceEntries{ts: 0}
-				select {
-				case avgsp = <-prevStageChan:
-					if support.Debug == -1 {
-						fmt.Println(spacename, samplerName, "received", avgsp)
+				if startCycle := <-syncPrevious; startCycle {
+
+					//fmt.Println(spacename, samplerName, "new cycle started")
+					if syncNext != nil {
+						syncNext <- true
 					}
-				case <-time.After(timeoutInterval):
-				}
-				cTS := support.Timestamp()
-				// if the time interval has passed a new sample is calculated and passed over
-				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
-					if buffer != nil {
-						//fmt.Println(avgID, buffer)
-						acc := float64(0)
-						if avgID == 1 {
-							//fmt.Println("first")
-							// first sampler need to consider sample permanence
-							for i := 0; i < len(buffer)-1; i++ {
-								acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
-							}
-						} else {
-							//fmt.Println("the rest")
-							// second and later sampler need to consider presence from past average
-							for i := 1; i < len(buffer); i++ {
-								acc += float64(buffer[i].val) * float64(buffer[i].ts-buffer[i-1].ts) / float64(cTS-buffer[0].ts)
-							}
-						}
-						// the following statement is also used for second and later samplers to account for possible missing information
-						acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(cTS-buffer[0].ts)
-						counter.val = int(math.RoundToEven(acc))
-						if counter.val < 0 && avgNegSkip {
-							counter.val = 0
-						}
 
-						// Extract all applicable series for each entry
-						entries := make(map[int][]dataEntry)
-						for i, v := range buffer {
-							for j, ent := range v.entries {
-								ent.ts = buffer[i].ts
-								entries[j] = append(entries[j], ent)
+					if samplerInterval < 86400 {
+						// the counter needs to be reset as we are not doing a multi cycle
+						// thus we need sync reset at start
+						counter = spaceEntries{ts: support.Timestamp(), val: 0}
+					}
+
+					// refts is used yo track multicycles situations that can end during a cycle.
+					// it is bad practice, but it needs to be supported
+					refts := int64(0)
+					buffer = nil
+
+					for startCycle {
+
+						avgsp := spaceEntries{ts: 0}
+						select {
+						case avgsp = <-prevStageChan:
+							if support.Debug == -1 {
+								fmt.Println(spacename, samplerName, "received", avgsp)
 							}
-						}
+						case <-time.After(timeoutInterval):
+						case startCycle = <-syncPrevious:
+							// This will never happen with duration == 0
+							if !startCycle {
+								//fmt.Println(spacename, samplerName, "cycle stopped")
+								// check the various conditions of closure of the cycle
 
-						// find latest value per entry
-						ne := make(map[int]dataEntry)
-
-						for i, entv := range entries {
-							for j, ent := range entv {
-								if j == 0 {
-									ne[i] = ent
+								if duration > samplerIntervalMM {
+									// we need to just wait for next cycle
+									// do nothing
+									//buffer = nil
+									fmt.Println(spacename, samplerName, "end cycle do nothing")
 								} else {
-									if ne[i].ts < ent.ts {
-										ne[i] = ent
+									// we need to differentiate between spanning another cycle or ending in between
+									// also considering the time used for a new analysis in the current cycle
+									if samplerInterval < 86400 {
+										// it is less than a day, so we calculate and send average
+										// no data outside the cycle is used
+										counter = average(counter, buffer, support.Timestamp(), samplerIntervalMM-duration)
+										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
+											int(avgAnalysis[avgID-1].interval/2*1000))
+
+										//buffer = nil
+										fmt.Println(spacename, samplerName, "end cycle do avg and send")
+
+									} else {
+										// it is a multi-cycle calculation
+										// it can synchronise between cycles or be completely out of sync
+										cTS := support.Timestamp()
+										ct := average(counter, buffer, cTS, 0)
+										ct.ts = refts
+										multiCycle = append(multiCycle, dataEntry{val: ct.val})
+										if leftincycle > 86400000 {
+											// we have more cycles
+											// do nothing
+											leftincycle -= 86400000 - (duration - refts)
+											fmt.Println(spacename, samplerName, "end cycle, multi non finished", leftincycle)
+
+										} else {
+											// the multi-cycle ends between cycles
+											// we make average and send it out
+											acc := float64(0)
+											nc := int(samplerInterval / 86400)
+											for _, sm := range multiCycle {
+												if sm.ts == 0 {
+													acc += float64(sm.val / nc)
+												} else {
+													acc += float64(sm.val/nc) * float64(sm.ts/duration)
+												}
+											}
+											counter.ts = cTS
+											counter.val = int(math.RoundToEven(acc))
+											passData(spacename, samplerName, counter, nextStageChan, chantimeout,
+												int(avgAnalysis[avgID-1].interval/2*1000))
+											leftincycle = samplerIntervalMM
+											fmt.Println(spacename, samplerName, "end cycly multi finished")
+
+										}
 									}
 								}
+							} else {
+								fmt.Println(spacename, samplerName, "error in end of cycle sync")
+								log.Printf("spaces.sampler: received sync:true instead of false for sampler (%v,%v) "+
+									"for space %v\n", samplerName, samplerInterval, spacename)
 							}
 						}
+						// if the time interval has passed a new sample is calculated and passed over
+						if startCycle {
+							cTS := support.Timestamp()
+							if (cTS - counter.ts) >= samplerIntervalMM {
+								if samplerInterval < 86400 {
+									fmt.Println(spacename, samplerName, "avg calculation")
+									if buffer != nil {
+										//average(buffer, cTS, samplerIntervalMM)
+										counter = average(counter, buffer, cTS, 0)
+										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
+											int(avgAnalysis[avgID-1].interval/2*1000))
+										buffer[len(buffer)-1].ts = cTS
+										buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
+									} else {
+										//statsb[0] += 1
+										//support.DLog <- support.DevData{"spaces.samplers counter " + spacename + samplerName, support.Timestamp(),
+										//	"no samples branch count", statsb, true}
+										// the following code will force the state to persist, it should not be reachable except
+										// at the beginning of time
+										counter.ts = cTS
+										counter.val = 0
+										buffer = append(buffer, counter)
+										passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
+									}
+								} else {
+									// multi-cycle analysis
+									// we make the average and send it out
+									ct := average(counter, buffer, cTS, 0)
+									ct.ts = cTS
+									multiCycle = append(multiCycle, dataEntry{val: ct.val})
+									acc := float64(0)
+									nc := int(samplerInterval / 86400)
+									for _, sm := range multiCycle {
+										if sm.ts == 0 {
+											acc += float64(sm.val / nc)
+										} else {
+											acc += float64(sm.val/nc) * float64(sm.ts/duration)
+										}
+									}
+									counter.ts = cTS
+									counter.val = int(math.RoundToEven(acc))
+									passData(spacename, samplerName, counter, nextStageChan, chantimeout,
+										int(avgAnalysis[avgID-1].interval/2*1000))
+									// we prepare for the next sample ts
+									refts = duration - cTS
+									buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
+									leftincycle = samplerIntervalMM
+									fmt.Println(spacename, samplerName, "avg calculation multi, restarts from", buffer)
+								}
 
-						counter.entries = ne
-						counter.ts = cTS
-						passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
-						buffer = nil
-					} else {
-						statsb[0] += 1
-						support.DLog <- support.DevData{"spaces.samplers counter " + spacename + samplerName, support.Timestamp(),
-							"no samples branch count", statsb, true}
-						// the following code will force the state to persist, it should not be reachable except
-						// at the beginning of time
-						counter.ts = cTS
-						passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
+							}
+							//}
+							// when not timed out, the new data is added to he queue
+							// this data will also make the eventual average calculated irrelevant even if in the buffer (same cTS)
+							if avgsp.ts != 0 {
+								avgsp.ts = cTS
+								buffer = append(buffer, avgsp)
+							}
+						}
+						//} else if buffer == nil {
+						//	// the first sample of the series is the previous result
+						//	buffer = append(buffer, counter)
+						//}
 					}
-				}
-				// when not timed out, the new data is added to he queue
-				if avgsp.ts != 0 {
-					avgsp.ts = cTS
-					buffer = append(buffer, avgsp)
-				} else if buffer == nil {
-					// the first sample of the series is the previous result
-					buffer = append(buffer, counter)
+					if syncNext != nil {
+						syncNext <- false
+					}
 				}
 			}
 		}

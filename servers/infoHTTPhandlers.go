@@ -130,7 +130,7 @@ func asysHTTHandler() http.Handler {
 	//TODO replace with a dynamicaly created JS at start?
 
 	var asys []Jsonrt
-	if dt := os.Getenv("ANALISYSPERIOD"); dt != "" {
+	if dt := os.Getenv("ANALYSISPERIOD"); dt != "" {
 		for _, v := range strings.Split(strings.Trim(dt, ";"), ";") {
 			vc := strings.Split(strings.Trim(v, " "), " ")
 			//if len(vc) == 2 || len(vc) == 4 {

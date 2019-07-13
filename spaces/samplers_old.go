@@ -376,9 +376,18 @@ func sampler0(spacename string, prevStageChan, nextStageChan chan spaceEntries, 
 						//fmt.Println(avgID, buffer)
 						// a weighted average is calculate based on sample permanence
 						acc := float64(0)
-						for i := 0; i < len(buffer)-1; i++ {
-							acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
+						if avgID == 1 {
+							// first sampler need to consider sample permanence
+							for i := 0; i < len(buffer)-1; i++ {
+								acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(cTS-buffer[0].ts)
+							}
+						} else {
+							// second and later sampler need to consider presence from past average
+							for i := 1; i < len(buffer); i++ {
+								acc += float64(buffer[i].val) * float64(buffer[i].ts-buffer[i-1].ts) / float64(cTS-buffer[0].ts)
+							}
 						}
+						// the following statement is also used for second and later samplers to account for possible missing information
 						acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(cTS-buffer[0].ts)
 						counter.val = int(math.RoundToEven(acc))
 						if counter.val < 0 && avgNegSkip {
@@ -412,7 +421,9 @@ func sampler0(spacename string, prevStageChan, nextStageChan chan spaceEntries, 
 						counter.entries = ne
 						counter.ts = cTS
 						passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
-						buffer = nil
+						//buffer = nil
+						buffer[len(buffer)-1].ts = cTS
+						buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
 					} else {
 						statsb[0] += 1
 						support.DLog <- support.DevData{"spaces.samplers counter " + spacename + samplerName, support.Timestamp(),

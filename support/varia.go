@@ -74,6 +74,8 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 	if start == end {
 		return false, nil
 	}
+	// this ensures the first minute if captured
+	start = start.Add(-1 * time.Second)
 	now := time.Now()
 	nows := strconv.Itoa(now.Hour()) + ":"
 	mins := "00" + strconv.Itoa(now.Minute())

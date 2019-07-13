@@ -205,7 +205,7 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", SamplingWindow)
 
-	avgw := strings.Trim(os.Getenv("ANALISYSPERIOD"), ";")
+	avgw := strings.Trim(os.Getenv("ANALYSISPERIOD"), ";")
 	avgWindows := make(map[string]int)
 	//avgAnalysisSchedule = make(map[string]timeSchedule)
 	tw := make(map[int]string)
@@ -228,18 +228,18 @@ func setpUpCounter() {
 			//		//fmt.Println("end", en)
 			//		avgAnalysisSchedule[support.StringLimit(data[0], support.LabelLength)] = timeSchedule{st, en}
 			//	} else {
-			//		log.Println("spaces.setpUpCounter: illegal end ANALISYSPERIOD value", data)
+			//		log.Println("spaces.setpUpCounter: illegal end ANALYSISPERIOD value", data)
 			//	}
 			//} else {
-			//	log.Println("spaces.setpUpCounter: illegal start ANALISYSPERIOD value", data)
+			//	log.Println("spaces.setpUpCounter: illegal start ANALYSISPERIOD value", data)
 			//}
 			default:
 				// error
-				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALISYSPERIOD values", data)
+				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALYSISPERIOD values", data)
 			}
 
 			if v, e := strconv.Atoi(data[1]); e != nil {
-				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALISYSPERIOD values", data)
+				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALYSISPERIOD values", data)
 			} else {
 				if v > SamplingWindow {
 					name := support.StringLimit(data[0], support.LabelLength)
@@ -275,19 +275,21 @@ func setpUpCounter() {
 
 	//os.Exit(1)
 
-	if val := strings.Split(strings.Trim(os.Getenv("ANALISYSWINDOW"), " "), " "); len(val) == 2 {
+	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
 			//fmt.Println("start", st)
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
 				//fmt.Println("end", en)
 				avgAnalysisSchedule = timeSchedule{st, en, 0}
 				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
+				avgAnalysisSchedule.duration += 60000
+				//fmt.Println(avgAnalysisSchedule)
 				log.Printf("spaces.setpUpCounter: Analysis window is set from %v to %v\n", val[0], val[1])
 			} else {
-				log.Fatal("spaces.setpUpCounter: illegal end ANALISYSWINDOW value", val)
+				log.Fatal("spaces.setpUpCounter: illegal end ANALYSISWINDOW value", val)
 			}
 		} else {
-			log.Fatal("spaces.setpUpCounter: illegal start ANALISYSWINDOW value", val)
+			log.Fatal("spaces.setpUpCounter: illegal start ANALYSISWINDOW value", val)
 		}
 	}
 
