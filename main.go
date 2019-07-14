@@ -23,21 +23,44 @@ const version = "v. 0.6.0" // version
 func main() {
 
 	folder, _ := support.GetCurrentExecDir()
-	var env = flag.String("env", "", "configuration filename")
+	var cdelay = flag.Int("cdelay", 300, "recovery delay in secs")
 	var dbs = flag.String("dbs", "", "databases root folder")
-	var dmode = flag.Int("dmode", 0, "activate and select a development mode")
 	var dbug = flag.Int("debug", 0, "activate and select a debug mode")
-	var dvl = flag.Bool("dvl", false, "activate dvl")
-	var ri = flag.Int("ri", 360, "set ri")
-	var rs = flag.Int64("rs", 10000000, "set rs")
 	var dl = flag.Bool("dellogs", false, "delete all logs")
+	var dvl = flag.Bool("dvl", false, "activate dvl")
+	var dmode = flag.Int("dmode", 0, "activate and select a development mode")
+	var env = flag.String("env", "", "configuration filename")
+	var ks = flag.Bool("ks", false, "enable kill switch")
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset")
-	var cdelay = flag.Int("cdelay", 300, "recovery delay in secs")
-	var ks = flag.Bool("ks", false, "enable kill switch")
+	var ri = flag.Int("ri", 360, "set ri")
+	var rs = flag.Int64("rs", 10000000, "set rs")
+	var st = flag.String("start", "", "cstart time expressed as HH:MM")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
+
+	if *st != "" {
+		if ns, err := time.Parse(support.TimeLayout, *st); err != nil {
+			log.Println("Syntax error in specified start time", *st)
+			os.Exit(1)
+		} else {
+			now := time.Now()
+			nows := strconv.Itoa(now.Hour()) + ":"
+			mins := "00" + strconv.Itoa(now.Minute())
+			nows += mins[len(mins)-2:]
+			if ne, err := time.Parse(support.TimeLayout, nows); err != nil {
+				log.Println("Syntax error retrieving system current time")
+				os.Exit(1)
+			} else {
+				del := ns.Sub(ne)
+				if del > 0 {
+					log.Println("Waiting till", *st, "before starting server")
+					time.Sleep(del)
+				}
+			}
+		}
+	}
 
 	if *dmode != 0 {
 		log.Printf("!!! WARNING DEVELOPMENT MODE %v !!!\n", *dmode)

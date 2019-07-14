@@ -233,26 +233,27 @@ func handlerTCPRequest(conn net.Conn) {
 							if _, e := conn.Read(ans); e != nil {
 								// close connection in case of error
 								if support.Debug != 0 {
-									log.Printf("servers.handlerTCPRequest: failed reset communication of device %v//%v\n", ipc, mach)
+									log.Printf("servers.handlerTCPRequest: failed start reset communication of device %v//%v\n", ipc, mach)
 								}
 								c <- false
 							} else {
-								if ans[0] != cmdAPI["rstbg"].cmd {
-									if support.Debug != 0 {
-										log.Printf("servers.handlerTCPRequest: failed reset of device %v//%v with answer %v\n", ipc, mach, ans)
-									}
+								//fmt.Println(codings.Crc8([]byte{cmdAPI["rstbg"].cmd}), ans)
+								if ans[0] != cmdAPI["rstbg"].cmd || ans[1] != codings.Crc8([]byte{cmdAPI["rstbg"].cmd}) {
+									//if support.Debug != 0 {
+									log.Printf("servers.handlerTCPRequest: failed start reset of device %v//%v with answer %v\n", ipc, mach, ans)
+									//}
 									c <- false
 								} else {
-									if support.Debug != 0 {
-										log.Printf("servers.handlerTCPRequest: executed reset of device %v//%v\n", ipc, mach)
-									}
+									//if support.Debug != 0 {
+									log.Printf("servers.handlerTCPRequest: executed start reset of device %v//%v\n", ipc, mach)
+									//}
 									c <- true
 								}
 							}
 						} else {
 							// close connection in case of error
 							if support.Debug != 0 {
-								log.Printf("servers.handlerTCPRequest: connection error during reset of device %v//%v\n", ipc, mach)
+								log.Printf("servers.handlerTCPRequest: connection error during start reset of device %v//%v\n", ipc, mach)
 							}
 							c <- false
 						}

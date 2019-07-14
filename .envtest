@@ -135,7 +135,8 @@ SPACE_livlab = 0 1
 ## Define the time when the space is always empty, this data is used to reset
 ## the space counter
 ##CLOSURE_x = start as xx:xx; end as xx:xx
-CLOSURE_livlab = 3:00; 05:00
+#CLOSURE_livlab = 3:00; 05:00
+CLOSURE_livlab = 19:56; 20:00
 
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off
@@ -149,10 +150,10 @@ RESETSLOT = 23:30; 00:30; 30
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##ANALYSISPERIOD = name seconds; name seconds; ...
-ANALYSISPERIOD = 20sec 20; 30sec 30; 5mins 300; day 36000; day2 100000
-#ANALYSISPERIOD = 5mins 300; day 36000; day2 100000
+#ANALYSISPERIOD = 20sec 20; 30sec 30; 5mins 300; day 36000; day2 100000
+ANALYSISPERIOD = 5mins 300; day 36000; day2 100000
 
 ## ANALYSIS WINDOW
 ## Defines the period in which analysis will be executed (24h format hh:mm)
 ##ANALYSISWINDOW = start end
-ANALYSISWINDOW = 10:50 10:52
+ANALYSISWINDOW = 20:40 21:55

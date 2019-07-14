@@ -141,6 +141,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					var e error
 					// in closure time the value is forced to zero
 					if skip, e = support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+						// reset counter in case we are in a CLOSURE period
 						//fmt.Println(skip)
 						if skip {
 							counter.val = 0
@@ -167,7 +168,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					// in closure time the value is forced to zero
 					if e == nil {
 						if skip {
+							// reset all entries values in case we are in a CLOSURE period
 							counter.entries[sp.id] = dataEntry{val: 0}
+							fmt.Println("reset", counter)
 						} else {
 							if v, ok := counter.entries[sp.id]; ok {
 								v.val += sp.val
@@ -178,6 +181,17 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						}
 					}
 				case <-time.After(timeoutInterval):
+					if skip, e := support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+						// reset all values in case we are in a CLOSURE period
+						//fmt.Println(skip)
+						if skip {
+							counter.val = 0
+							for i := 0; i < len(counter.entries); i++ {
+								counter.entries[i] = dataEntry{val: 0}
+							}
+							fmt.Println("reset", counter)
+						}
+					}
 				}
 				//fmt.Println(counter)
 				if duration != 0 {
@@ -198,7 +212,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 							// does nothing, remove
 						} else {
 							//fmt.Println("was out, goes in")
-							// starts reconding and sends syncNext true
+							// starts recording and sends syncNext true
 							syncNext <- true
 							cyclein = true
 							firstDataOfCycle = true
@@ -467,12 +481,17 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						// the counter needs to be reset as we are not doing a multi cycle
 						// thus we need sync reset at start
 						counter = spaceEntries{ts: support.Timestamp(), val: 0}
+						buffer = []spaceEntries{counter}
+					} else {
+						buffer = []spaceEntries{spaceEntries{ts: support.Timestamp(), val: 0}}
 					}
 
 					// refts is used yo track multicycles situations that can end during a cycle.
 					// it is bad practice, but it needs to be supported
 					refts := int64(0)
-					buffer = nil
+					//buffer = []spaceEntries{counter} // redundant
+					//startTSCycle := counter.ts
+					fmt.Println(spacename, samplerName, "start cycle", counter, buffer, "at", support.Timestamp())
 
 					for startCycle {
 
@@ -492,7 +511,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 								if duration > samplerIntervalMM {
 									// we need to just wait for next cycle
 									// do nothing
-									//buffer = nil
+									buffer = []spaceEntries{} // redundant
 									fmt.Println(spacename, samplerName, "end cycle do nothing")
 								} else {
 									// we need to differentiate between spanning another cycle or ending in between
@@ -504,8 +523,8 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
 											int(avgAnalysis[avgID-1].interval/2*1000))
 
-										//buffer = nil
-										fmt.Println(spacename, samplerName, "end cycle do avg and send")
+										buffer = []spaceEntries{} // redundant
+										fmt.Println(spacename, samplerName, "end cycle do avg and send", counter)
 
 									} else {
 										// it is a multi-cycle calculation
@@ -518,7 +537,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											// we have more cycles
 											// do nothing
 											leftincycle -= 86400000 - (duration - refts)
-											fmt.Println(spacename, samplerName, "end cycle, multi non finished", leftincycle)
+											fmt.Println(spacename, samplerName, "end cycle, multi non finished", leftincycle, counter)
 
 										} else {
 											// the multi-cycle ends between cycles
@@ -537,9 +556,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											passData(spacename, samplerName, counter, nextStageChan, chantimeout,
 												int(avgAnalysis[avgID-1].interval/2*1000))
 											leftincycle = samplerIntervalMM
-											fmt.Println(spacename, samplerName, "end cycly multi finished")
-
+											fmt.Println(spacename, samplerName, "end cycly multi finished", counter)
 										}
+										buffer = []spaceEntries{} // redundant
 									}
 								}
 							} else {

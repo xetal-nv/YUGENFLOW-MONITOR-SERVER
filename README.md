@@ -47,30 +47,33 @@ GATESERVER is set to the application folder
 See .env file for configuration example
 
 **COMMAND LINE OPTIONS:**  
--env String : specifies the configuration file, uses .env if not specified  
 -dbs Path : specifies path where to store the database, './DBS' used if not specified  
--dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
+-cdelay int : specifies the maximum delay for recovery data usage  
 -debug Int : specifies a debug mode (0: off, -1: short flow noalgo, 1: verbose, 2: verbose no algo, 3: verbose no dbs, 4: verbose no algo no dbs)  
--dvl : activate dvl  
--ri Int : set log ri  
--rs Int64 : set log rs  
 -dellogs : delete all existing logs  
+-dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
+-dvl : activate dvl  
+-env String : specifies the configuration file, uses .env if not specified  
+-ks : enable killswitch API  
 -nomal : disable malicious attack control  
 -norst : disable start-up device reset  
--cdelay int : specifies the maximum delay for recovery data usage  
--ks : enable killswitch API  
+-ri Int : set log ri  
+-rs Int64 : set log rs  
+-st string : set start time, time specified as HH:MM
 
 **CHANGELOG TO v0.6.0:**  
 
- - Added ANALYSISWINDOW configuration option that synchronise analysis and define "workign hours" (need testing)  
- - Added delay server start (to be done)  
- - Added additional CRC check in start-up reset (to be done)  
+ - Added ANALYSISWINDOW configuration option that synchronise analysis and define "working hours" (need testing)  
+ - Added delay server start with command option 'st'  
+ - Added additional CRC check in start-up reset  
  - Added possibility to declare maximum value for each space (to be done)  
  - Reporting on current samples is now to be enables by command line with -repcon (to be done)  
  - Resolved minor bug that would skip the first minute in any time schedule provided in the configuration file  
  - Removed CMODE 3  
  - Improved averaging algorithm with edge cases of missing samples/averages near the analysis period end  
  - Added support for ANALYSISWINDOW in JS (to be done)  
+ - Some cosmetic changes to the code
+ - Fixed bug preventing CLOSURE_ from working always  
 
 **CHANGELOG TO v0.5.1:**  
 
