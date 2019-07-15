@@ -57,23 +57,25 @@ See .env file for configuration example
 -ks : enable killswitch API  
 -nomal : disable malicious attack control  
 -norst : disable start-up device reset  
+-repcon : enables current reporting in JS
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -st string : set start time, time specified as HH:MM
 
 **CHANGELOG TO v0.6.0:**  
 
- - Added ANALYSISWINDOW configuration option that synchronise analysis and define "working hours" (need testing)  
+ - Added ANALYSISWINDOW configuration option that synchronise analysis and define "working hours"  
  - Added delay server start with command option 'st'  
  - Added additional CRC check in start-up reset  
- - Added possibility to declare maximum value for each space (to be done)  
- - Reporting on current samples is now to be enables by command line with -repcon (to be done)  
+ - Added possibility to declare maximum value for each space  
+ - Reporting on current samples is now to be enables by command line with -repcon  
  - Resolved minor bug that would skip the first minute in any time schedule provided in the configuration file  
  - Removed CMODE 3  
  - Improved averaging algorithm with edge cases of missing samples/averages near the analysis period end  
- - Added support for ANALYSISWINDOW in JS (to be done)  
- - Some cosmetic changes to the code
- - Fixed bug preventing CLOSURE_ from working always  
+ - Added support for ANALYSISWINDOW in JS  
+ - Some cosmetic changes to the code and interface  
+ - Fixed bug preventing CLOSURE_ from working always
+ - Code cleaning (to be done)    
 
 **CHANGELOG TO v0.5.1:**  
 

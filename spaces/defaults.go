@@ -48,8 +48,8 @@ var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains a
 var ResetDBS map[string]map[string]map[string]chan bool             // reset channel for the DBS's
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all output channels to the data bank
 var SpaceDef map[string][]int                                       // maps a space name to its entries
+var SpaceMaxOccupancy map[string]int                                // maps a space name to its maximum occupancy, if defined
 var spaceTimes map[string]timeSchedule                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode
-//var cstats string                                                   // data compression flag for stats
-var MutexInitData = &sync.RWMutex{}                    // mutex for InitData
-var InitData map[string]map[string]map[string][]string // holds values from a previous run loaded from file .recovery
+var MutexInitData = &sync.RWMutex{}                                 // mutex for InitData
+var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recovery

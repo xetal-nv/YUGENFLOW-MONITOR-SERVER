@@ -93,3 +93,4 @@ const mindelayrefusedconnection = 30 // mininum delay for refused connection
 var errormngt = [3]int{1, 5, 15}     // [min penalty, max panelty, max number of consecucitve errors]
 var tcpTokens chan bool              // token for accepting a TCP erquest
 var Kswitch bool                     // kill switch flag
+var RepCon bool                      // enables reporting on current

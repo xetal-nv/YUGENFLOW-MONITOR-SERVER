@@ -119,12 +119,12 @@ ENTRY_0 = 0 1 2 3 4 5 6 7 8 9
 ENTRY_1 = 10 11 12 13 14 15 16 17 18 19
 
 ## SPACES DECLARATIONS
-## Define the region where gates are to be combined.
+## Define the region where gates are to be combined in terms of name and maximum occuopancy (optional)
 ## IMPORTANT: Entries CANNOT be shared among spaces
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##SPACES_NAMES = name_space name_space ...
-SPACES_NAMES = livlab
+##SPACES_NAMES = name_space:max_occupancy ...
+SPACES_NAMES = livlab:20
 
 ## SPACE COMPOSITION
 ## Lists the entry points per space
@@ -149,11 +149,11 @@ RESETSLOT = 23:30; 00:30; 30
 ## Defines a given storage interval with optional 'start' and 'end' daily hours
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##ANALYSISPERIOD = name seconds; name seconds; ...
+##ANALYSISPERIOD = name seconds; name seconds; ...-
 #ANALYSISPERIOD = 20sec 20; 30sec 30; 5mins 300; day 36000; day2 100000
 ANALYSISPERIOD = 5mins 300; day 36000; day2 100000
 
 ## ANALYSIS WINDOW
 ## Defines the period in which analysis will be executed (24h format hh:mm)
 ##ANALYSISWINDOW = start end
-ANALYSISWINDOW = 20:40 21:55
+#ANALYSISWINDOW = 20:40 21:55

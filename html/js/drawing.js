@@ -3,6 +3,10 @@ let measurement = "sample";
 let allmeasurements = [{"name": "current", "value": "0"}];
 let selel = null;
 
+if (openingTime !== "") {
+    alert("!!! WARNING !!!\nReal-time data is only available " + openingTime + ".\nReporting is always available.\n")
+}
+
 function timeConverter(UNIX_timestamp) {
     let a = new Date(UNIX_timestamp);
     let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -60,7 +64,7 @@ function drawSpace(rawspaces) {
                                         for (let i = 0; i < allmeasurements.length; i++) {
                                             document.getElementById(allmeasurements[i].name).innerText = "";
                                             if (allmeasurements[i].name !== "current") {
-                                                document.getElementById(allmeasurements[i].name + "_").style.color="lightgray";
+                                                document.getElementById(allmeasurements[i].name + "_").style.color = "lightgray";
                                             }
                                         }
                                     };
@@ -81,7 +85,7 @@ function drawSpace(rawspaces) {
                         for (let i = 0; i < allmeasurements.length; i++) {
                             document.getElementById(allmeasurements[i].name).innerText = "";
                             if (allmeasurements[i].name !== "current") {
-                                document.getElementById(allmeasurements[i].name + "_").style.color="black";
+                                document.getElementById(allmeasurements[i].name + "_").style.color = "black";
                             }
                         }
                     };
@@ -114,7 +118,8 @@ function drawSpace(rawspaces) {
     };
 
     function updatedata() {
-        if (spacename !== "") {
+        // if ((spacename !== "")) {
+        if ((spacename !== "") && (openingTime === "")) {
             let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
             // console.log(measurement)
             for (let i = 0; i < allmeasurements.length; i++) {
@@ -192,8 +197,10 @@ $(document).ready(function () {
                 let rp = document.getElementById("reptype");
                 // console.log(jsObj)
                 let ch = document.createElement("option");
-                ch.textContent = "current";
-                rp.appendChild(ch);
+                if (reportCurrent) {
+                    ch.textContent = "current";
+                    rp.appendChild(ch);
+                }
                 for (let i = 0; i < jsObj.length; i++) {
                     let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
                     allmeasurements.push(el);

@@ -17,6 +17,8 @@
     <script type="text/javascript" src="js/sw.js"></script>
     <script type="text/javascript" src="js/dat.js"></script>
     <script type="text/javascript" src="js/pikaday.js"></script>
+    <script type="text/javascript" src="js/op.js"></script>
+    <script type="text/javascript" src="js/rep.js"></script>
 
 </head>
 <body>
@@ -30,7 +32,7 @@
         </li>
         -->
         <li style="width: 300px;text-align: right; padding-right: 20px; font-weight: bold;font-family: arial, sans-serif;">
-            Latest timestamp:
+            Time of latest data:
         </li>
         <li style="width: 10em;text-align: left;font-family: arial, sans-serif;"><span id="lastts">n/a</span></li>
     </ul>
@@ -44,6 +46,7 @@
             <!-- Canvas end -->
         </div>
         <div class="col2" style="align-content: center;">
+            <h3 style=" color: black; padding-bottom: 0.3em ">Real-time data</h3>
             <!-- Data end -->
             <form id="spacesel" action="">
                 <select id="spacename">
@@ -64,11 +67,13 @@
             <!-- Data end -->
             <!-- Report start -->
             <hr>
+            <h3 style=" color: black; padding-bottom: 0.3em ">Report generator</h3>
             <form id="spacesel">
                 <select id="reptype">
                     <option>Choose a dataset</option>
                 </select>
             </form>
+            <p></p>
             <div>
                 <label for="start">Start:</label>
                 <br>

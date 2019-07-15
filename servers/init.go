@@ -66,6 +66,7 @@ func setJSenvironment() {
 	if err = f.Close(); err != nil {
 		log.Fatal("Fatal error closing ip.js: ", err)
 	}
+
 	f, err = os.Create("./html/js/sw.js")
 	if err != nil {
 		log.Fatal("Fatal error creating sw.js: ", err)
@@ -78,24 +79,23 @@ func setJSenvironment() {
 	if err = f.Close(); err != nil {
 		log.Fatal("Fatal error closing sw.js: ", err)
 	}
-	//var rmode string
-	//if rmode = os.Getenv("RMODE"); rmode == "" {
-	//	rmode = "0"
-	//}
-	//
-	//f, err = os.Create("./html/js/rmode.js")
-	//if err != nil {
-	//	log.Fatal("Fatal error creating rmode.js: ", err)
-	//}
-	//js = "var rmode = " + rmode + ";"
-	//if _, err := f.WriteString(js); err != nil {
-	//	_ = f.Close()
-	//	log.Fatal("Fatal error writing to rmode.js: ", err)
-	//}
-	//if err = f.Close(); err != nil {
-	//	log.Fatal("Fatal error closing rmode.js: ", err)
-	//}
-	//log.Printf("Reporting mode set to %v\n", rmode)
+
+	f, err = os.Create("./html/js/rep.js")
+	if err != nil {
+		log.Fatal("Fatal error creating rep.js: ", err)
+	}
+	if RepCon {
+		js = "var reportCurrent = true;\n"
+	} else {
+		js = "var reportCurrent = false;\n"
+	}
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to rep.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing rep.js: ", err)
+	}
 }
 
 // set-up of HTTP servers and handlers

@@ -36,6 +36,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 	start := avgAnalysisSchedule.start
 	end := avgAnalysisSchedule.end
 	duration := avgAnalysisSchedule.duration
+
 	//schedule := !(start == time.Time{})
 	//fmt.Println(duration, avgID, avgAnalysis[avgID].interval)
 
@@ -123,6 +124,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 
 			var cyclein bool
 			firstDataOfCycle := true
+			var maxOccupancy int
+			if v, ok := SpaceMaxOccupancy[spacename]; ok {
+				maxOccupancy = v
+			} else {
+				maxOccupancy = 0
+			}
+			//fmt.Println(maxOccupancy)
 			// when there is no valid ANALYSISWINDOW, se let the samplers always run
 			if duration == 0 {
 				//fmt.Println("no duration is defined")
@@ -164,6 +172,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					}
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
+					}
+					if maxOccupancy != 0 {
+						if counter.val > maxOccupancy {
+							sp.val = 0
+							counter.val = maxOccupancy
+							//fmt.Println("got above limit", sp.val, counter)
+						}
 					}
 					// in closure time the value is forced to zero
 					if e == nil {
@@ -390,6 +405,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 				//fmt.Println(period, cTS-buffer[0].ts)
 				//if buffer != nil {
 				//fmt.Println(avgID, buffer)
+				if len(buffer) == 0 {
+					return ct
+				}
 				period := float64(cTS - buffer[0].ts + modifier)
 				acc := float64(0)
 				if avgID == 1 {
@@ -543,12 +561,12 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											// the multi-cycle ends between cycles
 											// we make average and send it out
 											acc := float64(0)
-											nc := int(samplerInterval / 86400)
+											nc := math.RoundToEven(float64(samplerInterval) / 86400)
 											for _, sm := range multiCycle {
 												if sm.ts == 0 {
-													acc += float64(sm.val / nc)
+													acc += float64(sm.val) / nc
 												} else {
-													acc += float64(sm.val/nc) * float64(sm.ts/duration)
+													acc += (float64(sm.val) / nc) * (float64(sm.ts) / float64(duration))
 												}
 											}
 											counter.ts = cTS

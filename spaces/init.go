@@ -59,9 +59,11 @@ func SetUp() {
 		for i := range dtypes {
 			InitData[i] = make(map[string]map[string][]string)
 			for _, j := range spaces {
-				InitData[i][support.StringLimit(j, support.LabelLength)] = make(map[string][]string)
+				name := strings.Trim(strings.Split(j, ":")[0], " ")
+				InitData[i][support.StringLimit(name, support.LabelLength)] = make(map[string][]string)
 			}
 		}
+		//fmt.Println(InitData)
 		file, err := os.Open(".recovery")
 		if err != nil {
 			log.Printf("spaces.setUpDataDBSBank: InitData file absent or corrupted\n")
@@ -102,15 +104,30 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	spaceTimes = make(map[string]timeSchedule)
 
 	if data := os.Getenv("SPACES_NAMES"); data != "" {
+		SpaceMaxOccupancy = make(map[string]int)
 		spaces := strings.Split(data, " ")
 		bufsize = 50
 		if v, e := strconv.Atoi(os.Getenv("INTBUFFSIZE")); e == nil {
 			bufsize = v
 		}
 
+		// extracts the paces names and their maximum occupancy is defined
 		for i := 0; i < len(spaces); i++ {
-			spaces[i] = strings.Trim(spaces[i], " ")
+			singleSpaceData := strings.Split(strings.Trim(spaces[i], " "), ":")
+			name := strings.Trim(singleSpaceData[0], " ")
+			spaces[i] = strings.Trim(name, " ")
+			if len(singleSpaceData) == 2 {
+				if v, e := strconv.Atoi(singleSpaceData[1]); e == nil {
+					SpaceMaxOccupancy[support.StringLimit(spaces[i], support.LabelLength)] = v
+				} else {
+					log.Fatal("spaces.setUpSpaces: fatal error entry maximum occupancy", singleSpaceData)
+				}
+			}
 		}
+
+		//fmt.Println(spaces)
+		//fmt.Println(SpaceMaxOccupancy)
+		//os.Exit(1)
 
 		// initialise the processing threads for each space
 		for _, name := range spaces {
@@ -275,11 +292,14 @@ func setpUpCounter() {
 
 	//os.Exit(1)
 
+	jsTxt := "var openingTime = \"\";\n"
+
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
 			//fmt.Println("start", st)
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
 				//fmt.Println("end", en)
+				jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
 				avgAnalysisSchedule = timeSchedule{st, en, 0}
 				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.duration += 60000
@@ -293,6 +313,17 @@ func setpUpCounter() {
 		}
 	}
 
+	f, err := os.Create("./html/js/op.js")
+	if err != nil {
+		log.Fatal("Fatal error creating op.js: ", err)
+	}
+	if _, err := f.WriteString(jsTxt); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to op.js: ", err)
+	}
+	if err = f.Close(); err != nil {
+		log.Fatal("Fatal error closing op.js: ", err)
+	}
 	//os.Exit(1)
 }
 

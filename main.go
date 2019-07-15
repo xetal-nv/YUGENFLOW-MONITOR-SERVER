@@ -33,6 +33,7 @@ func main() {
 	var ks = flag.Bool("ks", false, "enable kill switch")
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset")
+	var repcon = flag.Bool("repcon", false, "enable reporting on current data ")
 	var ri = flag.Int("ri", 360, "set ri")
 	var rs = flag.Int64("rs", 10000000, "set rs")
 	var st = flag.String("start", "", "cstart time expressed as HH:MM")
@@ -85,6 +86,9 @@ func main() {
 	if *cdelay != 300 {
 		log.Printf("!!! WARNING RECOVERY DELAY CHANGED !!!\n")
 	}
+	if *repcon {
+		log.Printf("!!! WARNING CURRENT REPORTING ENABLED !!!\n")
+	}
 
 	servers.Dvl = *dvl
 	support.Debug = *dbug
@@ -95,6 +99,7 @@ func main() {
 	support.RstON = !*norst
 	spaces.Crashmaxdelay = int64(*cdelay) * 1000
 	servers.Kswitch = *ks
+	servers.RepCon = *repcon
 
 	folder = os.Getenv("GATESERVER")
 
