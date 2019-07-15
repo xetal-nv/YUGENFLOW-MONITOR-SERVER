@@ -75,7 +75,8 @@ See .env file for configuration example
  - Added support for ANALYSISWINDOW in JS  
  - Some cosmetic changes to the code and interface  
  - Fixed bug preventing CLOSURE_ from working always
- - Code cleaning (to be done)    
+ - Code cleaning (to be done)
+ - Added option MULTICYCLEDAYSONLY to force multicycles to be only multiple of days  
 
 **CHANGELOG TO v0.5.1:**  
 

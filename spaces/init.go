@@ -50,6 +50,13 @@ func SetUp() {
 	}
 	dtypes[support.StringLimit("entry", support.LabelLength)] = entry
 
+	// set multicycleonlydays
+	if data := os.Getenv("MULTICYCLEDAYSONLY"); data != "" {
+		multicycleonlydays = true
+		log.Printf("spaces.setUpDataDBSBank: MULTICYCLEDAYSONLY enabled\n")
+	} else {
+		multicycleonlydays = false
+	}
 	// load initial values is present (note maximum line size 64k characters)
 	MutexInitData.Lock()
 	if data := os.Getenv("SPACES_NAMES"); data != "" {

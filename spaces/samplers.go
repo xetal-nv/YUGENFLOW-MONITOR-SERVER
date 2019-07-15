@@ -36,6 +36,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 	start := avgAnalysisSchedule.start
 	end := avgAnalysisSchedule.end
 	duration := avgAnalysisSchedule.duration
+	mcod := multicycleonlydays
 
 	//schedule := !(start == time.Time{})
 	//fmt.Println(duration, avgID, avgAnalysis[avgID].interval)
@@ -561,7 +562,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											// the multi-cycle ends between cycles
 											// we make average and send it out
 											acc := float64(0)
-											nc := math.RoundToEven(float64(samplerInterval) / 86400)
+											//nc := math.RoundToEven(float64(samplerInterval) / 86400)
+											var nc float64
+											if mcod {
+												nc = math.RoundToEven(float64(samplerInterval) / 86400)
+											} else {
+												nc = float64(samplerInterval) / 86400
+											}
 											for _, sm := range multiCycle {
 												if sm.ts == 0 {
 													acc += float64(sm.val) / nc
@@ -574,7 +581,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											passData(spacename, samplerName, counter, nextStageChan, chantimeout,
 												int(avgAnalysis[avgID-1].interval/2*1000))
 											leftincycle = samplerIntervalMM
-											fmt.Println(spacename, samplerName, "end cycly multi finished", counter)
+											fmt.Println(spacename, samplerName, "end cycly multi finished", mcod, counter)
 										}
 										buffer = []spaceEntries{} // redundant
 									}

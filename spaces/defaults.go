@@ -30,6 +30,7 @@ const chantimeout = 100
 
 // variables defined via options/configuration file
 var Crashmaxdelay int64
+var multicycleonlydays bool
 
 // Internal variables - some might be turned into local variables
 var dtypes map[string]dtfuncs                                      // holds the datatypes and the associated prep functions for space.passData
