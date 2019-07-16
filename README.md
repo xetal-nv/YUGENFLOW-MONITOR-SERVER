@@ -4,9 +4,9 @@ Copyright Xetal @ 2019
 Author: F. Pessolano  
 
 **Requirements:**  
-GO 1.12 or similar  
+GO 1.12 or compatible  
 64-bit architecture  
-Badger version 1.5.5 or similar  
+Badger version 1.5.3  
 
 **List API:**  
 HTTPSPORTS[1]/ks -> if enabled, kills the server  
