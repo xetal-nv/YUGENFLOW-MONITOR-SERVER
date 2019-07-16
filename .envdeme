@@ -135,15 +135,17 @@ RESETSLOT = 23:30; 00:30; 30
 ## If not null, forces analysis longer than one day to be rounded to an integer number of days
 MULTICYCLEDAYSONLY = 1
 
-## ANALYSIS DEFINITION
-## Defines a given storage interval
-## NOTE: names longer than LENLABEL characters will be truncated in the database
-## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##ANALYSISPERIOD = name seconds; name seconds; ...
-#ANALYSISPERIOD = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
-ANALYSISPERIOD = halfhour 1800; hour 3600; day 86000; week 604000; 4weeks 2419000
-
 ## ANALYSIS WINDOW
 ## Defines the period in which analysis will be executed (24h format hh:mm)
 ##ANALYSISWINDOW = start end
 ANALYSISWINDOW = 07:00 20:00
+
+## ANALYSIS DEFINITION
+## Defines a given storage interval in seconds.
+## Intervals shorter than a day will be used fully for calculating the averages with data received in ANALYSISWINDOW
+## For intervals longer than a day, the duration of ANALYSISWINDOW will be considered per day average only
+## NOTE: names longer than LENLABEL characters will be truncated in the database
+## NOTE: names shorter than LENLABEL characters will be extended with '_'
+##ANALYSISPERIOD = name seconds; name seconds; ...
+#ANALYSISPERIOD = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
+ANALYSISPERIOD = halfhour 1800; hour 3600; day 47000; week 604000; 4weeks 2419000
