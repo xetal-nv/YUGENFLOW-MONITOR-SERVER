@@ -431,7 +431,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 				// introduces an error in stages after the first. Its relevance depends on the ration between analysis periods
 				//acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(cTS-buffer[0].ts)
 				acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(period)
-				ct.val = int(math.RoundToEven(acc))
+				ct.val = int(math.Round(acc))
 				//if avgID == 1 {
 				fmt.Println(samplerName, ct.val)
 				//}
@@ -565,7 +565,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											//nc := math.RoundToEven(float64(samplerInterval) / 86400)
 											var nc float64
 											if mcod {
-												nc = math.RoundToEven(float64(samplerInterval) / 86400)
+												nc = math.Round(float64(samplerInterval) / 86400)
 											} else {
 												nc = float64(samplerInterval) / 86400
 											}
@@ -577,7 +577,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 												}
 											}
 											counter.ts = cTS
-											counter.val = int(math.RoundToEven(acc))
+											counter.val = int(math.Round(acc))
 											passData(spacename, samplerName, counter, nextStageChan, chantimeout,
 												int(avgAnalysis[avgID-1].interval/2*1000))
 											leftincycle = samplerIntervalMM
@@ -632,7 +632,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										}
 									}
 									counter.ts = cTS
-									counter.val = int(math.RoundToEven(acc))
+									counter.val = int(math.Round(acc))
 									passData(spacename, samplerName, counter, nextStageChan, chantimeout,
 										int(avgAnalysis[avgID-1].interval/2*1000))
 									// we prepare for the next sample ts

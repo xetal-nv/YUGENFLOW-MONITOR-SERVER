@@ -37,7 +37,7 @@ $(document).ready(function () {
         _startDate = startPicker.getDate(),
         _endDate = endPicker.getDate();
 
-    maxtries = 10
+    maxtries = 10;
 
 
     if (_startDate) {
@@ -87,7 +87,7 @@ $(document).ready(function () {
                 //     rawdataEntries.sort(sortentryEl0);
                 // }
 
-                // Find the minimum intervak in changes, normally this is the measurement step
+                // Find the minimum interval in changes, normally this is the measurement step
                 // TODO to be replaced with with dynamically constructed js from conf files
                 let tslist = [];
                 let tsstep = -1;
@@ -191,7 +191,11 @@ $(document).ready(function () {
                 //     break;
                 // default:
                 for (let i = 0; i < tslist.length; i++) {
-                    data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
+                    let d = new Date(tslist[i]);
+                    var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
+                        d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+                    data += datestring + ", " + Math.trunc(tslist[i] / 1000)
+                        // data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
                         + ", " + finalData[tslist[i]];
                     // let offset = finalData[tslist[i]];
                     // for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
@@ -275,8 +279,9 @@ $(document).ready(function () {
                 timeout: 2000,
                 url: ip + "/info",
                 success: function (rawdata) {
-                    let info = JSON.parse(rawdata),
-                        currentplan = [];
+                    let info = JSON.parse(rawdata);
+                    // noinspection JSMismatchedCollectionQueryUpdate
+                    let currentplan = []; // only used as a check of integrity
                     for (let i = 0; i < info.length; i++) {
                         if (info[i]["spacename"] === space) {
                             for (let j = 0; j < info[i]["entries"].length; j++) {
@@ -285,7 +290,7 @@ $(document).ready(function () {
                         }
                     }
                     if (currentplan !== []) {
-                        currentplan.sort(sortentryEl0);
+                        // currentplan.sort(sortentryEl0);
                         // loadsamples(header, path, currentplan, 0)
                         loadsamples(header, path, 0)
                     } else {
