@@ -2,7 +2,6 @@ package servers
 
 import (
 	"encoding/json"
-	"fmt"
 	"gateserver/spaces"
 	"gateserver/support"
 	"log"
@@ -58,7 +57,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		}
 		rt := Register{true, "", dataMap[ref]()}
 		if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
-			fmt.Println("HTTP got a nil channel")
+			log.Println("HTTP got a nil channel")
 		}
 		select {
 		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
@@ -75,7 +74,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 			}
 		case <-time.After(ito * time.Millisecond):
 			if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
-				fmt.Println("HTTP got a nil channel")
+				log.Println("HTTP got a nil channel")
 			}
 			rt.Valid = false
 			rt.Error = "TO"

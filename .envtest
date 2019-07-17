@@ -152,7 +152,7 @@ MULTICYCLEDAYSONLY = 1
 ## ANALYSIS WINDOW
 ## Defines the period in which analysis will be executed (24h format hh:mm)
 ##ANALYSISWINDOW = start end
-#ANALYSISWINDOW = 20:40 21:55
+#ANALYSISWINDOW = 08:40 18:30
 
 ## ANALYSIS DEFINITION
 ## Defines a given storage interval in seconds.
@@ -162,4 +162,4 @@ MULTICYCLEDAYSONLY = 1
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##ANALYSISPERIOD = name seconds; name seconds; ...-
 #ANALYSISPERIOD = 20sec 20; 30sec 30; 5mins 300; day 36000; day2 100000
-ANALYSISPERIOD = 5mins 300; day 36000; day2 160000
+ANALYSISPERIOD = 5mins 300; hour 3600; day 47000; 2day 160000

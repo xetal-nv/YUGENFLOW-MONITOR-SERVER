@@ -118,7 +118,6 @@ function drawSpace(rawspaces) {
     };
 
     function updatedata() {
-        // if ((spacename !== "")) {
         if ((spacename !== "") && (openingTime === "")) {
             let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
             // console.log(measurement)
@@ -142,7 +141,6 @@ function drawSpace(rawspaces) {
                                 switch (ms[0]) {
                                     case "sample":
                                         dt = spaces["counter"]["val"];
-                                        // console.log("sample");
                                         break;
                                     case "entry":
                                         // console.log(data);
@@ -157,7 +155,6 @@ function drawSpace(rawspaces) {
                                                 }
                                             }
                                         }
-                                        // console.log("entry");
                                         break;
                                     default:
                                         break;
@@ -217,7 +214,6 @@ $(document).ready(function () {
                 $("#analysis").html(html);
             },
             error: function (jqXhr, textStatus, error) {
-                // console.log("here");
                 alert("Failed to connect to ASYS API");
                 console.log(jqXhr);
                 // console.log(textStatus);

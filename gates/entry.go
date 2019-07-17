@@ -72,9 +72,7 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 		flag[i] = false
 	}
 
-	// NOTE it might have an issue with noise or a device faster than 1ms
-
-	// bget new samples and clean scratchpad from not allowed pos and negs
+	// get new samples and clean scratchpad from not allowed pos and negs
 	for i, sen := range sensorListEntry {
 		smem := scratchPad.senData[i]
 		if smem.ts != sen.ts || smem.val != sen.val { //new sample detected
@@ -137,7 +135,7 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			scratchPad.unusedSampleSumOut[gate[1]]++
 		}
 
-		// TODO test cleaning in case or large asymmetries due to defected sensor
+		// cleaning in case or large asymmetries due to defected sensor
 		if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
 			rt += 1
 			scratchPad.unusedSampleSumIn[gate[0]] -= 1

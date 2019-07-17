@@ -105,24 +105,14 @@ func handlerTCPRequest(conn net.Conn) {
 		}
 		gates.MutexDeclaredDevices.RUnlock()
 
-		//// check mac replication on pending devices for malicious attack
-		//mutexPendingDevices.RLock()
-		//if _, pr := pendingDevice[string(mac)]; pr {
-		//	malf(true)
-		//}
-		//mutexPendingDevices.RUnlock()
-
 		// START redo with different check
 
-		//fmt.Println("start")
 		mutexConnMAC.RLock()
 		if oldcn, ts := sensorConnMAC[string(mac)]; ts {
 			mutexConnMAC.RUnlock()
-			//fmt.Println("entered")
 			// the current device is returning faster than its old channel is closed
 			// or we are in presence of a malicious attack
 			// checking if the old connection is alive will be used to decide the situation
-			//time.Sleep(time.Duration(timeout) * time.Second)
 			ch := make(chan bool)
 			go func() {
 				if _, e := oldcn.Read(make([]byte, 1)); e != nil {
@@ -138,15 +128,12 @@ func handlerTCPRequest(conn net.Conn) {
 					sensorConnMAC[string(mac)] = conn
 					mutexConnMAC.Unlock()
 					log.Printf("servers.handlerTCPRequest: re-connected to old device %v//%v\n", ipc, mach)
-					//fmt.Println("returning")
 				} else {
-					//fmt.Println("malicious")
 					malf(true)
 				}
 			case <-time.After(time.Duration(timeout+1) * time.Second):
 				// We wait further before assuming this is a malicious attack
 				// this is a rare situation that should never happen
-				//fmt.Println("timeout return")
 				ch0 := make(chan bool)
 				go func() {
 					if _, e := oldcn.Read(make([]byte, 1)); e != nil {
@@ -159,9 +146,7 @@ func handlerTCPRequest(conn net.Conn) {
 				case ans := <-ch0:
 					if ans {
 						log.Printf("servers.handlerTCPRequest: re-connected (timeout) to old device %v//%v\n", ipc, mach)
-						//fmt.Println("returning")
 					} else {
-						//fmt.Println("malicious")
 						malf(true)
 					}
 				case <-time.After(time.Duration(maltimeout-timeout) * time.Second):
@@ -175,38 +160,12 @@ func handlerTCPRequest(conn net.Conn) {
 		}
 		if loop {
 			// in case the device is legit the connection table is updated
-			//fmt.Println("passed")
 			mutexConnMAC.Lock()
 			sensorConnMAC[string(mac)] = conn
 			mutexConnMAC.Unlock()
-			//fmt.Println("finished")
 		}
 
-		//mutexSensorMacs.Lock()
-		//if id, reged := sensorIdMAC[string(mac)]; reged {
-		//	if active, ok := sensorChanUsedID[id]; ok {
-		//		mutexSensorMacs.Unlock()
-		//		if active {
-		//			// We are in presence of a possible malicious attack
-		//			// We wait maltimeout reading and throwing away periodically at timeout interval
-		//			malf(true)
-		//		} else {
-		//			log.Printf("servers.handlerTCPRequest: connected to old device %v//%v\n", ipc, mach)
-		//		}
-		//	} else {
-		//		// this should never happen
-		//		// the following code resolves it in vase it happens for some unforseen crash
-		//		sensorChanUsedID[id] = false
-		//		mutexSensorMacs.Unlock()
-		//	}
-		//} else {
-		//	mutexSensorMacs.Unlock()
-		//	log.Printf("servers.handlerTCPRequest: connected to new device %v//%v\n", ipc, mach)
-		//}
-		// END redo
-
 		if loop {
-			//fmt.Println(mach, "1")
 
 			// Update the list of pending devices
 			mutexPendingDevices.Lock()
@@ -215,7 +174,6 @@ func handlerTCPRequest(conn net.Conn) {
 
 			// reset the sensor if it its first connection
 			// malicious devices will also be receiving this command
-			// TODO need to still  check CRC on answer
 			if support.RstON {
 				mutexSensorMacs.RLock()
 				_, ok1 := sensorIdMAC[string(mac)]
@@ -237,16 +195,15 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 								c <- false
 							} else {
-								//fmt.Println(codings.Crc8([]byte{cmdAPI["rstbg"].cmd}), ans)
 								if ans[0] != cmdAPI["rstbg"].cmd || ans[1] != codings.Crc8([]byte{cmdAPI["rstbg"].cmd}) {
-									//if support.Debug != 0 {
-									log.Printf("servers.handlerTCPRequest: failed start reset of device %v//%v with answer %v\n", ipc, mach, ans)
-									//}
+									if support.Debug != 0 {
+										log.Printf("servers.handlerTCPRequest: failed start reset of device %v//%v with answer %v\n", ipc, mach, ans)
+									}
 									c <- false
 								} else {
-									//if support.Debug != 0 {
-									log.Printf("servers.handlerTCPRequest: executed start reset of device %v//%v\n", ipc, mach)
-									//}
+									if support.Debug != 0 {
+										log.Printf("servers.handlerTCPRequest: executed start reset of device %v//%v\n", ipc, mach)
+									}
 									c <- true
 								}
 							}
@@ -268,14 +225,11 @@ func handlerTCPRequest(conn net.Conn) {
 					}
 				}
 
-				//fmt.Println(mach, "2")
 			}
 
 			if support.Debug != 0 {
 				log.Printf("servers.handlerTCPRequest: status of device %v//%v is %v\n", ipc, mach, loop)
 			}
-
-			//fmt.Println(mach, "3")
 
 			// updates SensorCmdMac if loop is still true checking if it already exists
 			mutexSensorMacs.RLock()
@@ -309,10 +263,8 @@ func handlerTCPRequest(conn net.Conn) {
 			} else {
 				mutexSensorMacs.RUnlock()
 			}
-			//fmt.Println(mach, "4")
 		}
 		for loop {
-			//fmt.Println(mach, cks)
 			cmd := make([]byte, 1)
 			if _, e := conn.Read(cmd); e != nil {
 
@@ -425,7 +377,6 @@ func handlerTCPRequest(conn net.Conn) {
 								if _, ok := unknownMacChan[string(mac)]; !ok {
 									log.Printf("servers.handlerTCPRequest: new device with undefined id %v//%v\n", ipc, mach)
 									unknownMacChan[string(mac)] = make(chan net.Conn)
-									//unkownDevice[string(mac)] = false
 								} else {
 									log.Printf("servers.handlerTCPRequest: old device with undefined id %v//%v\n", ipc, mach)
 								}
@@ -457,7 +408,6 @@ func handlerTCPRequest(conn net.Conn) {
 				default:
 					if !idKnown {
 						log.Printf("servers.handlerTCPRequest: rejected data %v from a device %v//%v with no valid ID yet\n", cmd[0], ipc, mach)
-						//loop = false
 					} else {
 						// verify it is a command answer, if not closes the TCP channel
 						if v, ok := cmdAnswerLen[cmd[0]]; ok {

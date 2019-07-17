@@ -14,9 +14,6 @@ import (
 	"time"
 )
 
-// Uses Badger version < 2.0
-// TODO pass to badger 2.0 or pass 1.5.5 to our repo
-
 // set-ups database
 func TimedIntDBSSetUp(folder string, fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence

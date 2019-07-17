@@ -54,22 +54,18 @@ $(document).ready(function () {
 
     function generateReport() {
 
-        function sortentryEl0(a, b) {
-
-            if (a[0] < b[0]) return -1;
-            if (a[0] > b[0]) return 1;
-            return 0;
-        }
+        // function sortentryEl0(a, b) {
+        //
+        //     if (a[0] < b[0]) return -1;
+        //     if (a[0] > b[0]) return 1;
+        //     return 0;
+        // }
 
         // function exportreport(header, entrieslist, sampledata, entrydata) {
         function exportreport(header, sampledata) {
             let data = header,
                 rawdataSample = [],
-                // rawdataEntries = [],
                 finalData = {};
-            // for (let i = 0; i < entrieslist.length; i++) {
-            //     data += ", total entry:" + entrieslist[i][0];
-            // }
             data += "\n";
             if (sampledata !== null) {
                 for (let i = 0; i < sampledata.length; i++) {
@@ -77,15 +73,6 @@ $(document).ready(function () {
                         rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
                     }
                 }
-                // rawdataSample.sort(sortentryEl0);
-                // if (entrydata !== null) {
-                //     for (let i = 0; i < entrydata.length; i++) {
-                //         if ((entrydata[i]["ts"] !== "") && (entrydata[i]["val"] !== "")) {
-                //             rawdataEntries.push([entrydata[i]["ts"], entrydata[i]["val"]])
-                //         }
-                //     }
-                //     rawdataEntries.sort(sortentryEl0);
-                // }
 
                 // Find the minimum interval in changes, normally this is the measurement step
                 // TODO to be replaced with with dynamically constructed js from conf files
@@ -93,7 +80,6 @@ $(document).ready(function () {
                 let tsstep = -1;
                 while (rawdataSample.length > 0) {
                     let sam = rawdataSample.shift();
-                    // entries = entrieslist.slice();
                     tslist.push(sam[0]);
                     if (tsstep < 0) {
                         tsstep += 1
@@ -106,109 +92,17 @@ $(document).ready(function () {
                         }
                     }
 
-                    // if (rawdataEntries.length > 0) {
-                    //     while (Math.abs(sam[0] - rawdataEntries[0][0]) < samplingWindow) {
-                    //         let ents = rawdataEntries.shift();
-                    //         for (let i = 0; i < ents[1].length; i++) {
-                    //             let ent = ents[1][i];
-                    //             for (let j = 0; j < entries.length; j++) {
-                    //                 if (entries[j][0] === ent[0]) {
-                    //                     entries[j][1] = ent[1];
-                    //                     break;
-                    //                 }
-                    //             }
-                    //         }
-                    //         if (rawdataEntries.length === 0) {
-                    //             break;
-                    //         }
-                    //     }
-                    // }
                     finalData[sam[0]] = sam[1];
-                    // for (let i = 0; i < entries.length; i++) finalData[sam[0]][1].push([entries[i][0], entries[i][1]]);
                 }
 
-                // switch (rmode) {
-                // case 1:
-                //     for (let i = 0; i < tslist.length; i++) {
-                //         data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
-                //             + ", " + finalData[tslist[i]][0];
-                //         let offset = finalData[tslist[i]][0];
-                //         for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                //             offset -= finalData[tslist[i]][1][j][1]
-                //         }
-                //         for (j = 0; j < finalData[tslist[i]][1].length; j++) {
-                //             if (offset === 0) {
-                //                 data += ", " + finalData[tslist[i]][1][j][1];
-                //             } else {
-                //                 data += ", [" + finalData[tslist[i]][1][j][1] + "]";
-                //             }
-                //         }
-                //         data += "\n"
-                //     }
-                //     break;
-                // case 2:
-                // case 3:
-                //     let adjust = [];
-                //     adjust = Array(finalData[tslist[0]][1].length).fill(0);
-                //     for (let i = 0; i < tslist.length; i++) {
-                //         data += new Date(tslist[i]) + ", " + Math.trunc(tslist[i] / 1000)
-                //             + ", " + finalData[tslist[i]][0];
-                //         let offset = finalData[tslist[i]][0];
-                //         for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                //             offset -= finalData[tslist[i]][1][j][1]
-                //         }
-                //         let bracks = 0;
-                //         if (offset !== 0) {
-                //             let acc = 0;
-                //             for (let i = 0; i < adjust.length; i++) {
-                //                 acc += adjust[i]
-                //             }
-                //             if (offset !== acc) {
-                //                 for (let i = 0; i < Math.abs(offset - acc); i++) {
-                //                     let ind = i % adjust.length;
-                //                     if ((offset - acc) > 0) {
-                //                         adjust[ind] += 1
-                //                     } else {
-                //                         adjust[ind] -= 1
-                //                     }
-                //                 }
-                //                 bracks = 1;
-                //             }
-                //         } else {
-                //             adjust = Array(finalData[tslist[0]][1].length).fill(0);
-                //         }
-                //         if ((rmode !== 3) || (bracks !== 0)) {
-                //             for (j = 0; j < finalData[tslist[i]][1].length; j++) {
-                //                 data += ", " + (finalData[tslist[i]][1][j][1] + adjust[j]);
-                //             }
-                //         }
-                //         if ((bracks !== 0) && (rmode === 2)) {
-                //             data += ", *"
-                //         }
-                //         data += "\n"
-                //     }
-                //
-                //     break;
-                // default:
                 for (let i = 0; i < tslist.length; i++) {
                     let d = new Date(tslist[i]);
                     var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
                         d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
                     data += datestring + ", " + Math.trunc(tslist[i] / 1000)
                         + ", " + finalData[tslist[i]];
-                    // let offset = finalData[tslist[i]];
-                    // for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
-                    //     offset -= finalData[tslist[i]][1][j][1]
-                    // }
-                    // for (j = 0; j < finalData[tslist[i]][1].length; j++) {
-                    //     if (offset === 0) {
-                    //         data += ", " + finalData[tslist[i]][1][j][1];
-                    //     }
-                    // }
                     data += "\n"
                 }
-                // break;
-                // }
 
                 var blob = new Blob([data], {type: 'text/plain'}),
                     anchor = document.createElement('a');
@@ -233,7 +127,6 @@ $(document).ready(function () {
                 success: function (rawdata) {
                     let sampledata = JSON.parse(rawdata);
                     // console.log(sampledata)
-                    // loadEntries(header, api, entrieslist, sampledata, 0);
                     exportreport(header, sampledata);
                 },
                 error: function (error) {
@@ -249,28 +142,6 @@ $(document).ready(function () {
 
             });
         }
-
-        // function loadEntries(header, api, entrieslist, sampledata, tries) {
-        //     $.ajax({
-        //         type: 'GET',
-        //         timeout: 10000,
-        //         url: ip + "/series?type=entry?space=" + api,
-        //         success: function (rawdata) {
-        //             let entrydata = JSON.parse(rawdata);
-        //             exportreport(header, entrieslist, sampledata, entrydata);
-        //         },
-        //         error: function (error) {
-        //             if (tries === maxtries) {
-        //                 alert("Server connection lost.\n Please try again later.");
-        //                 console.log("Error enrtries:" + error);
-        //                 document.getElementById("loader").style.visibility = "hidden";
-        //             } else {
-        //                 loadEntries(header, api, entrieslist, sampledata, tries + 1)
-        //             }
-        //         }
-        //
-        //     });
-        // }
 
         function start_report(header, path, tries) {
             $.ajax({
@@ -334,9 +205,6 @@ $(document).ready(function () {
                 + "\"#dataset: " + asys + " \"\n"
                 + "\"#start: " + startDate + " \"\n"
                 + "\"#end: " + copyendDate + " \"\n\n";
-            // if (rmode === 2) {
-            //     header += "* entry values are estimated \n\n"
-            // }
             header += "Date/Time, Epoch Time (s), average presence";
             let path = space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
 

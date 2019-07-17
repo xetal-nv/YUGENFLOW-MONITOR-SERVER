@@ -70,7 +70,7 @@ func SetUp() {
 				InitData[i][support.StringLimit(name, support.LabelLength)] = make(map[string][]string)
 			}
 		}
-		//fmt.Println(InitData)
+
 		file, err := os.Open(".recovery")
 		if err != nil {
 			log.Printf("spaces.setUpDataDBSBank: InitData file absent or corrupted\n")
@@ -81,17 +81,13 @@ func SetUp() {
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
 				data := strings.Split(scanner.Text(), ",")
-				//fmt.Println(data)
 				if len(data) == 5 {
 					// any other length implies a wrong data and will be ignored
 					InitData[data[0]][data[1]][data[2]] = []string{data[3], data[4]}
 				}
 			}
-			//fmt.Println(InitData)
 			log.Printf("spaces.setUpDataDBSBank: InitData file imported\n")
 		}
-		//fmt.Println(InitData)
-		//os.Exit(1)
 	} else {
 		log.Printf("spaces.setUpDataDBSBank: error reading space definition, recovery skipped")
 	}
@@ -131,10 +127,6 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 				}
 			}
 		}
-
-		//fmt.Println(spaces)
-		//fmt.Println(SpaceMaxOccupancy)
-		//os.Exit(1)
 
 		// initialise the processing threads for each space
 		for _, name := range spaces {
@@ -182,8 +174,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	} else {
 		log.Fatal("spaces.setUpSpaces: fatal error no space has been defined")
 	}
-	//time.Sleep(5 * time.Second)
-	//os.Exit(1)
+
 	return spaceChannels
 }
 
@@ -195,15 +186,6 @@ func setpUpCounter() {
 	}
 	log.Printf("Compression mode set to %v\n", cmode)
 
-	//cstats = os.Getenv("CSTATS")
-	//if cstats == "" {
-	//	cstats = "0"
-	//}
-	//if cstats == "1" {
-	//	log.Printf("Compression mode enabled for statistics\n")
-	//}
-
-	//sw := os.Getenv("SAMWINDOW")
 	if os.Getenv("INSTANTNEG") == "1" {
 		instNegSkip = false
 	} else {
@@ -224,14 +206,12 @@ func setpUpCounter() {
 			log.Fatal("spaces.setpUpCounter: fatal error in definition of SAMWINDOW")
 		} else {
 			SamplingWindow = v
-			//}
 		}
 	}
 	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", SamplingWindow)
 
 	avgw := strings.Trim(os.Getenv("ANALYSISPERIOD"), ";")
 	avgWindows := make(map[string]int)
-	//avgAnalysisSchedule = make(map[string]timeSchedule)
 	tw := make(map[int]string)
 	curr := support.StringLimit("current", support.LabelLength)
 	avgWindows[curr] = SamplingWindow
@@ -244,19 +224,6 @@ func setpUpCounter() {
 			switch len(data) {
 			case 2:
 				// analysis defined with period only, nothing extra to be done
-			//case 4:
-			// analysis defined with start and end
-			//if st, e := time.Parse(support.TimeLayout, data[2]); e == nil {
-			//	//fmt.Println("start", st)
-			//	if en, e := time.Parse(support.TimeLayout, data[3]); e == nil {
-			//		//fmt.Println("end", en)
-			//		avgAnalysisSchedule[support.StringLimit(data[0], support.LabelLength)] = timeSchedule{st, en}
-			//	} else {
-			//		log.Println("spaces.setpUpCounter: illegal end ANALYSISPERIOD value", data)
-			//	}
-			//} else {
-			//	log.Println("spaces.setpUpCounter: illegal start ANALYSISPERIOD value", data)
-			//}
 			default:
 				// error
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALYSISPERIOD values", data)
@@ -286,31 +253,16 @@ func setpUpCounter() {
 		avgAnalysis[i] = avgInterval{tw[v], v}
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
-	//if len(avgAnalysisSchedule) > 0 {
-	//	tmp := ""
-	//	for i := range avgAnalysisSchedule {
-	//		tmp += i
-	//	}
-	//	log.Printf("spaces.setpUpCounter: setting averaging time schedule for \n  [%v]\n", tmp)
-	//}
-
-	//fmt.Println(avgAnalysis)
-	//fmt.Println(avgAnalysisSchedule)
-
-	//os.Exit(1)
 
 	jsTxt := "var openingTime = \"\";\n"
 
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
-			//fmt.Println("start", st)
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
-				//fmt.Println("end", en)
 				jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
 				avgAnalysisSchedule = timeSchedule{st, en, 0}
 				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.duration += 60000
-				//fmt.Println(avgAnalysisSchedule)
 				log.Printf("spaces.setpUpCounter: Analysis window is set from %v to %v\n", val[0], val[1])
 			} else {
 				log.Fatal("spaces.setpUpCounter: illegal end ANALYSISWINDOW value", val)
@@ -331,17 +283,12 @@ func setpUpCounter() {
 	if err = f.Close(); err != nil {
 		log.Fatal("Fatal error closing op.js: ", err)
 	}
-	//os.Exit(1)
 }
 
 // set-up DBS thread and data flow structure based on the provided configuration
 func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
 	now := support.Timestamp()
-
-	//fmt.Println(InitData)
-
-	//os.Exit(1)
 
 	latestChannelLock.Lock()
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
@@ -377,15 +324,12 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 						// found valid InitData data
 						if (now - ts) < Crashmaxdelay {
 							// data is fresh enough
-							//fmt.Println("accepted", now-ts, InitData)
 							switch dl {
 							case "sample__":
 								if va, e := strconv.Atoi(InitData[dl][name][v.name][1]); e == nil {
-									//fmt.Println("e ", dataEntry{tag, ts, va})
 									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], dataEntry{tag, ts, va})
 								} else {
 									log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-									//fmt.Println(dl + name + v.name, "starts with no init")
 									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 								}
 							case "entry___":
@@ -412,38 +356,30 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 										length  int
 										entries [][]int
 									}{id: tag, ts: 0, length: len(va), entries: va}
-									//fmt.Println("e ", tag, ts, va)
 									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
 								} else {
 									log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-									//fmt.Println(dl + name + v.name, "starts with no init")
 									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 								}
 							default:
 								log.Printf("spaces.setUpDataDBSBank: invalid InitData data type for %v\n", tag)
-								//fmt.Println(dl + name + v.name, "starts with no init")
 								go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 							}
 						} else {
 							// data is not fresh enough
-							//fmt.Println(now, ts, Crashmaxdelay)
 							log.Printf("spaces.setUpDataDBSBank: too old InitData ts for %v\n", tag)
-							//fmt.Println(dl + name + v.name, "starts with no init since InitData is old")
 							go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 						}
 					} else {
 						log.Printf("spaces.setUpDataDBSBank: invalid InitData ts for %v\n", tag)
-						//fmt.Println(dl + name + v.name, "starts with no init")
 						go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 					}
 				} else {
 					// register started with no InitData data (not available)
-					//fmt.Println(dl + name + v.name, "starts with no init")
 					go storage.SafeReg(dl+name+v.name, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 				}
 
 				// start of distributed data passing structure
-				//go storage.SafeReg(latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 				if support.Debug < 3 {
 					ResetDBS[dl][name][v.name] = make(chan bool)
 					latestDBSIn[dl][name][v.name] = make(chan interface{})
