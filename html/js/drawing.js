@@ -3,7 +3,13 @@ let measurement = "sample";
 let allmeasurements = [{"name": "current", "value": "0"}];
 let selel = null;
 
-if (openingTime !== "") {
+let regex = new RegExp(':', 'g');
+let timeNow = new Date(),
+    timeNowHS = timeNow.getHours() + ":" + timeNow.getMinutes(),
+    incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
+        && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
+
+if (!incycle) {
     alert("!!! WARNING !!!\nReal-time data is only available " + openingTime + ".\nReporting is always available.\n")
 }
 
@@ -118,7 +124,12 @@ function drawSpace(rawspaces) {
     };
 
     function updatedata() {
-        if ((spacename !== "") && (openingTime === "")) {
+        let regex = new RegExp(':', 'g');
+        let timeNow = new Date(),
+            timeNowHS = timeNow.getHours() + ":" + timeNow.getMinutes(),
+            incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
+                && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
+        if ((spacename !== "") && (incycle)) {
             let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
             // console.log(measurement)
             for (let i = 0; i < allmeasurements.length; i++) {

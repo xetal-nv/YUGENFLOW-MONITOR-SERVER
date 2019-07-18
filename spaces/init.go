@@ -255,11 +255,15 @@ func setpUpCounter() {
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 
 	jsTxt := "var openingTime = \"\";\n"
+	jsST := "var startTime = \"\";\n"
+	jsEN := "var endTime = \"\";\n"
 
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
 				jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
+				jsST = "var opStartTime = \"" + val[0] + "\";\n"
+				jsEN = "var opEndTime = \"" + val[1] + "\";\n"
 				avgAnalysisSchedule = timeSchedule{st, en, 0}
 				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.duration += 60000
@@ -277,6 +281,14 @@ func setpUpCounter() {
 		log.Fatal("Fatal error creating op.js: ", err)
 	}
 	if _, err := f.WriteString(jsTxt); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to op.js: ", err)
+	}
+	if _, err := f.WriteString(jsST); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to op.js: ", err)
+	}
+	if _, err := f.WriteString(jsEN); err != nil {
 		_ = f.Close()
 		log.Fatal("Fatal error writing to op.js: ", err)
 	}

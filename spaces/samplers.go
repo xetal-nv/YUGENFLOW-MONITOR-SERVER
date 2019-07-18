@@ -201,18 +201,23 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						log.Printf("spaces.sampler: error on InClosureTime for sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spacename)
 					} else {
 						if !incyc && !cyclein {
+							// was and stays out of cycle
 							// does nothing, left for readability
 						} else if !incyc && cyclein {
+							// was in cycles and exits cycle
 							// stops recording data and sendNext false
 							syncNext <- false
 							cyclein = false
 						} else if incyc && cyclein {
+							// was and stays in cycle
 							// does nothing, left for readability
 						} else {
+							// was out and exnters cycke
 							// starts recording and sends syncNext true
 							syncNext <- true
 							cyclein = true
 							firstDataOfCycle = true
+
 						}
 					}
 				}
