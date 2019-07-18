@@ -5,7 +5,7 @@ let selel = null;
 
 let regex = new RegExp(':', 'g');
 let timeNow = new Date(),
-    timeNowHS = timeNow.getHours() + ":" + timeNow.getMinutes(),
+    timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
     incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
         && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
 
@@ -126,7 +126,7 @@ function drawSpace(rawspaces) {
     function updatedata() {
         let regex = new RegExp(':', 'g');
         let timeNow = new Date(),
-            timeNowHS = timeNow.getHours() + ":" + timeNow.getMinutes(),
+            timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
             incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
                 && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
         if ((spacename !== "") && (incycle)) {
