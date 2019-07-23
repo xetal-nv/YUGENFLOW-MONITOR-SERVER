@@ -27,6 +27,7 @@ func main() {
 	var dbs = flag.String("dbs", "", "databases root folder")
 	var dbug = flag.Int("debug", 0, "activate and select a debug mode")
 	var dl = flag.Bool("dellogs", false, "delete all logs")
+	var de = flag.Bool("dumpentry", false, "dump all entry data to log files")
 	var dvl = flag.Bool("dvl", false, "activate dvl")
 	var dmode = flag.Int("dmode", 0, "activate and select a development mode")
 	var env = flag.String("env", "", "configuration filename")
@@ -71,6 +72,9 @@ func main() {
 		log.Printf("!!! WARNING DEBUG MODE %v !!!\n", *dbug)
 
 	}
+	if *de {
+		log.Printf("!!! WARNING DUMP ENTRY IS ENABLED !!!\n")
+	}
 	if *dl {
 		log.Printf("!!! WARNING DELETING ALL LOGS !!!\n")
 	}
@@ -100,6 +104,7 @@ func main() {
 	spaces.Crashmaxdelay = int64(*cdelay) * 1000
 	servers.Kswitch = *ks
 	servers.RepCon = *repcon
+	gates.LogToFileAll = *de
 
 	folder = os.Getenv("GATESERVER")
 

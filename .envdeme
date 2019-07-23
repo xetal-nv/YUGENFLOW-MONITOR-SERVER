@@ -159,7 +159,6 @@ ANALYSISPERIOD = 20mins 1800; hour 3600; day 47000
 ## Defines internals of time where only presence detection is relevant, no counting
 ## Time is providedin the HH:MM format
 ##PRESENCE_spacename = detectorname start end; ...
-#PRESENCE_livlab = morning 09:00 10:00; afternoon 13:00 17:00; earlyafternoon 12:01 12:03
 PRESENCE_d2 = night 20:00 06:00
 PRESENCE_d3 = night 20:00 06:00
 
@@ -193,7 +192,7 @@ OVERVIEWREPORT = 08:00 18:00
 ## 'period' provides the average count int he given period
 ## The declaration order will be reflected in the reported order as well
 ##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
-OVERVIEWDATA = point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 20:00 06:00 test;
+OVERVIEWDATA = point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 20:00 06:00 night;
 
 ## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
 ## REFERENCESAMPLES = name_measurement

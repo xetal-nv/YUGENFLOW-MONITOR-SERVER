@@ -44,3 +44,4 @@ var gateList map[int][]int                 // list of Gates by device Id, order 
 var EntryList map[int]EntryDef             // maps devices to entries
 var MutexDeclaredDevices = &sync.RWMutex{} // this mutex is used to avoid concurrent DeclaredDevices
 var DeclaredDevices map[string]int         // maps the declared mac with the id of a used device
+var LogToFileAll bool                      // flag of all entry activity has to be logged to a file

@@ -54,6 +54,7 @@ See .env file for configuration example
 -debug Int : specifies a debug mode (0: off, -1: short flow noalgo, 1: verbose, 2: verbose no algo, 3: verbose no dbs, 4: verbose no algo no dbs)  
 -dellogs : delete all existing logs  
 -dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
+-dumpentry : forces all entry values/activity to be written in a log file for debug (experimental)  
 -dvl : activate dvl  
 -env String : specifies the configuration file, uses .env if not specified  
 -ks : enable killswitch API  
@@ -78,8 +79,12 @@ See .env file for configuration example
  - Removed possible race at DBS creation  
  - Solved issues with european copies of Excel  
  - In case overview is the only report available, the selector is now hidden  
+ - Removed CRC control on start-up since it was bugged, anyhow redundant  
+ - Added dumpentry command line option  
 
 **CHANGELOG TO v0.6.0:**  
+
+BUG WARNING: This version only works with option '-norst'  
 
  - Added ANALYSISWINDOW configuration option that synchronise analysis and define "working hours"  
  - Added delay server start with command option 'st'  

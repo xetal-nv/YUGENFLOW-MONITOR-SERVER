@@ -5,6 +5,8 @@ import (
 	"gateserver/spaces"
 	"gateserver/support"
 	"log"
+	"os"
+	"strconv"
 )
 
 // set-up for the processing of sensor/gate data into flow values for the associated entry id
@@ -34,12 +36,20 @@ func entryProcessingSetUp(id int, in chan sensorData, entrylist EntryDef) {
 // implements the core logic od the sensor/gate data processing
 func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sensorData,
 	gateListEntry map[int][]int, scratchPad scratchData) {
+	var f *os.File
+	var err error
+	if LogToFileAll {
+		f, err = os.Create("log/entry_" + strconv.Itoa(id) + ".txt")
+	}
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
 				support.DLog <- support.DevData{"Gates.entryProcessingCore",
 					support.Timestamp(), "", []int{1}, true}
 			}()
+			if err == nil && LogToFileAll {
+				_ = f.Close()
+			}
 			log.Printf("Gates.entryProcessingCore: recovering for entry %v due to %v\n ", id, e)
 			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
 		}
@@ -51,6 +61,38 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		if support.Debug != 2 && support.Debug != 4 && support.Debug != -1 {
 			sensorListEntry[data.id] = data
 			sensorListEntry, gateListEntry, scratchPad, nv = trackPeople(id, sensorListEntry, gateListEntry, scratchPad)
+		}
+		if LogToFileAll {
+			if err == nil {
+				//type scratchData struct {
+				//	senData            map[int]sensorData
+				//	unusedSampleSumIn  map[int]int
+				//	unusedSampleSumOut map[int]int
+				//}
+				//type sensorData struct {
+				//	id  int
+				//	ts  int64
+				//	val int
+				//}
+				_, _ = f.WriteString("New sample\n")
+				_, _ = f.WriteString("sensor data: ")
+				for key, val := range scratchPad.senData {
+					_, _ = f.WriteString("( " + strconv.Itoa(key) + "," + strconv.Itoa(int(val.ts)) + "," + strconv.Itoa(val.val) + " ) ")
+				}
+				_, _ = f.WriteString("\n")
+
+				_, _ = f.WriteString("unusedSampleSumIn: ")
+				for key, val := range scratchPad.unusedSampleSumIn {
+					_, _ = f.WriteString("( " + strconv.Itoa(key) + "," + strconv.Itoa(val) + " ) ")
+				}
+				_, _ = f.WriteString("\n")
+
+				_, _ = f.WriteString("unusedSampleSumOut: ")
+				for key, val := range scratchPad.unusedSampleSumOut {
+					_, _ = f.WriteString("( " + strconv.Itoa(key) + "," + strconv.Itoa(val) + " ) ")
+				}
+				_, _ = f.WriteString("\n\n")
+			}
 		}
 		if e := spaces.SendData(id, nv); e != nil {
 			log.Println(e)

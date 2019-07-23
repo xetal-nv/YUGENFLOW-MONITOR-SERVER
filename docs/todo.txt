@@ -1,0 +1,7 @@
+Overall code cleaning
+Give JS analysis specs for proper reporting and simplify code
+Add API (removable at compile time) for databased analysis
+Entry split in and out
+og binary (command line) dump data per day
+add graphs as reporting instead of number
+CRC on start-up reset

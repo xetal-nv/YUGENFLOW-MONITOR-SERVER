@@ -195,7 +195,8 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 								c <- false
 							} else {
-								if ans[0] != cmdAPI["rstbg"].cmd || ans[1] != codings.Crc8([]byte{cmdAPI["rstbg"].cmd}) {
+								//if ans[0] != cmdAPI["rstbg"].cmd || ans[1] != codings.Crc8([]byte{cmdAPI["rstbg"].cmd}) {
+								if ans[0] != cmdAPI["rstbg"].cmd {
 									if support.Debug != 0 {
 										log.Printf("servers.handlerTCPRequest: failed start reset of device %v//%v with answer %v\n", ipc, mach, ans)
 									}
