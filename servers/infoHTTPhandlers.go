@@ -127,7 +127,7 @@ func asysHTTHandler() http.Handler {
 		cors = true
 	}
 
-	//TODO replace with a dynamicaly created JS at start
+	//TODO consider replacing with a dynamically created JS at start
 	var asys []Jsonrt
 	if dt := os.Getenv("ANALYSISPERIOD"); dt != "" {
 		for _, v := range strings.Split(strings.Trim(dt, ";"), ";") {

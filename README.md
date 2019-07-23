@@ -31,6 +31,7 @@ HTTPSPORTS[1]/cmd?list -> lists all available commands
   
 NOTE: values in val are specified as x,y,n,..   
 NOTE: all commands need to be fully tested via mac and id  
+NOTE: series API supports types: sample, entry, presence  
 
 **List HTTP pages:**  
 HTTPSPORTS[0]/ -> webapp
@@ -62,6 +63,21 @@ See .env file for configuration example
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -st string : set start time, time specified as HH:MM
+
+**CHANGELOG TO v0.7.0:**  
+
+ - Added configuration RTWINDOW defining a reporting window for real time data. It overrides ANALYSISWINDOW for reporting only  
+ - Added overview report mode with configurable template  
+ - Option REPSHOW to enable specific reports  
+ - Option RTSHOW to enable specific real time values   
+ - Display report on browser (maybe)  
+ - Consolidated all variables for JS, which are generated dynamically only once, in one file def.js  
+ - Removed redundant check on report generation  
+ - Added a new API for presence detection including configuration options, use "presence" as type in the series API  
+ - Removed declaration of DBS reset channels, they are just placeholders.  
+ - Removed possible race at DBS creation  
+ - Solved issues with european copies of Excel  
+ - In case overview is the only report available, the selector is now hidden  
 
 **CHANGELOG TO v0.6.0:**  
 

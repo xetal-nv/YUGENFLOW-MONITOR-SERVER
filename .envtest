@@ -1,4 +1,5 @@
 ##### SERVER SETUP #####
+
 ## ADDRESSES
 ## DO NOT CHANGE
 ## HTTPSPORTS = app port, api port
@@ -69,6 +70,7 @@ CMODE = 2
 CORS = 1
 
 ##### GATE AND GROUPS #####
+
 ## GATE ORIENTATION
 ##REVERSE = id_gate ...
 
@@ -131,19 +133,13 @@ SPACES_NAMES = livlab:20
 ##SPACE_x = id_entry  id_entry ...
 SPACE_livlab = 0 1
 
-## CLOSURE DECLARATION
-## Define the time when the space is always empty, this data is used to reset
-## the space counter
-##CLOSURE_x = start as xx:xx; end as xx:xx
-#CLOSURE_livlab = 3:00; 05:00
-CLOSURE_livlab = 19:56; 20:00
-
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off
 ## RESET = start as xx:xx; end as xx:xx; sampling interval in minutes
 RESETSLOT = 23:30; 00:30; 30
 
-##### ANALYSIS #####
+##### AVERAGE ANALYSIS #####
+## DESCRIPTION: provides average number of people and flow, also in real time
 
 ## MULTICYCLE DAYS ONLY
 ## If not null, forces analysis longer than one day to be rounded to an integer number of days
@@ -152,14 +148,77 @@ MULTICYCLEDAYSONLY = 1
 ## ANALYSIS WINDOW
 ## Defines the period in which analysis will be executed (24h format hh:mm)
 ##ANALYSISWINDOW = start end
-ANALYSISWINDOW = 08:40 18:30
+#ANALYSISWINDOW = 08:40 18:30
+
+## CLOSURE DECLARATION
+## Define the time when the space is always empty, this data is used to reset
+## the space counter
+##CLOSURE_x = start as xx:xx; end as xx:xx
+#CLOSURE_livlab = 3:00; 05:00
+#CLOSURE_livlab = 19:56; 20:00
 
 ## ANALYSIS DEFINITION
 ## Defines a given storage interval in seconds.
 ## Intervals shorter than a day will be used fully for calculating the averages with data received in ANALYSISWINDOW
 ## For intervals longer than a day, the duration of ANALYSISWINDOW will be considered per day average only
+## NOTE: analysis 'current' is reserved
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##ANALYSISPERIOD = name seconds; name seconds; ...-
-#ANALYSISPERIOD = 20sec 20; 30sec 30; 5mins 300; day 36000; day2 100000
-ANALYSISPERIOD = 5mins 300; hour 3600; day 47000; 2day 160000
+#ANALYSISPERIOD = 20secs 20; 30secs 30; 5mins 300; day 86000; 2days 100000
+ANALYSISPERIOD = 20secs 20; 20mins 1200;hour 3600; day 86000
+
+##### PRESENCE DETECTION #####
+## DESCRIPTION: This detection provides the number of possible detection in a given interval
+## It does not provide real-time data.
+
+## PRESENCE INTERVAL DEFINITION
+## Defines internals of time where only presence detection is relevant, no counting
+## Time is providedin the HH:MM format
+##PRESENCE_spacename = detectorname start end; ...
+PRESENCE_livlab = morning 09:00 10:00; afternoon 13:00 17:00; night 20:00 23:00
+#PRESENCE_livlab = test 07:23 07:30
+#PRESENCE_livlab = day 09:00 09:09
+
+##### REPORTING #####
+
+## RT VALIDITY WINDOW
+## Defines the period in which real-time reporting will be provided (24h format hh:mm)
+## Note this setting overrides ANALYSISWINDOW for the JS.
+## It is best practice that RTWINDOW is included in ANALYSISWINDOWs
+##RTWINDOW = start end
+#RTWINDOW = 08:00 17:00
+
+## RT ANALYSIS ##
+## Specifies which analysis will be shown in the real-time panel
+##RTSHOW = name name ...
+RTSHOW = 20secs 20mins hour day
+
+## REPORTED ANALYSIS ##
+## Specifies which analysis will be shown in the real-time panel
+##REPSHOW = name name ...
+#REPSHOW = 20secs hour day
+
+## ENABLING AND DEFINITION IF THE OVERVIEW REPORT ## (being developed and defined)
+## Day definition for the overview report, time format hh:mm
+## OVERVIEWREPORT =  start end
+OVERVIEWREPORT = 08:00 18:00
+
+## Defines the report structure. Three type of data are available
+## 'presence' provides of there was activity in the given interval based on a given presence defintion from PRESENCE_
+## 'point' provides the arevage count at the moment in time with a given precision in minutes
+## 'period' provides the average count int he given period
+## The declaration order will be reflected in the reported order as well
+##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
+OVERVIEWDATA = point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 09:00 10:00 morning; presence 13:00 17:00 afternoon; presence 20:00 23:00 night;
+
+## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
+## REFERENCESAMPLES = name_measurement
+REFERENCESAMPLES = 20secs
+
+## SKIPDAYS = list week days to be skipped (0 is sunday, 6 is Saturday)
+SKIPDAYS = 0 6
+
+## Defines user
+USER = DEME
+

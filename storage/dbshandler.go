@@ -17,6 +17,7 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData) {
 			case d := <-in:
 				if support.Debug != 3 && support.Debug != 4 {
 					if e := a.Extract(d); e == nil {
+						//fmt.Println("handle",a)
 						if a.Valid() {
 							if err := StoreSample(a, !support.Stringending(id, "current", "_")); err != nil {
 								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v\n", id, err, a)

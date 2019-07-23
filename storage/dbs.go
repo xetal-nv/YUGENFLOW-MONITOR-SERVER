@@ -154,7 +154,9 @@ func TimedIntDBSClose() {
 // set-ups a series and/or retrieve its definition from the database
 func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 	found = true
+	tagMutex.Lock()
 	if _, ok := tagStart[tag]; !ok {
+		//tagMutex.RUnlock()
 		// if not initialised it creates a new series
 		// sets the entry in tagStart
 		if c, e := ReadHeader(tag, sDB); e != nil {
@@ -186,6 +188,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 			log.Printf("register.SetSeries: existing series %v:%v loaded\n", tag, step)
 		}
 	}
+	tagMutex.Unlock()
 	return found, err
 }
 
@@ -250,12 +253,22 @@ func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
 
 // stores a sample, optionally it updates the header
 func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
+	//fmt.Println("store", d)
 	ts := d.Ts()
 	tag := d.Tag()
 	val := d.Marshal()
+	//fmt.Println("store", val)
+	tagMutex.RLock()
 	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
 		i := (ts - st[0]) / (st[1] * 1000)
+		// the first sample is lost anyhow, but in some cases it takes time for the second to arrive and overwrite it
+		// as i==0 is not readable we force it to 1
+		if i == 0 {
+			i = 1
+		}
 		lab := tag + strconv.Itoa(int(i))
+		//fmt.Println("store", lab, sDB)
 		if sDB {
 			select {
 			case statsChanIn <- dbInChan{[]byte(lab), val, false}:
@@ -270,6 +283,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 			}
 		}
 	} else {
+		tagMutex.RUnlock()
 		err = errors.New("Serie " + tag + " not found")
 	}
 	if len(updatehead) == 1 {
@@ -295,15 +309,20 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 	tag = s0.Tag()
 	ts0 := s0.Ts()
 	ts1 := s1.Ts()
+	tagMutex.RLock()
 	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
+		//fmt.Println(st, s0, s1)
 		if ts1 != st[0] {
 			if ts0 <= (st[0] + st[1]*1000) {
 				ts0 = st[0] + st[1]*1000 // offset to skip the header
 			}
 			i := (ts0 - st[0]) / (st[1] * 1000)
 			i1 := (ts1 - st[0]) / (st[1] * 1000)
+			//fmt.Println(i, i1)
 			for i <= i1 {
 				lab := []byte(tag + strconv.Itoa(int(i)))
+				//fmt.Println(tag + strconv.Itoa(int(i)), sDB)
 				co := make(chan dbOutChan)
 				if sDB {
 					select {
@@ -320,6 +339,7 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 				}
 				select {
 				case ans := <-co:
+					//fmt.Println(ans.err)
 					if ans.err == nil {
 						nts := st[0] + i*st[1]*1000
 						rt = append(rt, ans.r)
@@ -332,6 +352,7 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 			}
 		}
 	} else {
+		tagMutex.RUnlock()
 		err = errors.New("Serie " + tag + " not found")
 	}
 	return tag, rts, rt, err
@@ -350,7 +371,9 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 	}
 	tag = head.Tag()
 	ts1 := head.Ts()
+	tagMutex.RLock()
 	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
 		if ts1 <= st[0] {
 			err = errors.New("storage.ReadLastN: illegal end series point provided")
 		} else {
@@ -387,6 +410,7 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 			}
 		}
 	} else {
+		tagMutex.RUnlock()
 		err = errors.New("storage.ReadLastN: serie " + tag + " not found")
 	}
 	return
@@ -394,10 +418,13 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 
 // returns the stored definition of a series with identified tag
 func GetDefinition(tag string) []int64 {
-	return tagStart[tag]
+	tagMutex.RLock()
+	a := tagStart[tag]
+	tagMutex.RUnlock()
+	return a
 }
 
-// View read an entry, when l==0, it assumes it is a variable length element
+// Read read an entry, when l==0, it assumes it is a variable length element
 // and it retrieves the length from the element first (maximum number of fields in 16 bit)
 func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 
@@ -441,7 +468,7 @@ func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 	return
 }
 
-// View read an entry, when l==0, it assumes it is a variable length element
+// dbReadDriver read an entry, when l==0, it assumes it is a variable length element
 // and it retrieves the length from the element first (maximum number of fields in 16 bit)
 // this version acts as a buffered thread to a database, requires time-out and closure on the receiving end
 func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
@@ -555,6 +582,7 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 				} else {
 					err = txn.Set(data.id, data.val)
 				}
+				//fmt.Println(err)
 				return err
 			})
 			support.CleanupLock.RUnlock()

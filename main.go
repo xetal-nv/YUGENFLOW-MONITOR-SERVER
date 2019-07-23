@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const version = "v. 0.6.0" // version
+const version = "v. 0.7.0" // version
 
 func main() {
 
@@ -196,12 +196,12 @@ func main() {
 			}(i, mac)
 		}
 	case 1:
-		go sensormodels.SensorModel(0, 110, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '1'})
-		go sensormodels.SensorModel(1, 120, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '2'})
-		go sensormodels.SensorModel(20, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '3'})
-		go sensormodels.SensorModel(21, 70, 3, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '4'})
-		go sensormodels.SensorModel(2340, 90, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '5'})
-		go sensormodels.SensorModel(65535, 50, 2, []int{-1, 0, 1, 2, 127}, []byte{'a', 'b', 'c', '1', '2', '6'})
+		go sensormodels.SensorModel(0, 7000, 20, []int{-1, 0, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
+		go sensormodels.SensorModel(1, 7000, 30, []int{-1, 0, 1}, []byte{'a', 'b', 'c', '1', '2', '2'})
+		go sensormodels.SensorModel(20, 5000, 20, []int{-1, 0, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
+		go sensormodels.SensorModel(21, 5500, 30, []int{-1, 0, 1}, []byte{'a', 'b', 'c', '1', '2', '4'})
+		go sensormodels.SensorModel(2340, 900, 20, []int{-1, 0, 1}, []byte{'a', 'b', 'c', '1', '2', '5'})
+		go sensormodels.SensorModel(65535, 500, 20, []int{-1, 0, 1}, []byte{'a', 'b', 'c', '1', '2', '6'})
 	default:
 	}
 

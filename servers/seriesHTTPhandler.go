@@ -95,6 +95,9 @@ func seriesHTTPhandler() http.Handler {
 				}
 				var s0, s1 storage.SampleData
 				switch params["type"] {
+				case "presence":
+					s0 = &storage.SerieSample{Stag: label, Sts: st}
+					s1 = &storage.SerieSample{Stag: label, Sts: en}
 				case "sample":
 					s0 = &storage.SerieSample{Stag: label, Sts: st}
 					s1 = &storage.SerieSample{Stag: label, Sts: en}
@@ -104,6 +107,7 @@ func seriesHTTPhandler() http.Handler {
 				default:
 					return
 				}
+				//fmt.Println(st,en)
 
 				var rt []storage.SampleData
 				if tag, ts, vals, e := storage.ReadSeries(s0, s1, params["analysis"] != "current"); e == nil {

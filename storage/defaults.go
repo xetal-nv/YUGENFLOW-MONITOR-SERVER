@@ -34,6 +34,7 @@ var timeout int
 var currentDB, statsDB *badger.DB     // databases
 var once sync.Once                    // used fpr one time set-up function
 var currentTTL time.Duration          // provides the TTL value to be used
+var tagMutex = &sync.RWMutex{}        // this mutex is used to avoid concurrent writes on start-up on tagStart
 var tagStart map[string][]int64       // map of definition for all series currently in use
 var statsChanIn chan dbInChan         // channel for storing to the statistical DB
 var currentChanIn chan dbInChan       // channel for storing to the current DB

@@ -1,4 +1,5 @@
 ##### SERVER SETUP #####
+
 ## ADDRESSES
 ## DO NOT CHANGE
 ## HTTPSPORTS = app port, api port
@@ -108,7 +109,7 @@ ENTRY_3 = 3
 ## IMPORTANT: Entries CANNOT be shared among spaces
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
-##SPACES_NAMES = name_space name_space ...
+##SPACES_NAMES = name_space:max_occupancy ...
 SPACES_NAMES = d2 d3
 
 ## SPACE COMPOSITION
@@ -116,13 +117,6 @@ SPACES_NAMES = d2 d3
 ##SPACE_x = id_entry  id_entry ...
 SPACE_d2 = 0 1
 SPACE_d3 = 2 3
-
-## CLOSURE DECLARATION
-## Define the time when the space is always empty, this data is used to reset
-## the space counter
-##CLOSURE_x = start as xx:xx; end as xx:xx
-CLOSURE_d2 = 21:00; 23:00
-CLOSURE_d3 = 21:00; 23:00
 
 ## RESET DECLARATION
 ## Define interval for resetting sensors, interval 0 turns it off
@@ -138,7 +132,14 @@ MULTICYCLEDAYSONLY = 1
 ## ANALYSIS WINDOW
 ## Defines the period in which analysis will be executed (24h format hh:mm)
 ##ANALYSISWINDOW = start end
-ANALYSISWINDOW = 07:00 20:00
+ANALYSISWINDOW = 08:00 18:00
+
+## CLOSURE DECLARATION
+## Define the time when the space is always empty, this data is used to reset
+## the space counter
+##CLOSURE_x = start as xx:xx; end as xx:xx
+CLOSURE_d2 = 21:00; 23:00
+CLOSURE_d3 = 21:00; 23:00
 
 ## ANALYSIS DEFINITION
 ## Defines a given storage interval in seconds.
@@ -148,4 +149,58 @@ ANALYSISWINDOW = 07:00 20:00
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##ANALYSISPERIOD = name seconds; name seconds; ...
 #ANALYSISPERIOD = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
-ANALYSISPERIOD = halfhour 1800; hour 3600; day 47000; week 604000; 4weeks 2419000
+ANALYSISPERIOD = 20mins 1800; hour 3600; day 47000
+
+##### PRESENCE DETECTION #####
+## DESCRIPTION: This detection provides the number of possible detection in a given interval
+## It does not provide real-time data.
+
+## PRESENCE INTERVAL DEFINITION
+## Defines internals of time where only presence detection is relevant, no counting
+## Time is providedin the HH:MM format
+##PRESENCE_spacename = detectorname start end; ...
+#PRESENCE_livlab = morning 09:00 10:00; afternoon 13:00 17:00; earlyafternoon 12:01 12:03
+PRESENCE_d2 = night 20:00 06:00
+PRESENCE_d3 = night 20:00 06:00
+
+##### REPORTING #####
+
+## RT VALIDITY WINDOW
+## Defines the period in which real-time reporting will be provided (24h format hh:mm)
+## Note this setting overrides ANALYSISWINDOW for the JS.
+## It is best practice that RTWINDOW is included in ANALYSISWINDOWs
+##RTWINDOW = start end
+#RTWINDOW = 08:00 17:00
+
+## RT ANALYSIS ##
+## Specifies which analysis will be shown in the real-time panel
+##RTSHOW = name name ...
+RTSHOW = 20mins hour day
+
+## REPORTED ANALYSIS ##
+## Specifies which analysis will be shown in the real-time panel
+##REPSHOW = name name ...
+REPSHOW =
+
+## ENABLING AND DEFINITION IF THE OVERVIEW REPORT ## (being developed and defined)
+## Day definition for the overview report, time format hh:mm
+## OVERVIEWREPORT =  start end
+OVERVIEWREPORT = 08:00 18:00
+
+## Defines the report structure. Three type of data are available
+## 'presence' provides of there was activity in the given interval based on a given presence defintion from PRESENCE_
+## 'point' provides the arevage count at the moment in time with a given precision in minutes
+## 'period' provides the average count int he given period
+## The declaration order will be reflected in the reported order as well
+##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
+OVERVIEWDATA = point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 20:00 06:00 test;
+
+## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
+## REFERENCESAMPLES = name_measurement
+REFERENCESAMPLES = 20mins
+
+## SKIPDAYS = list week days to be skipped (0 is sunday, 6 is Saturday)
+SKIPDAYS = 0 6
+
+## Defines user
+USER = DEME

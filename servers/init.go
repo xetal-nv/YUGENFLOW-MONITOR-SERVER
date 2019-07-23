@@ -49,41 +49,41 @@ func setJSenvironment() {
 			}
 		}
 	}
+
+	//f, err := os.Create("./html/js/def.js")
+	//if err != nil {
+	//	log.Fatal("Fatal error creating def.js: ", err)
+	//}
+
+	//var f *os.File
+	//var err error
+
+	//f, err = os.OpenFile("./html/js/def.js", os.O_APPEND|os.O_WRONLY, 0600)
+	//f, err := os.Create("./html/js/op.js")
+	//if err != nil {
+	f, err := os.Create("./html/js/def.js")
+	if err != nil {
+		log.Fatal("Fatal error creating def.js: ", err)
+	}
+	//}
+
 	ip := ""
 	if ip = os.Getenv("IP"); ip == "" {
 		ip = support.GetOutboundIP().String()
 	}
 
-	f, err := os.Create("./html/js/ip.js")
-	if err != nil {
-		log.Fatal("Fatal error creating ip.js: ", err)
-	}
-	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";"
+	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
-		log.Fatal("Fatal error writing to ip.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing ip.js: ", err)
+		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
-	f, err = os.Create("./html/js/sw.js")
-	if err != nil {
-		log.Fatal("Fatal error creating sw.js: ", err)
-	}
-	js = "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;"
+	js = "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;\n"
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
-		log.Fatal("Fatal error writing to sw.js: ", err)
-	}
-	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing sw.js: ", err)
+		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
-	f, err = os.Create("./html/js/rep.js")
-	if err != nil {
-		log.Fatal("Fatal error creating rep.js: ", err)
-	}
 	if RepCon {
 		js = "var reportCurrent = true;\n"
 	} else {
@@ -91,11 +91,144 @@ func setJSenvironment() {
 	}
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
-		log.Fatal("Fatal error writing to rep.js: ", err)
+		log.Fatal("Fatal error writing to def.js: ", err)
 	}
+
+	js = "var user = \"" + strings.Trim(os.Getenv("USER"), " ") + "\";\n"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+
+	js = "var overviewReport = false;\n"
+	if strings.Trim(os.Getenv("OVERVIEWREPORT"), " ") != "" &&
+		strings.Trim(os.Getenv("OVERVIEWDATA"), " ") != "" {
+		jsAlt := "var overviewReport = true;\nlet overviewReportDefs = ["
+		for _, el := range strings.Split(strings.Trim(os.Getenv("OVERVIEWDATA"), " "), ";") {
+			eldef := strings.Split(strings.Trim(el, " "), " ")
+			//fmt.Println(eldef)
+			switch eldef[0] {
+			case "point":
+				jsAlt += "{name: \"at " + eldef[1] + "\", start: \"\", end: \"\", point: \"" + eldef[1] +
+					"\", precision: \"" + eldef[2] + "\", presence: \"\", id: 0},\n"
+			case "period":
+				jsAlt += "{name: \"" + eldef[1] + " to " + eldef[2] + "\", start: \"" + eldef[1] +
+					"\", end: \"" + eldef[2] + "\", point: \"\", precision: \"\", presence: \"\", id: 0},\n"
+			case "presence":
+				jsAlt += "{name: \"activity " + eldef[1] + " to " + eldef[2] + "?\", start: \"\", end: \"\", point: \"" +
+					"\", precision: \"\", presence: \"" + eldef[3] + "\", id: 0},\n"
+			case "":
+			default:
+				log.Fatal("Fatal error in OVERVIEWDATA, illegal value in  ", el)
+			}
+		}
+		if schd := strings.Split(strings.Trim(os.Getenv("OVERVIEWREPORT"), " "), " "); len(schd) == 2 {
+			jsAlt += "{name: \"day\", start: \"" + schd[0] + "\", end: \"" + schd[1] + "\", point: \"\", precision: \"\", " +
+				"presence: \"\", id: 0, skip: true}];\n"
+		} else {
+			log.Fatal("Fatal error in OVERVIEWREPORT, illegal value")
+		}
+		if val := strings.Trim(os.Getenv("REFERENCESAMPLES"), " "); val != "" {
+			jsAlt += "var refOverviewAsys = \"" + val + "\";\n"
+			js = jsAlt
+		}
+		if val := strings.Trim(os.Getenv("SKIPDAYS"), " "); val != "" {
+			jsAlt += "var overviewSkipDays = ["
+			for _, v := range strings.Split(val, " ") {
+				jsAlt += "\"" + v + "\", "
+			}
+			js = jsAlt[:len(jsAlt)-2] + "];\n"
+		}
+	}
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+
+	if val := strings.Trim(os.Getenv("RTSHOW"), " "); val != "" {
+		ll := strings.Split(val, " ")
+		js = "var rtshow = ["
+		for _, v := range ll {
+			js += "\"" + strings.Trim(v, " ") + "\", "
+		}
+		js = js[0 : len(js)-2]
+		js += "];\n"
+		if _, err := f.WriteString(js); err != nil {
+			_ = f.Close()
+			log.Fatal("Fatal error writing to def.js: ", err)
+		}
+	}
+
+	if val := strings.Trim(os.Getenv("REPSHOW"), " "); val != "" {
+		ll := strings.Split(val, " ")
+		js = "var repshow = ["
+		for _, v := range ll {
+			js += "\"" + strings.Trim(v, " ") + "\", "
+		}
+		js = js[0 : len(js)-2]
+		js += "];\n"
+
+	} else {
+		js = "var repshow = \"\";\n"
+	}
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+
+	jsTxt := "var openingTime = \"\";\n"
+	jsST := "var opStartTime = \"\";\n"
+	jsEN := "var opEndTime = \"\";\n"
+
+	if strings.Trim(os.Getenv("RTWINDOW"), " ") == "" {
+		if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
+			if _, e := time.Parse(support.TimeLayout, val[0]); e == nil {
+				if _, e := time.Parse(support.TimeLayout, val[1]); e == nil {
+					jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
+					jsST = "var opStartTime = \"" + val[0] + "\";\n"
+					jsEN = "var opEndTime = \"" + val[1] + "\";\n"
+					log.Printf("spaces.setJSenvironment: Analysis window is set from %v to %v\n", val[0], val[1])
+				} else {
+					log.Fatal("spaces.setJSenvironment: illegal end ANALYSISWINDOW value", val)
+				}
+			} else {
+				log.Fatal("spaces.setJSenvironment: illegal start ANALYSISWINDOW value", val)
+			}
+		}
+	} else {
+		if val := strings.Split(strings.Trim(os.Getenv("RTWINDOW"), " "), " "); len(val) == 2 {
+			if _, e := time.Parse(support.TimeLayout, val[0]); e == nil {
+				if _, e := time.Parse(support.TimeLayout, val[1]); e == nil {
+					jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
+					jsST = "var opStartTime = \"" + val[0] + "\";\n"
+					jsEN = "var opEndTime = \"" + val[1] + "\";\n"
+					log.Printf("spaces.setJSenvironment: Analysis window is set from %v to %v\n", val[0], val[1])
+				} else {
+					log.Fatal("spaces.setJSenvironment: illegal end RTWINDOW value", val)
+				}
+			} else {
+				log.Fatal("spaces.setJSenvironment: illegal start RTWINDOW value", val)
+			}
+		}
+	}
+
+	if _, err := f.WriteString(jsTxt); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+	if _, err := f.WriteString(jsST); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+	if _, err := f.WriteString(jsEN); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+
 	if err = f.Close(); err != nil {
-		log.Fatal("Fatal error closing rep.js: ", err)
+		log.Fatal("Fatal error closing def.js: ", err)
 	}
+	//os.Exit(1)
 }
 
 // set-up of HTTP servers and handlers
@@ -122,6 +255,8 @@ func setupHTTP() error {
 	hMap[1]["/info"] = infoHTTHandler()
 	// Series data retrieval API
 	hMap[1]["/series"] = seriesHTTPhandler()
+	// Presence data retrieval API
+	//hMap[1]["/detections"] = presenceHTTPhandler()
 	// Sensor command API
 	hMap[1]["/cmd"] = commandHTTHandler()
 	// analysis information API

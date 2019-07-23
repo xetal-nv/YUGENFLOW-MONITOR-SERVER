@@ -5,13 +5,25 @@ import (
 	"strconv"
 )
 
-// sends the gate data to the proper counters
+// Implement entry data distribution
 func SendData(entry int, val int) error {
-	if entrySpaceChannels[entry] == nil {
+	// This function takes care of distributing de received data to the relevant processors
+
+	// sends the gate data to the proper counters
+	if entrySpaceSamplerChannels[entry] == nil {
 		return errors.New("spaces.SendData: error entry not valid id: " + strconv.Itoa(entry))
 	}
-	for _, v := range entrySpaceChannels[entry] {
+	for _, v := range entrySpaceSamplerChannels[entry] {
 		go func() { v <- spaceEntries{id: entry, val: val} }()
 	}
+
+	//  sends the gate data to the proper presence detectors
+	if entrySpacePresenceChannels[entry] == nil {
+		return errors.New("spaces.SendData: error entry not valid id: " + strconv.Itoa(entry))
+	}
+	for _, v := range entrySpacePresenceChannels[entry] {
+		go func() { v <- spaceEntries{id: entry, val: val} }()
+	}
+
 	return nil
 }

@@ -1,6 +1,8 @@
+var repvisile = (reportCurrent) || (repshow.length !== 0);
+
 let spacename = "";
 let measurement = "sample";
-let allmeasurements = [{"name": "current", "value": "0"}];
+let allmeasurements = [];
 let selel = null;
 
 let regex = new RegExp(':', 'g');
@@ -9,7 +11,7 @@ let timeNow = new Date(),
     incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
         && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
 
-if (!incycle) {
+if ((!incycle) && (openingTime !== "")) {
     alert("!!! WARNING !!!\nReal-time data is only available " + openingTime + ".\nReporting is always available.\n")
 }
 
@@ -129,7 +131,8 @@ function drawSpace(rawspaces) {
             timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
             incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
                 && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
-        if ((spacename !== "") && (incycle)) {
+
+        if ((spacename !== "") && ((incycle) || (openingTime === ""))) {
             let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
             // console.log(measurement)
             for (let i = 0; i < allmeasurements.length; i++) {
@@ -142,9 +145,11 @@ function drawSpace(rawspaces) {
                             let spaces = JSON.parse(data);
                             // console.log(data);
                             if (spaces["valid"]) {
-                                if (allmeasurements[i].name === "current") {
-                                    document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
-                                }
+                                // if (allmeasurements[i].name === "current") {
+                                    // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
+                                    // console.log(new Date());
+                                    document.getElementById("lastts").innerText = new Date().toLocaleString();
+                                // }
                                 let dt = "n/a";
                                 // console.log(measurement)
                                 let ms = measurement.split("_");
@@ -204,18 +209,32 @@ $(document).ready(function () {
                 let jsObj = JSON.parse(data);
                 let rp = document.getElementById("reptype");
                 // console.log(jsObj)
-                let ch = document.createElement("option");
+                if (overviewReport) {
+                    let ch = document.createElement("option");
+                    ch.textContent = "overview";
+                    rp.appendChild(ch);
+                }
                 if (reportCurrent) {
+                    let ch = document.createElement("option");
+                    allmeasurements.push({"name": "current", "value": "0"});
                     ch.textContent = "current";
                     rp.appendChild(ch);
                 }
                 for (let i = 0; i < jsObj.length; i++) {
                     let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                    allmeasurements.push(el);
-                    let ch = document.createElement("option");
-                    ch.textContent = jsObj[i]["name"];
-                    rp.appendChild(ch);
+                    if (rtshow.indexOf(el.name) > -1) {
+                        allmeasurements.push(el);
+                    }
+                    if (repshow.indexOf(el.name) > -1) {
+                        let ch = document.createElement("option");
+                        ch.textContent = jsObj[i]["name"];
+                        rp.appendChild(ch);
+                    }
                 }
+                if (!repvisile) {
+                    rp.style.visibility = "hidden";
+                }
+
                 let html = "";
                 for (let i = 0; i < allmeasurements.length; i++) {
                     html += "<tr>" +

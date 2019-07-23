@@ -567,29 +567,35 @@ func passData(spacename, samplerName string, counter spaceEntries, nextStageChan
 	}
 
 	latestChannelLock.RLock()
-	for n, dt := range dtypes {
-		wg.Add(1)
-		data := dt.pf(n+spacename+samplerName, cc)
-		// new sample sent to the output register
-		go func(data interface{}, ch chan interface{}) {
-			defer wg.Done()
-			select {
-			case ch <- data:
-			case <-time.After(time.Duration(stimeout) * time.Millisecond):
-				log.Printf("spaces.samplers: Timeout writing to register for %v:%v\n", spacename, samplerName)
-			}
-		}(data, latestBankIn[n][spacename][samplerName])
-		// new sample sent to the database
-		go func(data interface{}, ch chan interface{}) {
-			// We do not need to wait for this goroutine
-			select {
-			case ch <- data:
-			case <-time.After(time.Duration(ltimeout) * time.Millisecond):
-				if support.Debug != 3 && support.Debug != 4 {
-					log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spacename, samplerName)
+	for dl, dt := range dtypes {
+		// only selects the sampler data, let generic for future extensions
+		switch dl {
+		case "presence":
+			// skip
+		default:
+			wg.Add(1)
+			data := dt.pf(dl+spacename+samplerName, cc)
+			// new sample sent to the output register
+			go func(data interface{}, ch chan interface{}) {
+				defer wg.Done()
+				select {
+				case ch <- data:
+				case <-time.After(time.Duration(stimeout) * time.Millisecond):
+					log.Printf("spaces.samplers: Timeout writing to register for %v:%v\n", spacename, samplerName)
 				}
-			}
-		}(data, latestDBSIn[n][spacename][samplerName])
+			}(data, latestBankIn[dl][spacename][samplerName])
+			// new sample sent to the database
+			go func(data interface{}, ch chan interface{}) {
+				// We do not need to wait for this goroutine
+				select {
+				case ch <- data:
+				case <-time.After(time.Duration(ltimeout) * time.Millisecond):
+					if support.Debug != 3 && support.Debug != 4 {
+						log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spacename, samplerName)
+					}
+				}
+			}(data, latestDBSIn[dl][spacename][samplerName])
+		}
 	}
 	latestChannelLock.RUnlock()
 	if nextStageChan != nil {

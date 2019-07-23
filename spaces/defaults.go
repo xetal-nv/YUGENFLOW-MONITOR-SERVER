@@ -37,7 +37,8 @@ var dtypes map[string]dtfuncs                                      // holds the 
 var instNegSkip bool                                               // skips instantaneous negative counters
 var avgNegSkip bool                                                // skips instantaneous negative counters
 var bufsize int                                                    // size of channel buffer among samplers
-var entrySpaceChannels map[int][]chan spaceEntries                 // channels form entry to associated space
+var entrySpaceSamplerChannels map[int][]chan spaceEntries          // channels from entry to associated space sampler
+var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels from entry to associated space presence detector
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
 var avgAnalysisSchedule timeSchedule                               // specifies the activity range of the analysis
