@@ -64,16 +64,6 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		}
 		if LogToFileAll {
 			if err == nil {
-				//type scratchData struct {
-				//	senData            map[int]sensorData
-				//	unusedSampleSumIn  map[int]int
-				//	unusedSampleSumOut map[int]int
-				//}
-				//type sensorData struct {
-				//	id  int
-				//	ts  int64
-				//	val int
-				//}
 				_, _ = f.WriteString("New sample\n")
 				_, _ = f.WriteString("sensor data: ")
 				for key, val := range scratchPad.senData {
