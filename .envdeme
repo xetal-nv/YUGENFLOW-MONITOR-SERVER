@@ -149,7 +149,7 @@ CLOSURE_d3 = 21:00; 23:00
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##ANALYSISPERIOD = name seconds; name seconds; ...
 #ANALYSISPERIOD = unit 300; day 86400; week 604800; wmonth 2419200; hour 3600
-ANALYSISPERIOD = 20mins 1800; hour 3600; day 47000
+ANALYSISPERIOD = 20mins 1200; hour 3600; day 47000
 
 ##### PRESENCE DETECTION #####
 ## DESCRIPTION: This detection provides the number of possible detection in a given interval

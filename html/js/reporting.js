@@ -219,6 +219,7 @@ $(document).ready(function () {
             // data += "\n";
             if ((sampledata === null) || (sampledata === undefined)) {
                 alert("No data available for the selected time.");
+                document.getElementById("loader").style.visibility = "hidden";
             } else {
                 let currentDay = "", //current days in analysis
                     allResults = {}, // holds all results
@@ -322,7 +323,7 @@ $(document).ready(function () {
         function loadpresence(header, data, presenceSets, api, tries) {
             if (presenceSets.length === 0) {
                 // generate report
-                console.log("loadpresence", data);
+                // console.log("loadpresence", data);
                 generateOverview(header, data);
             } else {
                 // load data

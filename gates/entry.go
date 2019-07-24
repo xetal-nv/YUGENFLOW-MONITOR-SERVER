@@ -81,6 +81,10 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 				for key, val := range scratchPad.unusedSampleSumOut {
 					_, _ = f.WriteString("( " + strconv.Itoa(key) + "," + strconv.Itoa(val) + " ) ")
 				}
+				_, _ = f.WriteString("\n")
+				_, _ = f.WriteString("calculated datapoint: ")
+				_, _ = f.WriteString("( " + strconv.Itoa(int(support.Timestamp())) + "," + strconv.Itoa(nv) + " ) ")
+
 				_, _ = f.WriteString("\n\n")
 			}
 		}

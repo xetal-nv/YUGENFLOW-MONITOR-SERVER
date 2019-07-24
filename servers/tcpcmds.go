@@ -36,15 +36,15 @@ func handlerReset(id int) {
 					rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
 					if rt.State {
 						done = true
-						go func() {
-							support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
-								support.Timestamp(), "", []int{1}, true}
-						}()
+						//go func() {
+						//	support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
+						//		support.Timestamp(), "", []int{1}, true}
+						//}()
 					} else {
-						go func() {
-							support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
-								support.Timestamp(), "", []int{1}, true}
-						}()
+						//go func() {
+						//	support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
+						//		support.Timestamp(), "", []int{1}, true}
+						//}()
 					}
 				}
 			} else {
@@ -56,7 +56,7 @@ func handlerReset(id int) {
 	}
 }
 
-func assingID(st chan bool, conn net.Conn, com chan net.Conn, mac []byte) {
+func assingID(st chan bool, conn net.Conn, com chan net.Conn, _mac []byte) {
 	defer func() { st <- false }()
 	select {
 	case <-com:

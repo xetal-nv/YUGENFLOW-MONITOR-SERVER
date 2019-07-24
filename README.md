@@ -79,12 +79,14 @@ See .env file for configuration example
  - Removed possible race at DBS creation  
  - Solved issues with european copies of Excel  
  - In case overview is the only report available, the selector is now hidden  
- - Removed CRC control on start-up since it was bugged, anyhow redundant  
- - Added dumpentry command line option  
+ - Removed CRC control on on reset  
+ - Added dumpentry command line option for debug purposed  
+ - Resolved bug that report action wheel does not disappear with no valid data  
+ - Added check on compulsory configuration variables  
 
 **CHANGELOG TO v0.6.0:**  
 
-BUG WARNING: This version only works with option '-norst'  
+BUG WARNING: This version only works with option '-norst' and ANALYSISWINDOW must be defined  
 
  - Added ANALYSISWINDOW configuration option that synchronise analysis and define "working hours"  
  - Added delay server start with command option 'st'  

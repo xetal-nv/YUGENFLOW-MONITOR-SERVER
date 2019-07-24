@@ -153,10 +153,12 @@ func setJSenvironment() {
 		}
 		js = js[0 : len(js)-2]
 		js += "];\n"
-		if _, err := f.WriteString(js); err != nil {
-			_ = f.Close()
-			log.Fatal("Fatal error writing to def.js: ", err)
-		}
+	} else {
+		js = "var rtshow = [];\n"
+	}
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
 	if val := strings.Trim(os.Getenv("REPSHOW"), " "); val != "" {
@@ -439,6 +441,10 @@ func setUpTCP() {
 				}
 			}
 		}
+	}
+
+	if !resetbg.valid {
+		log.Println("servers.StartTCP: Warning RESETSLOT has invalid data", os.Getenv("RESETSLOT"))
 	}
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)

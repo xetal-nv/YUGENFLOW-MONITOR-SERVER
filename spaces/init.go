@@ -277,6 +277,8 @@ func setpUpCounter() {
 				}
 			}
 		}
+	} else {
+		log.Fatal("spaces.setpUpCounter: no averaging values have been defined in ANALYSISPERIOD!!!")
 	}
 
 	keys := make([]int, 0, len(tw))

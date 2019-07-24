@@ -146,9 +146,9 @@ function drawSpace(rawspaces) {
                             // console.log(data);
                             if (spaces["valid"]) {
                                 // if (allmeasurements[i].name === "current") {
-                                    // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
-                                    // console.log(new Date());
-                                    document.getElementById("lastts").innerText = new Date().toLocaleString();
+                                // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
+                                // console.log(new Date());
+                                document.getElementById("lastts").innerText = new Date().toLocaleString();
                                 // }
                                 let dt = "n/a";
                                 // console.log(measurement)
@@ -220,16 +220,22 @@ $(document).ready(function () {
                     ch.textContent = "current";
                     rp.appendChild(ch);
                 }
-                for (let i = 0; i < jsObj.length; i++) {
-                    let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                    if (rtshow.indexOf(el.name) > -1) {
-                        allmeasurements.push(el);
+                // console.log(rtshow.length)
+                if (rtshow.length !== 0) {
+                    for (let i = 0; i < jsObj.length; i++) {
+                        let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
+                        if (rtshow.indexOf(el.name) > -1) {
+                            allmeasurements.push(el);
+                        }
+                        if (repshow.indexOf(el.name) > -1) {
+                            let ch = document.createElement("option");
+                            ch.textContent = jsObj[i]["name"];
+                            rp.appendChild(ch);
+                        }
                     }
-                    if (repshow.indexOf(el.name) > -1) {
-                        let ch = document.createElement("option");
-                        ch.textContent = jsObj[i]["name"];
-                        rp.appendChild(ch);
-                    }
+                } else {
+                    document.getElementById("rttitle").style.visibility = "hidden";
+                    document.getElementById("rtvalues").style.visibility = "hidden";
                 }
                 if (!repvisile) {
                     rp.style.visibility = "hidden";
