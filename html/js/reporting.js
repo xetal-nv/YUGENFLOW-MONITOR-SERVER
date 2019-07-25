@@ -209,6 +209,8 @@ $(document).ready(function () {
         // ];
 
         let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
+            'November', 'December'];
 
 
         // processavgdata analyses the data from presence averages and start the
@@ -228,7 +230,9 @@ $(document).ready(function () {
                 for (let i = 0; i < sampledata.length; i++) {
                     // console.log(sampledata[i].ts);
                     let d = new Date(sampledata[i].ts);
-                    var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay(),
+                    // var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay(),
+                    var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
+                        " " + d.getDay(),
                         sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
 
                     // checks if this is a new day and sets al variables in case it is
@@ -289,6 +293,7 @@ $(document).ready(function () {
                         }
                     }
                 }
+                // console.log(allResults);
                 allResults[cycleResult[0]] = cycleResult;
 
                 // pass the data to the next func for presence
@@ -342,8 +347,8 @@ $(document).ready(function () {
                         if ((sampledata !== null) && (sampledata !== undefined)) {
                             for (let i = 0; i < sampledata.length; i++) {
                                 let d = new Date(sampledata[i].ts);
-                                var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay(),
-                                    sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+                                var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay();
+                                // sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
                                 // for (let i=0; i<data[sampleDate].length; i++) {console.log(data[sampleDate][i]);}
                                 data[sampleDate][current.id + 1] = sampledata[i].val;
                             }
@@ -368,20 +373,13 @@ $(document).ready(function () {
         function generateOverview(header, data) {
             // TODO HERE - delete fake data
             // data = {
-            //     "21-07 0": ["21-07 0", [0, 23], [0, 25], [0, 5], [0, 19], 22, 22, [0, 5]],
-            //     "22-07 1": ["22-07 1", [0, 5], [0, 23], [0, 19], [0, 25], 19, 22, [0, 15]],
-            //     "23-07 2": ["23-07 2", [0, 25], [0, 5], [0, 23], [0, 19], 22, 19, [0, 5]],
-            //     "24-07 3": ["24-07 3", [0, 19], [0, 25], [0, 5], [0, 23], 19, 22, [0, 15]],
-            //     "25-07 4": ["25-07 4", [0, 23], [0, 19], [0, 25], [0, 5], 22, 19, [0, 5]],
-            //     "26-07 5": ["26-07 5", [0, 5], [0, 23], [0, 19], [0, 25], 19, 22, [0, 15]],
-            //     "27-07 6": ["27-07 6", [0, 25], [0, 5], [0, 23], [0, 19], 22, 19, [0, 5]],
-            //     "28-07 0": ["28-07 0", [0, 19], [0, 25], [0, 5], [0, 23], 22, 22, [0, 15]],
-            //     "29-07 1": ["29-07 1", [0, 9], [0, 5], [0, 25], [0, 3], 22, 2, [0, 5]],
-            //     "30-07 2": ["30-07 2", [0, 19], [0, 25], [0, 5], [0, 23], 2, 22, [0, 15]],
-            //     "31-07 3": ["31-07 3", [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
+            //     "2019-07-31 3": ["31-07-2019 3", , , , , , ,],
+            //     "2019-08-01 4": ["1-08-2019 4", [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
+            //     "2019-08-02 5": ["2-08-2019 5", [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
             // };
             // console.log(data);
             let keys = Object.keys(data);
+            // console.log(keys);
             let periodavg = [];
             let weekavg = [];
             let tmp = [];
@@ -389,52 +387,64 @@ $(document).ready(function () {
             for (let k in keys) {
                 // console.log(data[keys[k]]);
                 let v = data[keys[k]];
-                header += v[0].split(" ")[0] + ", " + days[parseInt(v[0].split(" ")[1])];
-                if ((data[keys[k]][0].split(" ")[1] === "0") && (tmp.length !== 0)) {
-                    // start week, calculate and store average
-                    let val = 0;
-                    for (let i = 0; i < tmp.length; i++) {
-                        val += tmp[i]
+                let daydatetmp = (v[0].split(" ")[0]).split("-");
+                let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];
+                // console.log(daydate);
+                header += daydate + ", " + days[parseInt(v[0].split(" ")[1])];
+                let valid = false;
+                for (let a = 1; a < v.length; a++) {
+                    if (v[a] !== undefined) {
+                        valid = true
                     }
-                    // console.log(val, tmp.length);
-                    val = Math.round(val / tmp.length);
-                    weekavg.push(val);
-                    // console.log(tmp);
-                    if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
-                        tmp = [v[v.length - 1][1]]
+                }
+                if (valid) {
+                    // console.log(valid);
+                    if ((data[keys[k]][0].split(" ")[1] === "0") && (tmp.length !== 0)) {
+                        // start week, calculate and store average
+                        let val = 0;
+                        for (let i = 0; i < tmp.length; i++) {
+                            val += tmp[i]
+                        }
+                        // console.log(val, tmp.length);
+                        val = Math.round(val / tmp.length);
+                        weekavg.push(val);
+                        // console.log(tmp);
+                        if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
+                            tmp = [v[v.length - 1][1]]
+                        } else {
+                            tmp = []
+                        }
+                        // console.log(tmp);
                     } else {
-                        tmp = []
-                    }
-                    // console.log(tmp);
-                } else {
-                    // console.log(v[v.length-1][1]);
-                    if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
-                        tmp.push(v[v.length - 1][1])
-                    }
-                }
-                if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
-                    periodavg.push(v[v.length - 1][1])
-                }
-                if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
-                    for (let j = 0; j < overviewReportDefs.length; j++) {
-                        if (!overviewReportDefs[j].skip) {
-                            // console.log(v[j+1]);
-                            if ((v[j + 1] !== null) && (v[j + 1] !== undefined)) {
-                                if (overviewReportDefs[j].presence !== "") {
-                                    if (v[j + 1] >= 2) {
-                                        header += ", true"
-                                    } else {
-                                        header += ", false"
-                                    }
-                                } else {
-                                    header += "," + Math.round(v[j + 1][1]);
-                                }
-                            } else {
-                                header += ", "
-                            }
+                        // console.log(v[v.length-1][1]);
+                        if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
+                            tmp.push(v[v.length - 1][1])
                         }
                     }
-                    // console.log(keys[k], data[keys[k]])
+                    if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
+                        periodavg.push(v[v.length - 1][1])
+                    }
+                    if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
+                        for (let j = 0; j < overviewReportDefs.length; j++) {
+                            if (!overviewReportDefs[j].skip) {
+                                // console.log(v[j+1]);
+                                if ((v[j + 1] !== null) && (v[j + 1] !== undefined)) {
+                                    if (overviewReportDefs[j].presence !== "") {
+                                        if (v[j + 1] >= 2) {
+                                            header += ", true"
+                                        } else {
+                                            header += ", false"
+                                        }
+                                    } else {
+                                        header += "," + Math.round(v[j + 1][1]);
+                                    }
+                                } else {
+                                    header += ", "
+                                }
+                            }
+                        }
+                        // console.log(keys[k], data[keys[k]])
+                    }
                 }
                 header += "\n";
             }
@@ -472,8 +482,8 @@ $(document).ready(function () {
         let select = document.getElementById("spacename");
         var myindex = select.selectedIndex,
             space = select.options[myindex].value;
-        select = document.getElementById("reptype");
-        myindex = select.selectedIndex;
+        // select = document.getElementById("reptype");
+        // myindex = select.selectedIndex;
         var asys = "overview",
             copyendDate = new Date(endDate),
             start, end;
