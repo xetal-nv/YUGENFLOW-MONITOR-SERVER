@@ -347,7 +347,8 @@ $(document).ready(function () {
                         if ((sampledata !== null) && (sampledata !== undefined)) {
                             for (let i = 0; i < sampledata.length; i++) {
                                 let d = new Date(sampledata[i].ts);
-                                var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay();
+                                var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
+                                    " " + d.getDay();
                                 // sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
                                 // for (let i=0; i<data[sampleDate].length; i++) {console.log(data[sampleDate][i]);}
                                 data[sampleDate][current.id + 1] = sampledata[i].val;
