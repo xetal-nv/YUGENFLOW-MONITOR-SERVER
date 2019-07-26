@@ -23,7 +23,7 @@ const version = "v. 0.7.0" // version
 func main() {
 
 	folder, _ := support.GetCurrentExecDir()
-	var cdelay = flag.Int("cdelay", 300, "recovery delay in secs")
+	var cdelay = flag.Int("cdelay", 90, "recovery delay in secs")
 	var dbs = flag.String("dbs", "", "databases root folder")
 	var dbug = flag.Int("debug", 0, "activate and select a debug mode")
 	var dl = flag.Bool("dellogs", false, "delete all logs")
@@ -114,12 +114,14 @@ func main() {
 	}
 
 	cleanup := func() {
+		// we use the crash timestamp as timestamp for all data
 		log.Println("Saving latest values for recovery")
-		if f, err := os.Create(".recovery"); err != nil {
+		if f, err := os.Create(".recoveryavg"); err != nil {
 			log.Printf("RECOVERY DATA ERROR %v \n", err.Error())
 		} else {
 			//noinspection GoUnhandledErrorResult
 			defer f.Close()
+			cTS := support.Timestamp()
 			for sam, el0 := range spaces.LatestBankOut {
 				for sp, el1 := range el0 {
 					for ms, ch := range el1 {
@@ -129,9 +131,9 @@ func main() {
 						case "entry":
 							dt := new(storage.SerieEntries)
 							_ = dt.Extract(<-ch)
-							ok = dt.Tag() != "" && dt.Ts() != 0
+							//ok = dt.Tag() != "" && dt.Ts() != 0
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
-								data += strconv.FormatInt(dt.Ts(), 10) + ","
+								data += strconv.FormatInt(cTS, 10) + ","
 								if ok = len(dt.Sval) != 0; ok {
 									data += "["
 									val := dt.Sval
@@ -145,7 +147,7 @@ func main() {
 							dt := new(storage.SerieSample)
 							_ = dt.Extract(<-ch)
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
-								data += strconv.FormatInt(dt.Ts(), 10) + ","
+								data += strconv.FormatInt(cTS, 10) + ","
 								data += strconv.Itoa(dt.Val()) + "\n"
 							}
 						default:

@@ -1,6 +1,7 @@
 package spaces
 
 import (
+	"fmt"
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
@@ -9,15 +10,10 @@ import (
 	"time"
 )
 
-type intervalDetector struct {
-	id         string    // entry id as string to support entry data in the entire communication pipe
-	start, end time.Time // start and end of the interval
-	incycle    bool      // track if it si in cycle
-	activity   dataEntry // activity count
-}
+// TODO add recovery values form crashes while in cycle, use recovery and space.init
 
 //func detectors(spacename string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
-func detectors(name string, gateChan chan spaceEntries, allIntervals []intervalDetector,
+func detectors(name string, gateChan chan spaceEntries, allIntervals []intervalDetector, recovery chan []intervalDetector,
 	sendDBSchan map[string]chan interface{}, tn, ntn int) {
 
 	//latestDBSIn[dl][name][v.name] = make(chan interface{})
@@ -77,7 +73,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []intervalD
 					support.Timestamp(), "", []int{1}, true}
 			}()
 			log.Printf("spaces.detectors: space %v detector recovering from : %v\n ", name, e)
-			go detectors(name, gateChan, allIntervals, sendDBSchan, tn, ntn)
+			go detectors(name, gateChan, allIntervals, recovery, sendDBSchan, tn, ntn)
 		}
 	}()
 
@@ -99,7 +95,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []intervalD
 					if sp.val != 0 {
 						allIntervals[i].activity.val += 1
 						allIntervals[i].activity.ts = support.Timestamp()
-						//fmt.Println("space activity for interval", allIntervals[i].id, "was", allIntervals[i].activity)
+						fmt.Println("space activity for interval", allIntervals[i].id, "was", allIntervals[i].activity)
 						//sendDBSchan[allIntervals[i].id] <- allIntervals[i].activity
 					}
 				} else if allIntervals[i].incycle {

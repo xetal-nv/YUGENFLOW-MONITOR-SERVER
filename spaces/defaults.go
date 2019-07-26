@@ -18,6 +18,14 @@ type timeSchedule struct {
 	duration int64
 }
 
+// define intervals and stores values for presence detectors
+type intervalDetector struct {
+	id         string    // entry id as string to support entry data in the entire communication pipe
+	start, end time.Time // start and end of the interval
+	incycle    bool      // track if it si in cycle
+	activity   dataEntry // activity count
+}
+
 type pfunc func(string, spaceEntries) interface{}
 type cfunc func(string, chan interface{}, chan bool)
 type dtfuncs struct {
@@ -47,11 +55,12 @@ var latestBankIn map[string]map[string]map[string]chan interface{} // contains a
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
 
 // external variables
-var ResetDBS map[string]map[string]map[string]chan bool             // reset channel for the DBS's
+var _ResetDBS map[string]map[string]map[string]chan bool            // reset channel for the DBS's
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all output channels to the data bank
+var LatestDetectorOut map[string]chan []intervalDetector            // contains the latest presence values for recovery purposes
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var SpaceMaxOccupancy map[string]int                                // maps a space name to its maximum occupancy, if defined
 var spaceTimes map[string]timeSchedule                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode
 var MutexInitData = &sync.RWMutex{}                                 // mutex for InitData
-var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recovery
+var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recoveryavg

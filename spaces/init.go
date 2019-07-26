@@ -96,7 +96,7 @@ func SetUp() {
 			}
 		}
 
-		file, err := os.Open(".recovery")
+		file, err := os.Open(".recoveryavg")
 		if err != nil {
 			log.Printf("spaces.setUpDataDBSBank: InitData file absent or corrupted\n")
 		} else {
@@ -175,6 +175,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 				}
 			}
 			spaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
+			LatestDetectorOut = make(map[string]chan []intervalDetector)
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				name = support.StringLimit(name, support.LabelLength)
 
@@ -185,7 +186,8 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 				// presence detection threads
 				spacePresenceChannels[name] = make(chan spaceEntries, bufsize)
-				go detectors(name, spacePresenceChannels[name], []intervalDetector{},
+				LatestDetectorOut[name] = make(chan []intervalDetector)
+				go detectors(name, spacePresenceChannels[name], []intervalDetector{}, LatestDetectorOut[name],
 					make(map[string]chan interface{}), 0, 0)
 
 				var sg []int
@@ -356,7 +358,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestBankIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestDBSIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
-	ResetDBS = make(map[string]map[string]map[string]chan bool, len(spaceChannels))
+	_ResetDBS = make(map[string]map[string]map[string]chan bool, len(spaceChannels))
 
 	for dl, dt := range dtypes {
 
@@ -371,14 +373,14 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
 			if support.Debug < 3 {
 				latestDBSIn[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
-				//ResetDBS[dl] = make(map[string]map[string]chan bool, len(spaceChannels)) // placeholder
+				//_ResetDBS[dl] = make(map[string]map[string]chan bool, len(spaceChannels)) // placeholder
 			}
 			// set-ups the database for the sampler and average processing DBS thread
 			for name := range spaceChannels {
 				LatestBankOut[dl][name] = make(map[string]chan interface{}, len(avgAnalysis))
 				latestBankIn[dl][name] = make(map[string]chan interface{}, len(avgAnalysis))
 				if support.Debug < 3 {
-					//ResetDBS[dl][name] = make(map[string]chan bool, len(avgAnalysis)) // placeholder
+					//_ResetDBS[dl][name] = make(map[string]chan bool, len(avgAnalysis)) // placeholder
 					latestDBSIn[dl][name] = make(map[string]chan interface{}, len(avgAnalysis))
 				}
 				for _, v := range avgAnalysis {
@@ -450,13 +452,13 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 					if support.Debug < 3 {
 						// start of distributed data passing structure
 						// the reset channel is not used at the moment, this is a place holder
-						//ResetDBS[dl][name][v.name] = make(chan bool)
+						//_ResetDBS[dl][name][v.name] = make(chan bool)
 						latestDBSIn[dl][name][v.name] = make(chan interface{})
 						label := dl + name + v.name
 						if _, e := storage.SetSeries(label, v.interval, !support.Stringending(label, "current", "_")); e != nil {
 							log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
 						}
-						//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], ResetDBS[dl][name][v.name])
+						//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])
 						go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
 					}
 				}
