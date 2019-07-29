@@ -19,11 +19,11 @@ type timeSchedule struct {
 }
 
 // define intervals and stores values for presence detectors
-type intervalDetector struct {
-	id         string    // entry id as string to support entry data in the entire communication pipe
-	start, end time.Time // start and end of the interval
+type IntervalDetector struct {
+	Id         string    // entry Id as string to support entry data in the entire communication pipe
+	Start, End time.Time // Start and End of the interval
 	incycle    bool      // track if it si in cycle
-	activity   dataEntry // activity count
+	Activity   DataEntry // Activity count
 }
 
 type pfunc func(string, spaceEntries) interface{}
@@ -49,7 +49,7 @@ var entrySpaceSamplerChannels map[int][]chan spaceEntries          // channels f
 var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels from entry to associated space presence detector
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
-var avgAnalysisSchedule timeSchedule                               // specifies the activity range of the analysis
+var avgAnalysisSchedule timeSchedule                               // specifies the Activity range of the analysis
 var latestChannelLock = &sync.RWMutex{}                            // this mutex is for a perceived race on the below slices
 var latestBankIn map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
@@ -57,7 +57,7 @@ var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains a
 // external variables
 var _ResetDBS map[string]map[string]map[string]chan bool            // reset channel for the DBS's
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all output channels to the data bank
-var LatestDetectorOut map[string]chan []intervalDetector            // contains the latest presence values for recovery purposes
+var LatestDetectorOut map[string]chan []IntervalDetector            // contains the latest presence values for recovery purposes
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var SpaceMaxOccupancy map[string]int                                // maps a space name to its maximum occupancy, if defined
 var spaceTimes map[string]timeSchedule                              // maps a space name to its closure times

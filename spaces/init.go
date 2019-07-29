@@ -24,10 +24,10 @@ func SetUp() {
 	// currently defined are: sample, entry, presence
 	// track usage of dtypes and use proper conditional statements
 
-	// add sample type based on dataEntry
+	// add sample type based on DataEntry
 	var sample = dtfuncs{}
 	sample.pf = func(nm string, se spaceEntries) interface{} {
-		return dataEntry{id: nm, ts: se.ts, val: se.val}
+		return DataEntry{id: nm, Ts: se.ts, Val: se.val}
 	}
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst)
@@ -45,7 +45,7 @@ func SetUp() {
 		if len(se.entries) > 0 {
 			var entries [][]int
 			for id, v := range se.entries {
-				entries = append(entries, []int{id, v.val})
+				entries = append(entries, []int{id, v.Val})
 			}
 			data.id = nm
 			data.ts = se.ts
@@ -61,7 +61,7 @@ func SetUp() {
 	// add presence type, which is equal to sample
 	var presence = dtfuncs{}
 	presence.pf = func(nm string, se spaceEntries) interface{} {
-		return dataEntry{id: nm, ts: se.ts, val: se.val}
+		return DataEntry{id: nm, Ts: se.ts, Val: se.val}
 	}
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst)
@@ -82,7 +82,7 @@ func SetUp() {
 
 		InitData = make(map[string]map[string]map[string][]string)
 		for i := range dtypes {
-			// filter out data that do not need start value form recovery
+			// filter out data that do not need Start value form recovery
 			switch i {
 			case "presence":
 				// skip
@@ -175,20 +175,22 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 				}
 			}
 			spaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
-			LatestDetectorOut = make(map[string]chan []intervalDetector)
+			LatestDetectorOut = make(map[string]chan []IntervalDetector)
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				name = support.StringLimit(name, support.LabelLength)
 
-				// the go routines below start the relevant processing threads
+				// the go routines below Start the relevant processing threads
 				// sampling and averaging threads
 				spaceChannels[name] = make(chan spaceEntries, bufsize)
 				go sampler(name, spaceChannels[name], nil, nil, nil, 0, sync.Once{}, 0, 0)
 
 				// presence detection threads
 				spacePresenceChannels[name] = make(chan spaceEntries, bufsize)
-				LatestDetectorOut[name] = make(chan []intervalDetector)
-				go detectors(name, spacePresenceChannels[name], []intervalDetector{}, LatestDetectorOut[name],
-					make(map[string]chan interface{}), 0, 0)
+				LatestDetectorOut[name] = make(chan []IntervalDetector)
+				detectCh := make(chan []IntervalDetector)
+				go SafeRegDetectors(detectCh, LatestDetectorOut[name])
+				go detectors(name, spacePresenceChannels[name], []IntervalDetector{}, detectCh,
+					make(map[string]chan interface{}), sync.Once{}, 0, 0)
 
 				var sg []int
 				for _, val := range strings.Split(sts, " ") {
@@ -301,18 +303,18 @@ func setpUpCounter() {
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
-				//jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
-				//jsST = "var opStartTime = \"" + val[0] + "\";\n"
-				//jsEN = "var opEndTime = \"" + val[1] + "\";\n"
+				//jsTxt = "var openingTime = \"from " + Val[0] + " to " + Val[1] + "\";\n"
+				//jsST = "var opStartTime = \"" + Val[0] + "\";\n"
+				//jsEN = "var opEndTime = \"" + Val[1] + "\";\n"
 				avgAnalysisSchedule = timeSchedule{st, en, 0}
 				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.duration += 60000
 				log.Printf("spaces.setpUpCounter: Analysis window is set from %v to %v\n", val[0], val[1])
 			} else {
-				log.Fatal("spaces.setpUpCounter: illegal end ANALYSISWINDOW value", val)
+				log.Fatal("spaces.setpUpCounter: illegal End ANALYSISWINDOW value", val)
 			}
 		} else {
-			log.Fatal("spaces.setpUpCounter: illegal start ANALYSISWINDOW value", val)
+			log.Fatal("spaces.setpUpCounter: illegal Start ANALYSISWINDOW value", val)
 		}
 	}
 
@@ -397,10 +399,10 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 								switch dl {
 								case "sample__":
 									if va, e := strconv.Atoi(InitData[dl][name][v.name][1]); e == nil {
-										go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], dataEntry{tag, ts, va})
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], DataEntry{tag, ts, va})
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-										go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 									}
 								case "entry___":
 									vas := strings.Split(InitData[dl][name][v.name][1][2:len(InitData[dl][name][v.name][1])-2], "][")
@@ -426,31 +428,31 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 											length  int
 											entries [][]int
 										}{id: tag, ts: 0, length: len(va), entries: va}
-										go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-										go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 									}
 								default:
 									log.Printf("spaces.setUpDataDBSBank: invalid InitData data type for %v\n", tag)
-									go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+									go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 								}
 							} else {
 								// data is not fresh enough
-								log.Printf("spaces.setUpDataDBSBank: too old InitData ts for %v\n", tag)
-								go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+								log.Printf("spaces.setUpDataDBSBank: too old InitData Ts for %v\n", tag)
+								go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 							}
 						} else {
-							log.Printf("spaces.setUpDataDBSBank: invalid InitData ts for %v\n", tag)
-							go storage.SafeReg(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+							log.Printf("spaces.setUpDataDBSBank: invalid InitData Ts for %v\n", tag)
+							go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 						}
 					} else {
 						// register started with no InitData data (not available)
-						go storage.SafeReg(dl+name+v.name, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+						go storage.SafeRegGeneric(dl+name+v.name, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
 					}
 
 					if support.Debug < 3 {
-						// start of distributed data passing structure
+						// Start of distributed data passing structure
 						// the reset channel is not used at the moment, this is a place holder
 						//_ResetDBS[dl][name][v.name] = make(chan bool)
 						latestDBSIn[dl][name][v.name] = make(chan interface{})

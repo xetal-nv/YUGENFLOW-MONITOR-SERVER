@@ -27,6 +27,7 @@ func handlerTCPRequest(conn net.Conn) {
 	var ci, ce chan []byte  // channel for the API command
 	var devid chan int      // channel for the API command
 	cks := errormngt[2]
+	malfcheck := 0 // count number fo suspicions of attacks
 
 	defer func() {
 		if idKnown {
@@ -76,9 +77,11 @@ func handlerTCPRequest(conn net.Conn) {
 		// Start reading data
 
 		// define a malicious report function that, depending if on strict mode, also kills the connection
-		malf := func(strict bool) {
+		//malf := func(strict bool) {
+		malf := func() {
 			if support.MalOn {
-				if strict {
+				//if strict {
+				if malfcheck > 3 {
 					log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
 					go func() {
 						support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
@@ -93,15 +96,24 @@ func handlerTCPRequest(conn net.Conn) {
 					}
 					loop = false
 				} else {
-					log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+					log.Printf("servers.handlerTCPRequest: building suspicion on device %v//%v\n", ipc, mach)
 				}
+				//} else {
+				//	log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+				//}
 			}
 		}
 
 		gates.MutexDeclaredDevices.RLock()
 		if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
 			// Device is not allowed, behaviour depends if in strict mode
-			malf(strictFlag)
+			if strictFlag {
+				malfcheck += 1
+				malf()
+			} else {
+				log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+			}
+			//malf(strictFlag)
 		}
 		gates.MutexDeclaredDevices.RUnlock()
 
@@ -129,7 +141,9 @@ func handlerTCPRequest(conn net.Conn) {
 					mutexConnMAC.Unlock()
 					log.Printf("servers.handlerTCPRequest: re-connected to old device %v//%v\n", ipc, mach)
 				} else {
-					malf(true)
+					//malf(true)
+					malfcheck += 1
+					malf()
 				}
 			case <-time.After(time.Duration(timeout+1) * time.Second):
 				// We wait further before assuming this is a malicious attack
@@ -147,10 +161,14 @@ func handlerTCPRequest(conn net.Conn) {
 					if ans {
 						log.Printf("servers.handlerTCPRequest: re-connected (timeout) to old device %v//%v\n", ipc, mach)
 					} else {
-						malf(true)
+						malfcheck += 1
+						malf()
+						//malf(true)
 					}
 				case <-time.After(time.Duration(maltimeout-timeout) * time.Second):
-					malf(true)
+					malfcheck += 1
+					malf()
+					//malf(true)
 				}
 			}
 
@@ -265,6 +283,7 @@ func handlerTCPRequest(conn net.Conn) {
 				mutexSensorMacs.RUnlock()
 			}
 		}
+		malfcheck = 0
 		for loop {
 			cmd := make([]byte, 1)
 			if _, e := conn.Read(cmd); e != nil {
@@ -330,8 +349,11 @@ func handlerTCPRequest(conn net.Conn) {
 
 								if ind != deviceId && ind != 65535 {
 									// Device is a malicious attack, connection is terminated
-									malf(true)
+									malfcheck += 2
+									malf()
+									//malf(true)
 								} else {
+									malfcheck = 0
 									mutexSensorMacs.Lock()
 									if !idKnown {
 										oldMac, ok1 := sensorMacID[deviceId]
@@ -353,8 +375,11 @@ func handlerTCPRequest(conn net.Conn) {
 										} else {
 											// this is either a known device or an attack using a known/used ID
 											if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
-												malf(true)
+												malfcheck += 2
+												malf()
+												//malf(true)
 											} else {
+												malfcheck = 0
 												sensorChanUsedID[deviceId] = true
 											}
 										}

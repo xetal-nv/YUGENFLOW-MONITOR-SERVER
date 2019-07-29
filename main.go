@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"gateserver/gates"
 	"gateserver/sensormodels"
 	"gateserver/servers"
@@ -117,11 +118,12 @@ func main() {
 		// we use the crash timestamp as timestamp for all data
 		log.Println("Saving latest values for recovery")
 		if f, err := os.Create(".recoveryavg"); err != nil {
-			log.Printf("RECOVERY DATA ERROR %v \n", err.Error())
+			log.Printf("RECOVERY DATA SAMPLER ERROR %v \n", err.Error())
 		} else {
 			//noinspection GoUnhandledErrorResult
 			defer f.Close()
 			cTS := support.Timestamp()
+			// Saves the latest sampler values
 			for sam, el0 := range spaces.LatestBankOut {
 				for sp, el1 := range el0 {
 					for ms, ch := range el1 {
@@ -154,8 +156,31 @@ func main() {
 						}
 						if ok {
 							if _, err := f.WriteString(data); err != nil {
-								log.Printf("RECOVERY DATA ERROR %v \n", err.Error())
+								log.Printf("RECOVERY DATA SAMPLER ERROR %v \n", err.Error())
 							}
+						}
+					}
+				}
+			}
+		}
+		if f, err := os.Create(".recoverypres"); err != nil {
+			log.Printf("RECOVERY DATA DETECTORS ERROR %v \n", err.Error())
+		} else {
+			//noinspection GoUnhandledErrorResult
+			defer f.Close()
+			// Saves the latest detector values
+			for space, detVal := range spaces.LatestDetectorOut {
+				if detVal != nil {
+					val := <-detVal
+					if val != nil {
+						for _, el := range val {
+							data := space + "," + el.Id + "," + strconv.FormatInt(el.Start.Unix(), 10) + "," +
+								strconv.FormatInt(el.End.Unix(), 10) + "," + strconv.FormatInt(time.Now().Unix(), 10) +
+								"," + strconv.Itoa(el.Activity.Val) + "\n"
+							if _, err := f.WriteString(data); err != nil {
+								log.Printf("RECOVERY DATA DETECTORS ERROR %v \n", err.Error())
+							}
+							fmt.Println(space, el.Id, el.Start.Unix(), el.End.Unix(), el.Activity.Ts, el.Activity.Val)
 						}
 					}
 				}

@@ -90,7 +90,27 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 	return
 }
 
-// used by InClosureTime
+// true if given time in between start and end
+func InClosureTimeFull(start, end, now time.Time) (rt bool, err error) {
+	if start == end {
+		return false, nil
+	}
+	// this ensures the first minute if captured
+	start = start.Add(-1 * time.Second)
+	nows := strconv.Itoa(now.Hour()) + ":"
+	mins := "00" + strconv.Itoa(now.Minute())
+	nows += mins[len(mins)-2:]
+	var ns time.Time
+	ns, err = time.Parse(TimeLayout, nows)
+	if err != nil {
+		return
+	} else {
+		rt = inTimeSpan(start, end, ns)
+	}
+	return
+}
+
+// used by InClosureTime, InClosureTimeFull
 func inTimeSpan(start, end, check time.Time) bool {
 	if check.After(end) {
 		if end.After(start) {

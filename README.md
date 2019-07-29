@@ -85,8 +85,8 @@ See .env file for configuration example
  - Added check on compulsory configuration variables  
  - .recovery file renamed .recoveryavg tp specify the datapath it belongs to  
  - Changed recovery policy from always showing a sample in the webapp if the counter if not too old, independently form how old the sample average is  
- - Check malicious check if it is working correctly (TBD)  
- - Add recovery for detection presence datapath (TBD)  
+ - Improved resistance of malicious check errors due to channel misallignment  
+ - Add recovery for detection presence datapath (IP)  
 
 **CHANGELOG TO v0.6.0:**  
 

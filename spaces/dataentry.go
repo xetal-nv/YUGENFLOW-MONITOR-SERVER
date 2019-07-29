@@ -6,23 +6,23 @@ import (
 	"strconv"
 )
 
-type dataEntry struct {
-	id  string // entry id as string to support entry data in the entire communication pipe
-	ts  int64  // timestamp
-	val int    // data received
+type DataEntry struct {
+	id  string // entry Id as string to support entry data in the entire communication pipe
+	Ts  int64  // timestamp
+	Val int    // data received
 }
 
 type spaceEntries struct {
-	id      int               // entry id
+	id      int               // entry Id
 	ts      int64             // timestamp for the cumulative value
 	val     int               // cumulative value
-	entries map[int]dataEntry // cumulative value per entry
+	entries map[int]DataEntry // cumulative value per entry
 }
 
-// extract a dataEntry value from a generic interface{} if possible
-func (de *dataEntry) Extract(i interface{}) error {
+// extract a DataEntry value from a generic interface{} if possible
+func (de *DataEntry) Extract(i interface{}) error {
 	if i == nil {
-		return errors.New("spaces.dataEntry.Extract: error illegal data received")
+		return errors.New("spaces.DataEntry.Extract: error illegal data received")
 	}
 	rv := reflect.ValueOf(i)
 	defer func() {
@@ -30,7 +30,7 @@ func (de *dataEntry) Extract(i interface{}) error {
 			_ = de.Extract(nil)
 		}
 	}()
-	z := dataEntry{id: strconv.Itoa(int(rv.Field(0).Int())), ts: rv.Field(2).Int(), val: int(rv.Field(1).Int())}
+	z := DataEntry{id: strconv.Itoa(int(rv.Field(0).Int())), Ts: rv.Field(2).Int(), Val: int(rv.Field(1).Int())}
 	*de = z
 	return nil
 }
