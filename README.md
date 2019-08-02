@@ -1,4 +1,4 @@
-# gateserver
+# Xetal Flow Monitoring GateServer
 
 Copyright Xetal @ 2019  
 Author: F. Pessolano  
@@ -86,7 +86,7 @@ See .env file for configuration example
  - .recovery file renamed .recoveryavg tp specify the datapath it belongs to  
  - Changed recovery policy from always showing a sample in the webapp if the counter if not too old, independently form how old the sample average is  
  - Improved resistance of malicious check errors due to channel misallignment  
- - Add recovery for detection presence datapath (IP)  
+ - Add recovery for detection presence datapath  
 
 **CHANGELOG TO v0.6.0:**  
 

@@ -211,6 +211,7 @@ $(document).ready(function () {
         let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
             'November', 'December'];
+        let dataLock = false;
 
 
         // processavgdata analyses the data from presence averages and start the
@@ -326,6 +327,13 @@ $(document).ready(function () {
         }
 
         function loadpresence(header, data, presenceSets, api, tries) {
+            while (dataLock){}
+            dataLock = true;
+            // for (let i = 0; i < presenceSets.length; i++) {
+                // console.log(presenceSets[i])
+            // }
+            // console.log("pippo")
+
             if (presenceSets.length === 0) {
                 // generate report
                 // console.log("loadpresence", data);
@@ -354,6 +362,7 @@ $(document).ready(function () {
                                 data[sampleDate][current.id + 1] = sampledata[i].val;
                             }
                         }
+                        dataLock = false;
                         loadpresence(header, data, presenceSets, api, tries)
                     },
                     error: function (error) {
@@ -363,6 +372,7 @@ $(document).ready(function () {
                             document.getElementById("loader").style.visibility = "hidden";
                         } else {
                             // loadsamples(header, api, entrieslist, tries + 1)
+                            dataLock = false;
                             loadpresence(header, data, presenceSets, api, tries + 1)
                         }
                     }

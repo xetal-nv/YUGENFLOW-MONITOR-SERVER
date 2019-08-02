@@ -163,7 +163,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						if support.Debug != 0 {
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 						}
-						//sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
+						sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 					}
 				} else if allIntervals[i].incycle {
 					allIntervals[i].incycle = false

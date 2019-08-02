@@ -210,7 +210,7 @@ OVERVIEWREPORT = 08:00 18:00
 ## 'period' provides the average count int he given period
 ## The declaration order will be reflected in the reported order as well
 ##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
-OVERVIEWDATA = point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 08:00 10:00 morning; presence 13:00 17:00 afternoon; presence 20:00 23:00 night;
+OVERVIEWDATA = presence 13:00 17:00 afternoon; point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 08:00 10:00 morning; presence 20:00 23:00 night;
 
 ## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
 ## REFERENCESAMPLES = name_measurement
