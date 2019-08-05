@@ -87,7 +87,7 @@ See .env file for configuration example
  - Changed recovery policy from always showing a sample in the webapp if the counter if not too old, independently form how old the sample average is  
  - Improved resistance of malicious check errors due to channel misallignment  
  - Add recovery for detection presence datapath  
- - Added support for point reporting averages  
+ - Added support for point reporting weekly and period averages  
 
 **CHANGELOG TO v0.6.0:**  
 

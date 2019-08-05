@@ -331,7 +331,7 @@ $(document).ready(function () {
                 }
                 dataLock = true;
                 // for (let i = 0; i < presenceSets.length; i++) {
-                // console.log(presenceSets[i])
+                //     console.log(presenceSets[i])
                 // }
                 // console.log("pippo")
 
@@ -348,7 +348,8 @@ $(document).ready(function () {
                         url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
                             let sampledata = JSON.parse(rawdata);
-                            // console.log(sampledata);
+                            // TODO check if all is ok here
+                            console.log(sampledata);
                             // console.log(data[5]);
                             // console.log(current.id);
                             // data[current.id] = sampledata[0].val;
