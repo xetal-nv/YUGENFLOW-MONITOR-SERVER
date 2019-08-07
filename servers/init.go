@@ -115,7 +115,8 @@ func setJSenvironment() {
 				jsAlt += "{name: \"" + eldef[1] + " to " + eldef[2] + "\", start: \"" + eldef[1] +
 					"\", end: \"" + eldef[2] + "\", point: \"\", precision: \"\", presence: \"\", id: 0},\n"
 			case "presence":
-				jsAlt += "{name: \"activity " + eldef[1] + " to " + eldef[2] + "?\", start: \"\", end: \"\", point: \"" +
+				jsAlt += "{name: \"activity " + eldef[1] + " to " + eldef[2] + "?\", start: \"" + eldef[1] +
+					"\", end: \"" + eldef[2] + "\", point: \"" +
 					"\", precision: \"\", presence: \"" + eldef[3] + "\", id: 0},\n"
 			case "":
 			default:

@@ -220,6 +220,19 @@ $(document).ready(function () {
                 // console.log(overviewReportDefs);
                 // let data = header;
                 // data += "\n";
+                // console.log(sampledata);
+
+                // identify the presence sets
+                let presenceSets = [];
+                let presenceSetsFlags = [];
+                for (let j = 0; j < overviewReportDefs.length; j++) {
+                    if (overviewReportDefs[j].presence !== "") {
+                        overviewReportDefs[j].id = j;
+                        presenceSets.push(overviewReportDefs[j]);
+                        presenceSetsFlags.push(false);
+                    }
+                }
+
                 if ((sampledata === null) || (sampledata === undefined)) {
                     alert("No data available for the selected time.");
                     document.getElementById("loader").style.visibility = "hidden";
@@ -239,14 +252,20 @@ $(document).ready(function () {
                         // checks if this is a new day and sets al variables in case it is
                         if (currentDay !== sampleDate) {
                             if (currentDay !== "") {
+                                for (let i = 0; i < presenceSets.length; i++) {
+                                    if (cycleResult[presenceSets[i].id + 1] === undefined) {
+                                        presenceSetsFlags[i] = true
+                                    }
+                                }
                                 allResults[cycleResult[0]] = cycleResult;
                                 cycleResult = new Array(overviewReportDefs.length + 1);
                             }
                             currentDay = sampleDate;
                             cycleResult[0] = currentDay;
+                            // console.log(cycleResult)
                         }
 
-                        presenceSets = [];
+                        // presenceSets = [];
 
                         for (let j = 0; j < overviewReportDefs.length; j++) {
                             if (overviewReportDefs[j].point !== "") {
@@ -271,34 +290,68 @@ $(document).ready(function () {
                                         // console.log(refT, oldT, newT);
                                     }
                                 }
-                            } else if ((overviewReportDefs[j].start !== "") && (overviewReportDefs[j].end !== "")) {
-                                let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
-                                    sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10),
-                                    stime = parseInt(sampleTime.replace(':', ''), 10);
-                                if ((stime >= sst) && (stime <= sed)) {
-                                    // this is an interval detection
-                                    // since the period is covered by samples, we can use arithmetic average
-                                    // console.log(cycleResult[j]);
-                                    if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === null)) {
-                                        // first sample
-                                        cycleResult[j + 1] = [1, sampledata[i].val]
-                                    } else {
-                                        cycleResult[j + 1][1] = (cycleResult[j + 1][1] * cycleResult[j + 1][0] + sampledata[i].val)
-                                            / (cycleResult[j + 1][0] + 1);
-                                        cycleResult[j + 1][0] += 1;
+                            } else if ((overviewReportDefs[j].start !== "") && (overviewReportDefs[j].end !== ""))
+                                if (overviewReportDefs[j].presence === "") {
+                                    let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
+                                        sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10),
+                                        stime = parseInt(sampleTime.replace(':', ''), 10);
+                                    if ((stime >= sst) && (stime <= sed)) {
+                                        // this is an interval detection
+                                        // since the period is covered by samples, we can use arithmetic average
+                                        // console.log(cycleResult[j]);
+                                        if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === null)) {
+                                            // first sample
+                                            cycleResult[j + 1] = [1, sampledata[i].val]
+                                        } else {
+                                            cycleResult[j + 1][1] = (cycleResult[j + 1][1] * cycleResult[j + 1][0] + sampledata[i].val)
+                                                / (cycleResult[j + 1][0] + 1);
+                                            cycleResult[j + 1][0] += 1;
+                                        }
+                                    }
+                                } else {
+                                    if (cycleResult[j + 1] === undefined) {
+                                        // TODO check for presence,
+                                        //  when presence can be determined for all days no need to enquire the server
+                                        let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
+                                            sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10),
+                                            stime = parseInt(sampleTime.replace(':', ''), 10);
+                                        if ((stime >= sst) && (stime <= sed)) {
+                                            // this is an interval detection
+                                            // if sample is different from zero, we have a presence
+                                            if (sampledata[i].val !== 0) {
+                                                cycleResult[j + 1] = sampledata[i].val * 2
+                                            }
+                                        }
                                     }
                                 }
-                            } else if (overviewReportDefs[j].presence !== "") {
-                                overviewReportDefs[j].id = j;
-                                presenceSets.push(overviewReportDefs[j])
-                            }
+                            // } else if (overviewReportDefs[j].presence !== "") {
+                            //     overviewReportDefs[j].id = j;
+                            //     presenceSets.push(overviewReportDefs[j])
+                            // }
                         }
                     }
                     // console.log(allResults);
                     allResults[cycleResult[0]] = cycleResult;
+                    for (let i = 0; i < presenceSets.length; i++) {
+                        if (cycleResult[presenceSets[i].id + 1] === undefined) {
+                            presenceSetsFlags[i] = true
+                        }
+                    }
+                    let filteredPresenceSets = [];
+                    for (let i = 0; i < presenceSets.length; i++) {
+                        if (presenceSetsFlags[i]) {
+                            filteredPresenceSets.push(presenceSets[i])
+                        }
+                    }
+
+                    // console.log(filteredPresenceSets);
 
                     // pass the data to the next func for presence
-                    loadpresence(header, allResults, presenceSets, api, tries)
+                    // console.log(allResults);
+                    // loadpresence(header, allResults, filteredPresenceSets, api, tries)
+
+                    // temporary
+                    generateOverview(header, allResults);
                 }
             }
 
@@ -333,7 +386,7 @@ $(document).ready(function () {
                 // for (let i = 0; i < presenceSets.length; i++) {
                 //     console.log(presenceSets[i])
                 // }
-                // console.log("pippo")
+                // console.log(data)
 
                 if (presenceSets.length === 0) {
                     // generate report
@@ -341,19 +394,21 @@ $(document).ready(function () {
                     generateOverview(header, data);
                 } else {
                     // load data
-                    let current = presenceSets.pop();
+                    let current = presenceSets[presenceSets.length - 1];
+                    // console.log("DEBUG ", current);
                     $.ajax({
                         type: 'GET',
                         timeout: 5000,
                         url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
                             let sampledata = JSON.parse(rawdata);
-                            // TODO check if all is ok here
-                            console.log(sampledata);
+                            // console.log("DEBUG", current.name, sampledata);
                             // console.log(data[5]);
                             // console.log(current.id);
                             // data[current.id] = sampledata[0].val;
-                            // update allResult, note that it can have multiple dates !!!
+
+                            // remove presence measure since loaded from the server
+                            presenceSets.pop();
                             if ((sampledata !== null) && (sampledata !== undefined)) {
                                 for (let i = 0; i < sampledata.length; i++) {
                                     let d = new Date(sampledata[i].ts);
@@ -392,6 +447,7 @@ $(document).ready(function () {
                 //     "2019-08-03 6": ["3-08-2019 6", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
                 //     "2019-08-04 0": ["4-08-2019 0", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
                 //     "2019-08-05 1": ["5-08-2019 1", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
+                //     "2019-08-06 2": ["6-08-2019 2", 22, [0, 9], [0, 5], , , , , [0, 5]],
                 // };
                 // console.log(data);
                 let keys = Object.keys(data);
@@ -437,7 +493,9 @@ $(document).ready(function () {
                                 val += tmpDays[i]
                             }
                             // console.log(val, tmp.length);
-                            val = Math.round(val / tmpDays.length);
+                            if (val !== 0) {
+                                val = Math.round(val / tmpDays.length)
+                            }
                             weekdayavg.push(val);
                             // console.log(tmp);
                             if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
@@ -466,10 +524,14 @@ $(document).ready(function () {
                                 if (tmppointDays.length !== 0) {
                                     for (let i = 0; i < periods.length; i++) {
                                         // console.log(v, periods[i]);
-                                        if (v[periods[i] + 1] === undefined) {
+                                        // we assume that, except for the last sample, undefined is missing data to be set tot zero
+                                        // comment the first if when this is not valid
+                                        if ((v[periods[i] + 1] === undefined) && (k !== (keys.length - 1).toString())) {
                                             v[periods[i] + 1] = [0, 0]
                                         }
-                                        tmppointDays[i].push(v[periods[i] + 1][1]);
+                                        if (v[periods[i] + 1] !== undefined) {
+                                            tmppointDays[i].push(v[periods[i] + 1][1])
+                                        }
                                     }
                                 }
                             }
@@ -508,13 +570,17 @@ $(document).ready(function () {
                     val += tmpDays[i]
                 }
                 // console.log(val, tmp.length);
-                val = Math.round(val / tmpDays.length);
+                if (val !== 0) {
+                    val = Math.round(val / tmpDays.length)
+                }
                 weekdayavg.push(val);
                 val = 0;
                 for (let i = 0; i < perioddayavg.length; i++) {
                     val += perioddayavg[i]
                 }
-                val = Math.round(val / perioddayavg.length);
+                if (val !== 0) {
+                    val = Math.round(val / perioddayavg.length)
+                }
                 perioddayavg = [val];
                 header += "\n";
                 header += "\n";
@@ -536,7 +602,11 @@ $(document).ready(function () {
                                     for (let k = 0; k < valPoint.length; k++) {
                                         acc += valPoint[k]
                                     }
-                                    weekpointavg[i].push(Math.round(acc / valPoint.length))
+                                    if (acc !== 0) {
+                                        weekpointavg[i].push(Math.round(acc / valPoint.length))
+                                    } else {
+                                        weekpointavg[i].push(0)
+                                    }
                                     // console.log(i, valPoint, weekpointavg[i]);
                                 }
                                 valPoint = []
@@ -547,7 +617,11 @@ $(document).ready(function () {
                         for (let k = 0; k < valPoint.length; k++) {
                             acc += valPoint[k]
                         }
-                        weekpointavg[i].push(Math.round(acc / valPoint.length))
+                        if (acc !== 0) {
+                            weekpointavg[i].push(Math.round(acc / valPoint.length))
+                        } else {
+                            weekpointavg[i].push(0)
+                        }
                         // console.log(i, valPoint, weekpointavg[i])
                     }
                 }
@@ -564,8 +638,12 @@ $(document).ready(function () {
                             // console.log(periodpointavg[j][i])
                         }
                         // console.log(acc);
-                        header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
-                            Math.round(acc / periodpointavg[j].length) + "\n";
+                        if (acc !== 0) {
+                            header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
+                                Math.round(acc / periodpointavg[j].length) + "\n"
+                        } else {
+                            header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
+                        }
                         header += "\n";
                     }
                 }
