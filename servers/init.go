@@ -100,6 +100,22 @@ func setJSenvironment() {
 		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
+	js = "var spaceTimes = {\n"
+	for i, v := range spaces.SpaceTimes {
+		name := strings.Trim(i, "_")
+		hourS := "0" + strconv.Itoa(v.Start.Hour())
+		minS := "0" + strconv.Itoa(v.Start.Minute())
+		hourE := "0" + strconv.Itoa(v.End.Hour())
+		minE := "0" + strconv.Itoa(v.End.Minute())
+		js += "\"" + name + "\": " + "[\"" + hourS + ":" + minS + "\", \"" + hourE + ":" + minE + "\"],\n"
+	}
+	js += "};\n"
+	js += "var labellength = " + strconv.Itoa(support.LabelLength) + ";\n"
+	if _, err := f.WriteString(js); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+
 	js = "var overviewReport = false;\n"
 	if strings.Trim(os.Getenv("OVERVIEWREPORT"), " ") != "" &&
 		strings.Trim(os.Getenv("OVERVIEWDATA"), " ") != "" {

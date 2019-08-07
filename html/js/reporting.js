@@ -309,17 +309,27 @@ $(document).ready(function () {
                                         }
                                     }
                                 } else {
-                                    if (cycleResult[j + 1] === undefined) {
-                                        // TODO check for presence,
-                                        //  when presence can be determined for all days no need to enquire the server
-                                        let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
-                                            sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10),
-                                            stime = parseInt(sampleTime.replace(':', ''), 10);
-                                        if ((stime >= sst) && (stime <= sed)) {
-                                            // this is an interval detection
-                                            // if sample is different from zero, we have a presence
-                                            if (sampledata[i].val !== 0) {
+                                    let name = api.split("?")[0];
+                                    if (name.length > labellength) {
+                                        name = name.slice(0, labellength)
+                                    }
+                                    let clts = parseInt(spaceTimes[name][0].replace(':', ''), 10),
+                                        clte = parseInt(spaceTimes[name][1].replace(':', ''), 10),
+                                        stime = parseInt(sampleTime.replace(':', ''), 10);
+                                    if ((stime < clts) || (stime > clte)) {
+                                        // console.log("not in closure");
+                                        if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === 0))  {
+                                            // check for presence, including closure time check!
+                                            // when presence can be determined for all days no need to enquire the server
+                                            let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
+                                                sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
+                                            // stime = parseInt(sampleTime.replace(':', ''), 10);
+                                            if ((stime >= sst) && (stime <= sed)) {
+                                                // this is an interval detection
+                                                // if sample is different from zero, we have a presence
+                                                // if (sampledata[i].val !== 0) {
                                                 cycleResult[j + 1] = sampledata[i].val * 2
+                                                // }
                                             }
                                         }
                                     }

@@ -12,10 +12,10 @@ type avgInterval struct {
 }
 
 // define the interval when every counter needs to be forced to zero
-type timeSchedule struct {
-	start    time.Time
-	end      time.Time
-	duration int64
+type TimeSchedule struct {
+	Start    time.Time
+	End      time.Time
+	Duration int64
 }
 
 // define intervals and stores values for presence detectors
@@ -49,7 +49,7 @@ var entrySpaceSamplerChannels map[int][]chan spaceEntries          // channels f
 var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels from entry to associated space presence detector
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
-var avgAnalysisSchedule timeSchedule                               // specifies the Activity range of the analysis
+var avgAnalysisSchedule TimeSchedule                               // specifies the Activity range of the analysis
 var latestChannelLock = &sync.RWMutex{}                            // this mutex is for a perceived race on the below slices
 var latestBankIn map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
@@ -60,7 +60,7 @@ var LatestBankOut map[string]map[string]map[string]chan interface{} // contains 
 var LatestDetectorOut map[string]chan []IntervalDetector            // contains the latest presence values for recovery purposes
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var SpaceMaxOccupancy map[string]int                                // maps a space name to its maximum occupancy, if defined
-var spaceTimes map[string]timeSchedule                              // maps a space name to its closure times
+var SpaceTimes map[string]TimeSchedule                              // maps a space name to its closure times
 var cmode string                                                    // data compression mode
 var MutexInitData = &sync.RWMutex{}                                 // mutex for InitData
 var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recoveryavg

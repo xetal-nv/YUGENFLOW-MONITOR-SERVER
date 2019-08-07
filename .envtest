@@ -154,7 +154,7 @@ MULTICYCLEDAYSONLY = 1
 ## Define the time when the space is always empty, this data is used to reset
 ## the space counter
 ##CLOSURE_x = start as xx:xx; end as xx:xx
-#CLOSURE_livlab = 3:00; 05:00
+CLOSURE_livlab = 3:00; 05:00
 #CLOSURE_livlab = 19:56; 20:00
 
 ## ANALYSIS DEFINITION

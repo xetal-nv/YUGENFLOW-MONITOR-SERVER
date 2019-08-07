@@ -131,7 +131,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	entrySpaceSamplerChannels = make(map[int][]chan spaceEntries)
 	entrySpacePresenceChannels = make(map[int][]chan spaceEntries)
 	SpaceDef = make(map[string][]int)
-	spaceTimes = make(map[string]timeSchedule)
+	SpaceTimes = make(map[string]TimeSchedule)
 
 	if data := os.Getenv("SPACES_NAMES"); data != "" {
 		SpaceMaxOccupancy = make(map[string]int)
@@ -157,24 +157,24 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 		// initialise the processing threads for each space
 		for _, name := range spaces {
-			var sprange timeSchedule
+			var sprange TimeSchedule
 			nl, _ := time.Parse(support.TimeLayout, "00:00")
 			rng := strings.Split(strings.Trim(os.Getenv("CLOSURE_"+name), ";"), ";")
-			sprange.start, sprange.end = nl, nl
+			sprange.Start, sprange.End = nl, nl
 			if len(rng) == 2 {
 				for i, v := range rng {
 					rng[i] = strings.Trim(v, " ")
 				}
 				if v, e := time.Parse(support.TimeLayout, rng[0]); e == nil {
-					sprange.start = v
+					sprange.Start = v
 					if v, e := time.Parse(support.TimeLayout, rng[1]); e == nil {
-						sprange.end = v
+						sprange.End = v
 					} else {
-						sprange.start = nl
+						sprange.Start = nl
 					}
 				}
 			}
-			spaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
+			SpaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
 			LatestDetectorOut = make(map[string]chan []IntervalDetector)
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				name = support.StringLimit(name, support.LabelLength)
@@ -306,9 +306,9 @@ func setpUpCounter() {
 				//jsTxt = "var openingTime = \"from " + Val[0] + " to " + Val[1] + "\";\n"
 				//jsST = "var opStartTime = \"" + Val[0] + "\";\n"
 				//jsEN = "var opEndTime = \"" + Val[1] + "\";\n"
-				avgAnalysisSchedule = timeSchedule{st, en, 0}
-				avgAnalysisSchedule.duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
-				avgAnalysisSchedule.duration += 60000
+				avgAnalysisSchedule = TimeSchedule{st, en, 0}
+				avgAnalysisSchedule.Duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
+				avgAnalysisSchedule.Duration += 60000
 				log.Printf("spaces.setpUpCounter: Analysis window is set from %v to %v\n", val[0], val[1])
 			} else {
 				log.Fatal("spaces.setpUpCounter: illegal End ANALYSISWINDOW value", val)

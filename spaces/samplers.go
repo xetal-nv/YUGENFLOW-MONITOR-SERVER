@@ -31,9 +31,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 	stats := []int{tn, ntn}
 	//statsb := []int{0}
 	samplerName := avgAnalysis[avgID].name
-	start := avgAnalysisSchedule.start
-	end := avgAnalysisSchedule.end
-	duration := avgAnalysisSchedule.duration
+	start := avgAnalysisSchedule.Start
+	end := avgAnalysisSchedule.End
+	duration := avgAnalysisSchedule.Duration
 	mcod := multicycleonlydays
 
 	// recover init values if existing
@@ -140,7 +140,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					var skip bool
 					var e error
 					// in closure time the value is forced to zero
-					if skip, e = support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+					if skip, e = support.InClosureTime(SpaceTimes[spacename].Start, SpaceTimes[spacename].End); e == nil {
 						// reset counter in case we are in a CLOSURE period
 						if skip {
 							counter.val = 0
@@ -185,7 +185,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						}
 					}
 				case <-time.After(timeoutInterval):
-					if skip, e := support.InClosureTime(spaceTimes[spacename].start, spaceTimes[spacename].end); e == nil {
+					if skip, e := support.InClosureTime(SpaceTimes[spacename].Start, SpaceTimes[spacename].End); e == nil {
 						// reset all values in case we are in a CLOSURE period
 						if skip {
 							counter.val = 0
@@ -408,7 +408,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 							}
 						case <-time.After(timeoutInterval):
 						case startCycle = <-syncPrevious:
-							// This will never happen with duration == 0
+							// This will never happen with Duration == 0
 							if !startCycle {
 								// check the various conditions of closure of the cycle
 

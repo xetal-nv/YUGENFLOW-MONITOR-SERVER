@@ -88,8 +88,8 @@ See .env file for configuration example
  - Improved resistance of malicious check errors due to channel misallignment  
  - Add recovery for detection presence datapath  
  - Added support for point reporting weekly and period averages 
- - CHECK PRESENCE SERVER AND REPORTING FOR BUGS (IP)  
- - Added support for fall back analysis of data if presence data not available yet for reporting (TBD)  
+ - CHECK PRESENCE SERVER FOR BUGS, currently bypassed in reporting (IP)  
+ - Added support for fall back analysis of data if presence data not available yet for reporting  
  
 **CHANGELOG TO v0.6.0:**  
 
