@@ -155,6 +155,8 @@ func setJSenvironment() {
 				jsAlt += "\"" + v + "\", "
 			}
 			js = jsAlt[:len(jsAlt)-2] + "];\n"
+		} else {
+			js += "var overviewSkipDays = [];\n"
 		}
 	}
 	if _, err := f.WriteString(js); err != nil {

@@ -35,6 +35,7 @@ type dtfuncs struct {
 
 // Constants
 const chantimeout = 100
+const minTransactionsForDetection = 2
 
 // variables defined via options/configuration file
 var Crashmaxdelay int64

@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// TODO add recovery values form crashes from .recoverypres
+// TODO redesign it with using a proper DBS driver and API storing one value per day instead of a true TSDB
 
 // SafeRegDetectors is a safe register used for recovery purposes
 func SafeRegDetectors(in, out chan []IntervalDetector) {
@@ -42,6 +42,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 
 	timeoutInterval := 5 * chantimeout * time.Millisecond
 	active := true
+	saved := false
 	// load the configuration, this is done only once even when recovering
 	once.Do(func() {
 		// configuration is read, if name is truncated, the name needs to be recovered from the config file as well
@@ -70,7 +71,10 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 							start, end, false, DataEntry{id: nm}})
 						sendDBSchan[nm] = make(chan interface{})
 						//label := spacename + nm
-						if _, e := storage.SetSeries(nm, SamplingWindow, true); e != nil {
+						//fmt.Println(nm, int(end.Unix() - start.Unix())/4, SamplingWindow)
+						//os.Exit(1)
+						// this approach is quite slow
+						if _, e := storage.SetSeries(nm, SamplingWindow*10, true); e != nil {
 							log.Fatalf("spaces.detectors: fatal error setting database %v\n", nm)
 						}
 						go dtypes["presence"].cf(nm, sendDBSchan[nm], nil)
@@ -124,7 +128,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 					}
 				}
 			}
-
+			log.Printf("spaces.detectors: detectors for %v activated\n", spacename)
 		} else {
 			active = false
 			//fmt.Println("detector for", name, "not active")
@@ -148,6 +152,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 		var sp spaceEntries
 		select {
 		case sp = <-gateChan:
+			//fmt.Println("got", sp.val)
 		case <-time.After(timeoutInterval):
 		}
 		if active {
@@ -163,18 +168,46 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						if support.Debug != 0 {
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 						}
-						//sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
+						// 2 activities is the minimum for guaranteed presence and we store it as soon as it happens
+						// waiting for the at least a interval step to elapse
+						//var recSH string
+						//if allIntervals[i].End.Hour() >= allIntervals[i].Start.Hour() {
+						//	recSH = "0" + strconv.Itoa((allIntervals[i].End.Hour()-allIntervals[i].Start.Hour())/4+allIntervals[i].Start.Hour())
+						//} else {
+						//	recSH = "0" + strconv.Itoa((24+allIntervals[i].End.Hour()-allIntervals[i].Start.Hour())/4+allIntervals[i].Start.Hour())
+						//
+						//}
+						//recSM := "0" + strconv.Itoa((allIntervals[i].End.Minute()-allIntervals[i].Start.Minute())/4+allIntervals[i].Start.Minute())
+						//recSH = recSH[len(recSH)-2:]
+						//recSM = recSM[len(recSM)-2:]
+						//fmt.Println(recSH, recSM, recSH+":"+recSM)
+						//if recStart, e := time.Parse(support.TimeLayout, recSH+":"+recSM); e == nil {
+						//fmt.Print(recStart)
+						//if found, e := support.InClosureTime(recStart, allIntervals[i].End); e == nil && found {
+						if allIntervals[i].Activity.Val >= minTransactionsForDetection && !saved {
+							sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
+							saved = true
+							fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
+						} else {
+							fmt.Println("space Activity for interval", allIntervals[i].Id, "NOT saved")
+						}
+						//}
+						//}
+						//os.Exit(1)
 					}
 				} else if allIntervals[i].incycle {
 					if support.Debug != 0 {
 						fmt.Println("space Activity for interval", allIntervals[i].Id, " ended as", allIntervals[i].Activity)
 					}
 					allIntervals[i].incycle = false
+					saved = false
 					//fmt.Println("exit cycle")
-					//fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
+					fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 					sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 					allIntervals[i].Activity.Val = 0
 					allIntervals[i].Activity.Ts = support.Timestamp()
+				} else {
+					//fmt.Println("not cycle")
 				}
 			}
 			// send the current values to the recovery register

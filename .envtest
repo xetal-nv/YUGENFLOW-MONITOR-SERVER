@@ -176,7 +176,7 @@ ANALYSISPERIOD = 20secs 20; 20mins 1200;hour 3600; day 86000
 ## Defines internals of time where only presence detection is relevant, no counting
 ## Time is providedin the HH:MM format
 ##PRESENCE_spacename = detectorname start end; ...
-PRESENCE_livlab = morning 08:00 12:30; afternoon 13:00 14:00; night 20:00 23:00
+PRESENCE_livlab = morning 08:00 09:10; afternoon 13:00 18:00; night 18:00 23:59
 #PRESENCE_livlab = test 07:23 07:30
 #PRESENCE_livlab = day 09:00 09:09
 
@@ -210,14 +210,15 @@ OVERVIEWREPORT = 08:00 18:00
 ## 'period' provides the average count int he given period
 ## The declaration order will be reflected in the reported order as well
 ##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
-OVERVIEWDATA = presence 13:00 14:00 afternoon; point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 08:00 12:30 morning; presence 20:00 23:00 night;
+OVERVIEWDATA = presence 13:00 18:00 afternoon; point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 08:00 12:30 morning; presence 18:00 06:00 night;
 
 ## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
 ## REFERENCESAMPLES = name_measurement
 REFERENCESAMPLES = 20secs
 
 ## SKIPDAYS = list week days to be skipped (0 is sunday, 6 is Saturday)
-SKIPDAYS = 0 6
+#SKIPDAYS = 0 6
+SKIPDAYS =
 
 ## Defines user
 USER = DEME

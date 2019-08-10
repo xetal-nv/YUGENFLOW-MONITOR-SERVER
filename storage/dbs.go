@@ -264,6 +264,7 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 		i := (ts - st[0]) / (st[1] * 1000)
 		// the first sample is lost anyhow, but in some cases it takes time for the second to arrive and overwrite it
 		// as i==0 is not readable we force it to 1
+		//fmt.Println("store", tag, ts, val, i)
 		if i == 0 {
 			i = 1
 		}

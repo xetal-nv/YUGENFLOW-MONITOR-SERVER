@@ -71,7 +71,6 @@ See .env file for configuration example
  - Added overview report mode with configurable template  
  - Option REPSHOW to enable specific reports  
  - Option RTSHOW to enable specific real time values   
- - Display report on browser (maybe)  
  - Consolidated all variables for JS, which are generated dynamically only once, in one file def.js  
  - Removed redundant check on report generation  
  - Added a new API for presence detection including configuration options, use "presence" as type in the series API  
@@ -85,11 +84,12 @@ See .env file for configuration example
  - Added check on compulsory configuration variables  
  - .recovery file renamed .recoveryavg tp specify the datapath it belongs to  
  - Changed recovery policy from always showing a sample in the webapp if the counter if not too old, independently form how old the sample average is  
- - Improved resistance of malicious check errors due to channel misallignment  
+ - Improved resistance of malicious check errors due to channel misalignment  
  - Add recovery for detection presence datapath  
  - Added support for point reporting weekly and period averages 
- - CHECK PRESENCE SERVER FOR BUGS, currently bypassed in reporting (IP)  
  - Added support for fall back analysis of data if presence data not available yet for reporting  
+ - Added bypass.js for forcing JS changes without restart of the server and for sing new JS on old server verions  
+ - Added optimised DB driver for presence detection (IP)  
  
 **CHANGELOG TO v0.6.0:**  
 

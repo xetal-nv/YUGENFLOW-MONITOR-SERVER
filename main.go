@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"gateserver/gates"
 	"gateserver/sensormodels"
 	"gateserver/servers"
@@ -180,7 +179,7 @@ func main() {
 							if _, err := f.WriteString(data); err != nil {
 								log.Printf("RECOVERY DATA DETECTORS ERROR %v \n", err.Error())
 							}
-							fmt.Println(space, el.Id, el.Start.Unix(), el.End.Unix(), el.Activity.Ts, el.Activity.Val)
+							//fmt.Println(space, el.Id, el.Start.Unix(), el.End.Unix(), el.Activity.Ts, el.Activity.Val)
 						}
 					}
 				}

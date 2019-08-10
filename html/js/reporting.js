@@ -210,7 +210,7 @@ $(document).ready(function () {
             let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                 'November', 'December'];
-            let dataLock = false;
+            // let dataLock = false;
             let periods = [];
 
 
@@ -308,7 +308,10 @@ $(document).ready(function () {
                                             cycleResult[j + 1][0] += 1;
                                         }
                                     }
-                                } else {
+                                    // the if below is for development and will be removed
+                                } else if (!developmentflag) {
+                                    // check for presence, including closure time check
+                                    // when presence can be determined for all days no need to enquire the server
                                     let name = api.split("?")[0];
                                     if (name.length > labellength) {
                                         name = name.slice(0, labellength)
@@ -318,17 +321,14 @@ $(document).ready(function () {
                                         stime = parseInt(sampleTime.replace(':', ''), 10);
                                     if ((stime < clts) || (stime > clte)) {
                                         // console.log("not in closure");
+                                        // when there has been no valid or onlym zero sample, we check for activity
                                         if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === 0))  {
-                                            // check for presence, including closure time check!
-                                            // when presence can be determined for all days no need to enquire the server
                                             let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
                                                 sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
                                             // stime = parseInt(sampleTime.replace(':', ''), 10);
                                             if ((stime >= sst) && (stime <= sed)) {
-                                                // this is an interval detection
-                                                // if sample is different from zero, we have a presence
-                                                // if (sampledata[i].val !== 0) {
                                                 cycleResult[j + 1] = sampledata[i].val * 2
+                                                // console.log("valid", sampledata[i].val)
                                                 // }
                                             }
                                         }
@@ -354,14 +354,15 @@ $(document).ready(function () {
                         }
                     }
 
+                    // console.log(allResults);
                     // console.log(filteredPresenceSets);
 
                     // pass the data to the next func for presence
                     // console.log(allResults);
-                    // loadpresence(header, allResults, filteredPresenceSets, api, tries)
+                    loadpresence(header, allResults, filteredPresenceSets, api, tries)
 
-                    // temporary
-                    generateOverview(header, allResults);
+                    // temporary, to be deleted
+                    // generateOverview(header, allResults);
                 }
             }
 
@@ -390,9 +391,9 @@ $(document).ready(function () {
             }
 
             function loadpresence(header, data, presenceSets, api, tries) {
-                while (dataLock) {
-                }
-                dataLock = true;
+                // while (dataLock) {
+                // }
+                // dataLock = true;
                 // for (let i = 0; i < presenceSets.length; i++) {
                 //     console.log(presenceSets[i])
                 // }
@@ -405,10 +406,10 @@ $(document).ready(function () {
                 } else {
                     // load data
                     let current = presenceSets[presenceSets.length - 1];
-                    // console.log("DEBUG ", current);
+                    console.log("DEBUG: ", ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence);
                     $.ajax({
                         type: 'GET',
-                        timeout: 5000,
+                        timeout: 30000,
                         url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
                             let sampledata = JSON.parse(rawdata);
@@ -429,7 +430,7 @@ $(document).ready(function () {
                                     data[sampleDate][current.id + 1] = sampledata[i].val;
                                 }
                             }
-                            dataLock = false;
+                            // dataLock = false;
                             loadpresence(header, data, presenceSets, api, tries)
                         },
                         error: function (error) {
@@ -439,7 +440,7 @@ $(document).ready(function () {
                                 document.getElementById("loader").style.visibility = "hidden";
                             } else {
                                 // loadsamples(header, api, entrieslist, tries + 1)
-                                dataLock = false;
+                                // dataLock = false;
                                 loadpresence(header, data, presenceSets, api, tries + 1)
                             }
                         }
@@ -494,8 +495,8 @@ $(document).ready(function () {
                             valid = true
                         }
                     }
+                    // console.log(valid);
                     if (valid) {
-                        // console.log(valid);
                         if ((data[keys[k]][0].split(" ")[1] === "0") && (tmpDays.length !== 0)) {
                             // start week, calculate and store average, reset tmp array
                             let val = 0;
@@ -551,6 +552,7 @@ $(document).ready(function () {
                         }
                         if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
                             for (let j = 0; j < overviewReportDefs.length; j++) {
+                                // console.log(overviewReportDefs[j]);
                                 if (!overviewReportDefs[j].skip) {
                                     // console.log(v[j+1]);
                                     if ((v[j + 1] !== null) && (v[j + 1] !== undefined)) {
