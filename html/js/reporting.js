@@ -507,7 +507,7 @@ $(document).ready(function () {
                                 val += tmpDays[i]
                             }
                             // console.log(val, tmp.length);
-                            if (val !== 0) {
+                            if (tmpDays.length !== 0) {
                                 val = Math.round(val / tmpDays.length)
                             }
                             weekdayavg.push(val);
@@ -516,7 +516,8 @@ $(document).ready(function () {
                                 tmpDays = [v[v.length - 1][1]];
                                 if (tmppointDays.length !== 0) {
                                     for (let i = 0; i < periods.length; i++) {
-                                        tmppointDays[i].push(v[periods[i] + 1]);
+                                        tmppointDays[i].push(v[periods[i] + 1][1]);
+                                        tmppointDays[i].push(-1);
                                     }
                                 }
                             } else {
@@ -579,13 +580,13 @@ $(document).ready(function () {
                     header += "\n";
                 }
                 // console.log(tmppointDays);
-                // console.log(tmp);
+                // console.log(tmpDays);
                 let val = 0;
                 for (let i = 0; i < tmpDays.length; i++) {
                     val += tmpDays[i]
                 }
                 // console.log(val, tmp.length);
-                if (val !== 0) {
+                if (tmpDays.length !== 0) {
                     val = Math.round(val / tmpDays.length)
                 }
                 weekdayavg.push(val);
@@ -593,7 +594,7 @@ $(document).ready(function () {
                 for (let i = 0; i < perioddayavg.length; i++) {
                     val += perioddayavg[i]
                 }
-                if (val !== 0) {
+                if (perioddayavg.length !== 0) {
                     val = Math.round(val / perioddayavg.length)
                 }
                 perioddayavg = [val];
@@ -617,7 +618,7 @@ $(document).ready(function () {
                                     for (let k = 0; k < valPoint.length; k++) {
                                         acc += valPoint[k]
                                     }
-                                    if (acc !== 0) {
+                                    if (valPoint.length !== 0) {
                                         weekpointavg[i].push(Math.round(acc / valPoint.length))
                                     } else {
                                         weekpointavg[i].push(0)
@@ -632,7 +633,7 @@ $(document).ready(function () {
                         for (let k = 0; k < valPoint.length; k++) {
                             acc += valPoint[k]
                         }
-                        if (acc !== 0) {
+                        if (valPoint.length !== 0) {
                             weekpointavg[i].push(Math.round(acc / valPoint.length))
                         } else {
                             weekpointavg[i].push(0)
@@ -653,7 +654,7 @@ $(document).ready(function () {
                             // console.log(periodpointavg[j][i])
                         }
                         // console.log(acc);
-                        if (acc !== 0) {
+                        if (periodpointavg[j].length !== 0) {
                             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
                                 Math.round(acc / periodpointavg[j].length) + "\n"
                         } else {
