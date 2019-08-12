@@ -143,7 +143,7 @@ func (ss *SerieEntries) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) 
 	return rt
 }
 
-func SeriesEntryDBS(id string, in chan interface{}, rst chan bool) {
+func SeriesEntryDBS(id string, in chan interface{}, rst chan bool, tp string) {
 
-	handlerDBS(id, in, rst, new(SerieEntries))
+	handlerDBS(id, in, rst, new(SerieEntries), tp)
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// redundant
+// TODO check if ok
 
 func presenceHTTPhandler() http.Handler {
 	var cmds = []string{"space", "analysis", "start", "end"}
@@ -82,8 +82,11 @@ func presenceHTTPhandler() http.Handler {
 			s1 = &storage.SerieSample{Stag: label, Sts: en}
 
 			var rt []storage.SampleData
-			if tag, ts, vals, e := storage.ReadSeries(s0, s1, true); e == nil {
+			if tag, ts, vals, e := storage.ReadSeriesSD(s0, s1, true); e == nil {
 				//fmt.Println(tag, ts, vals)
+				//for _, val := range ts {
+				//	fmt.Println(time.Unix(val/1000, 0))
+				//}
 				rt = s0.UnmarshalSliceSS(tag, ts, vals)
 			}
 			_ = json.NewEncoder(w).Encode(rt)

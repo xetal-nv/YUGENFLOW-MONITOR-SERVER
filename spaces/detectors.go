@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-// TODO redesign it with using a proper DBS driver and API storing one value per day instead of a true TSDB
-
 // SafeRegDetectors is a safe register used for recovery purposes
 func SafeRegDetectors(in, out chan []IntervalDetector) {
 	var data []IntervalDetector
@@ -74,7 +72,8 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						//fmt.Println(nm, int(end.Unix() - start.Unix())/4, SamplingWindow)
 						//os.Exit(1)
 						// this approach is quite slow
-						if _, e := storage.SetSeries(nm, SamplingWindow*10, true); e != nil {
+						//if _, e := storage.SetSeries(nm, SamplingWindow*10, true); e != nil {
+						if _, e := storage.SetSeries(nm, 0, true); e != nil {
 							log.Fatalf("spaces.detectors: fatal error setting database %v\n", nm)
 						}
 						go dtypes["presence"].cf(nm, sendDBSchan[nm], nil)
@@ -169,7 +168,6 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 						}
 						// 2 activities is the minimum for guaranteed presence and we store it as soon as it happens
-						// waiting for the at least a interval step to elapse
 						//var recSH string
 						//if allIntervals[i].End.Hour() >= allIntervals[i].Start.Hour() {
 						//	recSH = "0" + strconv.Itoa((allIntervals[i].End.Hour()-allIntervals[i].Start.Hour())/4+allIntervals[i].Start.Hour())
@@ -187,9 +185,9 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						if allIntervals[i].Activity.Val >= minTransactionsForDetection && !saved {
 							sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 							saved = true
-							fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
+							//fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
 						} else {
-							fmt.Println("space Activity for interval", allIntervals[i].Id, "NOT saved")
+							//fmt.Println("space Activity for interval", allIntervals[i].Id, "NOT saved")
 						}
 						//}
 						//}
@@ -202,7 +200,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 					allIntervals[i].incycle = false
 					saved = false
 					//fmt.Println("exit cycle")
-					fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
+					//fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 					sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 					allIntervals[i].Activity.Val = 0
 					allIntervals[i].Activity.Ts = support.Timestamp()

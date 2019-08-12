@@ -30,7 +30,7 @@ func SetUp() {
 		return DataEntry{id: nm, Ts: se.ts, Val: se.val}
 	}
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
-		storage.SerieSampleDBS(id, in, rst)
+		storage.SerieSampleDBS(id, in, rst, "TS")
 	}
 	dtypes[support.StringLimit("sample", support.LabelLength)] = sample
 	// add entry type
@@ -55,7 +55,7 @@ func SetUp() {
 		return data
 	}
 	entry.cf = func(id string, in chan interface{}, rst chan bool) {
-		storage.SeriesEntryDBS(id, in, rst)
+		storage.SeriesEntryDBS(id, in, rst, "TS")
 	}
 	dtypes[support.StringLimit("entry", support.LabelLength)] = entry
 	// add presence type, which is equal to sample
@@ -64,7 +64,7 @@ func SetUp() {
 		return DataEntry{id: nm, Ts: se.ts, Val: se.val}
 	}
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
-		storage.SerieSampleDBS(id, in, rst)
+		storage.SerieSampleDBS(id, in, rst, "SD")
 	}
 	dtypes[support.StringLimit("presence", support.LabelLength)] = presence
 

@@ -75,7 +75,7 @@ func seriesHTTPhandler() http.Handler {
 				default:
 					return
 				}
-				if tag, ts, vals, e := storage.ReadLastN(s, num, params["analysis"] != "current"); e == nil {
+				if tag, ts, vals, e := storage.ReadLastNTS(s, num, params["analysis"] != "current"); e == nil {
 					rt := s.UnmarshalSliceSS(tag, ts, vals)
 					_ = json.NewEncoder(w).Encode(rt)
 				}
@@ -110,7 +110,7 @@ func seriesHTTPhandler() http.Handler {
 				//fmt.Println(st,en)
 
 				var rt []storage.SampleData
-				if tag, ts, vals, e := storage.ReadSeries(s0, s1, params["analysis"] != "current"); e == nil {
+				if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 					rt = s0.UnmarshalSliceSS(tag, ts, vals)
 				}
 				_ = json.NewEncoder(w).Encode(rt)

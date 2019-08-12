@@ -21,3 +21,4 @@
 // var opEndTime = "";
 
 var developmentflag = false;
+var reportWarning = "";

@@ -277,7 +277,7 @@ func setupHTTP() error {
 	// Series data retrieval API
 	hMap[1]["/series"] = seriesHTTPhandler()
 	// Presence data retrieval API
-	//hMap[1]["/detections"] = presenceHTTPhandler()
+	hMap[1]["/presence"] = presenceHTTPhandler()
 	// Sensor command API
 	hMap[1]["/cmd"] = commandHTTHandler()
 	// analysis information API

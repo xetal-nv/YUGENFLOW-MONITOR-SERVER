@@ -222,8 +222,8 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 	return
 }
 
-// updates the header of a series
-func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
+// updates the header of a TS series
+func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
 	var ts int64
 	var hd Headerdata
 	if len(gts) != 1 {
@@ -238,22 +238,22 @@ func updateHeader(tag string, sDB bool, gts ...int64) (err error) {
 			select {
 			case statsChanIn <- dbInChan{[]byte(tag + "0"), b, true}:
 			case <-time.After(time.Duration(timeout) * time.Second):
-				return errors.New("updateHeader " + tag + " stats time out")
+				return errors.New("updateTSHeader " + tag + " stats time out")
 			}
 		} else {
 			select {
 			case currentChanIn <- dbInChan{[]byte(tag + "0"), b, true}:
 			case <-time.After(time.Duration(timeout) * time.Second):
-				return errors.New("updateHeader " + tag + " current time out")
+				return errors.New("updateTSHeader " + tag + " current time out")
 			}
 		}
 	}
 	return
 }
 
-// stores a sample, optionally it updates the header
-func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
-	//fmt.Println("store", d)
+// stores a TS sample, optionally it updates the header
+func StoreSampleTS(d SampleData, sDB bool, updatehead ...bool) (err error) {
+	//fmt.Println("store TS", d)
 	ts := d.Ts()
 	tag := d.Tag()
 	val := d.Marshal()
@@ -274,13 +274,13 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 			select {
 			case statsChanIn <- dbInChan{[]byte(lab), val, false}:
 			case <-time.After(time.Duration(timeout) * time.Second):
-				return errors.New("StoreSample " + tag + " stats time out")
+				return errors.New("StoreSampleTS " + tag + " stats time out")
 			}
 		} else {
 			select {
 			case currentChanIn <- dbInChan{[]byte(lab), val, false}:
 			case <-time.After(time.Duration(timeout) * time.Second):
-				return errors.New("StoreSample " + tag + " current time out")
+				return errors.New("StoreSampleTS " + tag + " current time out")
 			}
 		}
 	} else {
@@ -289,22 +289,61 @@ func StoreSample(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	}
 	if len(updatehead) == 1 {
 		if updatehead[0] {
-			err = updateHeader(d.Tag(), sDB, ts)
+			err = updateTSHeader(d.Tag(), sDB, ts)
 		}
 	}
 	return err
 }
 
-// reads a series, all values between the timestamos included in s0 and s1 are reads
+// stores a SD sample, optionally it updates the header
+// TODO check if it works, WRONG TS is in writing or reading?
+// not working?
+func StoreSampleSD(d SampleData, sDB bool, updatehead ...bool) (err error) {
+	//fmt.Println("store SD", d)
+	ts := d.Ts()
+	tag := d.Tag()
+	val := d.Marshal()
+	tagMutex.RLock()
+	if _, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
+		tm := time.Unix(ts/1000, 0)
+		lab := tag + strconv.Itoa(tm.Year()) + "_" + strconv.Itoa(int(tm.Month())) + "_" + strconv.Itoa(tm.Day())
+		//fmt.Println("store SD", lab)
+		if sDB {
+			select {
+			case statsChanIn <- dbInChan{[]byte(lab), val, false}:
+			case <-time.After(time.Duration(timeout) * time.Second):
+				return errors.New("StoreSampleTS " + tag + " stats time out")
+			}
+		} else {
+			select {
+			case currentChanIn <- dbInChan{[]byte(lab), val, false}:
+			case <-time.After(time.Duration(timeout) * time.Second):
+				return errors.New("StoreSampleTS " + tag + " current time out")
+			}
+		}
+	} else {
+		tagMutex.RUnlock()
+		err = errors.New("Serie " + tag + " not found")
+	}
+	if len(updatehead) == 1 {
+		if updatehead[0] {
+			err = updateTSHeader(d.Tag(), sDB, ts)
+		}
+	}
+	return err
+}
+
+// reads a TS series, all values between the timestamos included in s0 and s1 are reads
 // values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
-func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
-		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(s0).String())
+		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
 		return
 	}
 	tag = s0.Tag()
@@ -329,13 +368,13 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 					select {
 					case statsChanOut <- dbOutCommChan{lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
 					case <-time.After(time.Duration(timeout) * time.Second):
-						return tag, rts, rt, errors.New("ReadSeries " + tag + " stats time out")
+						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " stats time out")
 					}
 				} else {
 					select {
 					case currentChanOut <- dbOutCommChan{lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
 					case <-time.After(time.Duration(timeout) * time.Second):
-						return tag, rts, rt, errors.New("ReadSeries " + tag + " current time out")
+						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " current time out")
 					}
 				}
 				select {
@@ -347,7 +386,7 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 						rts = append(rts, nts)
 					}
 				case <-time.After(time.Duration(timeout) * time.Second):
-					return tag, rts, rt, errors.New("ReadSeries " + tag + " receive time out")
+					return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " receive time out")
 				}
 				i += 1
 			}
@@ -359,15 +398,81 @@ func ReadSeries(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]by
 	return tag, rts, rt, err
 }
 
-// It returns the values for the last N timestamps
+// TODO check if it works
+func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+	// returns all values between s1 and s2, extremes included
+	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
+		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
+		return
+	}
+	tag = s0.Tag()
+	ts0 := s0.Ts() / 1000
+	ts1 := s1.Ts() / 1000
+	tagMutex.RLock()
+	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
+		////fmt.Println(st, s0, s1)
+		if ts1 != st[0] {
+			if ts0 < st[0]/1000 {
+				ts0 = st[0] / 1000 // force to skip non existent samples
+			}
+			// need to loop now on dates one day at a time
+			//time0 := time.Unix(s0.Ts(), 0)
+			//time0y, time0m, time0d := time0.Year(), int(time0.Month()), time0.Day()
+			//time1 := time.Unix(s1.Ts(), 0)
+			//time1y, time1m, time1d := time1.Year(), int(time1.Month()), time1.Day()
+
+			for i := ts0; i <= ts1; i += 86400 {
+				time0 := time.Unix(i, 0)
+				lab := tag + strconv.Itoa(time0.Year()) + "_" + strconv.Itoa(int(time0.Month())) + "_" + strconv.Itoa(time0.Day())
+				//fmt.Println("read SD", lab)
+				co := make(chan dbOutChan)
+				if sDB {
+					select {
+					case statsChanOut <- dbOutCommChan{[]byte(lab), s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
+					case <-time.After(time.Duration(timeout) * time.Second):
+						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " stats time out")
+					}
+				} else {
+					select {
+					case currentChanOut <- dbOutCommChan{[]byte(lab), s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
+					case <-time.After(time.Duration(timeout) * time.Second):
+						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " current time out")
+					}
+				}
+				select {
+				case ans := <-co:
+					//fmt.Println("READ_SD", ans)
+					if ans.err == nil {
+						// the ts is reduced to simply the day
+						//nts := int64(ts0/86400)*86400000
+						// we use the TS of the sample itself
+						nts := int64(0)
+						rt = append(rt, ans.r)
+						rts = append(rts, nts)
+					}
+				case <-time.After(time.Duration(timeout) * time.Second):
+					return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " receive time out")
+				}
+				i += 1
+			}
+		}
+	} else {
+		tagMutex.RUnlock()
+		err = errors.New("Serie " + tag + " not found")
+	}
+	return tag, rts, rt, err
+}
+
+// It returns the values for the last N timestamps in a TS serie
 // values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
-func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	if head.MarshalSize() == 0 && len(head.MarshalSizeModifiers()) != 2 {
-		err = errors.New("storage.ReadSeries: type not supporter: " + reflect.TypeOf(head).String())
+		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(head).String())
 		return
 	}
 	tag = head.Tag()
@@ -376,7 +481,7 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 	if st, ok := tagStart[tag]; ok {
 		tagMutex.RUnlock()
 		if ts1 <= st[0] {
-			err = errors.New("storage.ReadLastN: illegal end series point provided")
+			err = errors.New("storage.ReadLastNTS: illegal end series point provided")
 		} else {
 			i1 := (ts1 - st[0]) / (st[1] * 1000)
 			for j := ns; j > 0; j-- {
@@ -388,13 +493,13 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 						select {
 						case statsChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
 						case <-time.After(time.Duration(timeout) * time.Second):
-							return tag, rts, rt, errors.New("ReadLastN " + tag + " stats time out")
+							return tag, rts, rt, errors.New("ReadLastNTS " + tag + " stats time out")
 						}
 					} else {
 						select {
 						case currentChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
 						case <-time.After(time.Duration(timeout) * time.Second):
-							return tag, rts, rt, errors.New("ReadLastN " + tag + " current time out")
+							return tag, rts, rt, errors.New("ReadLastNTS " + tag + " current time out")
 						}
 					}
 					select {
@@ -405,14 +510,14 @@ func ReadLastN(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [
 							rts = append(rts, nts)
 						}
 					case <-time.After(time.Duration(timeout) * time.Second):
-						return tag, rts, rt, errors.New("ReadLastN " + tag + " receive time out")
+						return tag, rts, rt, errors.New("ReadLastNTS " + tag + " receive time out")
 					}
 				}
 			}
 		}
 	} else {
 		tagMutex.RUnlock()
-		err = errors.New("storage.ReadLastN: serie " + tag + " not found")
+		err = errors.New("storage.ReadLastNTS: serie " + tag + " not found")
 	}
 	return
 }
@@ -573,6 +678,7 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 	}()
 	for {
 		data := <-c
+		//fmt.Println(data)
 		go func(data dbInChan, db badger.DB, ttl bool) {
 			// locks clean-up to avoid database corruption
 			support.CleanupLock.RLock()

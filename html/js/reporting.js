@@ -322,7 +322,7 @@ $(document).ready(function () {
                                     if ((stime < clts) || (stime > clte)) {
                                         // console.log("not in closure");
                                         // when there has been no valid or onlym zero sample, we check for activity
-                                        if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === 0))  {
+                                        if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === 0)) {
                                             let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
                                                 sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
                                             // stime = parseInt(sampleTime.replace(':', ''), 10);
@@ -406,14 +406,17 @@ $(document).ready(function () {
                 } else {
                     // load data
                     let current = presenceSets[presenceSets.length - 1];
-                    console.log("DEBUG: ", ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence);
+                    // console.log("DEBUG: ", ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence);
+                    console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
                     $.ajax({
                         type: 'GET',
                         timeout: 30000,
-                        url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
+                        // url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
+                        url: ip + "/presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
                             let sampledata = JSON.parse(rawdata);
                             // console.log("DEBUG", current.name, sampledata);
+                            // return;
                             // console.log(data[5]);
                             // console.log(current.id);
                             // data[current.id] = sampledata[0].val;
@@ -701,7 +704,8 @@ $(document).ready(function () {
                     + "\"#user: " + user + " \"\n"
                     + "\"#space: " + space + " \"\n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
-                    + "\"#end: " + copyendDate.toDateString() + " \"\n\n"
+                    + "\"#end: " + copyendDate.toDateString() + " \"\n"
+                    + reportWarning + "\n\n"
                     // + "\"NOTE: all values are averages if not specified otherwise\"\n\n"
                     + "Date, Day, ";
                 // for (let i in overviewReportDefs) {

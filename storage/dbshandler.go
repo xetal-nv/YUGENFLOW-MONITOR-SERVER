@@ -8,7 +8,8 @@ import (
 
 // handler for a DBS with generic value coming from a channel on a generic interface{}
 // a is used to insert the actual value from the generic channel
-func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData) {
+// TODO check if ot works
+func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp string) {
 
 	r := func() {
 		log.Printf("register.TimedIntDBS: DBS handler %v started\n", id)
@@ -19,8 +20,17 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData) {
 					if e := a.Extract(d); e == nil {
 						//fmt.Println("handle",a)
 						if a.Valid() {
-							if err := StoreSample(a, !support.Stringending(id, "current", "_")); err != nil {
-								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v\n", id, err, a)
+							switch tp {
+							case "SD":
+								if err := StoreSampleSD(a, !support.Stringending(id, "current", "_")); err != nil {
+									log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
+								}
+							case "TS":
+								if err := StoreSampleTS(a, !support.Stringending(id, "current", "_")); err != nil {
+									log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
+								}
+							default:
+								log.Printf("storage.TimedIntDBS: DBS handler %v wrong data type %v\n", id, tp)
 							}
 						} else {
 							log.Printf("storage.TimedIntDBS: DBS handler discarded empty data % v for %v\n", a, id)

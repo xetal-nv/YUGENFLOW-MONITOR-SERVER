@@ -129,7 +129,7 @@ func Test_SerieEntries(t *testing.T) {
 		}
 	}
 
-	if err := StoreSample(&b, true, false); err != nil {
+	if err := StoreSampleTS(&b, true, false); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -174,19 +174,19 @@ func Test_DBS(t *testing.T) {
 	ts := support.Timestamp()
 	ts = support.Timestamp()
 	a := SerieSample{"entry___notame__current_", ts, 11}
-	if err := StoreSample(&a, false, true); err != nil {
+	if err := StoreSampleTS(&a, false, true); err != nil {
 		t.Fatal(err)
 	}
 	s0 := SerieSample{"entry___notame__current_", ts - 500000, 8}
 	s1 := SerieSample{"entry___notame__current_", ts + 1000, 8}
-	if tag, ts, vals, e := ReadSeries(&s0, &s1, false); e != nil {
+	if tag, ts, vals, e := ReadSeriesTS(&s0, &s1, false); e != nil {
 		t.Fatal(e)
 	} else {
 		fmt.Println(s1.UnmarshalSliceSS(tag, ts, vals))
 	}
 
-	//if tag, ts, vals, e := ReadLastN(&s1, 3, []int{}, false); e != nil {
-	if tag, ts, vals, e := ReadLastN(&s1, 100, false); e != nil {
+	//if tag, ts, vals, e := ReadLastNTS(&s1, 3, []int{}, false); e != nil {
+	if tag, ts, vals, e := ReadLastNTS(&s1, 100, false); e != nil {
 		t.Fatal(e)
 	} else {
 		fmt.Println(s1.UnmarshalSliceSS(tag, ts, vals))
