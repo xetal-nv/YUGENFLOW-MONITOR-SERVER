@@ -91,7 +91,7 @@ See .env file for configuration example
  - Added support for fall back analysis of data if presence data not available yet for reporting  
  - Added bypass.js for forcing JS changes without restart of the server and for sing new JS on old server verions  
  - Added optimised DB driver for presence detection (IP)  
- -CLEAN CODE (TBD)  
+ - CLEAN CODE (TBD)  
  
 **CHANGELOG TO v0.6.0:**  
 
