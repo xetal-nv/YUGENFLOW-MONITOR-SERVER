@@ -1,13 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Planned]
+## [Planned for 0.8.0]
 
 ### Added
  - Debug API or interface 
 
 ### Changed
  - Entry values include also total in and total out with optional periodic reset
+ - Period averages extended to all reported values
 
 ### Removed
 
