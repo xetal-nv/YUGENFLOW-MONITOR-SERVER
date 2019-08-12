@@ -507,7 +507,7 @@ $(document).ready(function () {
                                 val += tmpDays[i]
                             }
                             // console.log(val, tmp.length);
-                            if (val !== 0) {
+                            if (tmpDays.length !== 0) {
                                 val = Math.round(val / tmpDays.length)
                             }
                             weekdayavg.push(val);
@@ -580,13 +580,13 @@ $(document).ready(function () {
                     header += "\n";
                 }
                 // console.log(tmppointDays);
-                // console.log(tmp);
+                // console.log(tmpDays);
                 let val = 0;
                 for (let i = 0; i < tmpDays.length; i++) {
                     val += tmpDays[i]
                 }
                 // console.log(val, tmp.length);
-                if (val !== 0) {
+                if (tmpDays.length !== 0) {
                     val = Math.round(val / tmpDays.length)
                 }
                 weekdayavg.push(val);
@@ -594,11 +594,10 @@ $(document).ready(function () {
                 for (let i = 0; i < perioddayavg.length; i++) {
                     val += perioddayavg[i]
                 }
-                if (val !== 0) {
+                if (perioddayavg.length !== 0) {
                     val = Math.round(val / perioddayavg.length)
                 }
                 perioddayavg = [val];
-                header += "\n";
                 header += "\n";
                 if (periods.length !== 0) {
                     // calculate all week averages first and store all data for the period average
@@ -618,7 +617,7 @@ $(document).ready(function () {
                                     for (let k = 0; k < valPoint.length; k++) {
                                         acc += valPoint[k]
                                     }
-                                    if (acc !== 0) {
+                                    if (valPoint.length !== 0) {
                                         weekpointavg[i].push(Math.round(acc / valPoint.length))
                                     } else {
                                         weekpointavg[i].push(0)
@@ -633,7 +632,7 @@ $(document).ready(function () {
                         for (let k = 0; k < valPoint.length; k++) {
                             acc += valPoint[k]
                         }
-                        if (acc !== 0) {
+                        if (valPoint.length !== 0) {
                             weekpointavg[i].push(Math.round(acc / valPoint.length))
                         } else {
                             weekpointavg[i].push(0)
@@ -641,32 +640,67 @@ $(document).ready(function () {
                         // console.log(i, valPoint, weekpointavg[i])
                     }
                 }
-                // console.log(periodpointavg);
+                // console.log(weekpointavg);
                 // write period report if required
-                if ((periods !== undefined) && (weekdayavg !== undefined)) {
-                    for (let j = 0; j < periods.length; j++) {
-                        for (let i = 0; i < weekdayavg.length; i++) {
-                            header += "Presence average " + overviewReportDefs[periods[j]].name + " for week " + i + ", " + weekpointavg[j][i] + "\n";
+                // if ((periods !== undefined) && (weekdayavg !== undefined)) {
+                //     for (let j = 0; j < periods.length; j++) {
+                //         for (let i = 0; i < weekdayavg.length; i++) {
+                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for week " + i + ", " + weekpointavg[j][i] + "\n";
+                //         }
+                //         let acc = 0;
+                //         for (let i = 0; i < periodpointavg[j].length; i++) {
+                //             acc += periodpointavg[j][i]
+                //             // console.log(periodpointavg[j][i])
+                //         }
+                //         // console.log(acc);
+                //         if (periodpointavg[j].length !== 0) {
+                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
+                //                 Math.round(acc / periodpointavg[j].length) + "\n"
+                //         } else {
+                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
+                //         }
+                //         header += "\n";
+                //     }
+                // console.log(periods);
+                for (let i = 0; i < weekdayavg.length; i++) {
+                    header += "Average,week " + i + ",";
+                    for (let k = 0; k < overviewReportDefs.length; k++) {
+                        j = periods.indexOf(k);
+                        // console.log(j, k)
+                        if (j !== -1) {
+                            header += weekpointavg[j][i] + ","
+                        } else {
+                            header += ","
                         }
+                    }
+                    header += "\n"
+                }
+                // console.log(periodpointavg);
+                header += "Average,full period,";
+                // for (let i = 0; i < periods.length; i++) {
+                for (let k = 0; k < overviewReportDefs.length; k++) {
+                    j = periods.indexOf(k);
+                    if (j !== -1) {
                         let acc = 0;
                         for (let i = 0; i < periodpointavg[j].length; i++) {
                             acc += periodpointavg[j][i]
                             // console.log(periodpointavg[j][i])
                         }
-                        // console.log(acc);
-                        if (acc !== 0) {
-                            header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
-                                Math.round(acc / periodpointavg[j].length) + "\n"
+                        if (periodpointavg[j].length !== 0) {
+                            header += Math.round(acc / periodpointavg[j].length) + ","
                         } else {
-                            header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
+                            header += "0,"
                         }
-                        header += "\n";
+                    } else {
+                        header += ","
                     }
                 }
+                // }
+                header += "\n\n\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
-                    header += "Working day average for week " + i + ", " + weekdayavg[i] + "\n";
+                    header += "Working day average, week " + i + ", " + weekdayavg[i] + "\n";
                 }
-                header += "Working day average for the full period, " + perioddayavg[0] + "\n";
+                header += "Working day average, the full period, " + perioddayavg[0] + "\n";
                 // console.log(periodavg[0]);
                 // console.log(weekavg);
                 // console.log(header);
@@ -702,10 +736,12 @@ $(document).ready(function () {
                 }
                 let header = "sep=,\n" +
                     "#Xetal Flow Monitoring: " + version + " \n"
-                    + "\"#user: " + user + " \"\n"
-                    + "\"#space: " + space + " \"\n"
-                    + "\"#start: " + startDate.toDateString() + " \"\n"
-                    + "\"#end: " + copyendDate.toDateString() + " \"\n"
+                    + "\"#user, " + user + " \"\n"
+                    + "\"#space, " + space + " \"\n"
+                    + "\"#start, " + startDate.toDateString() + " \"\n"
+                    + "\"#end, " + copyendDate.toDateString() + " \"\n"
+                    + "\"#working day, from " + overviewReportDefs[overviewReportDefs.length - 1].start + " to " +
+                    overviewReportDefs[overviewReportDefs.length - 1].end + " \"\n"
                     + reportWarning + "\n\n"
                     // + "\"NOTE: all values are averages if not specified otherwise\"\n\n"
                     + "Date, Day, ";
@@ -715,10 +751,11 @@ $(document).ready(function () {
                         if (overviewReportDefs[i].presence === "") {
                             if (overviewReportDefs[i].point !== "") {
                                 header += "presence ";
-                                periods.push(i)
+                                // periods.push(i)
                             } else {
                                 header += "presence average "
                             }
+                            periods.push(i)
                         }
                         header += overviewReportDefs[i].name + ",";
                     }

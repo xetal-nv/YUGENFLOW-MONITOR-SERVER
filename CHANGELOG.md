@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
  - Added bypass.js for forcing JS changes without restart of the server and for sing new JS on old server verions  
  - Added optimised DB driver for presence detection (IP)  
  - Changelog file
+ - Period averages extended to all reported values
  
 ### Changed
  - Consolidated all variables for JS, which are generated dynamically only once, in one file def.js  
