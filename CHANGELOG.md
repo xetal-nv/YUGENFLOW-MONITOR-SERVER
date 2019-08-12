@@ -1,18 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Planned for 0.8.0]
+## [0.8.0]
 
-### Added
- - Debug API or interface 
-
-### Changed
- - Entry values include also total in and total out with optional periodic reset
- - Period averages extended to all reported values
-
-### Removed
-
-## [0.7.0RC3]
+## [0.7.0]
 ### Added
  - Configuration RTWINDOW defining a reporting window for real time data. It overrides ANALYSISWINDOW for reporting only  
  - Overview report mode with configurable template
@@ -27,6 +18,7 @@ All notable changes to this project will be documented in this file.
  - Added bypass.js for forcing JS changes without restart of the server and for sing new JS on old server verions  
  - Added optimised DB driver for presence detection (IP)  
  - Changelog file
+ - Period averages extended to all reported values
  
 ### Changed
  - Consolidated all variables for JS, which are generated dynamically only once, in one file def.js  
