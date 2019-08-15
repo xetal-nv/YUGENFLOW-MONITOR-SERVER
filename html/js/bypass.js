@@ -21,4 +21,6 @@
 // var opEndTime = "";
 
 var developmentflag = false;
+// accepts -1 (off) or flag [0,1]
+var defaultPresence = 1;
 var reportWarning = "";

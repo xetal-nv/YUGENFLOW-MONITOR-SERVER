@@ -2,6 +2,7 @@ package servers
 
 import (
 	"encoding/json"
+	"fmt"
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
@@ -12,7 +13,6 @@ import (
 )
 
 // TODO check if ok
-
 func presenceHTTPhandler() http.Handler {
 	var cmds = []string{"space", "analysis", "start", "end"}
 
@@ -66,14 +66,17 @@ func presenceHTTPhandler() http.Handler {
 			var e error
 			if st, e = strconv.ParseInt(params["start"], 10, 64); e != nil {
 				//fmt.Fprintf(w,"Error in start parameter")
+				_, _ = fmt.Fprintf(w, "")
 				return
 			}
 			if en, e = strconv.ParseInt(params["end"], 10, 64); e != nil {
 				//fmt.Fprintf(w,"Error in end parameter")
+				_, _ = fmt.Fprintf(w, "")
 				return
 			}
 			if st >= en {
 				//fmt.Fprintf(w,"Error as start parameter is later then the end one")
+				_, _ = fmt.Fprintf(w, "")
 				return
 			}
 			//fmt.Println(st,en)
@@ -89,7 +92,10 @@ func presenceHTTPhandler() http.Handler {
 				//}
 				rt = s0.UnmarshalSliceSS(tag, ts, vals)
 			}
-			_ = json.NewEncoder(w).Encode(rt)
+			// the if is added to deal with timeout issues due to the fact this read can eb too long
+			if e = json.NewEncoder(w).Encode(rt); e != nil {
+				_, _ = fmt.Fprintf(w, "")
+			}
 		}
 	})
 }

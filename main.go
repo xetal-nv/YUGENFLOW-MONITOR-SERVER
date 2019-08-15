@@ -214,7 +214,7 @@ func main() {
 			mac = append(mac, []byte(strconv.Itoa(i))...)
 			go func(i int, mac []byte) {
 				time.Sleep(time.Duration(rand.Intn(360)) * time.Second)
-				sensormodels.SensorModel(i-100, 500, 60, []int{-1, 0, 1, 2, 127}, mac)
+				sensormodels.SensorModel(i-100, 5000000, 100, []int{-1, 0, 1}, mac)
 			}(i, mac)
 		}
 		for i := 300; i < 450; i++ {
@@ -222,7 +222,7 @@ func main() {
 			mac = append(mac, []byte(strconv.Itoa(i))...)
 			go func(i int, mac []byte) {
 				time.Sleep(time.Duration(rand.Intn(360)) * time.Second)
-				sensormodels.SensorModel(65535, 500, 60, []int{-1, 0, 1, 2, 127}, mac)
+				sensormodels.SensorModel(65535, 500, 60, []int{-1, 0, 1}, mac)
 			}(i, mac)
 		}
 	case 1:

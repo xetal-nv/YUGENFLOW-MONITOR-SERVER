@@ -126,7 +126,7 @@ ENTRY_1 = 10 11 12 13 14 15 16 17 18 19
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
 ## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##SPACES_NAMES = name_space:max_occupancy ...
-SPACES_NAMES = livlab:20
+SPACES_NAMES = livlab
 
 ## SPACE COMPOSITION
 ## Lists the entry points per space
@@ -176,7 +176,7 @@ ANALYSISPERIOD = 20secs 20; 20mins 1200;hour 3600; day 86000
 ## Defines internals of time where only presence detection is relevant, no counting
 ## Time is providedin the HH:MM format
 ##PRESENCE_spacename = detectorname start end; ...
-PRESENCE_livlab = morning 08:00 12:00; afternoon 13:00 18:00; night 18:00 06:00
+PRESENCE_livlab = morning 08:00 12:30; afternoon 13:00 18:00; night 18:00 06:00
 #PRESENCE_livlab = test 07:23 07:30
 #PRESENCE_livlab = day 09:00 09:09
 
@@ -210,7 +210,7 @@ OVERVIEWREPORT = 08:00 18:00
 ## 'period' provides the average count int he given period
 ## The declaration order will be reflected in the reported order as well
 ##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
-OVERVIEWDATA = presence 13:00 18:00 afternoon; point 10:00 30; period 08:00 12:00; point 14:00 30; period 13:00 17:00; presence 08:00 12:30 morning; presence 18:00 06:00 night;
+OVERVIEWDATA = presence 18:00 06:00 night; period 08:00 12:00; point 10:00 30; presence 08:00 12:30 morning; period 13:00 17:00; point 14:00 30; presence 13:00 18:00 afternoon;
 
 ## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
 ## REFERENCESAMPLES = name_measurement
@@ -222,4 +222,3 @@ SKIPDAYS =
 
 ## Defines user
 USER = DEME
-

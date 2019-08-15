@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"gateserver/support"
-	"github.com/dgraph-io/badger"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dgraph-io/badger"
 )
 
 // set-ups database
@@ -308,7 +309,7 @@ func StoreSampleSD(d SampleData, sDB bool, updatehead ...bool) (err error) {
 		tagMutex.RUnlock()
 		tm := time.Unix(ts/1000, 0)
 		lab := tag + strconv.Itoa(tm.Year()) + "_" + strconv.Itoa(int(tm.Month())) + "_" + strconv.Itoa(tm.Day())
-		//fmt.Println("store SD", lab)
+		// fmt.Println("store SD", lab)
 		if sDB {
 			select {
 			case statsChanIn <- dbInChan{[]byte(lab), val, false}:
@@ -367,13 +368,13 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 				if sDB {
 					select {
 					case statsChanOut <- dbOutCommChan{lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
-					case <-time.After(time.Duration(timeout) * time.Second):
+					case <-time.After(time.Duration(timeout) * time.Minute):
 						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " stats time out")
 					}
 				} else {
 					select {
 					case currentChanOut <- dbOutCommChan{lab, s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
-					case <-time.After(time.Duration(timeout) * time.Second):
+					case <-time.After(time.Duration(timeout) * time.Minute):
 						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " current time out")
 					}
 				}
@@ -385,7 +386,7 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 						rt = append(rt, ans.r)
 						rts = append(rts, nts)
 					}
-				case <-time.After(time.Duration(timeout) * time.Second):
+				case <-time.After(time.Duration(timeout) * time.Minute):
 					return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " receive time out")
 				}
 				i += 1
@@ -398,7 +399,12 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 	return tag, rts, rt, err
 }
 
-// TODO check if it works
+// reads a SD series, all values between the timestamos included in s0 and s1 are reads
+// values are returns as a set of values
+// tag: identified of the series
+// rts: list of timestamps
+// rt: list of the series values ordered according to rts
+// err: reports the error is any
 func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
@@ -407,7 +413,7 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 	}
 	tag = s0.Tag()
 	ts0 := s0.Ts() / 1000
-	ts1 := s1.Ts() / 1000
+	ts1 := int64((s1.Ts()/1000)/86400)*86400 + 86399
 	tagMutex.RLock()
 	if st, ok := tagStart[tag]; ok {
 		tagMutex.RUnlock()
@@ -425,18 +431,18 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 			for i := ts0; i <= ts1; i += 86400 {
 				time0 := time.Unix(i, 0)
 				lab := tag + strconv.Itoa(time0.Year()) + "_" + strconv.Itoa(int(time0.Month())) + "_" + strconv.Itoa(time0.Day())
-				//fmt.Println("read SD", lab)
+				// fmt.Println("read SD", lab)
 				co := make(chan dbOutChan)
 				if sDB {
 					select {
 					case statsChanOut <- dbOutCommChan{[]byte(lab), s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
-					case <-time.After(time.Duration(timeout) * time.Second):
+					case <-time.After(time.Duration(timeout) * time.Minute):
 						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " stats time out")
 					}
 				} else {
 					select {
 					case currentChanOut <- dbOutCommChan{[]byte(lab), s0.MarshalSize(), s0.MarshalSizeModifiers(), co}:
-					case <-time.After(time.Duration(timeout) * time.Second):
+					case <-time.After(time.Duration(timeout) * time.Minute):
 						return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " current time out")
 					}
 				}
@@ -451,7 +457,7 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 						rt = append(rt, ans.r)
 						rts = append(rts, nts)
 					}
-				case <-time.After(time.Duration(timeout) * time.Second):
+				case <-time.After(time.Duration(timeout) * time.Minute):
 					return tag, rts, rt, errors.New("ReadSeriesTS " + tag + " receive time out")
 				}
 				i += 1
@@ -492,13 +498,13 @@ func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt
 					if sDB {
 						select {
 						case statsChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
-						case <-time.After(time.Duration(timeout) * time.Second):
+						case <-time.After(time.Duration(timeout) * time.Minute):
 							return tag, rts, rt, errors.New("ReadLastNTS " + tag + " stats time out")
 						}
 					} else {
 						select {
 						case currentChanOut <- dbOutCommChan{lab, head.MarshalSize(), head.MarshalSizeModifiers(), co}:
-						case <-time.After(time.Duration(timeout) * time.Second):
+						case <-time.After(time.Duration(timeout) * time.Minute):
 							return tag, rts, rt, errors.New("ReadLastNTS " + tag + " current time out")
 						}
 					}
@@ -509,7 +515,7 @@ func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt
 							rt = append(rt, ans.r)
 							rts = append(rts, nts)
 						}
-					case <-time.After(time.Duration(timeout) * time.Second):
+					case <-time.After(time.Duration(timeout) * time.Minute):
 						return tag, rts, rt, errors.New("ReadLastNTS " + tag + " receive time out")
 					}
 				}

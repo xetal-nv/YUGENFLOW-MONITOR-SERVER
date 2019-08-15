@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
  - Added optimised DB driver for presence detection (IP)  
  - Changelog file
  - Period averages extended to all reported values
+ - Added calendar week numbers to report
+ - Added activity reporting default (set in bypass.js)
  
 ### Changed
  - Consolidated all variables for JS, which are generated dynamically only once, in one file def.js  
@@ -33,7 +35,7 @@ All notable changes to this project will be documented in this file.
  - Removed redundant check on report generation  
  - Removed declaration of DBS reset channels, they are just placeholders.  
  - Removed possible race at DBS creation  
- - Removed CRC control on on reset  
+ - Removed CRC control on on reset 
 
  
 ## [v0.6.0] 

@@ -1,3 +1,9 @@
 main.exe
-logfile
 *.raw
+/.recoveryavg
+/.recoverypres
+/dbs/
+/.idea/
+/log/
+/html/js/dat.js
+/html/js/def.js

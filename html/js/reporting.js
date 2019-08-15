@@ -142,7 +142,12 @@ $(document).ready(function () {
                     timeout: 5000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
-                        let sampledata = JSON.parse(rawdata);
+                        let sampledata;
+                        try {
+                            sampledata = JSON.parse(rawdata);
+                        } catch (e) {
+                            console.log("received corrupted data: ", rawdata)
+                        }
                         // console.log(sampledata)
                         exportReport(header, sampledata);
                     },
@@ -212,6 +217,11 @@ $(document).ready(function () {
                 'November', 'December'];
             // let dataLock = false;
             let periods = [];
+
+            Date.prototype.getWeek = function () {
+                var onejan = new Date(this.getFullYear(), 0, 1);
+                return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+            };
 
 
             // processavgdata analyses the data from presence averages and start the
@@ -372,9 +382,14 @@ $(document).ready(function () {
                     timeout: 5000,
                     url: ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,
                     success: function (rawdata) {
-                        let sampledata = JSON.parse(rawdata);
-                        // console.log(sampledata)
-                        processavgdata(header, sampledata, api, analysis, tries);
+                        try {
+                            let sampledata = JSON.parse(rawdata);
+                            // console.log(sampledata)
+                            processavgdata(header, sampledata, api, analysis, tries);
+                        } catch (e) {
+                            alert("received corrupted data: " + rawdata);
+                            document.getElementById("loader").style.visibility = "hidden";
+                        }
                     },
                     error: function (error) {
                         if (tries === maxtries) {
@@ -414,24 +429,28 @@ $(document).ready(function () {
                         // url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         url: ip + "/presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
-                            let sampledata = JSON.parse(rawdata);
-                            // console.log("DEBUG", current.name, sampledata);
-                            // return;
-                            // console.log(data[5]);
-                            // console.log(current.id);
-                            // data[current.id] = sampledata[0].val;
-
-                            // remove presence measure since loaded from the server
                             presenceSets.pop();
-                            if ((sampledata !== null) && (sampledata !== undefined)) {
-                                for (let i = 0; i < sampledata.length; i++) {
-                                    let d = new Date(sampledata[i].ts);
-                                    var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
-                                        " " + d.getDay();
-                                    // sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-                                    // for (let i=0; i<data[sampleDate].length; i++) {console.log(data[sampleDate][i]);}
-                                    data[sampleDate][current.id + 1] = sampledata[i].val;
+                            try {
+                                let sampledata = JSON.parse(rawdata);
+                                // console.log("DEBUG", current.name, sampledata);
+                                // return;
+                                // console.log(data[5]);
+                                // console.log(current.id);
+                                // data[current.id] = sampledata[0].val;
+
+                                // remove presence measure since loaded from the server
+                                if ((sampledata !== null) && (sampledata !== undefined)) {
+                                    for (let i = 0; i < sampledata.length; i++) {
+                                        let d = new Date(sampledata[i].ts);
+                                        var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
+                                            " " + d.getDay();
+                                        // sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+                                        // for (let i=0; i<data[sampleDate].length; i++) {console.log(data[sampleDate][i]);}
+                                        data[sampleDate][current.id + 1] = sampledata[i].val;
+                                    }
                                 }
+                            } catch (e) {
+                                console.log("received corrupted data: ", rawdata)
                             }
                             // dataLock = false;
                             loadpresence(header, data, presenceSets, api, tries)
@@ -472,6 +491,8 @@ $(document).ready(function () {
                 let weekpointavg = [];
                 let tmpDays = [];
                 let tmppointDays;
+                let weeks = [];
+                let incfirstweek = -1;
                 keys.sort();
                 // console.log(periods);
                 if (periods.length !== 0) {
@@ -490,8 +511,11 @@ $(document).ready(function () {
                     let v = data[keys[k]];
                     let daydatetmp = (v[0].split(" ")[0]).split("-");
                     let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];
-                    // console.log(daydate);
-                    header += daydate + ", " + days[parseInt(v[0].split(" ")[1])];
+                    // console.log(daydatetmp);
+                    var dtmp = new Date(daydatetmp[0], parseInt(daydatetmp[1]) - 1, daydatetmp[2]);
+                    // console.log(d, d.getWeek());
+                    // return
+                    header += daydate + "," + days[parseInt(v[0].split(" ")[1])] + "," + dtmp.getWeek();
                     let valid = false;
                     for (let a = 1; a < v.length; a++) {
                         if (v[a] !== undefined) {
@@ -503,6 +527,10 @@ $(document).ready(function () {
                         if ((data[keys[k]][0].split(" ")[1] === "0") && (tmpDays.length !== 0)) {
                             // start week, calculate and store average, reset tmp array
                             let val = 0;
+                            weeks.push(dtmp.getWeek());
+                            if (incfirstweek === -1) {
+                                incfirstweek = 1
+                            }
                             for (let i = 0; i < tmpDays.length; i++) {
                                 val += tmpDays[i]
                             }
@@ -531,6 +559,10 @@ $(document).ready(function () {
                             // console.log(tmp);
                         } else {
                             // console.log(v[v.length-1][1]);
+                            if (incfirstweek === -1) {
+                                incfirstweek = 0;
+                                weeks.push(dtmp.getWeek());
+                            }
                             if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
                                 if (v[v.length - 1] === undefined) {
                                     v[v.length - 1] = [0, 0]
@@ -562,15 +594,39 @@ $(document).ready(function () {
                                     if ((v[j + 1] !== null) && (v[j + 1] !== undefined)) {
                                         if (overviewReportDefs[j].presence !== "") {
                                             if (v[j + 1] >= 2) {
-                                                header += ", true"
+                                                header += ",true"
                                             } else {
-                                                header += ", false"
+                                                header += ",false"
                                             }
                                         } else {
                                             header += "," + Math.round(v[j + 1][1]);
                                         }
                                     } else {
-                                        header += ", "
+                                        if (overviewReportDefs[j].presence !== "") {
+                                            let et = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
+                                            // let st = parseInt(overviewReportDefs[j].start.replace(':', ''), 10);
+                                            // if (st > et) {st = 0};
+                                            let ct0 = new Date();
+                                            let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
+                                            // console.log(st,et, ct);
+                                            if (ct > et) {
+                                                switch (defaultPresence) {
+                                                    case 0:
+                                                        header += ",false";
+                                                        break;
+                                                    case 1:
+                                                        header += ",true";
+                                                        break;
+                                                    default:
+                                                        header += ","
+                                                }
+                                            } else {
+                                                header += ","
+                                            }
+                                        } else {
+                                            header += ","
+                                        }
+
                                     }
                                 }
                             }
@@ -598,7 +654,7 @@ $(document).ready(function () {
                     val = Math.round(val / perioddayavg.length)
                 }
                 perioddayavg = [val];
-                header += "\n";
+                // header += "\n";
                 if (periods.length !== 0) {
                     // calculate all week averages first and store all data for the period average
                     for (let i = 0; i < periods.length; i++) {
@@ -663,7 +719,12 @@ $(document).ready(function () {
                 //     }
                 // console.log(periods);
                 for (let i = 0; i < weekdayavg.length; i++) {
-                    header += "Average,week " + i + ",";
+                    if ((i === 0) && (incfirstweek === 0)) {
+                        header += "Average weekly*,, " + weeks[i] + ",";
+                    } else {
+                        header += "Average weekly,, " + weeks[i] + ",";
+                    }
+
                     for (let k = 0; k < overviewReportDefs.length; k++) {
                         j = periods.indexOf(k);
                         // console.log(j, k)
@@ -676,7 +737,7 @@ $(document).ready(function () {
                     header += "\n"
                 }
                 // console.log(periodpointavg);
-                header += "Average,full period,";
+                header += "Average full period,,,";
                 // for (let i = 0; i < periods.length; i++) {
                 for (let k = 0; k < overviewReportDefs.length; k++) {
                     j = periods.indexOf(k);
@@ -697,13 +758,25 @@ $(document).ready(function () {
                 }
                 // }
                 header += "\n\n\n";
+                header += "#SUMMARY OCCUPANCY\n"
+                    + "\"#working day: from " + overviewReportDefs[overviewReportDefs.length - 1].start
+                    + " to " + overviewReportDefs[overviewReportDefs.length - 1].end + " \"\n"
+                    + "\n";
+                header += "Description, Week, Average\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
-                    header += "Working day average, week " + i + ", " + weekdayavg[i] + "\n";
+                    if ((i === 0) && (incfirstweek === 0)) {
+                        header += "Working day average*, " + weeks[i] + "," + weekdayavg[i] + "\n";
+                    } else {
+                        header += "Working day average, " + weeks[i] + "," + weekdayavg[i] + "\n";
+                    }
                 }
-                header += "Working day average, the full period, " + perioddayavg[0] + "\n";
+                header += "Working day average,full period," + perioddayavg[0] + "\n";
                 // console.log(periodavg[0]);
                 // console.log(weekavg);
                 // console.log(header);
+                if (incfirstweek === 0) {
+                    header += "\n\n* Partial week\n"
+                }
                 var blob = new Blob([header], {type: 'text/plain'}),
                     anchor = document.createElement('a');
                 var currentTime = new Date();
@@ -736,15 +809,15 @@ $(document).ready(function () {
                 }
                 let header = "sep=,\n" +
                     "#Xetal Flow Monitoring: " + version + " \n"
-                    + "\"#user, " + user + " \"\n"
-                    + "\"#space, " + space + " \"\n"
-                    + "\"#start, " + startDate.toDateString() + " \"\n"
-                    + "\"#end, " + copyendDate.toDateString() + " \"\n"
-                    + "\"#working day, from " + overviewReportDefs[overviewReportDefs.length - 1].start + " to " +
-                    overviewReportDefs[overviewReportDefs.length - 1].end + " \"\n"
+                    + "\"#user: " + user + " \"\n"
+                    + "\"#space: " + space + " \"\n"
+                    + "\"#start: " + startDate.toDateString() + " \"\n"
+                    + "\"#end: " + copyendDate.toDateString() + " \"\n"
                     + reportWarning + "\n\n"
+                    + "#OCCUPANCY REPORT\n\n"
                     // + "\"NOTE: all values are averages if not specified otherwise\"\n\n"
-                    + "Date, Day, ";
+                    // + "Date,Day,";
+                    + "Date,Day,Week,";
                 // for (let i in overviewReportDefs) {
                 for (let i = 0; i < overviewReportDefs.length; i++) {
                     if (!overviewReportDefs[i].skip) {
