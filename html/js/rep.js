@@ -1,0 +1,1 @@
+var reportCurrent = false;

@@ -1,9 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-
-## [0.7.0RC3]
+## [Unreleased 0.7.0RC3]
 ### Added
  - Configuration RTWINDOW defining a reporting window for real time data. It overrides ANALYSISWINDOW for reporting only  
  - Overview report mode with configurable template
@@ -19,6 +17,8 @@ All notable changes to this project will be documented in this file.
  - Added optimised DB driver for presence detection (IP)  
  - Changelog file
  - Period averages extended to all reported values
+ - Added calendar week numbers to report
+ - Added activity reporting default (set in bypass.js)
  
 ### Changed
  - Consolidated all variables for JS, which are generated dynamically only once, in one file def.js  

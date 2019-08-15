@@ -40,7 +40,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 
 	timeoutInterval := 5 * chantimeout * time.Millisecond
 	active := true
-	saved := false
+	// saved := false
 	// load the configuration, this is done only once even when recovering
 	once.Do(func() {
 		// configuration is read, if name is truncated, the name needs to be recovered from the config file as well
@@ -163,7 +163,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 					allIntervals[i].incycle = true
 					if sp.val != 0 {
 						allIntervals[i].Activity.Val += 1
-						allIntervals[i].Activity.Ts = support.Timestamp()
+						// allIntervals[i].Activity.Ts = support.Timestamp()
 						if support.Debug != 0 {
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 						}
@@ -182,28 +182,29 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						//if recStart, e := time.Parse(support.TimeLayout, recSH+":"+recSM); e == nil {
 						//fmt.Print(recStart)
 						//if found, e := support.InClosureTime(recStart, allIntervals[i].End); e == nil && found {
-						if allIntervals[i].Activity.Val >= minTransactionsForDetection && !saved {
-							sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
-							saved = true
-							//fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
-						} else {
-							//fmt.Println("space Activity for interval", allIntervals[i].Id, "NOT saved")
-						}
+						// if allIntervals[i].Activity.Val >= minTransactionsForDetection && !saved {
+						// 	sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
+						// 	saved = true
+						// 	//fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
+						// } else {
+						// 	//fmt.Println("space Activity for interval", allIntervals[i].Id, "NOT saved")
+						// }
 						//}
 						//}
 						//os.Exit(1)
 					}
 				} else if allIntervals[i].incycle {
+					// sample is saved with a ts adjusted with the timeout
+					allIntervals[i].Activity.Ts = support.Timestamp() - 5*chantimeout*2
 					if support.Debug != 0 {
 						fmt.Println("space Activity for interval", allIntervals[i].Id, " ended as", allIntervals[i].Activity)
 					}
 					allIntervals[i].incycle = false
-					saved = false
+					// saved = false
 					//fmt.Println("exit cycle")
 					//fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 					sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 					allIntervals[i].Activity.Val = 0
-					allIntervals[i].Activity.Ts = support.Timestamp()
 				} else {
 					//fmt.Println("not cycle")
 				}
