@@ -33,7 +33,7 @@ function drawSpace(rawspaces) {
     let draw = SVG('svgimage');
     let plan;
     let select = document.getElementById("spacename");
-    for (i = 0; i < rawspaces.length; i++) {
+    for (let i = 0; i < rawspaces.length; i++) {
         spaces[i] = rawspaces[i]["spacename"]
     }
 

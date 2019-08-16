@@ -388,7 +388,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						counter = spaceEntries{ts: support.Timestamp(), val: 0}
 						buffer = []spaceEntries{counter}
 					} else {
-						buffer = []spaceEntries{spaceEntries{ts: support.Timestamp(), val: 0}}
+						buffer = []spaceEntries{{ts: support.Timestamp(), val: 0}}
 					}
 
 					// refts is used yo track multicycles situations that can End during a cycle.

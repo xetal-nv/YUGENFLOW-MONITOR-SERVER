@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-var Dvl bool = false
+var Dvl = false
 
 func setJSenvironment() {
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {

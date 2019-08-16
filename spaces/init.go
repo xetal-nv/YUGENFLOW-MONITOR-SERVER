@@ -360,7 +360,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestBankIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	latestDBSIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
-	_ResetDBS = make(map[string]map[string]map[string]chan bool, len(spaceChannels))
+	//_ResetDBS = make(map[string]map[string]map[string]chan bool, len(spaceChannels))
 
 	for dl, dt := range dtypes {
 
@@ -458,7 +458,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 						latestDBSIn[dl][name][v.name] = make(chan interface{})
 						label := dl + name + v.name
 						if _, e := storage.SetSeries(label, v.interval, !support.Stringending(label, "current", "_")); e != nil {
-							log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
+							log.Fatal("spaces.setUpDataDBSBank: fatal error setting database " + name + v.name + ", " + strconv.Itoa(v.interval))
 						}
 						//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])
 						go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)

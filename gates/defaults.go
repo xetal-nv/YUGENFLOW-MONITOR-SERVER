@@ -26,10 +26,10 @@ type EntryDef struct {
 }
 
 // data cache used by the algorithm calculating flow from sensor data
-type scratchDataOld struct {
-	senData         map[int]sensorData // maps sensors ID with its latest used data
-	unusedSampleSum map[int]int        // maps sensors ID with the sum of unused samples received
-}
+//type scratchDataOld struct {
+//	senData         map[int]sensorData // maps sensors ID with its latest used data
+//	unusedSampleSum map[int]int        // maps sensors ID with the sum of unused samples received
+//}
 
 // data cache used by the algorithm calculating flow from sensor data
 type scratchData struct {

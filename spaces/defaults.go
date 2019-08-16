@@ -35,7 +35,8 @@ type dtfuncs struct {
 
 // Constants
 const chantimeout = 100
-const minTransactionsForDetection = 2
+
+//const minTransactionsForDetection = 2
 
 // variables defined via options/configuration file
 var Crashmaxdelay int64
@@ -56,7 +57,7 @@ var latestBankIn map[string]map[string]map[string]chan interface{} // contains a
 var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains all input channels to the database
 
 // external variables
-var _ResetDBS map[string]map[string]map[string]chan bool            // reset channel for the DBS's
+//var _ResetDBS map[string]map[string]map[string]chan bool            // reset channel for the DBS's
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all output channels to the data bank
 var LatestDetectorOut map[string]chan []IntervalDetector            // contains the latest presence values for recovery purposes
 var SpaceDef map[string][]int                                       // maps a space name to its entries

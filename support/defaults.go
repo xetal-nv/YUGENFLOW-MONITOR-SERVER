@@ -22,7 +22,7 @@ var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination d
 
 // set-ups all support variables according to the configuration file .env
 
-func SupportSetUp(envf string) {
+func SetUp(envf string) {
 	if envf == "" {
 		if e := godotenv.Load(); e != nil {
 			panic("Fatal error:" + e.Error())
@@ -51,6 +51,6 @@ func SupportSetUp(envf string) {
 	log.Println("Maximum label length set to", LabelLength)
 }
 
-func SupportTerminate() {
+func Terminate() {
 	closeLog()
 }

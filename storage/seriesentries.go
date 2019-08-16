@@ -111,7 +111,7 @@ func (ss *SerieEntries) Unmarshal(c []byte) error {
 	}()
 
 	ss.Sts = int64(binary.LittleEndian.Uint64(c[2:(2 + offsets[1])]))
-	for n := (2 + offsets[1]); n < len(c); n += offsets[0] {
+	for n := 2 + offsets[1]; n < len(c); n += offsets[0] {
 		v1 := c[n : n+4]
 		v2 := c[n+4 : n+8]
 		var g, gv int32

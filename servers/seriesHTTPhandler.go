@@ -86,15 +86,15 @@ func seriesHTTPhandler() http.Handler {
 				var st, en int64
 				var e error
 				if st, e = strconv.ParseInt(params["start"], 10, 64); e != nil {
-					fmt.Fprintf(w, "")
+					_, _ = fmt.Fprintf(w, "")
 					return
 				}
 				if en, e = strconv.ParseInt(params["end"], 10, 64); e != nil {
-					fmt.Fprintf(w, "")
+					_, _ = fmt.Fprintf(w, "")
 					return
 				}
 				if st >= en {
-					fmt.Fprintf(w, "")
+					_, _ = fmt.Fprintf(w, "")
 					return
 				}
 				var s0, s1 storage.SampleData
@@ -119,7 +119,7 @@ func seriesHTTPhandler() http.Handler {
 				}
 				// the if is added to deal with timeout issues due to the fact this read can eb too long
 				if e = json.NewEncoder(w).Encode(rt); e != nil {
-					fmt.Fprintf(w, "")
+					_, _ = fmt.Fprintf(w, "")
 				}
 			}
 		}

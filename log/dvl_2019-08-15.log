@@ -1,8 +1,0 @@
-counter starting livlab__current_, Thu Aug:15 13:59:0 2019, "", 0, 0
-counter starting livlab__20secs__, Thu Aug:15 13:59:0 2019, "", 0, 0
-counter starting livlab__20mins__, Thu Aug:15 13:59:0 2019, "", 0, 0
-counter starting livlab__hour____, Thu Aug:15 13:59:0 2019, "", 0, 0
-counter starting livlab__day_____, Thu Aug:15 13:59:0 2019, "", 0, 0
-spaces.samplers counter livlab__ current, Fri Aug:16 19:15:0 2019, "inconsistent counter vs entries", 3524500, 109910789
-servers.handlerTCPRequest recover, Thu Aug:15 14:08:0 2019, "", 197
-servers.StartTCP: exceeding number of allowed connections, Thu Aug:15 14:06:0 2019, "", 5

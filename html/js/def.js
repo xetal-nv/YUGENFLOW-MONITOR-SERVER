@@ -1,7 +1,7 @@
 var ip = "http://localhost:8090";
 var samplingWindow = 5 * 1000;
 var reportCurrent = false;
-var user = "francesco";
+var user = "DEME";
 var spaceTimes = {
 "livlab": ["03:00", "05:00"],
 };

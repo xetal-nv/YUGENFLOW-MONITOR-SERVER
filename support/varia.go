@@ -91,24 +91,24 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 }
 
 // true if given time in between start and end
-func InClosureTimeFull(start, end, now time.Time) (rt bool, err error) {
-	if start == end {
-		return false, nil
-	}
-	// this ensures the first minute if captured
-	start = start.Add(-1 * time.Second)
-	nows := strconv.Itoa(now.Hour()) + ":"
-	mins := "00" + strconv.Itoa(now.Minute())
-	nows += mins[len(mins)-2:]
-	var ns time.Time
-	ns, err = time.Parse(TimeLayout, nows)
-	if err != nil {
-		return
-	} else {
-		rt = inTimeSpan(start, end, ns)
-	}
-	return
-}
+//func InClosureTimeFull(start, end, now time.Time) (rt bool, err error) {
+//	if start == end {
+//		return false, nil
+//	}
+//	// this ensures the first minute if captured
+//	start = start.Add(-1 * time.Second)
+//	nows := strconv.Itoa(now.Hour()) + ":"
+//	mins := "00" + strconv.Itoa(now.Minute())
+//	nows += mins[len(mins)-2:]
+//	var ns time.Time
+//	ns, err = time.Parse(TimeLayout, nows)
+//	if err != nil {
+//		return
+//	} else {
+//		rt = inTimeSpan(start, end, ns)
+//	}
+//	return
+//}
 
 // used by InClosureTime, InClosureTimeFull
 func inTimeSpan(start, end, check time.Time) bool {
@@ -176,12 +176,12 @@ func TimeDifferenceInSecs(start, end string) (int64, error) {
 					t0s := (h0*3600 + m0*60) * 1000
 					t1s := (h1*3600 + m1*60) * 1000
 					if t0s > t1s {
-						return 0, errors.New("End later than start")
+						return 0, errors.New("end later than start")
 					}
 					return int64(t1s - t0s), nil
 				}
 			}
 		}
 	}
-	return 0, errors.New("Invalid data")
+	return 0, errors.New("invalid data")
 }

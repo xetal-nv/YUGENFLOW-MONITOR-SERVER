@@ -10,7 +10,7 @@ import (
 
 // set-ups the official log file
 
-var RotInt int = 360
+var RotInt = 360
 var RotSize int64 = 10000000
 var logf *os.File
 var e error
@@ -41,7 +41,7 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 
 	// look for latest lof file
 	found := true
-	var ind int = 0
+	var ind = 0
 	for found {
 		file := rf + "_" + strconv.Itoa(ind) + ".log"
 		if _, err := os.Stat(file); err == nil {

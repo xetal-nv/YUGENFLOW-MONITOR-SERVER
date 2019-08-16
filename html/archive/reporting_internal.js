@@ -37,7 +37,7 @@ $(document).ready(function () {
         _startDate = startPicker.getDate(),
         _endDate = endPicker.getDate();
 
-    maxtries = 10
+    maxtries = 10;
 
 
     if (_startDate) {
@@ -133,7 +133,7 @@ $(document).ready(function () {
                             for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
                                 offset -= finalData[tslist[i]][1][j][1]
                             }
-                            for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
                                 if (offset === 0) {
                                     data += ", " + finalData[tslist[i]][1][j][1];
                                 } else {
@@ -175,7 +175,7 @@ $(document).ready(function () {
                                 adjust = Array(finalData[tslist[0]][1].length).fill(0);
                             }
                             if ((rmode !== 3) || (bracks !== 0)) {
-                                for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                                for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
                                     data += ", " + (finalData[tslist[i]][1][j][1] + adjust[j]);
                                 }
                             }
@@ -194,7 +194,7 @@ $(document).ready(function () {
                             for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
                                 offset -= finalData[tslist[i]][1][j][1]
                             }
-                            for (j = 0; j < finalData[tslist[i]][1].length; j++) {
+                            for (let j = 0; j < finalData[tslist[i]][1].length; j++) {
                                 if (offset === 0) {
                                     data += ", " + finalData[tslist[i]][1][j][1];
                                 }

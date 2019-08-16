@@ -185,16 +185,16 @@ func main() {
 			}
 		}
 		log.Println("System shutting down")
-		support.SupportTerminate()
+		support.Terminate()
 		storage.TimedIntDBSClose()
 	}
-	support.SupportSetUp(*env)
+	support.SetUp(*env)
 
 	if folder != "" {
 		if e == nil {
 			log.Printf("Move to folder %v\n", folder)
 		} else {
-			log.Fatal("Unable to move to folder %v, error reported:%v\n", folder, e)
+			log.Fatal("Unable to move to folder " + folder + ", error reported: " + e.Error())
 		}
 	}
 

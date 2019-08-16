@@ -218,7 +218,7 @@ $(document).ready(function () {
             Date.prototype.getWeek = function() {
                 var onejan = new Date(this.getFullYear(), 0, 1);
                 return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-            }
+            };
 
 
             // processavgdata analyses the data from presence averages and start the
@@ -505,7 +505,7 @@ $(document).ready(function () {
                     let daydatetmp = (v[0].split(" ")[0]).split("-");
                     let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];
                     // console.log(daydatetmp);
-                    var dtmp = new Date(daydatetmp[0], parseInt(daydatetmp[1]) - 1, daydatetmp[2]);
+                    var dtmp = new Date(parseInt(daydatetmp[0]), parseInt(daydatetmp[1]) - 1, parseInt(daydatetmp[2]));
                     // console.log(d, d.getWeek());
                     // return
                     header += daydate + "," + days[parseInt(v[0].split(" ")[1])]+ "," + dtmp.getWeek();
@@ -595,16 +595,16 @@ $(document).ready(function () {
                                             // let st = parseInt(overviewReportDefs[j].start.replace(':', ''), 10);
                                             // if (st > et) {st = 0};
                                             let ct0 = new Date();
-                                            let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10)
+                                            let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
                                             // console.log(st,et, ct);
                                             if (ct > et) {
                                                 switch(defaultPresence) {
                                                     case 0:
                                                         header += ",false";
-                                                        break
+                                                        break;
                                                     case 1:
-                                                        header += ",true"
-                                                        break
+                                                        header += ",true";
+                                                        break;
                                                     default:
                                                         header += ","
                                                 }
@@ -711,7 +711,7 @@ $(document).ready(function () {
                 }
                     
                     for (let k = 0; k < overviewReportDefs.length; k++) {
-                        j = periods.indexOf(k);
+                        let j = periods.indexOf(k);
                         // console.log(j, k)
                         if (j !== -1) {
                             header += weekpointavg[j][i] + ","
@@ -725,7 +725,7 @@ $(document).ready(function () {
                 header += "Average full period,,,";
                 // for (let i = 0; i < periods.length; i++) {
                 for (let k = 0; k < overviewReportDefs.length; k++) {
-                    j = periods.indexOf(k);
+                    let j = periods.indexOf(k);
                     if (j !== -1) {
                         let acc = 0;
                         for (let i = 0; i < periodpointavg[j].length; i++) {
