@@ -55,29 +55,22 @@ $(document).ready(function () {
         function generateReport() {
 
             let select = document.getElementById("spacename");
-            var myindex = select.selectedIndex;
-            if (repvisile) {
+            // var myindex = select.selectedIndex;
+            // if (repvisile) {
                 select = document.getElementById("reptype");
-                myindex = select.selectedIndex;
+                var myindex = select.selectedIndex;
                 var asys = select.options[myindex].value;
                 if (asys === "overview") {
                     generateOverviewReport()
                 } else {
                     generatePeriodicReport()
                 }
-            } else {
-                generateOverviewReport()
-            }
+            // } else {
+            //     generateOverviewReport()
+            // }
         }
 
         function generatePeriodicReport() {
-
-            // function sortentryEl0(a, b) {
-            //
-            //     if (a[0] < b[0]) return -1;
-            //     if (a[0] > b[0]) return 1;
-            //     return 0;
-            // }
 
             function exportReport(header, sampledata) {
                 let data = header,
@@ -121,10 +114,11 @@ $(document).ready(function () {
                         data += "\n"
                     }
 
+                    var currentTime = new Date();
                     var blob = new Blob([data], {type: 'text/plain'}),
                         anchor = document.createElement('a');
-                    anchor.download = space + "_" + asys + ".csv";
-                    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+                    anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                        currentTime.getDate().toString() + "_" + space + "_" + asys + ".csv";                    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                     anchor.click();
                 } else {
@@ -201,17 +195,6 @@ $(document).ready(function () {
 
         function generateOverviewReport() {
 
-            // let overviewReportDefs = [
-            //     {name: "at 10:00", start: "", end: "", point: "10:00", precision: 30, presence: "", id: 0},
-            //     {name: "08:00 to 12:00", start: "08:00", end: "12:00", point: "", precision: 0, presence: "", id: 0},
-            //     {name: "at 20:30", start: "", end: "", point: "20:30", precision: 30, presence: "", id: 0},
-            //     {name: "13:00 to 22:00", start: "13:00", end: "22:00", point: "", precision: 0, presence: "", id: 0},
-            //     {name: "active 20:00 to 06:00", start: "", end: "", point: "", precision: 0, presence: "test", id: 0},
-            //     {name: "active 02:00 to 06:00", start: "", end: "", point: "", precision: 0, presence: "test", id: 0},
-            //     {name: "day", start: "08:00", end: "18:00", point: "", precision: 30, presence: "", id: 0, skip: true},
-            //
-            // ];
-
             let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                 'November', 'December'];
@@ -227,11 +210,6 @@ $(document).ready(function () {
             // processavgdata analyses the data from presence averages and start the
             // presence detection data collection
             function processavgdata(header, sampledata, api, analysis, tries) {
-                // console.log(overviewReportDefs);
-                // let data = header;
-                // data += "\n";
-                // console.log(sampledata);
-
                 // identify the presence sets
                 let presenceSets = [];
                 let presenceSetsFlags = [];
@@ -254,7 +232,6 @@ $(document).ready(function () {
                     for (let i = 0; i < sampledata.length; i++) {
                         // console.log(sampledata[i].ts);
                         let d = new Date(sampledata[i].ts);
-                        // var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay(),
                         var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
                             " " + d.getDay(),
                             sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
@@ -330,24 +307,16 @@ $(document).ready(function () {
                                         clte = parseInt(spaceTimes[name][1].replace(':', ''), 10),
                                         stime = parseInt(sampleTime.replace(':', ''), 10);
                                     if ((stime < clts) || (stime > clte)) {
-                                        // console.log("not in closure");
                                         // when there has been no valid or onlym zero sample, we check for activity
                                         if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === 0)) {
                                             let sst = parseInt(overviewReportDefs[j].start.replace(':', ''), 10),
                                                 sed = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
-                                            // stime = parseInt(sampleTime.replace(':', ''), 10);
                                             if ((stime >= sst) && (stime <= sed)) {
                                                 cycleResult[j + 1] = sampledata[i].val * 2
-                                                // console.log("valid", sampledata[i].val)
-                                                // }
                                             }
                                         }
                                     }
                                 }
-                            // } else if (overviewReportDefs[j].presence !== "") {
-                            //     overviewReportDefs[j].id = j;
-                            //     presenceSets.push(overviewReportDefs[j])
-                            // }
                         }
                     }
                     // console.log(allResults);
@@ -421,31 +390,21 @@ $(document).ready(function () {
                 } else {
                     // load data
                     let current = presenceSets[presenceSets.length - 1];
-                    // console.log("DEBUG: ", ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence);
                     console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
                     $.ajax({
                         type: 'GET',
                         timeout: 30000,
-                        // url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         url: ip + "/presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
                             presenceSets.pop();
                             try {
                                 let sampledata = JSON.parse(rawdata);
-                                // console.log("DEBUG", current.name, sampledata);
-                                // return;
-                                // console.log(data[5]);
-                                // console.log(current.id);
-                                // data[current.id] = sampledata[0].val;
-
                                 // remove presence measure since loaded from the server
                                 if ((sampledata !== null) && (sampledata !== undefined)) {
                                     for (let i = 0; i < sampledata.length; i++) {
                                         let d = new Date(sampledata[i].ts);
                                         var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
                                             " " + d.getDay();
-                                        // sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-                                        // for (let i=0; i<data[sampleDate].length; i++) {console.log(data[sampleDate][i]);}
                                         data[sampleDate][current.id + 1] = sampledata[i].val;
                                     }
                                 }
@@ -473,15 +432,15 @@ $(document).ready(function () {
 
             function generateOverview(header, data) {
                 // TODO HERE - delete fake data
-                // data = {
-                //     "2019-07-31 3": ["31-07-2019 3", , , [0, 0], , , , ,],
-                //     "2019-08-01 4": ["1-08-2019 4", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-02 5": ["2-08-2019 5", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-03 6": ["3-08-2019 6", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-04 0": ["4-08-2019 0", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-05 1": ["5-08-2019 1", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-06 2": ["6-08-2019 2", 22, [0, 9], [0, 5], , , , , [0, 5]],
-                // };
+                data = {
+                    "2019-07-31 3": ["31-07-2019 3", , , [0, 0], , , , ,],
+                    "2019-08-01 4": ["1-08-2019 4", 22, [0, 9], [0, 5], 22, [0, 25], [0, 3], 22, [0, 5]],
+                    "2019-08-02 5": ["2-08-2019 5", 22, [0, 9], [0, 5], 22, [0, 25], [0, 3], 22, [0, 5]],
+                    "2019-08-03 6": ["3-08-2019 6", 22, [0, 9], [0, 5], 22, [0, 25], [0, 3], 22, [0, 5]],
+                    "2019-08-04 0": ["4-08-2019 0", 22, [0, 9], [0, 5], 22, [0, 25], [0, 3], 22, [0, 5]],
+                    "2019-08-05 1": ["5-08-2019 1", 22, [0, 9], [0, 5], 22, [0, 25], [0, 3], 22, [0, 5]],
+                    "2019-08-06 2": ["6-08-2019 2", 22, [0, 9], [0, 5], , , , , [0, 5]],
+                };
                 // console.log(data);
                 let keys = Object.keys(data);
                 // console.log(keys);
@@ -586,7 +545,7 @@ $(document).ready(function () {
                         if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
                             perioddayavg.push(v[v.length - 1][1])
                         }
-                        if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
+                        // if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
                             for (let j = 0; j < overviewReportDefs.length; j++) {
                                 // console.log(overviewReportDefs[j]);
                                 if (!overviewReportDefs[j].skip) {
@@ -601,37 +560,38 @@ $(document).ready(function () {
                                         } else {
                                             header += "," + Math.round(v[j + 1][1]);
                                         }
-                                    } else {
-                                        if (overviewReportDefs[j].presence !== "") {
-                                            let et = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
-                                            // let st = parseInt(overviewReportDefs[j].start.replace(':', ''), 10);
-                                            // if (st > et) {st = 0};
-                                            let ct0 = new Date();
-                                            let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
-                                            // console.log(st,et, ct);
-                                            if (ct > et) {
-                                                switch (defaultPresence) {
-                                                    case 0:
-                                                        header += ",false";
-                                                        break;
-                                                    case 1:
-                                                        header += ",true";
-                                                        break;
-                                                    default:
-                                                        header += ","
-                                                }
-                                            } else {
-                                                header += ","
-                                            }
-                                        } else {
-                                            header += ","
-                                        }
-
                                     }
+                                    // } else {
+                                    //     if (overviewReportDefs[j].presence !== "") {
+                                    //         let et = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
+                                    //         // let st = parseInt(overviewReportDefs[j].start.replace(':', ''), 10);
+                                    //         // if (st > et) {st = 0};
+                                    //         let ct0 = new Date();
+                                    //         let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
+                                    //         // console.log(st,et, ct);
+                                    //         if (ct > et) {
+                                    //             switch (defaultPresence) {
+                                    //                 case 0:
+                                    //                     header += ",false";
+                                    //                     break;
+                                    //                 case 1:
+                                    //                     header += ",true";
+                                    //                     break;
+                                    //                 default:
+                                    //                     header += ","
+                                    //             }
+                                    //         } else {
+                                    //             header += ","
+                                    //         }
+                                    //     } else {
+                                    //         header += ","
+                                    //     }
+                                    //
+                                    // }
                                 }
                             }
                             // console.log(keys[k], data[keys[k]])
-                        }
+                        // }
                     }
                     header += "\n";
                 }
@@ -696,29 +656,7 @@ $(document).ready(function () {
                         // console.log(i, valPoint, weekpointavg[i])
                     }
                 }
-                // console.log(weekpointavg);
-                // write period report if required
-                // if ((periods !== undefined) && (weekdayavg !== undefined)) {
-                //     for (let j = 0; j < periods.length; j++) {
-                //         for (let i = 0; i < weekdayavg.length; i++) {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for week " + i + ", " + weekpointavg[j][i] + "\n";
-                //         }
-                //         let acc = 0;
-                //         for (let i = 0; i < periodpointavg[j].length; i++) {
-                //             acc += periodpointavg[j][i]
-                //             // console.log(periodpointavg[j][i])
-                //         }
-                //         // console.log(acc);
-                //         if (periodpointavg[j].length !== 0) {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
-                //                 Math.round(acc / periodpointavg[j].length) + "\n"
-                //         } else {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
-                //         }
-                //         header += "\n";
-                //     }
-                // console.log(periods);
-                header += "\n";
+                header += "\n\n\"#note: Averages skips days as defined in SKIPDAYS\"\n\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
                     if ((i === 0) && (incfirstweek === 0)) {
                         header += "Average weekly*,, " + weeks[i] + ",";
@@ -778,6 +716,7 @@ $(document).ready(function () {
                 if (incfirstweek === 0) {
                     header += "\n\n* Partial week\n"
                 }
+
                 var blob = new Blob([header], {type: 'text/plain'}),
                     anchor = document.createElement('a');
                 var currentTime = new Date();
@@ -810,11 +749,11 @@ $(document).ready(function () {
                 }
                 let header = "sep=,\n" +
                     "#Xetal Flow Monitoring: " + version + " \n"
-                    + "\"#user: " + user + " \"\n"
+                    // + "\"#user: " + user + " \"\n"
                     + "\"#space: " + space + " \"\n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
-                    + reportWarning + "\n\n"
+                    + "\n\n"
                     + "#OCCUPANCY REPORT\n\n"
                     // + "\"NOTE: all values are averages if not specified otherwise\"\n\n"
                     // + "Date,Day,";

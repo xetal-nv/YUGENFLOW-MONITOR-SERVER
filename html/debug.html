@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-GB" lang="en-GB">
+<head>
+    <title>Xetal Flow Monitor - Debug</title>
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
+    <meta name="description" content="Xetal Flow Monitor"/>
+    <meta name="keywords" content=""/>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" type="text/css" href="./css/css.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="./css/pikaday.css" media="screen"/>
+    <link rel="stylesheet" type="text/css" href="./css/site.css" media="screen"/>
+
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/svg.min.js"></script>
+    <script type="text/javascript" src="js/vers.js"></script>
+    <script type="text/javascript" src="js/def.js"></script>
+    <script type="text/javascript" src="js/bypass.js"></script>
+    <script type="text/javascript" src="js/dat.js"></script>
+    <script type="text/javascript" src="js/pikaday.js"></script>
+
+</head>
+<body>
+<div id="layoutdims">
+    <ul>
+        <li style="width: 300px;text-align: right; padding-right: 20px; font-weight: bold;font-family: arial, sans-serif;">
+            Time of latest data:
+        </li>
+        <li style="width: 14em;text-align: left;font-family: arial, sans-serif;"><span id="lastts">n/a</span></li>
+    </ul>
+</div>
+<div class="colmask leftmenu">
+    <div class="colleft">
+        <div class="col1">
+            <!-- Canvas -->
+            <svg id="svgimage" height='700' width='800' xmlns="http://www.w3.org/2000/svg">
+            </svg>
+            <!-- Canvas end -->
+        </div>
+        <div class="col2" style="align-content: center;">
+            <h3 style=" color: black; padding-bottom: 0.3em " id="rttitle">Real-time data</h3>
+            <!-- Data end -->
+            <form id="spacesel" action="">
+                <select id="spacename">
+                    <option>Choose a space</option>
+                </select>
+            </form>
+            <table class="table" id="rtvalues">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                </tr>
+                <thead>
+                <tbody id="analysis">
+
+                </tbody>
+            </table>
+            <!-- Data end -->
+            <!-- Report start -->
+            <hr>
+            <h3 style=" color: black; padding-bottom: 0.3em ">Report generator</h3>
+            <form id="spacesel">
+                <select id="reptype">
+                    <option>Choose a dataset</option>
+                </select>
+            </form>
+            <p></p>
+            <div>
+                <label for="start">Start:</label>
+                <br>
+                <input type="text" id="start">
+            </div>
+            <div>
+                <label for="end">End:</label>
+                <br>
+                <input type="text" id="end">
+            </div>
+            <div>
+                <input type="button" value="Generate report" id="gen">
+
+            </div>
+            <div><img src="./images/loader2.gif" width="35" id="loader"></div>
+
+            <!-- Report end -->
+        </div>
+    </div>
+</div>
+<div id="footer">
+    <p>Powered by Xetal Yugen</p>
+</div>
+
+<script type="text/javascript" src="js/dra_debug.js"></script>
+<script type="text/javascript" src="js/rep_debug.js"></script>
+
+</body>
+</html>

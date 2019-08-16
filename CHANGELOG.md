@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.8.0]
+### Added
+ - Debug webapp (in progress)
 
 ## [0.7.0]
 ### Added
