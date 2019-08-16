@@ -142,8 +142,9 @@ $(document).ready(function () {
                     timeout: 5000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
+                        let sampledata;
                         try {
-                        let sampledata = JSON.parse(rawdata);} catch (e) {console.log("received corrupted data: ",rawdata)}
+                        sampledata = JSON.parse(rawdata);} catch (e) {console.log("received corrupted data: ",rawdata)}
                         // console.log(sampledata)
                         exportReport(header, sampledata);
                     },
@@ -284,7 +285,7 @@ $(document).ready(function () {
                                     if (Math.abs(refT - newT) <= overviewReportDefs[j].precision) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val]
                                         // console.log("first sample");
-                                        // console.log(refT, newT);
+                                        // console.log(refT, newT), sampledata[i].val;
                                     }
                                 } else {
                                     // we need to take the closest sample
@@ -293,7 +294,7 @@ $(document).ready(function () {
                                         && (Math.abs(refT - newT) <= Math.abs(refT - oldT))) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val];
                                         // console.log("next sample");
-                                        // console.log(refT, oldT, newT);
+                                        // console.log(refT, oldT, newT,sampledata[i].val);
                                     }
                                 }
                             } else if ((overviewReportDefs[j].start !== "") && (overviewReportDefs[j].end !== ""))
@@ -701,6 +702,7 @@ $(document).ready(function () {
                 //         header += "\n";
                 //     }
                 // console.log(periods);
+                header += "\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
                     if ((i===0) && (incfirstweek===0)) {                    
                         header += "Average weekly*,, " + weeks[i] + ",";

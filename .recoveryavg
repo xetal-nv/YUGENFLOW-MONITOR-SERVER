@@ -1,8 +1,10 @@
-sample__,livlab__,20secs__,1565870207553,0
-sample__,livlab__,20mins__,1565870207553,39
-sample__,livlab__,hour____,1565870207553,20
-sample__,livlab__,current_,1565870207553,3
-entry___,livlab__,hour____,1565870207553,[[0 17][1 -72]]
-entry___,livlab__,current_,1565870207553,[[0 17][1 -87]]
-entry___,livlab__,20secs__,1565870207553,[[0 17][1 -88]]
-entry___,livlab__,20mins__,1565870207553,[[0 23][1 -79]]
+entry___,livlab__,hour____,1565975764459,[[1 267][0 -83]]
+entry___,livlab__,day_____,1565975764459,[[1 62][0 -134]]
+entry___,livlab__,current_,1565975764459,[[1 254][0 -91]]
+entry___,livlab__,20secs__,1565975764459,[[1 253][0 -91]]
+entry___,livlab__,20mins__,1565975764459,[[1 254][0 -91]]
+sample__,livlab__,current_,1565975764459,339
+sample__,livlab__,20secs__,1565975764459,337
+sample__,livlab__,20mins__,1565975764459,344
+sample__,livlab__,hour____,1565975764459,354
+sample__,livlab__,day_____,1565975764459,101
