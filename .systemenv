@@ -1,0 +1,61 @@
+##### SYSTEM SETUP #####
+## FORCE REMOVAL DATABASE LOCK AT START-UP
+FORCEDBS = 1
+
+## TTL RT DATA IN DAYS
+EXPTIME = 14
+
+## BUFFERING
+INTBUFFSIZE = 20
+DBSBUFFSIZE = 50
+
+## LABEL LENGTH
+## CHANGING THIS VALUE MIGHT CAUSE COMPATIBILITY ISSUES
+LENLABEL = 8
+
+## 1 CRC used, 0 CRC not used
+CRC = 1
+
+## ALLOW (1) NEGATIVES SAMPLES (ACTUAL and AVERAGED)
+INSTANTNEG = 0
+AVERAGENEG = 0
+
+## SAMPLING INTERVAL IN SECONDS FOR CURRENT READINGS
+## This value also represents the smallest interval for anything related to analysis
+SAMWINDOW = 5
+
+## RANGE OF DEVICES PER GATE - UNSUPPORTED
+#DEVPERGATE = 2 2
+
+## TIMEOURS (TO) IN S
+## Defives the device, database and malicious connection timeouts
+DEVICETO = 10
+DBSTO = 10
+MALTO = 120
+
+## SELFROOT
+## Attempts to automatically determine the root folder of the server executable
+SELFFD = 1
+
+## DATABASE GARBAGE COLLECTION
+## Define interval for the database garbage collection
+## It cannot be null
+## GARBIT = start time hh:mm; end time hh:mm; interval check in minutes
+GARBINT = 23:30; 00:30; 20
+#GARBINT = 16:00; 00:30; 1
+
+
+## COMPRESSION MODE
+## 0: OFF
+## 1: DIFFERENTIAL
+## 2: DIFFERENTIAL WITH CLEANING ON CONSTANT COUNTER (DEFAULT)
+CMODE = 2
+
+## ENABLE CORS
+CORS = 1
+
+## TCP PROTOCOL
+TCPPROT = tcp4
+
+## User/client name
+USER = DEME

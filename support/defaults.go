@@ -24,13 +24,28 @@ var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination d
 
 func SupportSetUp(envf string) {
 	if envf == "" {
-		if e := godotenv.Load(); e != nil {
-			panic("Fatal error:" + e.Error())
+		if _, err := os.Stat(".systemenv"); err == nil {
+			if e := godotenv.Load(".systemenv"); e != nil {
+				panic("Fatal error:" + e.Error())
+			}
+		} else {
+			if e := godotenv.Load(); e != nil {
+				panic("Fatal error:" + e.Error())
+			}
 		}
 	} else {
-		if e := godotenv.Load(envf); e != nil {
-			panic("Fatal error:" + e.Error())
+		if _, err := os.Stat(".systemenv"); err == nil {
+			if e := godotenv.Load(".systemenv", envf); e != nil {
+				panic("Fatal error:" + e.Error())
+			}
+		} else {
+			if e := godotenv.Load(envf); e != nil {
+				panic("Fatal error:" + e.Error())
+			}
 		}
+		//if e := godotenv.Load(envf); e != nil {
+		//	panic("Fatal error:" + e.Error())
+		//}
 	}
 
 	LabelLength = 8
