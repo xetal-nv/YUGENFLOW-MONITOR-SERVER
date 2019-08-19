@@ -1,1 +1,0 @@
-var samplingWindow = 5 * 1000;

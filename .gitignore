@@ -1,3 +1,13 @@
 main.exe
 logfile
 *.raw
+/dbs/
+/html/js/def.js
+/html/js/ip.js
+/html/js/dat.js
+/html/js/rep.js
+/html/js/op.js
+/html/js/sw.js
+/log/
+.recoveryavg
+.recoverypres
