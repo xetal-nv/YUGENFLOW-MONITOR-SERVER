@@ -28,6 +28,8 @@ func seriesHTTPhandler() http.Handler {
 		cors = true
 	}
 
+	//dbgRegistry["192.168.1.116"] = support.Timestamp()
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -44,6 +46,19 @@ func seriesHTTPhandler() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
+		// check if the client is authorised to access debug data
+		//ip := strings.Split(r.RemoteAddr,":")[0]
+		//authorised := false
+		//dbgMutex.Lock()
+		//if _, ok := dbgRegistry[ip]; ok {
+		//fmt.Println((support.Timestamp() - tts)/1000<(authInterval * 60))
+		//authorised = true
+		//}
+		//if authorised {
+		//	fmt.Println("servers.seriesHTTPhandler: answering authorised device at address ", ip)
+		//}
+		//fmt.Println(authorised, ip)
+
 		params := make(map[string]string)
 		for _, i := range cmds {
 			params[i] = ""
@@ -58,6 +73,7 @@ func seriesHTTPhandler() http.Handler {
 					support.DLog <- support.DevData{"servers.seriesHTTPhandler: " + strings.Trim(val[0], " "),
 						support.Timestamp(), "illegal request", []int{1}, true}
 				}()
+				_, _ = fmt.Fprintf(w, "")
 				return
 			}
 		}
@@ -74,6 +90,7 @@ func seriesHTTPhandler() http.Handler {
 				case "entry":
 					s = &storage.SerieEntries{Stag: label, Sts: support.Timestamp()}
 				default:
+					_, _ = fmt.Fprintf(w, "")
 					return
 				}
 				if tag, ts, vals, e := storage.ReadLastNTS(s, num, params["analysis"] != "current"); e == nil {
@@ -99,16 +116,16 @@ func seriesHTTPhandler() http.Handler {
 				}
 				var s0, s1 storage.SampleData
 				switch params["type"] {
-				case "presence":
-					s0 = &storage.SerieSample{Stag: label, Sts: st}
-					s1 = &storage.SerieSample{Stag: label, Sts: en}
 				case "sample":
 					s0 = &storage.SerieSample{Stag: label, Sts: st}
 					s1 = &storage.SerieSample{Stag: label, Sts: en}
 				case "entry":
+					//if authorised {
 					s0 = &storage.SerieEntries{Stag: label, Sts: st}
 					s1 = &storage.SerieEntries{Stag: label, Sts: en}
+					//}
 				default:
+					_, _ = fmt.Fprintf(w, "")
 					return
 				}
 				//fmt.Println(st,en)

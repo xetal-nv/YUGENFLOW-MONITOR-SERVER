@@ -36,6 +36,7 @@ NOTE: series API supports types: sample, entry
 
 **List HTTP pages:**  
 HTTPSPORTS[0]/ -> webapp
+HTTPSPORTS[0]/dbg.html -> debug webapp  
 
 **SVG convention:**  
 Elements triggering data from a entry need to have as ID the entry id as from the configuration file (disabled)  

@@ -109,7 +109,6 @@ func infoHTTHandler() http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-
 		_ = json.NewEncoder(w).Encode(inst)
 
 	})

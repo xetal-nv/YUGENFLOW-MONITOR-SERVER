@@ -50,17 +50,6 @@ func setJSenvironment() {
 		}
 	}
 
-	//f, err := os.Create("./html/js/def.js")
-	//if err != nil {
-	//	log.Fatal("Fatal error creating def.js: ", err)
-	//}
-
-	//var f *os.File
-	//var err error
-
-	//f, err = os.OpenFile("./html/js/def.js", os.O_APPEND|os.O_WRONLY, 0600)
-	//f, err := os.Create("./html/js/op.js")
-	//if err != nil {
 	f, err := os.Create("./html/js/def.js")
 	if err != nil {
 		log.Fatal("Fatal error creating def.js: ", err)
@@ -246,10 +235,24 @@ func setJSenvironment() {
 		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
+	jsTxt = "var spaceDefinitions = "
+	for nm, df := range spaces.SpaceDef {
+		nm = strings.Replace(nm, "_", "", -1)
+		jsTxt += "{\"" + nm + "\": ["
+		for _, en := range df {
+			jsTxt += strconv.Itoa(en) + ","
+		}
+		jsTxt = strings.Trim(jsTxt, ",") + "]},"
+	}
+	jsTxt = strings.Trim(jsTxt, ",") + ";"
+	if _, err := f.WriteString(jsTxt); err != nil {
+		_ = f.Close()
+		log.Fatal("Fatal error writing to def.js: ", err)
+	}
+
 	if err = f.Close(); err != nil {
 		log.Fatal("Fatal error closing def.js: ", err)
 	}
-	//os.Exit(1)
 }
 
 // set-up of HTTP servers and handlers
@@ -260,6 +263,8 @@ func setupHTTP() error {
 	dataMap = make(map[string]datafunc)
 	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
 	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
+
+	//dbgRegistry = make(map[string]int64)
 
 	// enable web server
 	hMap[0] = map[string]http.Handler{

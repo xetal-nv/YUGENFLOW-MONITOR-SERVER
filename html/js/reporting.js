@@ -146,7 +146,7 @@ $(document).ready(function () {
                         try {
                             sampledata = JSON.parse(rawdata);
                         } catch (e) {
-                            console.log("received corrupted data: ", rawdata)
+                            console.log("received corrupted data")
                         }
                         // console.log(sampledata)
                         exportReport(header, sampledata);
@@ -387,7 +387,7 @@ $(document).ready(function () {
                             // console.log(sampledata)
                             processavgdata(header, sampledata, api, analysis, tries);
                         } catch (e) {
-                            alert("received corrupted data: " + rawdata);
+                            alert("received corrupted data");
                             document.getElementById("loader").style.visibility = "hidden";
                         }
                     },
@@ -507,7 +507,7 @@ $(document).ready(function () {
                 }
                 // console.log(tmppointDays);
                 for (let k in keys) {
-                    // console.log(data[keys[k]]);
+                    console.log(data[keys[k]]);
                     let v = data[keys[k]];
                     let daydatetmp = (v[0].split(" ")[0]).split("-");
                     let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];

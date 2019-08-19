@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.8.0]
 ### Added
- - Debug webapp at dbg.html (in progress)
+ - Debug webapp at dbg.html
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
 
 ## [0.7.0]

@@ -1,6 +1,12 @@
 Overall code cleaning
 Give JS analysis specs for proper reporting and simplify code
-Add API (removable at compile time) for databased analysis v0.8
-Entry split in and out v0.8
+Add API: pin code to enable debug mode (time based, use ip table)
+Entry split in and out v0.8 (ony day basis so that net flow stays 0)
 log binary (command line) dump data per day
 add graphs as reporting instead of number
+Remove entry from API user
+Simplify debug gui (forced values)
+Graphs for current day
+Overview report remove last day (add warning on report)
+No current disables only report (useful for graphs)
+

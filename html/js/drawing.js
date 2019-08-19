@@ -214,7 +214,7 @@ $(document).ready(function () {
                     ch.textContent = "overview";
                     rp.appendChild(ch);
                 }
-                if (reportCurrent) {
+                if (reportCurrent || (rtshow[0]==="dbg")) {
                     let ch = document.createElement("option");
                     allmeasurements.push({"name": "current", "value": "0"});
                     ch.textContent = "current";
@@ -224,10 +224,10 @@ $(document).ready(function () {
                 if (rtshow.length !== 0) {
                     for (let i = 0; i < jsObj.length; i++) {
                         let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                        if (rtshow.indexOf(el.name) > -1) {
+                        if ((rtshow.indexOf(el.name) > -1) || (rtshow[0]==="dbg")) {
                             allmeasurements.push(el);
                         }
-                        if (repshow.indexOf(el.name) > -1) {
+                        if ((repshow.indexOf(el.name) > -1) || (rtshow[0]==="dbg")){
                             let ch = document.createElement("option");
                             ch.textContent = jsObj[i]["name"];
                             rp.appendChild(ch);
@@ -237,7 +237,7 @@ $(document).ready(function () {
                     document.getElementById("rttitle").style.visibility = "hidden";
                     document.getElementById("rtvalues").style.visibility = "hidden";
                 }
-                if (!repvisile) {
+                if ((!repvisile && (rtshow[0]!=="dbg"))) {
                     rp.style.visibility = "hidden";
                 }
 
