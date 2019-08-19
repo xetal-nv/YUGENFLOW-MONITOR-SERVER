@@ -544,7 +544,11 @@ $(document).ready(function () {
                                 tmpDays = [v[v.length - 1][1]];
                                 if (tmppointDays.length !== 0) {
                                     for (let i = 0; i < periods.length; i++) {
-                                        tmppointDays[i].push(v[periods[i] + 1][1]);
+                                        if (v[periods[i] + 1]!==undefined) {
+                                            if (v[periods[i] + 1].length === 2) {
+                                                tmppointDays[i].push(v[periods[i] + 1][1]);
+                                            }
+                                        }
                                         tmppointDays[i].push(-1);
                                     }
                                 }
