@@ -810,7 +810,7 @@ $(document).ready(function () {
                 }
                 let header = "sep=,\n" +
                     "#Xetal Flow Monitoring: " + version + " \n"
-                    + "\"#user: " + user + " \"\n"
+                    + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + space + " \"\n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"

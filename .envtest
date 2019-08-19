@@ -6,6 +6,9 @@ IP = localhost
 #IP = 192.168.0.2
 TCPPORT = 3333
 
+##### Defines edition type #####
+EDITION = XETAL
+
 ##### GATE AND GROUPS #####
 
 ## GATE ORIENTATION

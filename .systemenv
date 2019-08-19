@@ -56,6 +56,3 @@ CORS = 1
 
 ## TCP PROTOCOL
 TCPPROT = tcp4
-
-## User/client name
-USER = DEME

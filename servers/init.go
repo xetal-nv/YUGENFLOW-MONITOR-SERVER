@@ -83,7 +83,7 @@ func setJSenvironment() {
 		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
-	js = "var user = \"" + strings.Trim(os.Getenv("USER"), " ") + "\";\n"
+	js = "var edition = \"" + strings.Trim(os.Getenv("EDITION"), " ") + "\";\n"
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
 		log.Fatal("Fatal error writing to def.js: ", err)
