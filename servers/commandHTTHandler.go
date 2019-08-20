@@ -2,7 +2,6 @@ package servers
 
 import (
 	"encoding/json"
-	"fmt"
 	"gateserver/support"
 	"log"
 	"net/http"
@@ -44,6 +43,8 @@ func commandHTTHandler() http.Handler {
 		for _, i := range cmds {
 			params[i] = ""
 		}
+		// command pin is not exposed to the user with the list command
+		params["pin"] = ""
 
 		for _, rp := range strings.Split(r.URL.String(), "?")[1:] {
 			val := strings.Split(rp, "=")
@@ -58,8 +59,22 @@ func commandHTTHandler() http.Handler {
 			}
 		}
 
+		if params["pin"] != "" {
+			if params["pin"] == pindbg {
+				ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
+				dbgMutex.Lock()
+				dbgRegistry[ip] = support.Timestamp()
+				dbgMutex.Unlock()
+				_ = json.NewEncoder(w).Encode(Jsoncmdrt{"", true})
+			} else {
+				_ = json.NewEncoder(w).Encode(Jsoncmdrt{"", false})
+			}
+			return
+		}
+
 		if params["id"] != "" && params["mac"] != "" {
-			_, _ = fmt.Fprintf(w, "error: illegal command providing both mac and id")
+			_ = json.NewEncoder(w).Encode(Jsoncmdrt{"error: illegal command providing both mac and id", false})
+			return
 		}
 
 		if params["async"] != "1" {
@@ -67,6 +82,7 @@ func commandHTTHandler() http.Handler {
 			_ = json.NewEncoder(w).Encode(rv)
 		} else {
 			go func() { exeParamCommand(params) }()
+			_ = json.NewEncoder(w).Encode(Jsoncmdrt{"async mode", true})
 		}
 	})
 }

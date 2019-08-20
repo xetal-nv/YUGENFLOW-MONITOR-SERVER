@@ -194,8 +194,10 @@ func handlerTCPRequest(conn net.Conn) {
 			// malicious devices will also be receiving this command
 			if support.RstON {
 				mutexSensorMacs.RLock()
+				mutexUnknownMac.RLock()
 				_, ok1 := sensorIdMAC[string(mac)]
 				_, ok2 := unkownDevice[string(mac)]
+				mutexUnknownMac.RUnlock()
 				mutexSensorMacs.RUnlock()
 				if !(ok1 || ok2) {
 					// this is a completely new device

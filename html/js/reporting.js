@@ -37,7 +37,7 @@ $(document).ready(function () {
             _startDate = startPicker.getDate(),
             _endDate = endPicker.getDate();
 
-        maxtries = 10;
+        maxtries = 3;
 
 
         if (_startDate) {
@@ -139,7 +139,7 @@ $(document).ready(function () {
             function loadsamples(header, api, tries) {
                 $.ajax({
                     type: 'GET',
-                    timeout: 5000,
+                    timeout: 20000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
                         let sampledata;
@@ -153,7 +153,7 @@ $(document).ready(function () {
                     },
                     error: function (error) {
                         if (tries === maxtries) {
-                            alert("Server or network error.\n Please try again later.");
+                            alert("Range of data requested to large or network error.\n Please try a shorter period or try again later.");
                             console.log("Error samples:" + error);
                             document.getElementById("loader").style.visibility = "hidden";
                         } else {
@@ -379,9 +379,10 @@ $(document).ready(function () {
             function loadavgsamples(header, api, analysis, tries) {
                 $.ajax({
                     type: 'GET',
-                    timeout: 5000,
+                    timeout: 20000,
                     url: ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,
                     success: function (rawdata) {
+                        console.log(ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,);
                         try {
                             let sampledata = JSON.parse(rawdata);
                             // console.log(sampledata)
@@ -393,10 +394,11 @@ $(document).ready(function () {
                     },
                     error: function (error) {
                         if (tries === maxtries) {
-                            alert("Server or network error.\n Please try again later.");
+                            alert("Range of data requested to large or network error.\n Please try a shorter period or try again later.");
                             console.log("Error samples:" + error);
                             document.getElementById("loader").style.visibility = "hidden";
                         } else {
+                            // console.log(error);
                             // loadsamples(header, api, entrieslist, tries + 1)
                             loadavgsamples(header, api, analysis, tries + 1)
                         }
@@ -457,7 +459,7 @@ $(document).ready(function () {
                         },
                         error: function (error) {
                             if (tries === maxtries) {
-                                alert("Server or network error.\n Please try again later.");
+                                alert("Range of data requested to large or network error.\n Please try a shorter period or try again later.");
                                 console.log("Error samples:" + error);
                                 document.getElementById("loader").style.visibility = "hidden";
                             } else {
@@ -544,7 +546,7 @@ $(document).ready(function () {
                                 tmpDays = [v[v.length - 1][1]];
                                 if (tmppointDays.length !== 0) {
                                     for (let i = 0; i < periods.length; i++) {
-                                        if (v[periods[i] + 1]!==undefined) {
+                                        if (v[periods[i] + 1] !== undefined) {
                                             if (v[periods[i] + 1].length === 2) {
                                                 tmppointDays[i].push(v[periods[i] + 1][1]);
                                             }
@@ -613,7 +615,7 @@ $(document).ready(function () {
                                             let ct0 = new Date();
                                             let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
                                             // console.log(st,et, ct);
-                                            if (ct > et) {
+                                            if ((ct > et) && rtshow[0] !== "dbg") {
                                                 switch (defaultPresence) {
                                                     case 0:
                                                         header += ",false";
@@ -647,7 +649,7 @@ $(document).ready(function () {
                 }
                 // console.log(val, tmp.length);
                 if (tmpDays.length !== 0) {
-                    val = Math.round(val / tmpDays.length)
+                    val = Math.trunc(Math.round(val) * 10 / tmpDays.length) / 10
                 }
                 weekdayavg.push(val);
                 val = 0;
@@ -655,7 +657,7 @@ $(document).ready(function () {
                     val += perioddayavg[i]
                 }
                 if (perioddayavg.length !== 0) {
-                    val = Math.round(val / perioddayavg.length)
+                    val = Math.trunc(Math.round(val) * 10 / perioddayavg.length) / 10
                 }
                 perioddayavg = [val];
                 // header += "\n";
@@ -678,7 +680,7 @@ $(document).ready(function () {
                                         acc += valPoint[k]
                                     }
                                     if (valPoint.length !== 0) {
-                                        weekpointavg[i].push(Math.round(acc / valPoint.length))
+                                        weekpointavg[i].push(Math.trunc(Math.round(acc) * 10 / valPoint.length) / 10)
                                     } else {
                                         weekpointavg[i].push(0)
                                     }
@@ -693,7 +695,7 @@ $(document).ready(function () {
                             acc += valPoint[k]
                         }
                         if (valPoint.length !== 0) {
-                            weekpointavg[i].push(Math.round(acc / valPoint.length))
+                            weekpointavg[i].push(Math.trunc(Math.round(acc) * 10 / valPoint.length) / 10)
                         } else {
                             weekpointavg[i].push(0)
                         }
@@ -715,7 +717,7 @@ $(document).ready(function () {
                 //         // console.log(acc);
                 //         if (periodpointavg[j].length !== 0) {
                 //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
-                //                 Math.round(acc / periodpointavg[j].length) + "\n"
+                //                 Math.trunc(acc / periodpointavg[j].length) + "\n"
                 //         } else {
                 //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
                 //         }
@@ -753,7 +755,7 @@ $(document).ready(function () {
                             // console.log(periodpointavg[j][i])
                         }
                         if (periodpointavg[j].length !== 0) {
-                            header += Math.round(acc / periodpointavg[j].length) + ","
+                            header += (Math.trunc(Math.round(acc) * 10 / periodpointavg[j].length) / 10) + ","
                         } else {
                             header += "0,"
                         }

@@ -55,29 +55,52 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-		rt := Register{true, "", dataMap[ref]()}
-		if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
-			log.Println("HTTP got a nil channel")
-		}
-		select {
-		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
-			if data != nil {
-				if e := rt.Data.Extract(data); e != nil {
-					rt.Valid = false
-					rt.Error = "ID"
-				} else {
-					rt.Data.SetTag(tag)
-				}
+
+		// check if the client is authorised to access debug data
+		ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
+		//fmt.Println(r.RemoteAddr, ip)
+		authorised := false
+		dbgMutex.RLock()
+		if tts, ok := dbgRegistry[ip]; ok {
+			if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+				authorised = true
 			} else {
-				rt.Valid = false
-				rt.Error = "NIL"
+				delete(dbgRegistry, ip)
 			}
-		case <-time.After(ito * time.Millisecond):
+		}
+		dbgMutex.RUnlock()
+		if authorised {
+			log.Println("servers.seriesHTTPhandler: answering (debug) authorised device at address:", ip)
+		}
+
+		rt := Register{true, "", dataMap[ref]()}
+
+		if authorised || (!authorised && sp[0] != "entry___") {
 			if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
 				log.Println("HTTP got a nil channel")
 			}
+			select {
+			case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
+				if data != nil {
+					if e := rt.Data.Extract(data); e != nil {
+						rt.Valid = false
+						rt.Error = "ID"
+					} else {
+						rt.Data.SetTag(tag)
+					}
+				} else {
+					rt.Valid = false
+					rt.Error = "NIL"
+				}
+			case <-time.After(ito * time.Millisecond):
+				if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
+					log.Println("HTTP got a nil channel")
+				}
+				rt.Valid = false
+				rt.Error = "TO"
+			}
+		} else {
 			rt.Valid = false
-			rt.Error = "TO"
 		}
 
 		//noinspection GoUnhandledErrorResult
@@ -102,6 +125,7 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 	if os.Getenv("CORS") != "" {
 		cors = true
 	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -118,7 +142,28 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		_ = json.NewEncoder(w).Encode(retrieveSpace(tag, sp, als, ref))
+		// check if the client is authorised to access debug data
+		ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
+		authorised := false
+		dbgMutex.RLock()
+		if tts, ok := dbgRegistry[ip]; ok {
+			if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+				authorised = true
+			} else {
+				delete(dbgRegistry, ip)
+			}
+		}
+		dbgMutex.RUnlock()
+		if authorised {
+			log.Println("servers.spaceRegisterHTTPhandler: answering (debug) authorised device at address:", ip)
+		}
+
+		if authorised || (!authorised && sp[0] != "entry___") {
+
+			_ = json.NewEncoder(w).Encode(retrieveSpace(tag, sp, als, ref))
+		} else {
+			_ = json.NewEncoder(w).Encode(Register{false, "", dataMap[ref]()})
+		}
 
 	})
 }
@@ -148,10 +193,29 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
+		// check if the client is authorised to access debug data
+		ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
+		authorised := false
+		dbgMutex.RLock()
+		if tts, ok := dbgRegistry[ip]; ok {
+			if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+				authorised = true
+			} else {
+				delete(dbgRegistry, ip)
+			}
+		}
+		dbgMutex.RUnlock()
+		if authorised {
+			log.Println("servers.datatypeRegisterHTTPhandler: answering (debug) authorised device at address:", ip)
+		}
+
 		var rt []RegisterBank
-		for sp, als := range rg {
-			sp0 := support.StringLimit(path[1:], support.LabelLength)
-			rt = append(rt, retrieveSpace(tag, []string{sp0, sp}, als, tag))
+		if authorised || (!authorised && path != "/entry") {
+
+			for sp, als := range rg {
+				sp0 := support.StringLimit(path[1:], support.LabelLength)
+				rt = append(rt, retrieveSpace(tag, []string{sp0, sp}, als, tag))
+			}
 		}
 
 		_ = json.NewEncoder(w).Encode(rt)

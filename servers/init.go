@@ -264,7 +264,9 @@ func setupHTTP() error {
 	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
 	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
 
-	//dbgRegistry = make(map[string]int64)
+	dbgMutex.Lock()
+	dbgRegistry = make(map[string]int64)
+	dbgMutex.Unlock()
 
 	// enable web server
 	hMap[0] = map[string]http.Handler{
@@ -284,7 +286,8 @@ func setupHTTP() error {
 	// Presence data retrieval API
 	hMap[1]["/presence"] = presenceHTTPhandler()
 	// Sensor command API
-	hMap[1]["/cmd"] = commandHTTHandler()
+	hMap[1]["/cmd"] = commandHTTHandler() // to be deprecated
+	hMap[1]["/command"] = commandHTTHandler()
 	// analysis information API
 	hMap[1]["/asys"] = asysHTTHandler()
 	// unused registered device API

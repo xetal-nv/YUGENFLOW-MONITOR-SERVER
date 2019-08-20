@@ -144,6 +144,7 @@ function drawSpace(rawspaces) {
                         success: function (data) {
                             let spaces = JSON.parse(data);
                             // console.log(data);
+                            // console.log(urlv + allmeasurements[i].name);
                             if (spaces["valid"]) {
                                 // if (allmeasurements[i].name === "current") {
                                 // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
@@ -182,7 +183,8 @@ function drawSpace(rawspaces) {
                                 }
                             }
                         },
-                        error: function (jqXhr, textStatus, error) {
+                        // error: function (jqXhr, textStatus, error) {
+                        error: function (jqXhr) {
                             console.log("Failed to connect to update data");
                             console.log(jqXhr);
                         }
@@ -249,7 +251,8 @@ $(document).ready(function () {
                 }
                 $("#analysis").html(html);
             },
-            error: function (jqXhr, textStatus, error) {
+            // error: function (jqXhr, textStatus, error) {
+            error: function (jqXhr) {
                 alert("Failed to connect to ASYS API");
                 console.log(jqXhr);
                 // console.log(textStatus);
@@ -268,7 +271,8 @@ $(document).ready(function () {
                 let spaces = JSON.parse(data);
                 drawSpace(spaces)
             },
-            error: function (jqXhr, textStatus, error) {
+            // error: function (jqXhr, textStatus, error) {
+            error: function (jqXhr) {
                 alert("Failed to connect to INFO API");
                 console.log(jqXhr);
             }

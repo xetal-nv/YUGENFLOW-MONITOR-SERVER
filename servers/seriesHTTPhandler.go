@@ -28,8 +28,6 @@ func seriesHTTPhandler() http.Handler {
 		cors = true
 	}
 
-	//dbgRegistry["192.168.1.116"] = support.Timestamp()
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
@@ -47,16 +45,20 @@ func seriesHTTPhandler() http.Handler {
 		}
 
 		// check if the client is authorised to access debug data
-		//ip := strings.Split(r.RemoteAddr,":")[0]
-		//authorised := false
-		//dbgMutex.Lock()
-		//if _, ok := dbgRegistry[ip]; ok {
-		//fmt.Println((support.Timestamp() - tts)/1000<(authInterval * 60))
-		//authorised = true
-		//}
-		//if authorised {
-		//	fmt.Println("servers.seriesHTTPhandler: answering authorised device at address ", ip)
-		//}
+		ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
+		authorised := false
+		dbgMutex.RLock()
+		if tts, ok := dbgRegistry[ip]; ok {
+			if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+				authorised = true
+			} else {
+				delete(dbgRegistry, ip)
+			}
+		}
+		dbgMutex.RUnlock()
+		if authorised {
+			log.Println("servers.seriesHTTPhandler: answering (debug) authorised device at address:", ip)
+		}
 		//fmt.Println(authorised, ip)
 
 		params := make(map[string]string)
@@ -120,10 +122,12 @@ func seriesHTTPhandler() http.Handler {
 					s0 = &storage.SerieSample{Stag: label, Sts: st}
 					s1 = &storage.SerieSample{Stag: label, Sts: en}
 				case "entry":
-					//if authorised {
+					if !authorised {
+						_, _ = fmt.Fprintf(w, "")
+						return
+					}
 					s0 = &storage.SerieEntries{Stag: label, Sts: st}
 					s1 = &storage.SerieEntries{Stag: label, Sts: en}
-					//}
 				default:
 					_, _ = fmt.Fprintf(w, "")
 					return

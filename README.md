@@ -29,10 +29,17 @@ HTTPSPORTS[1]/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type pre
 HTTPSPORTS[1]/cmd?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
+HTTPSPORTS[1]/cmd?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
+HTTPSPORTS[1]/command?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
+HTTPSPORTS[1]/command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
+HTTPSPORTS[1]/command?list -> lists all available commands  
+HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
+
   
 NOTE: values in val are specified as x,y,n,..   
 NOTE: all commands need to be fully tested via mac and id  
 NOTE: series API supports types: sample, entry  
+NOTE: cmd API to be deprecated, do not use  
 
 **List HTTP pages:**  
 HTTPSPORTS[0]/ -> webapp

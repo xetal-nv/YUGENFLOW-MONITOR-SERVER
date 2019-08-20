@@ -51,6 +51,7 @@ func presenceHTTPhandler() http.Handler {
 					support.DLog <- support.DevData{"servers.seriesHTTPhandler: " + strings.Trim(val[0], " "),
 						support.Timestamp(), "illegal request", []int{1}, true}
 				}()
+				_, _ = fmt.Fprintf(w, "")
 				return
 			}
 		}

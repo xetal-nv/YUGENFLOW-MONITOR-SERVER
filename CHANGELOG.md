@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 ## [0.8.0]
 ### Added
  - Debug webapp at dbg.html
+ - Pin controlled access to entry data, uses API command?pin=
+ 
+### Changed
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
+ - Reporting average use trunc.round instead of round
+ - API 'cmd' renamed 'command', both path valid for back compatibility. Path 'cmd' will be removed in 0.9.0
 
 ## [0.7.0]
 ### Added
