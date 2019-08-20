@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
  - Reporting average use trunc.round instead of round
  - API 'cmd' renamed 'command', both path valid for back compatibility. Path 'cmd' will be removed in 0.9.0
+ - Improved speed and network usage of real time values in the webapp by using the SPACE API instead of the REGISTER one
 
 ## [0.7.0]
 ### Added

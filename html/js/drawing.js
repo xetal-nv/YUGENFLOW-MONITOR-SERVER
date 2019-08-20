@@ -133,65 +133,106 @@ function drawSpace(rawspaces) {
                 && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
 
         if ((spacename !== "") && ((incycle) || (openingTime === ""))) {
-            let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
-            // console.log(measurement)
-            for (let i = 0; i < allmeasurements.length; i++) {
+            let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename;
+            // console.log(urlv);
 
-                (function () {
-                    $.ajax({
-                        type: 'GET',
-                        url: urlv + allmeasurements[i].name,
-                        success: function (data) {
-                            let spaces = JSON.parse(data);
-                            // console.log(data);
-                            // console.log(urlv + allmeasurements[i].name);
-                            if (spaces["valid"]) {
-                                // if (allmeasurements[i].name === "current") {
-                                // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
-                                // console.log(new Date());
-                                document.getElementById("lastts").innerText = new Date().toLocaleString();
-                                // }
-                                let dt = "n/a";
-                                // console.log(measurement)
-                                let ms = measurement.split("_");
-                                // console.log(ms);
-                                switch (ms[0]) {
-                                    case "sample":
-                                        dt = spaces["counter"]["val"];
-                                        break;
-                                    case "entry":
-                                        // console.log(data);
-                                        // console.log(allmeasurements[i].name =="current");
-                                        if (allmeasurements[i].name === "current") {
-                                            if (spaces["counter"]["val"] !== null) {
-                                                for (let i = 0; i < spaces["counter"]["val"].length; i++) {
-                                                    if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
-                                                        dt = spaces["counter"]["val"][i][1];
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                // console.log(dt);
-                                // in case of corrupted JSON we skip uopating the page
-                                if (/^-{0,1}\d+$/.test(dt)) {
-                                    document.getElementById(allmeasurements[i].name).innerText = dt;
+            $.ajax({
+                type: 'GET',
+                timeout: 5000,
+                url: urlv,
+                success: function (rawdata) {
+                    try {
+                        let sampledata = JSON.parse(rawdata);
+                        // console.log("DEBUG");
+                        let validData = {};
+                        for (let i = 0; i < sampledata.counters.length; i++) {
+                            if (sampledata.counters[i].valid) {
+                                let tag = sampledata.counters[i].counter.tag;
+                                tag = tag.replace(/\_+/g, " ");
+                                tag = tag.split(" ")[2];
+                                // console.log(tag);
+                                validData[tag] = sampledata.counters[i].counter.val;
+                                for (let i = 0; i < allmeasurements.length; i++) {
+                                    let refTag = allmeasurements[i].name.substring(0, labellength);
+                                    if (validData[refTag]) {
+                                        document.getElementById(allmeasurements[i].name).innerText = validData[refTag];
+                                        // console.log(allmeasurements[i].name, validData[refTag]);
+                                    }
                                 }
                             }
-                        },
-                        // error: function (jqXhr, textStatus, error) {
-                        error: function (jqXhr) {
-                            console.log("Failed to connect to update data");
-                            console.log(jqXhr);
                         }
-                    });
-                })();
+                        // console.log(validData);
+                    } catch (e) {
+                        console.log("received corrupted data: ", rawdata)
+                    }
+                },
+                error: function (error) {
+                    console.log("Failed to connect to update data");
+                    console.log(error);
+                }
 
-            }
+            });
+
+
+            // let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
+            // console.log(measurement)
+            // for (let i = 0; i < allmeasurements.length; i++) {
+            //
+            //     (function () {
+            //         $.ajax({
+            //             type: 'GET',
+            //             url: urlv + allmeasurements[i].name,
+            //             success: function (data) {
+            //                 let spaces = JSON.parse(data);
+            //                 // console.log(data);
+            //                 // console.log(urlv + allmeasurements[i].name);
+            //                 if (spaces["valid"]) {
+            //                     // if (allmeasurements[i].name === "current") {
+            //                     // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
+            //                     // console.log(new Date());
+            //                     document.getElementById("lastts").innerText = new Date().toLocaleString();
+            //                     // }
+            //                     let dt = "n/a";
+            //                     // console.log(measurement)
+            //                     let ms = measurement.split("_");
+            //                     // console.log(ms);
+            //                     switch (ms[0]) {
+            //                         case "sample":
+            //                             dt = spaces["counter"]["val"];
+            //                             break;
+            //                         case "entry":
+            //                             // console.log(data);
+            //                             // console.log(allmeasurements[i].name =="current");
+            //                             if (allmeasurements[i].name === "current") {
+            //                                 if (spaces["counter"]["val"] !== null) {
+            //                                     for (let i = 0; i < spaces["counter"]["val"].length; i++) {
+            //                                         if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
+            //                                             dt = spaces["counter"]["val"][i][1];
+            //                                             break;
+            //                                         }
+            //                                     }
+            //                                 }
+            //                             }
+            //                             break;
+            //                         default:
+            //                             break;
+            //                     }
+            //                     // console.log(dt);
+            //                     // in case of corrupted JSON we skip uopating the page
+            //                     if (/^-{0,1}\d+$/.test(dt)) {
+            //                         document.getElementById(allmeasurements[i].name).innerText = dt;
+            //                     }
+            //                 }
+            //             },
+            //             // error: function (jqXhr, textStatus, error) {
+            //             error: function (jqXhr) {
+            //                 console.log("Failed to connect to update data");
+            //                 console.log(jqXhr);
+            //             }
+            //         });
+            //     })();
+            //
+            // }
         }
     }
 
@@ -216,7 +257,7 @@ $(document).ready(function () {
                     ch.textContent = "overview";
                     rp.appendChild(ch);
                 }
-                if (reportCurrent || (rtshow[0]==="dbg")) {
+                if (reportCurrent || (rtshow[0] === "dbg")) {
                     let ch = document.createElement("option");
                     allmeasurements.push({"name": "current", "value": "0"});
                     ch.textContent = "current";
@@ -226,10 +267,10 @@ $(document).ready(function () {
                 if (rtshow.length !== 0) {
                     for (let i = 0; i < jsObj.length; i++) {
                         let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                        if ((rtshow.indexOf(el.name) > -1) || (rtshow[0]==="dbg")) {
+                        if ((rtshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
                             allmeasurements.push(el);
                         }
-                        if ((repshow.indexOf(el.name) > -1) || (rtshow[0]==="dbg")){
+                        if ((repshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
                             let ch = document.createElement("option");
                             ch.textContent = jsObj[i]["name"];
                             rp.appendChild(ch);
@@ -239,7 +280,7 @@ $(document).ready(function () {
                     document.getElementById("rttitle").style.visibility = "hidden";
                     document.getElementById("rtvalues").style.visibility = "hidden";
                 }
-                if ((!repvisile && (rtshow[0]!=="dbg"))) {
+                if ((!repvisile && (rtshow[0] !== "dbg"))) {
                     rp.style.visibility = "hidden";
                 }
 
