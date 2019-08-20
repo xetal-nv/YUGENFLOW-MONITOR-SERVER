@@ -37,8 +37,7 @@ HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, n
 
   
 NOTE: values in val are specified as x,y,n,..   
-NOTE: all commands need to be fully tested via mac and id  
-NOTE: series API supports types: sample, entry  
+NOTE: series API supports types: sample, entry (debug only)  
 NOTE: cmd API to be deprecated, do not use  
 
 **List HTTP pages:**  
@@ -55,7 +54,7 @@ NOTE: If the server does no have a svg for a given space, the space will be igno
 GATESERVER is set to the application folder  
 
 **CONFIGURATION:**  
-See .envtest file for configuration example
+See .envtest and .systemenv files for configuration example
 
 **COMMAND LINE OPTIONS:**  
 -dbs Path : specifies path where to store the database, './DBS' used if not specified  
