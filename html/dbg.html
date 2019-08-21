@@ -59,7 +59,7 @@
             <!-- Report start -->
             <hr>
             <h3 style=" color: black; padding-bottom: 0.3em ">Report generator</h3>
-            <form id="spacesel">
+            <form id="repsel">
                 <select id="reptype">
                     <option>Choose a dataset</option>
                 </select>
@@ -79,6 +79,13 @@
                 <input type="button" value="Generate report" id="gen">
 
             </div>
+            <hr>
+            <input type="password" id="pin" size="20"/><br><br>
+            <div>
+                <input type="button" value="Send Pin" id="sendpin" onclick="sendPin()">
+
+            </div>
+
             <div><img src="./images/loader2.gif" width="35" id="loader"></div>
 
             <!-- Report end -->

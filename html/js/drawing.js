@@ -167,8 +167,8 @@ function drawSpace(rawspaces) {
                     }
                 },
                 error: function (error) {
-                    console.log("Failed to connect to update data");
-                    console.log(error);
+                    // console.log("Failed to connect to update data");
+                    // console.log(error);
                 }
 
             });
@@ -277,11 +277,15 @@ $(document).ready(function () {
                         }
                     }
                 } else {
-                    document.getElementById("rttitle").style.visibility = "hidden";
-                    document.getElementById("rtvalues").style.visibility = "hidden";
+                    // document.getElementById("rttitle").style.visibility = "hidden";
+                    document.getElementById("rttitle").className ='hidden';
+                    // document.getElementById("rtvalues").style.visibility = "hidden";
+                    document.getElementById("rtvalues").className ='hidden';
+                    // document.getElementById("MyElement").classList.add('hidden');
                 }
                 if ((!repvisile && (rtshow[0] !== "dbg"))) {
-                    rp.style.visibility = "hidden";
+                    // rp.style.visibility = "hidden";
+                    rp.className ='hidden';
                 }
 
                 let html = "";
