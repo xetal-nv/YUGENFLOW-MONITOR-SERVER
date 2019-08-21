@@ -1,9 +1,8 @@
 Overall code cleaning
 Give JS analysis specs for proper reporting and simplify code
-Entry split in and out v0.8 (ony day basis so that net flow stays 0)
+Entry split in and out (only day basis so that net flow stays 0)
 log binary (command line) dump data per day
 add graphs as reporting instead of number
 Graphs for current day
-Overview report remove last day (add warning on report)
-No current disables only report (useful for graphs)
+No current disables only report (only with graphs)
 

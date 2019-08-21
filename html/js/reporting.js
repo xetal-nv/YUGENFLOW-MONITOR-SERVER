@@ -3,6 +3,10 @@ $(document).ready(function () {
         Date.prototype.getUnixTime = function () {
             return (this.getTime() / 1000 | 0) * 1000
         };
+        let allowedEndDate = new Date();
+        if (rtshow[0]!=="dbg") {
+            allowedEndDate.setDate(allowedEndDate.getDate() - 1)
+        }
         var maxtries,
             startDate,
             endDate,
@@ -19,7 +23,8 @@ $(document).ready(function () {
             startPicker = new Pikaday({
                 field: document.getElementById('start'),
                 minDate: new Date(StartDat),
-                maxDate: new Date(),
+                // maxDate: new Date(),
+                maxDate: allowedEndDate,
                 onSelect: function () {
                     startDate = this.getDate();
                     updateStartDate();
@@ -28,7 +33,8 @@ $(document).ready(function () {
             endPicker = new Pikaday({
                 field: document.getElementById('end'),
                 minDate: new Date(StartDat),
-                maxDate: new Date(),
+                // maxDate: new Date(),
+                maxDate: allowedEndDate,
                 onSelect: function () {
                     endDate = this.getDate();
                     updateEndDate();

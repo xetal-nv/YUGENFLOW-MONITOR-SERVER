@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // returns a series of data. it accepts the following parameters
@@ -101,7 +102,27 @@ func seriesHTTPhandler() http.Handler {
 				}
 			}
 		} else {
+			var rt []storage.SampleData
 			if params["start"] != "" && params["end"] != "" {
+
+				// if not in debug mode, the request will not provide data for the current day
+				if !authorised {
+					if eni, err := strconv.Atoi(params["end"]); err == nil {
+						en := time.Unix(int64(eni/1000), 0)
+						ts := time.Now()
+						yearen, monthen, dayen := en.Date()
+						yearts, monthts, dayts := ts.Date()
+						if (yearen == yearts) && (monthen == monthts) && (dayen == dayts) {
+							h, m, s := en.Clock()
+							en = en.Add(-time.Duration(h)*time.Hour - time.Duration(m)*time.Minute - time.Duration(s)*time.Second)
+							params["end"] = strconv.FormatInt(en.Unix(), 10) + "000"
+						}
+					} else {
+						_, _ = fmt.Fprintf(w, "")
+						return
+					}
+				}
+
 				var st, en int64
 				var e error
 				if st, e = strconv.ParseInt(params["start"], 10, 64); e != nil {
@@ -134,14 +155,14 @@ func seriesHTTPhandler() http.Handler {
 				}
 				//fmt.Println(st,en)
 
-				var rt []storage.SampleData
+				//var rt []storage.SampleData
 				if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 					rt = s0.UnmarshalSliceSS(tag, ts, vals)
 				}
 				// the if is added to deal with timeout issues due to the fact this read can eb too long
-				if e = json.NewEncoder(w).Encode(rt); e != nil {
-					_, _ = fmt.Fprintf(w, "")
-				}
+			}
+			if e := json.NewEncoder(w).Encode(rt); e != nil {
+				_, _ = fmt.Fprintf(w, "")
 			}
 		}
 	})

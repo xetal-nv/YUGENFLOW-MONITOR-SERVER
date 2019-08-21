@@ -37,7 +37,7 @@ HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, n
 
   
 NOTE: values in val are specified as x,y,n,..   
-NOTE: series API supports types: sample, entry (debug mode only)  
+NOTE: series API supports types: sample, entry (debug mode only). Data for the current day are only available in debug mode  
 NOTE: cmd API to be deprecated, do not use  
 
 **List HTTP pages:**  

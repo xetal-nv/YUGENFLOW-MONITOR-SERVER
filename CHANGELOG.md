@@ -4,13 +4,14 @@ All notable changes to this project will be documented in this file.
 ## [0.8.0]
 ### Added
  - Debug webapp at dbg.html
- - Pin controlled access to entry data, uses API command?pin=
+ - Pin controlled access to entry data, uses API command?pin= and cen be entered also form debug webapp
  
 ### Changed
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
  - Reporting average use trunc.round instead of round
  - API 'cmd' renamed 'command', both path valid for back compatibility. Path 'cmd' will be removed in 0.9.0
  - Improved speed and network usage of real time values in the webapp by using the SPACE API instead of the REGISTER one
+ - Series API will not provide data for the current day if no in debug mode  
 
 ## [0.7.0]
 ### Added

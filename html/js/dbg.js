@@ -1,4 +1,5 @@
 rtshow = ["dbg"];
+reportWarning = "Current day data requires Debug Mode to be active";
 
 function sendPin() {
     let pin = document.getElementById("pin").value;
