@@ -16,25 +16,75 @@ if ((!incycle) && (openingTime !== "")) {
     alert("!!! WARNING !!!\nReal-time data is only available " + openingTime + ".\nReporting is always available.\n")
 }
 
-let dataDefinitions = [];
+let rtdataDefinitions = [];
+let archivedataDefinitions = [];
 let dataArrays = [];
+let dataArraysArchive = [];
 // let dataPoints = [];
 let mapnames = {};
 
-function toogleDataSeries(e) {
+function toogleRTDataSeries(e) {
     if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
         e.dataSeries.visible = false;
     } else {
         e.dataSeries.visible = true;
     }
-    chart.render();
+    chartRT.render();
 }
 
-chart = new CanvasJS.Chart("chartContainer", {
+function toogleArchiveDataSeries(e) {
+    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+        e.dataSeries.visible = false;
+    } else {
+        e.dataSeries.visible = true;
+    }
+    chartArchive.render();
+}
+
+chartRT = new CanvasJS.Chart("rtchartContainer", {
     animationEnabled: false,
     zoomEnabled: true,
     exportEnabled: true,
     exportFileName: "chart",
+    title:{
+        text: "Real-time data",
+    },
+    axisY: {
+        title: "# People",
+        // scaleBreaks: {
+        //     autoCalculate: true
+        // },
+        includeZero: false
+    },
+    axisX: {
+        // scaleBreaks: {
+        //     autoCalculate: true
+        // }
+        valueFormatString: "hh:mm:ss TT",
+
+        labelAngle: -30
+    },
+    toolTip: {
+        shared: true
+    },
+    legend: {
+        cursor: "pointer",
+        verticalAlign: "top",
+        horizontalAlign: "center",
+        dockInsidePlotArea: false,
+        itemclick: toogleRTDataSeries
+    },
+    data: rtdataDefinitions
+});
+
+chartArchive = new CanvasJS.Chart("archivechartContainer", {
+    animationEnabled: false,
+    zoomEnabled: true,
+    exportEnabled: true,
+    exportFileName: "chart",
+    title:{
+        text: "Archive data",
+    },
     axisY: {
         title: "# People",
         // scaleBreaks: {
@@ -46,6 +96,7 @@ chart = new CanvasJS.Chart("chartContainer", {
         // scaleBreaks: {
         //     autoCalculate: true
         // },
+        valueFormatString: "DD MMM hh:mm:ss TT",
         labelAngle: -30
     },
     toolTip: {
@@ -56,11 +107,13 @@ chart = new CanvasJS.Chart("chartContainer", {
         verticalAlign: "top",
         horizontalAlign: "center",
         dockInsidePlotArea: false,
-        itemclick: toogleDataSeries
+        itemclick: toogleArchiveDataSeries
     },
-    data: dataDefinitions
+    data: archivedataDefinitions
 });
-chart.render();
+
+chartArchive.render();
+chartRT.render();
 
 function timeConverter(UNIX_timestamp) {
     let a = new Date(UNIX_timestamp);
@@ -81,6 +134,7 @@ function drawSpace(rawspaces) {
     let plan;
     let selectSpace = document.getElementById("spacename");
     let selectDisplay = document.getElementById("displayoption");
+    let graphType = document.getElementById("datatypes");
     for (i = 0; i < rawspaces.length; i++) {
         spaces[i] = rawspaces[i]["spacename"]
     }
@@ -176,9 +230,12 @@ function drawSpace(rawspaces) {
         // need to remove the onclick events
         if (SelValue !== "Choose a space") {
             let currentTime = new Date();
-            chart.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                currentTime.getDate().toString() + "_" + SelValue;
-            chart.render();
+            chartRT.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                currentTime.getDate().toString() + "_" + SelValue+ "_RealTime";
+            chartRT.render();
+            chartArchive.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                currentTime.getDate().toString() + "_" + SelValue+ "_Archive";
+            chartArchive.render();
             readPlan(SelValue, false)
         } else {
             resetcanvas()
@@ -193,17 +250,74 @@ function drawSpace(rawspaces) {
             case "Plan":
                 document.getElementById("svgimage").style.display = "block";
                 document.getElementById("rtvalues").style.display = "table";
-                document.getElementById("chartContainer").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "none";
+                document.getElementById("picker").style.display = "none";
+                document.getElementById("pickerDataset").style.display = "none";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "none";
                 break;
             case "Graphs":
-                // TODO need to happen the control for the real time and interval of graphs
                 document.getElementById("svgimage").style.display = "none";
                 document.getElementById("rtvalues").style.display = "none";
-                document.getElementById("chartContainer").style.display = "block";
+                document.getElementById("rtchartContainer").style.display = "block";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "none";
+                document.getElementById("pickerDataset").style.display = "none";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "none";
+                graphType.selectedIndex = 0;
+                chartRT.render();
+                break;
+            case "Reporting":
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("svgimage").style.display = "block";
+                document.getElementById("picker").style.display = "block";
+                document.getElementById("pickerDataset").style.display = "block";
+                document.getElementById("gen").style.display = "block";
+                document.getElementById("graphdata").style.display = "none";
                 break;
             default:
                 // this should never happen
                 console.log("drawing.js went into an illegal state on the display option");
+        }
+    };
+
+    graphType.onchange = function () {
+        let myindex = graphType.selectedIndex;
+        let SelValue = graphType.options[myindex].value;
+        // console.log(myindex, SelValue);
+        switch (SelValue) {
+            case "Real-time":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "block";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "none";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "none";
+                chartRT.render();
+                break;
+            case "Archive":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "block";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "block";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "block";
+                chartArchive.render();
+                break;
+            default:
+                // this should never happen
+                console.log("drawing.js went into an illegal state on the graph data option");
         }
     };
 
@@ -230,6 +344,8 @@ function drawSpace(rawspaces) {
                         let validData = {};
                         // let servedData = [];
                         let currentTS = new Date();
+                        let myindex = graphType.selectedIndex;
+                        let SelValue = graphType.options[myindex].value;
                         for (let i = 0; i < sampledata.counters.length; i++) {
                             if (sampledata.counters[i].valid) {
                                 let tag = sampledata.counters[i].counter.tag;
@@ -256,7 +372,9 @@ function drawSpace(rawspaces) {
                                 }
                             }
                         }
-                        chart.render();
+                        if (SelValue === "Real-time") {
+                            chartRT.render()
+                        }
                         // console.log(validData);
                     } catch (e) {
                         console.log("updatedata failed: ", e)
@@ -331,15 +449,25 @@ $(document).ready(function () {
                             "<td id=\'" + allmeasurements[i].name + "\'> n/a </td>";
 
                         dataArrays.push([]);
-                        let tmp = {
-                            xValueFormatString: "hh:mm:ss TT",
+                        dataArraysArchive.push([]);
+                        let tmprt = {
+                            xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
                             name: allmeasurements[i].name,
                             showInLegend: true,
                             xValueType: "dateTime",
                             type: "stepLine",
                             dataPoints: dataArrays[i]
                         };
-                        dataDefinitions.push(tmp);
+                        let tmparch = {
+                            xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                            name: allmeasurements[i].name,
+                            showInLegend: true,
+                            xValueType: "dateTime",
+                            type: "stepLine",
+                            dataPoints: dataArraysArchive[i]
+                        };
+                        rtdataDefinitions.push(tmprt);
+                        archivedataDefinitions.push(tmparch);
                         mapnames[allmeasurements[i].name] = i;
                         // lastTS.push(0);
                     }

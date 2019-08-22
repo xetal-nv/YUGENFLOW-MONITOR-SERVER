@@ -4,7 +4,7 @@ $(document).ready(function () {
             return (this.getTime() / 1000 | 0) * 1000
         };
         let allowedEndDate = new Date();
-        if (rtshow[0]!=="dbg") {
+        if (rtshow[0] !== "dbg") {
             allowedEndDate.setDate(allowedEndDate.getDate() - 1)
         }
         var maxtries,
@@ -57,6 +57,81 @@ $(document).ready(function () {
         }
 
         document.getElementById("gen").addEventListener("click", generateReport);
+        document.getElementById("graphdata").addEventListener("click", loadGraphsData);
+
+        function loadGraphsData() {
+
+            function loadAllSample(space, path, meas, maxtries) {
+                if (meas.length === 0) {
+                    document.getElementById("loader").style.visibility = "hidden";
+                    chartArchive.render();
+                    return
+                }
+                let asys = meas[meas.length - 1].name;
+                $.ajax({
+                    type: 'GET',
+                    timeout: 100000,
+                    url: ip + "/series?type=sample?space=" + space + "?analysis=" + asys + path,
+                    success: function (rawdata) {
+                        // console.log(ip + "/series?type=sample?space=" + space + "?analysis=" + asys + path);
+                        meas.pop();
+                        let sampledata;
+                        try {
+                            sampledata = JSON.parse(rawdata);
+                        } catch (e) {
+                            console.log("received corrupted data")
+                        }
+                        if ((sampledata !== undefined) && (sampledata !== null)) {
+                            for (let i = 0; i < sampledata.length; i++) {
+                                dataArraysArchive[meas.length].push({
+                                    x: sampledata[i].ts,
+                                    y: sampledata[i].val
+                                });
+                            }
+                        }
+                        // console.log(sampledata);
+                        loadAllSample(space, path, meas, 0);
+                    },
+                    error: function (error) {
+                        if (tries === maxtries) {
+                            alert("Range of data requested too large or network error.\n Please try a shorter period or try again later.");
+                            console.log("Error samples:" + error);
+                            document.getElementById("loader").style.visibility = "hidden";
+                        } else {
+                            // loadsamples(header, api, entrieslist, tries + 1)
+                            loadsamples(space, path, meas, maxtries + 1);
+                        }
+                    }
+                });
+            }
+
+            let select = document.getElementById("spacename");
+            var myindex = select.selectedIndex,
+                space = select.options[myindex].value;
+            var copyendDate = new Date(endDate),
+                start, end;
+            if ((startDate !== undefined) && (endDate !== undefined)
+                && (space !== "Choose a space")) {
+                document.getElementById("loader").style.visibility = "visible";
+                start = startDate.getUnixTime();
+                copyendDate.setHours(endDate.getHours() + 23);
+                copyendDate.setMinutes(endDate.getMinutes() + 59);
+                if (copyendDate.getUnixTime() > Date.now()) {
+                    end = Date.now();
+                } else {
+                    end = copyendDate.getUnixTime();
+                }
+                for (let i = 0; i < dataArraysArchive.length; i++) {
+                    dataArraysArchive[i].length = 0;
+                }
+                let path = "?start=" + start + "?end=" + end;
+
+                loadAllSample(space, path, allmeasurements.slice(), 0);
+
+
+            }
+
+        }
 
         function generateReport() {
 
@@ -78,13 +153,6 @@ $(document).ready(function () {
 
         function generatePeriodicReport() {
 
-            // function sortentryEl0(a, b) {
-            //
-            //     if (a[0] < b[0]) return -1;
-            //     if (a[0] > b[0]) return 1;
-            //     return 0;
-            // }
-
             function exportReport(header, sampledata) {
                 let data = header,
                     rawdataSample = [],
@@ -98,7 +166,6 @@ $(document).ready(function () {
                     }
 
                     // Find the minimum interval in changes, normally this is the measurement step
-                    // TODO to be replaced with with dynamically constructed js from conf files
                     let tslist = [];
                     let tsstep = -1;
                     while (rawdataSample.length > 0) {
@@ -176,7 +243,7 @@ $(document).ready(function () {
             var myindex = select.selectedIndex,
                 space = select.options[myindex].value;
             select = document.getElementById("reptype");
-            myindex = select.selectedIndex;
+            // myindex = select.selectedIndex;
             var asys = select.options[myindex].value,
                 copyendDate = new Date(endDate),
                 start, end;

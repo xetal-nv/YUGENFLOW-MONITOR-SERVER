@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ### Added
  - Debug webapp at dbg.html
  - Pin controlled access to entry data, uses API command?pin= and cen be entered also form debug webapp
- - Added graphs for current values, including export of graphs
+ - Added graphs for current values and archived intervals, including export of graphs
  
 ### Changed
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible

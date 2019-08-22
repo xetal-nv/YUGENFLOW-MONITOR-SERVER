@@ -1,6 +1,5 @@
+Target 1.0.0:
 Overall code cleaning
-Give JS analysis specs for proper reporting and simplify code
+Make command line interface to the database for debug
 Entry split in and out (only day basis so that net flow stays 0, but first check if we cannot align entries ...)
-log binary (command line) dump data per day
-Graphs for real time or a given interval (excludes current for it)
 
