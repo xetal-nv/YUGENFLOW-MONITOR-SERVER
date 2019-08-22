@@ -62,7 +62,7 @@ $(document).ready(function () {
 
             let select = document.getElementById("spacename");
             var myindex = select.selectedIndex;
-            if (repvisile) {
+            if (repvisile || (rtshow[0] === "dbg")) {
                 select = document.getElementById("reptype");
                 myindex = select.selectedIndex;
                 var asys = select.options[myindex].value;
@@ -145,9 +145,10 @@ $(document).ready(function () {
             function loadsamples(header, api, tries) {
                 $.ajax({
                     type: 'GET',
-                    timeout: 20000,
+                    timeout: 100000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
+                        console.log(ip + "/series?type=sample?space=" + api);
                         let sampledata;
                         try {
                             sampledata = JSON.parse(rawdata);
@@ -159,7 +160,7 @@ $(document).ready(function () {
                     },
                     error: function (error) {
                         if (tries === maxtries) {
-                            alert("Range of data requested to large or network error.\n Please try a shorter period or try again later.");
+                            alert("Range of data requested too large or network error.\n Please try a shorter period or try again later.");
                             console.log("Error samples:" + error);
                             document.getElementById("loader").style.visibility = "hidden";
                         } else {
@@ -206,17 +207,6 @@ $(document).ready(function () {
         }
 
         function generateOverviewReport() {
-
-            // let overviewReportDefs = [
-            //     {name: "at 10:00", start: "", end: "", point: "10:00", precision: 30, presence: "", id: 0},
-            //     {name: "08:00 to 12:00", start: "08:00", end: "12:00", point: "", precision: 0, presence: "", id: 0},
-            //     {name: "at 20:30", start: "", end: "", point: "20:30", precision: 30, presence: "", id: 0},
-            //     {name: "13:00 to 22:00", start: "13:00", end: "22:00", point: "", precision: 0, presence: "", id: 0},
-            //     {name: "active 20:00 to 06:00", start: "", end: "", point: "", precision: 0, presence: "test", id: 0},
-            //     {name: "active 02:00 to 06:00", start: "", end: "", point: "", precision: 0, presence: "test", id: 0},
-            //     {name: "day", start: "08:00", end: "18:00", point: "", precision: 30, presence: "", id: 0, skip: true},
-            //
-            // ];
 
             let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
@@ -385,7 +375,7 @@ $(document).ready(function () {
             function loadavgsamples(header, api, analysis, tries) {
                 $.ajax({
                     type: 'GET',
-                    timeout: 20000,
+                    timeout: 100000,
                     url: ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,
                     success: function (rawdata) {
                         console.log(ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,);
@@ -400,7 +390,7 @@ $(document).ready(function () {
                     },
                     error: function (error) {
                         if (tries === maxtries) {
-                            alert("Range of data requested to large or network error.\n Please try a shorter period or try again later.");
+                            alert("Range of data requested too large or network error.\n Please try a shorter period or try again later.");
                             console.log("Error samples:" + error);
                             document.getElementById("loader").style.visibility = "hidden";
                         } else {
@@ -433,7 +423,7 @@ $(document).ready(function () {
                     console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
                     $.ajax({
                         type: 'GET',
-                        timeout: 30000,
+                        timeout: 100000,
                         // url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         url: ip + "/presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
@@ -465,7 +455,7 @@ $(document).ready(function () {
                         },
                         error: function (error) {
                             if (tries === maxtries) {
-                                alert("Range of data requested to large or network error.\n Please try a shorter period or try again later.");
+                                alert("Range of data requested too large or network error.\n Please try a shorter period or try again later.");
                                 console.log("Error samples:" + error);
                                 document.getElementById("loader").style.visibility = "hidden";
                             } else {

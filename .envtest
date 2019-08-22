@@ -102,8 +102,8 @@ CLOSURE_livlab = 3:00; 05:00
 ## Intervals shorter than a day will be used fully for calculating the averages with data received in ANALYSISWINDOW
 ## For intervals longer than a day, the duration of ANALYSISWINDOW will be considered per day average only
 ## NOTE: analysis 'current' is reserved
+## NOTE: do not use values below SAMWINDOW for the shortest interval, values greater then 20s are advised
 ## NOTE: names longer than LENLABEL characters will be truncated in the database
-## NOTE: names shorter than LENLABEL characters will be extended with '_'
 ##ANALYSISPERIOD = name seconds; name seconds; ...-
 #ANALYSISPERIOD = 20secs 20; 30secs 30; 5mins 300; day 86000; 2days 100000
 ANALYSISPERIOD = 20secs 20; 20mins 1200;hour 3600; day 86000

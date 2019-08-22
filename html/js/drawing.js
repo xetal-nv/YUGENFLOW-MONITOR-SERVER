@@ -33,6 +33,8 @@ function toogleDataSeries(e) {
 chart = new CanvasJS.Chart("chartContainer", {
     animationEnabled: false,
     zoomEnabled: true,
+    exportEnabled: true,
+    exportFileName: "chart",
     axisY: {
         title: "# People",
         // scaleBreaks: {
@@ -56,15 +58,6 @@ chart = new CanvasJS.Chart("chartContainer", {
         dockInsidePlotArea: false,
         itemclick: toogleDataSeries
     },
-    // data: [
-    //     {
-    //         xValueFormatString: "hh:mm:ss TT",
-    //         name: "Actual data",
-    //         showInLegend: true,
-    //         type: "stepLine",
-    //         dataPoints: dataPoints
-    //     }
-    // ]
     data: dataDefinitions
 });
 chart.render();
@@ -181,7 +174,15 @@ function drawSpace(rawspaces) {
             selectDisplay.selectedIndex = 0
         }
         // need to remove the onclick events
-        if (SelValue !== "Choose a space") readPlan(SelValue, false); else resetcanvas()
+        if (SelValue !== "Choose a space") {
+            let currentTime = new Date();
+            chart.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                currentTime.getDate().toString() + "_" + SelValue;
+            chart.render();
+            readPlan(SelValue, false)
+        } else {
+            resetcanvas()
+        }
     };
 
     selectDisplay.onchange = function () {
@@ -195,6 +196,7 @@ function drawSpace(rawspaces) {
                 document.getElementById("chartContainer").style.display = "none";
                 break;
             case "Graphs":
+                // TODO need to happen the control for the real time and interval of graphs
                 document.getElementById("svgimage").style.display = "none";
                 document.getElementById("rtvalues").style.display = "none";
                 document.getElementById("chartContainer").style.display = "block";
@@ -203,7 +205,6 @@ function drawSpace(rawspaces) {
                 // this should never happen
                 console.log("drawing.js went into an illegal state on the display option");
         }
-        // if (SelValue !== "Choose a space") readPlan(SelValue, false); else resetcanvas()
     };
 
     function updatedata() {
@@ -240,26 +241,10 @@ function drawSpace(rawspaces) {
                                     let index = mapnames[tag];
                                     // if (tag === "current") {
                                     // if (lastTS[index] === 0) {
-                                        dataArrays[index].push({
-                                            x: currentTS,
-                                            y: sampledata.counters[i].counter.val
-                                        });
-                                    //     lastTS[index] = currentTS
-                                    // } else if (lastTS[index] !== sampledata.counters[i].counter.ts) {
-                                    //     dataArrays[index].push({
-                                    //         x: new Date(sampledata.counters[i].counter.ts),
-                                    //         y: sampledata.counters[i].counter.val
-                                    //     });
-                                    //     lastTS[index] = sampledata.counters[i].counter.ts
-                                    // } else if (lastTS[index] === sampledata.counters[i].counter.ts) {
-                                    //     dataArrays[index].push({
-                                    //         x: currentTS,
-                                    //         y: dataArrays[dataArrays.length - 1].y
-                                    //     });
-                                    //     // console.log(dataDefinitions);
-                                    // }
-
-                                    // }
+                                    dataArrays[index].push({
+                                        x: currentTS,
+                                        y: sampledata.counters[i].counter.val
+                                    });
                                     validData[tag] = sampledata.counters[i].counter.val;
                                     for (let i = 0; i < allmeasurements.length; i++) {
                                         let refTag = allmeasurements[i].name.substring(0, labellength);
@@ -268,22 +253,9 @@ function drawSpace(rawspaces) {
                                             // console.log(allmeasurements[i].name, validData[refTag]);
                                         }
                                     }
-                                } else {
-                                    console.log("Received corrupted update data", rawdata)
                                 }
                             }
                         }
-                        // console.log(servedData);
-                        // for (let j=0; j<allmeasurements.length; j++) {
-                        //     if (!(allmeasurements[i].name in servedData)) {
-                        //         // last sample is replicated
-                        //         let index = mapnames[allmeasurements[i].name];
-                        //         dataArrays[index].push({
-                        //             x: currentTS,
-                        //             y: dataArrays[dataArrays.length - 1].y
-                        //         });
-                        //     }
-                        // }
                         chart.render();
                         // console.log(validData);
                     } catch (e) {
@@ -304,98 +276,102 @@ function drawSpace(rawspaces) {
 }
 
 $(document).ready(function () {
-    // extract analysis information and set-up the data section
-    (function () {
-        $.ajax({
-            type: 'GET',
-            url: ip + "/asys",
-            success: function (data) {
-                let jsObj = JSON.parse(data);
-                let rp = document.getElementById("reptype");
-                // console.log(jsObj)
-                if (overviewReport) {
-                    let ch = document.createElement("option");
-                    ch.textContent = "overview";
-                    rp.appendChild(ch);
-                }
-                allmeasurements.push({"name": "current", "value": "0"});
-                if (reportCurrent || (rtshow[0] === "dbg")) {
-                    let ch = document.createElement("option");
-                    ch.textContent = "current";
-                    rp.appendChild(ch);
-                }
-                // console.log(rtshow.length)
-                if (rtshow.length !== 0) {
-                    for (let i = 0; i < jsObj.length; i++) {
-                        let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                        if ((rtshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
-                            allmeasurements.push(el);
-                        }
-                        if ((repshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
-                            let ch = document.createElement("option");
-                            ch.textContent = jsObj[i]["name"];
-                            rp.appendChild(ch);
-                        }
+        Date.prototype.getUnixTime = function () {
+            return (this.getTime() / 1000 | 0) * 1000
+        };
+        // extract analysis information and set-up the data section
+        (function () {
+            $.ajax({
+                type: 'GET',
+                url: ip + "/asys",
+                success: function (data) {
+                    let jsObj = JSON.parse(data);
+                    let rp = document.getElementById("reptype");
+                    // console.log(jsObj)
+                    if (overviewReport) {
+                        let ch = document.createElement("option");
+                        ch.textContent = "overview";
+                        rp.appendChild(ch);
                     }
-                } else {
-                    // document.getElementById("rttitle").style.visibility = "hidden";
-                    document.getElementById("rttitle").className = 'hidden';
-                    // document.getElementById("rtvalues").style.visibility = "hidden";
-                    document.getElementById("rtvalues").className = 'hidden';
-                    // document.getElementById("MyElement").classList.add('hidden');
+                    if (reportCurrent || (rtshow[0] === "dbg")) {
+                        allmeasurements.push({"name": "current", "value": "0"});
+                        let ch = document.createElement("option");
+                        ch.textContent = "current";
+                        rp.appendChild(ch);
+                    }
+                    // console.log(rtshow.length)
+                    if (rtshow.length !== 0) {
+                        for (let i = 0; i < jsObj.length; i++) {
+                            let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
+                            if ((rtshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
+                                allmeasurements.push(el);
+                            }
+                            if ((repshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
+                                let ch = document.createElement("option");
+                                ch.textContent = jsObj[i]["name"];
+                                rp.appendChild(ch);
+                            }
+                        }
+                    } else {
+                        // document.getElementById("rttitle").style.visibility = "hidden";
+                        document.getElementById("rttitle").className = 'hidden';
+                        // document.getElementById("rtvalues").style.visibility = "hidden";
+                        document.getElementById("rtvalues").className = 'hidden';
+                        // document.getElementById("MyElement").classList.add('hidden');
+                    }
+                    if ((!repvisile && (rtshow[0] !== "dbg"))) {
+                        // rp.style.visibility = "hidden";
+                        rp.className = 'hidden';
+                    }
+
+                    let html = "";
+                    for (let i = 0; i < allmeasurements.length; i++) {
+                        html += "<tr>" +
+                            "<td id=\'" + allmeasurements[i].name + "_" + "\'>" + allmeasurements[i].name + "</td>" +
+                            "<td id=\'" + allmeasurements[i].name + "\'> n/a </td>";
+
+                        dataArrays.push([]);
+                        let tmp = {
+                            xValueFormatString: "hh:mm:ss TT",
+                            name: allmeasurements[i].name,
+                            showInLegend: true,
+                            xValueType: "dateTime",
+                            type: "stepLine",
+                            dataPoints: dataArrays[i]
+                        };
+                        dataDefinitions.push(tmp);
+                        mapnames[allmeasurements[i].name] = i;
+                        // lastTS.push(0);
+                    }
+                    // console.log(mapnames);
+                    $("#analysis").html(html);
+                },
+                error: function (jqXhr) {
+                    alert("Failed to connect to ASYS API");
+                    console.log(jqXhr);
                 }
-                if ((!repvisile && (rtshow[0] !== "dbg"))) {
-                    // rp.style.visibility = "hidden";
-                    rp.className = 'hidden';
+
+            });
+        })();
+
+        // extract space information and set-up the canvas and selection menu
+        (function () {
+            $.ajax({
+                type: 'GET',
+                url: ip + "/info",
+                success: function (data) {
+                    let spaces = JSON.parse(data);
+                    drawSpace(spaces)
+                },
+                error: function (jqXhr) {
+                    alert("Failed to connect to INFO API");
+                    console.log(jqXhr);
                 }
 
-                let html = "";
-                for (let i = 0; i < allmeasurements.length; i++) {
-                    html += "<tr>" +
-                        "<td id=\'" + allmeasurements[i].name + "_" + "\'>" + allmeasurements[i].name + "</td>" +
-                        "<td id=\'" + allmeasurements[i].name + "\'> n/a </td>";
-
-                    dataArrays.push([]);
-                    let tmp = {
-                        xValueFormatString: "hh:mm:ss TT",
-                        name: allmeasurements[i].name,
-                        showInLegend: true,
-                        xValueType: "dateTime",
-                        type: "stepLine",
-                        dataPoints: dataArrays[i]
-                    };
-                    dataDefinitions.push(tmp);
-                    mapnames[allmeasurements[i].name] = i;
-                    // lastTS.push(0);
-                }
-                // console.log(mapnames);
-                $("#analysis").html(html);
-            },
-            error: function (jqXhr) {
-                alert("Failed to connect to ASYS API");
-                console.log(jqXhr);
-            }
-
-        });
-    })();
-
-    // extract space information and set-up the canvas and selection menu
-    (function () {
-        $.ajax({
-            type: 'GET',
-            url: ip + "/info",
-            success: function (data) {
-                let spaces = JSON.parse(data);
-                drawSpace(spaces)
-            },
-            error: function (jqXhr) {
-                alert("Failed to connect to INFO API");
-                console.log(jqXhr);
-            }
-
-        });
-    })();
+            });
+        })();
 
 
-});
+    }
+);
 

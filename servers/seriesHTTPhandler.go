@@ -10,7 +10,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // returns a series of data. it accepts the following parameters
@@ -105,23 +104,23 @@ func seriesHTTPhandler() http.Handler {
 			var rt []storage.SampleData
 			if params["start"] != "" && params["end"] != "" {
 
-				// if not in debug mode, the request will not provide data for the current day
-				if !authorised {
-					if eni, err := strconv.Atoi(params["end"]); err == nil {
-						en := time.Unix(int64(eni/1000), 0)
-						ts := time.Now()
-						yearen, monthen, dayen := en.Date()
-						yearts, monthts, dayts := ts.Date()
-						if (yearen == yearts) && (monthen == monthts) && (dayen == dayts) {
-							h, m, s := en.Clock()
-							en = en.Add(-time.Duration(h)*time.Hour - time.Duration(m)*time.Minute - time.Duration(s)*time.Second)
-							params["end"] = strconv.FormatInt(en.Unix(), 10) + "000"
-						}
-					} else {
-						_, _ = fmt.Fprintf(w, "")
-						return
-					}
-				}
+				//// if not in debug mode, the request will not provide data for the current day
+				//if !authorised {
+				//	if eni, err := strconv.Atoi(params["end"]); err == nil {
+				//		en := time.Unix(int64(eni/1000), 0)
+				//		ts := time.Now()
+				//		yearen, monthen, dayen := en.Date()
+				//		yearts, monthts, dayts := ts.Date()
+				//		if (yearen == yearts) && (monthen == monthts) && (dayen == dayts) {
+				//			h, m, s := en.Clock()
+				//			en = en.Add(-time.Duration(h)*time.Hour - time.Duration(m)*time.Minute - time.Duration(s)*time.Second)
+				//			params["end"] = strconv.FormatInt(en.Unix(), 10) + "000"
+				//		}
+				//	} else {
+				//		_, _ = fmt.Fprintf(w, "")
+				//		return
+				//	}
+				//}
 
 				var st, en int64
 				var e error

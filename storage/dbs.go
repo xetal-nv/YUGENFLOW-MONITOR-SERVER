@@ -19,7 +19,7 @@ import (
 func TimedIntDBSSetUp(folder string, fd bool) error {
 	// fd is used for testing or bypass the configuration file also in its absence
 	if v, e := strconv.Atoi(os.Getenv("DBSTO")); e != nil {
-		timeout = 5
+		timeout = 20
 	} else {
 		timeout = v
 	}
