@@ -5,13 +5,17 @@ All notable changes to this project will be documented in this file.
 ### Added
  - Debug webapp at dbg.html
  - Pin controlled access to entry data, uses API command?pin= and cen be entered also form debug webapp
+ - Added graphs for current values
  
 ### Changed
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
  - Reporting average use trunc.round instead of round
  - API 'cmd' renamed 'command', both path valid for back compatibility. Path 'cmd' will be removed in 0.9.0
  - Improved speed and network usage of real time values in the webapp by using the SPACE API instead of the REGISTER one
- - Series API will not provide data for the current day if no in debug mode  
+ - Series API will not provide data for the current day if no in debug mode
+ - Added support for absence of plan, a message is displayed instead
+ - Disabling current from severs only disables it for reporting
+ - Web app interface has been cleaned and adapted to accommodate graphs  
 
 ## [0.7.0]
 ### Added

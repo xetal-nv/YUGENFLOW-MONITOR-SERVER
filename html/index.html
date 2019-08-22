@@ -17,6 +17,7 @@
     <script type="text/javascript" src="js/bypass.js"></script>
     <script type="text/javascript" src="js/dat.js"></script>
     <script type="text/javascript" src="js/pikaday.js"></script>
+    <script type="text/javascript" src="js/canvasjs.min.js"></script>
 
 </head>
 <body>
@@ -34,16 +35,22 @@
             <!-- Canvas -->
             <svg id="svgimage" height='700' width='800' xmlns="http://www.w3.org/2000/svg">
             </svg>
+            <div id="chartContainer" style="height: 500px; width: 1000px; margin: 20px auto;display:none"></div>
             <!-- Canvas end -->
         </div>
         <div class="col2" style="align-content: center;">
+            <!--<h3 style=" color: black; padding-bottom: 0.3em " id="rttitle">Real-time data</h3> -->
             <h3 style=" color: black; padding-bottom: 0.3em " id="rttitle">Real-time data</h3>
             <!-- Data end -->
-            <form id="spacesel" action="">
-                <select id="spacename">
-                    <option>Choose a space</option>
-                </select>
-            </form>
+            <select id="spacename">
+                <option>Choose a space</option>
+            </select>
+            <p></p>
+            <select id="displayoption">
+                <option>Plan</option>
+                <option>Graphs</option>
+            </select>
+            <p></p>
             <table class="table" id="rtvalues">
                 <thead>
                 <tr>

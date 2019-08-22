@@ -1,8 +1,7 @@
 Overall code cleaning
 Give JS analysis specs for proper reporting and simplify code
-Entry split in and out (only day basis so that net flow stays 0)
+Entry split in and out (only day basis so that net flow stays 0, but first check if we cannot align entries ...)
 log binary (command line) dump data per day
-add graphs as reporting instead of number
 Graphs for current day
 No current disables only report (only with graphs)
 

@@ -3,21 +3,22 @@ body {
     padding: 0;
     border: 0; /* This removes the border around the viewport in old versions of IE */
     width: 100%;
-    background: #00245d;
+    /*background: #00245d;*/
+    background: white;
     min-width: 600px; /* Minimum width of layout - remove line if not required */
     /* The min-width property does not work in old versions of Internet Explorer */
     font-size: 90%;
 }
 
-a {
-    color: #369;
-}
+/*a {*/
+/*    color: #369;*/
+/*}*/
 
-a:hover {
-    color: #fff;
-    background: #369;
-    text-decoration: none;
-}
+/*a:hover {*/
+/*    color: #fff;*/
+/*    background: #369;*/
+/*    text-decoration: none;*/
+/*}*/
 
 h1, h2, h3 {
     margin: .8em 0 .2em 0;
@@ -30,9 +31,9 @@ p {
     padding: 0;
 }
 
-img {
-    margin: 10px 0 5px;
-}
+/*img {*/
+/*    margin: 10px 0 5px;*/
+/*}*/
 
 audio {
     display: none;
@@ -189,7 +190,7 @@ tr:nth-child(even) {
 .col3 {
     float: left;
     position: relative;
-    padding: 0 0 1em 0;
+    padding: 1em 0 1em 0;
     overflow: hidden;
 }
 
@@ -253,9 +254,9 @@ tr:nth-child(even) {
 }
 
 canvas {
-    background-color: #00245d;
+    /*background-color: #00245d;*/
     width: 100%;
-    height: auto;
+    /*height: auto;*/
 }
 
 .absent {

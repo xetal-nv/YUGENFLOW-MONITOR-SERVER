@@ -4,6 +4,7 @@ let spacename = "";
 let measurement = "sample";
 let allmeasurements = [];
 let selel = null;
+// let lastTS = [];
 
 let regex = new RegExp(':', 'g');
 let timeNow = new Date(),
@@ -14,6 +15,59 @@ let timeNow = new Date(),
 if ((!incycle) && (openingTime !== "")) {
     alert("!!! WARNING !!!\nReal-time data is only available " + openingTime + ".\nReporting is always available.\n")
 }
+
+let dataDefinitions = [];
+let dataArrays = [];
+// let dataPoints = [];
+let mapnames = {};
+
+function toogleDataSeries(e) {
+    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+        e.dataSeries.visible = false;
+    } else {
+        e.dataSeries.visible = true;
+    }
+    chart.render();
+}
+
+chart = new CanvasJS.Chart("chartContainer", {
+    animationEnabled: false,
+    zoomEnabled: true,
+    axisY: {
+        title: "# People",
+        // scaleBreaks: {
+        //     autoCalculate: true
+        // },
+        includeZero: false
+    },
+    axisX: {
+        // scaleBreaks: {
+        //     autoCalculate: true
+        // },
+        labelAngle: -30
+    },
+    toolTip: {
+        shared: true
+    },
+    legend: {
+        cursor: "pointer",
+        verticalAlign: "top",
+        horizontalAlign: "center",
+        dockInsidePlotArea: false,
+        itemclick: toogleDataSeries
+    },
+    // data: [
+    //     {
+    //         xValueFormatString: "hh:mm:ss TT",
+    //         name: "Actual data",
+    //         showInLegend: true,
+    //         type: "stepLine",
+    //         dataPoints: dataPoints
+    //     }
+    // ]
+    data: dataDefinitions
+});
+chart.render();
 
 function timeConverter(UNIX_timestamp) {
     let a = new Date(UNIX_timestamp);
@@ -32,7 +86,8 @@ function drawSpace(rawspaces) {
     let spaces = [];
     let draw = SVG('svgimage');
     let plan;
-    let select = document.getElementById("spacename");
+    let selectSpace = document.getElementById("spacename");
+    let selectDisplay = document.getElementById("displayoption");
     for (i = 0; i < rawspaces.length; i++) {
         spaces[i] = rawspaces[i]["spacename"]
     }
@@ -52,8 +107,9 @@ function drawSpace(rawspaces) {
             type: 'GET',
             url: ip + "/plan/" + name,
             success: function (data) {
-                let jsObj = JSON.parse(data);
-                plan = draw.svg(jsObj["qualifier"]);
+                let planDataRaw = JSON.parse(data);
+                // console.log(planDataRaw);
+                plan = draw.svg(planDataRaw["qualifier"]);
                 if (!od) {
                     spacename = name;
                     for (let i = 0; i < rawspaces.length; i++) {
@@ -81,22 +137,22 @@ function drawSpace(rawspaces) {
                             break;
                         }
                     }
-                    let total = document.getElementById(name);
-                    selel = total;
-                    total.setAttribute("class", "st2");
-                    total.onmousedown = function () {
-                        // console.log("found " + name)
-                        measurement = "sample";
-                        if (selel != null) selel.setAttribute("class", "st1");
-                        total.setAttribute("class", "st2");
-                        selel = total;
-                        for (let i = 0; i < allmeasurements.length; i++) {
-                            document.getElementById(allmeasurements[i].name).innerText = "";
-                            if (allmeasurements[i].name !== "current") {
-                                document.getElementById(allmeasurements[i].name + "_").style.color = "black";
-                            }
-                        }
-                    };
+                    // let total = document.getElementById(name);
+                    // selel = total;
+                    // total.setAttribute("class", "st2");
+                    // total.onmousedown = function () {
+                    //     // console.log("found " + name)
+                    //     measurement = "sample";
+                    //     if (selel != null) selel.setAttribute("class", "st1");
+                    //     total.setAttribute("class", "st2");
+                    //     selel = total;
+                    //     for (let i = 0; i < allmeasurements.length; i++) {
+                    //         document.getElementById(allmeasurements[i].name).innerText = "";
+                    //         if (allmeasurements[i].name !== "current") {
+                    //             document.getElementById(allmeasurements[i].name + "_").style.color = "black";
+                    //         }
+                    //     }
+                    // };
                 }
             },
             error: function (error) {
@@ -112,17 +168,42 @@ function drawSpace(rawspaces) {
         let el = document.createElement("option");
         el.textContent = opt;
         el.value = opt;
-        select.appendChild(el);
+        selectSpace.appendChild(el);
     }
 
     resetcanvas();
 
-    select.onchange = function () {
-        var myindex = select.selectedIndex;
-        var SelValue = select.options[myindex].value;
-        if (plan != null) plan.clear();
+    selectSpace.onchange = function () {
+        let myindex = selectSpace.selectedIndex;
+        let SelValue = selectSpace.options[myindex].value;
+        if (plan != null) {
+            plan.clear();
+            selectDisplay.selectedIndex = 0
+        }
         // need to remove the onclick events
         if (SelValue !== "Choose a space") readPlan(SelValue, false); else resetcanvas()
+    };
+
+    selectDisplay.onchange = function () {
+        let myindex = selectDisplay.selectedIndex;
+        let SelValue = selectDisplay.options[myindex].value;
+        // console.log(myindex, SelValue);
+        switch (SelValue) {
+            case "Plan":
+                document.getElementById("svgimage").style.display = "block";
+                document.getElementById("rtvalues").style.display = "table";
+                document.getElementById("chartContainer").style.display = "none";
+                break;
+            case "Graphs":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("chartContainer").style.display = "block";
+                break;
+            default:
+                // this should never happen
+                console.log("drawing.js went into an illegal state on the display option");
+        }
+        // if (SelValue !== "Choose a space") readPlan(SelValue, false); else resetcanvas()
     };
 
     function updatedata() {
@@ -143,27 +224,70 @@ function drawSpace(rawspaces) {
                 success: function (rawdata) {
                     try {
                         let sampledata = JSON.parse(rawdata);
-                        // console.log("DEBUG");
+                        document.getElementById("lastts").innerText = new Date().toLocaleString();
+                        // console.log("DEBUG", sampledata.counters);
                         let validData = {};
+                        // let servedData = [];
+                        let currentTS = new Date();
                         for (let i = 0; i < sampledata.counters.length; i++) {
                             if (sampledata.counters[i].valid) {
                                 let tag = sampledata.counters[i].counter.tag;
                                 tag = tag.replace(/\_+/g, " ");
                                 tag = tag.split(" ")[2];
                                 // console.log(tag);
-                                validData[tag] = sampledata.counters[i].counter.val;
-                                for (let i = 0; i < allmeasurements.length; i++) {
-                                    let refTag = allmeasurements[i].name.substring(0, labellength);
-                                    if (validData[refTag]) {
-                                        document.getElementById(allmeasurements[i].name).innerText = validData[refTag];
-                                        // console.log(allmeasurements[i].name, validData[refTag]);
+                                if (tag in mapnames) {
+                                    // servedData.push(tag);
+                                    let index = mapnames[tag];
+                                    // if (tag === "current") {
+                                    // if (lastTS[index] === 0) {
+                                        dataArrays[index].push({
+                                            x: currentTS,
+                                            y: sampledata.counters[i].counter.val
+                                        });
+                                    //     lastTS[index] = currentTS
+                                    // } else if (lastTS[index] !== sampledata.counters[i].counter.ts) {
+                                    //     dataArrays[index].push({
+                                    //         x: new Date(sampledata.counters[i].counter.ts),
+                                    //         y: sampledata.counters[i].counter.val
+                                    //     });
+                                    //     lastTS[index] = sampledata.counters[i].counter.ts
+                                    // } else if (lastTS[index] === sampledata.counters[i].counter.ts) {
+                                    //     dataArrays[index].push({
+                                    //         x: currentTS,
+                                    //         y: dataArrays[dataArrays.length - 1].y
+                                    //     });
+                                    //     // console.log(dataDefinitions);
+                                    // }
+
+                                    // }
+                                    validData[tag] = sampledata.counters[i].counter.val;
+                                    for (let i = 0; i < allmeasurements.length; i++) {
+                                        let refTag = allmeasurements[i].name.substring(0, labellength);
+                                        if (validData[refTag]) {
+                                            document.getElementById(allmeasurements[i].name).innerText = validData[refTag];
+                                            // console.log(allmeasurements[i].name, validData[refTag]);
+                                        }
                                     }
+                                } else {
+                                    console.log("Received corrupted update data", rawdata)
                                 }
                             }
                         }
+                        // console.log(servedData);
+                        // for (let j=0; j<allmeasurements.length; j++) {
+                        //     if (!(allmeasurements[i].name in servedData)) {
+                        //         // last sample is replicated
+                        //         let index = mapnames[allmeasurements[i].name];
+                        //         dataArrays[index].push({
+                        //             x: currentTS,
+                        //             y: dataArrays[dataArrays.length - 1].y
+                        //         });
+                        //     }
+                        // }
+                        chart.render();
                         // console.log(validData);
                     } catch (e) {
-                        console.log("received corrupted data: ", rawdata)
+                        console.log("updatedata failed: ", e)
                     }
                 },
                 error: function (error) {
@@ -172,67 +296,6 @@ function drawSpace(rawspaces) {
                 }
 
             });
-
-
-            // let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename + "/";
-            // console.log(measurement)
-            // for (let i = 0; i < allmeasurements.length; i++) {
-            //
-            //     (function () {
-            //         $.ajax({
-            //             type: 'GET',
-            //             url: urlv + allmeasurements[i].name,
-            //             success: function (data) {
-            //                 let spaces = JSON.parse(data);
-            //                 // console.log(data);
-            //                 // console.log(urlv + allmeasurements[i].name);
-            //                 if (spaces["valid"]) {
-            //                     // if (allmeasurements[i].name === "current") {
-            //                     // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
-            //                     // console.log(new Date());
-            //                     document.getElementById("lastts").innerText = new Date().toLocaleString();
-            //                     // }
-            //                     let dt = "n/a";
-            //                     // console.log(measurement)
-            //                     let ms = measurement.split("_");
-            //                     // console.log(ms);
-            //                     switch (ms[0]) {
-            //                         case "sample":
-            //                             dt = spaces["counter"]["val"];
-            //                             break;
-            //                         case "entry":
-            //                             // console.log(data);
-            //                             // console.log(allmeasurements[i].name =="current");
-            //                             if (allmeasurements[i].name === "current") {
-            //                                 if (spaces["counter"]["val"] !== null) {
-            //                                     for (let i = 0; i < spaces["counter"]["val"].length; i++) {
-            //                                         if (spaces["counter"]["val"][i][0].toString() === ms[1]) {
-            //                                             dt = spaces["counter"]["val"][i][1];
-            //                                             break;
-            //                                         }
-            //                                     }
-            //                                 }
-            //                             }
-            //                             break;
-            //                         default:
-            //                             break;
-            //                     }
-            //                     // console.log(dt);
-            //                     // in case of corrupted JSON we skip uopating the page
-            //                     if (/^-{0,1}\d+$/.test(dt)) {
-            //                         document.getElementById(allmeasurements[i].name).innerText = dt;
-            //                     }
-            //                 }
-            //             },
-            //             // error: function (jqXhr, textStatus, error) {
-            //             error: function (jqXhr) {
-            //                 console.log("Failed to connect to update data");
-            //                 console.log(jqXhr);
-            //             }
-            //         });
-            //     })();
-            //
-            // }
         }
     }
 
@@ -241,8 +304,6 @@ function drawSpace(rawspaces) {
 }
 
 $(document).ready(function () {
-
-
     // extract analysis information and set-up the data section
     (function () {
         $.ajax({
@@ -257,9 +318,9 @@ $(document).ready(function () {
                     ch.textContent = "overview";
                     rp.appendChild(ch);
                 }
+                allmeasurements.push({"name": "current", "value": "0"});
                 if (reportCurrent || (rtshow[0] === "dbg")) {
                     let ch = document.createElement("option");
-                    allmeasurements.push({"name": "current", "value": "0"});
                     ch.textContent = "current";
                     rp.appendChild(ch);
                 }
@@ -278,14 +339,14 @@ $(document).ready(function () {
                     }
                 } else {
                     // document.getElementById("rttitle").style.visibility = "hidden";
-                    document.getElementById("rttitle").className ='hidden';
+                    document.getElementById("rttitle").className = 'hidden';
                     // document.getElementById("rtvalues").style.visibility = "hidden";
-                    document.getElementById("rtvalues").className ='hidden';
+                    document.getElementById("rtvalues").className = 'hidden';
                     // document.getElementById("MyElement").classList.add('hidden');
                 }
                 if ((!repvisile && (rtshow[0] !== "dbg"))) {
                     // rp.style.visibility = "hidden";
-                    rp.className ='hidden';
+                    rp.className = 'hidden';
                 }
 
                 let html = "";
@@ -293,15 +354,26 @@ $(document).ready(function () {
                     html += "<tr>" +
                         "<td id=\'" + allmeasurements[i].name + "_" + "\'>" + allmeasurements[i].name + "</td>" +
                         "<td id=\'" + allmeasurements[i].name + "\'> n/a </td>";
+
+                    dataArrays.push([]);
+                    let tmp = {
+                        xValueFormatString: "hh:mm:ss TT",
+                        name: allmeasurements[i].name,
+                        showInLegend: true,
+                        xValueType: "dateTime",
+                        type: "stepLine",
+                        dataPoints: dataArrays[i]
+                    };
+                    dataDefinitions.push(tmp);
+                    mapnames[allmeasurements[i].name] = i;
+                    // lastTS.push(0);
                 }
+                // console.log(mapnames);
                 $("#analysis").html(html);
             },
-            // error: function (jqXhr, textStatus, error) {
             error: function (jqXhr) {
                 alert("Failed to connect to ASYS API");
                 console.log(jqXhr);
-                // console.log(textStatus);
-                // console.log(error);
             }
 
         });
@@ -316,7 +388,6 @@ $(document).ready(function () {
                 let spaces = JSON.parse(data);
                 drawSpace(spaces)
             },
-            // error: function (jqXhr, textStatus, error) {
             error: function (jqXhr) {
                 alert("Failed to connect to INFO API");
                 console.log(jqXhr);

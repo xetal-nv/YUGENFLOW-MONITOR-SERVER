@@ -167,13 +167,20 @@ func planHTTPHandler(name string) http.Handler {
 		cors = true
 	}
 
+	empty, err := ioutil.ReadFile("./installation/empty.svg")
+	if err != nil {
+		log.Fatal("planHTTPHandler: Fatal error, resource empty.svg is missing")
+	}
+
 	rt := Jsonrt{Name: name}
 	if name != "" {
 		data, err := ioutil.ReadFile("./installation/" + name + ".svg")
 		if err != nil {
-			log.Printf("planHTTPHandler %v: error %v reading svg file\n", name, err)
+			log.Printf("planHTTPHandler %v: error reading svg file, empty one assigned\n", name)
+			rt.Qualifier = string(empty)
+		} else {
+			rt.Qualifier = string(data)
 		}
-		rt.Qualifier = string(data)
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
