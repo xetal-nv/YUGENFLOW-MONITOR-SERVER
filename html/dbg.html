@@ -40,6 +40,12 @@
             <!-- Canvas end -->
         </div>
         <div class="col2" style="align-content: center;">
+            <input type="password" id="pin" size="20"/><br><br>
+            <div>
+                <input type="button" value="Send Pin" id="sendpin" onclick="sendPin()">
+            </div>
+            <p></p>
+            <hr>
             <h3 style=" color: black; padding-bottom: 0.3em " id="rttitle">Data Analysis tools</h3>
             <!-- Data end -->
             <select id="spacename">
@@ -70,30 +76,30 @@
             <!-- Data end -->
             <!-- Report start -->
             <hr>
-            <h3 style=" color: black; padding-bottom: 0.3em ">Report generator</h3>
-            <select id="reptype">
-                <option>Choose a dataset</option>
-            </select>
+            <div id="pickerDataset" style="display:none">
+                <select id="reptype">
+                    <option>Choose a dataset</option>
+                </select>
+            </div>
             <p></p>
-            <div>
-                <label for="start">Start:</label>
-                <br>
-                <input type="text" id="start">
+            <div id="picker" style="display:none">
+                <div>
+                    <label for="start">Start:</label>
+                    <br>
+                    <input type="text" id="start">
+                </div>
+                <div>
+                    <label for="end">End:</label>
+                    <br>
+                    <input type="text" id="end">
+                </div>
             </div>
             <div>
-                <label for="end">End:</label>
-                <br>
-                <input type="text" id="end">
-            </div>
-            <div>
-                <input type="button" value="Generate report" id="gen">
+                <input type="button" value="Generate report" id="gen" style="display:none">
 
             </div>
-            <hr>
-            <input type="password" id="pin" size="20"/><br><br>
             <div>
-                <input type="button" value="Send Pin" id="sendpin" onclick="sendPin()">
-
+                <input type="button" value="Load Data" id="graphdata" style="display:none">
             </div>
 
             <div><img src="./images/loader2.gif" width="35" id="loader"></div>

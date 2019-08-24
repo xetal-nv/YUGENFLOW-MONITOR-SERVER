@@ -46,9 +46,10 @@ chartRT = new CanvasJS.Chart("rtchartContainer", {
     zoomEnabled: true,
     exportEnabled: true,
     exportFileName: "chart",
-    title:{
+    title: {
         text: "Real-time data",
     },
+    subtitles: [{text: "Data available only " + openingTime}],
     axisY: {
         title: "# People",
         // scaleBreaks: {
@@ -61,7 +62,6 @@ chartRT = new CanvasJS.Chart("rtchartContainer", {
         //     autoCalculate: true
         // }
         valueFormatString: "hh:mm:ss TT",
-
         labelAngle: -30
     },
     toolTip: {
@@ -82,9 +82,10 @@ chartArchive = new CanvasJS.Chart("archivechartContainer", {
     zoomEnabled: true,
     exportEnabled: true,
     exportFileName: "chart",
-    title:{
+    title: {
         text: "Archive data",
     },
+    subtitles: [{text: "Data valid only " + openingTime}],
     axisY: {
         title: "# People",
         // scaleBreaks: {
@@ -97,7 +98,7 @@ chartArchive = new CanvasJS.Chart("archivechartContainer", {
         //     autoCalculate: true
         // },
         valueFormatString: "DD MMM hh:mm:ss TT",
-        labelAngle: -30
+        labelAngle: -30,
     },
     toolTip: {
         shared: true
@@ -231,10 +232,10 @@ function drawSpace(rawspaces) {
         if (SelValue !== "Choose a space") {
             let currentTime = new Date();
             chartRT.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                currentTime.getDate().toString() + "_" + SelValue+ "_RealTime";
+                currentTime.getDate().toString() + "_" + SelValue + "_RealTime";
             chartRT.render();
             chartArchive.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                currentTime.getDate().toString() + "_" + SelValue+ "_Archive";
+                currentTime.getDate().toString() + "_" + SelValue + "_Archive";
             chartArchive.render();
             readPlan(SelValue, false)
         } else {
@@ -386,6 +387,13 @@ function drawSpace(rawspaces) {
                 }
 
             });
+        } else {
+            if ((!incycle) && (openingTime !== "")) {
+                for (let i = 0; i < dataArrays.length; i++) {
+                    dataArrays[i].length = 0;
+                }
+                chartRT.render();
+            }
         }
     }
 
@@ -453,6 +461,7 @@ $(document).ready(function () {
                         let tmprt = {
                             xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
                             name: allmeasurements[i].name,
+                            connectNullData: true,
                             showInLegend: true,
                             xValueType: "dateTime",
                             type: "stepLine",
@@ -460,6 +469,8 @@ $(document).ready(function () {
                         };
                         let tmparch = {
                             xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                            markerType: "none",
+                            connectNullData: true,
                             name: allmeasurements[i].name,
                             showInLegend: true,
                             xValueType: "dateTime",

@@ -127,7 +127,7 @@ PRESENCE_livlab = morning 08:00 12:30; afternoon 13:00 18:00; night 18:00 06:00
 ## Note this setting overrides ANALYSISWINDOW for the JS.
 ## It is best practice that RTWINDOW is included in ANALYSISWINDOWs
 ##RTWINDOW = start end
-#RTWINDOW = 08:00 17:00
+RTWINDOW = 08:00 17:00
 
 ## RT ANALYSIS ##
 ## Specifies which analysis will be shown in the real-time panel

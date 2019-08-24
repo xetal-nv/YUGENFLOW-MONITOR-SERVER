@@ -3,7 +3,8 @@ $(document).ready(function () {
         Date.prototype.getUnixTime = function () {
             return (this.getTime() / 1000 | 0) * 1000
         };
-        let allowedEndDate = new Date();
+        let allowedEndDate = new Date(),
+            boundarySamplesVal = -1;
         if (rtshow[0] !== "dbg") {
             allowedEndDate.setDate(allowedEndDate.getDate() - 1)
         }
@@ -61,6 +62,111 @@ $(document).ready(function () {
 
         function loadGraphsData() {
 
+            // returns two integers in unix format for date and time
+            Date.prototype.ToInt2 = function () {
+                let date = this.getFullYear().toString() + ("0" + (this.getMonth() + 1).toString()).slice(-2) +
+                    ("0" + this.getDate().toString()).slice(-2);
+                let time = ("0" + this.getHours()).slice(-2) + ("0" + this.getMinutes()).slice(-2) + ("0" + this.getSeconds()).slice(-2);
+                return [parseInt(date, 10), parseInt(time, 10)]
+            };
+
+            // takes a string of format hh:mm and uses to replace the time
+            Date.prototype.ReplaceTime = function (time) {
+                let tmp = time.split(":"),
+                    hour = parseInt(tmp[0], 10),
+                    minutes = parseInt(tmp[1], 10);
+                this.setHours(hour, minutes, 0, 0)
+            };
+
+            // return a list fo the samples needed insertion
+            function insertSamples(currentPhase, nextPhase, cDay, defVal) {
+                let retVal = [],
+                    currentDay = new Date(cDay);
+                switch (currentPhase) {
+                    case 0:
+                    case 1:
+                        if (nextPhase > 1) {
+                            currentDay.ReplaceTime(opStartTime);
+                            retVal.push({ts: new Date(currentDay), val: defVal})
+                        }
+                        if (nextPhase > 2) {
+                            currentDay.ReplaceTime(opEndTime);
+                            retVal.push({ts: new Date(currentDay), val: defVal})
+                        }
+
+                        break;
+                    case 2:
+                        if (nextPhase > 2) {
+                            currentDay.ReplaceTime(opEndTime);
+                            retVal.push({ts: new Date(currentDay), val: defVal})
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                return retVal
+            }
+
+            // removes all saples ooutside of the working period and creates boundary values set to defVal
+            function cleanSampleList(trace, defVal) {
+
+                let startDate = new Date("2019 08 19"),
+                    endDate = new Date("2019 08 22"),
+                    startAn = startDate.ToInt2()[0],
+                    endAn = endDate.ToInt2()[0],
+                    startRef = parseInt(opStartTime.replace(":", "") + "00", 10),
+                    endRef = parseInt(opEndTime.replace(":", "") + "00", 10),
+                    refDayDate = startDate,
+                    refDay = startAn,
+                    cyclePhase = 0,
+                    samples = [];
+
+                for (let i = 0; i < trace.length; i++) {
+                    let cursorDate = new Date(trace[i].ts),
+                        cursor = cursorDate.ToInt2();
+                    if (cursor[0] !== refDay) {
+                        // Day has changed, we need to add samples if needed
+                        samples = samples.concat(insertSamples(cyclePhase, 3, refDayDate, defVal));
+                        refDay = cursor[0];
+                        refDayDate = cursorDate;
+                        cyclePhase = 0
+                    }
+                    if (cursor[1] <= startRef) {
+                        cyclePhase = 1
+                    } else if (cursor[1] >= endRef) {
+                        if (cyclePhase !== 3) {
+                            samples = samples.concat(insertSamples(cyclePhase, 3, refDayDate, defVal));
+                            cyclePhase = 3
+                        }
+                    } else {
+                        if (cyclePhase !== 2) {
+                            samples = samples.concat(insertSamples(cyclePhase, 2, refDayDate, defVal));
+                            cyclePhase = 2
+                        } else {
+                            // add normal sample
+                            samples.push({ts: cursorDate, val: trace[i].val})
+                        }
+                    }
+                }
+
+                // add sample left in the current day
+                if (cyclePhase < 3) {
+                    samples = samples.concat(insertSamples(cyclePhase, 3, refDayDate, defVal))
+                }
+
+                // add sample for empty following days
+                cyclePhase = 0;
+                refDayDate = new Date(trace[trace.length - 1].ts);
+                while (refDay < endAn) {
+                    refDayDate.setDate(refDayDate.getDate() + 1);
+                    refDay = refDayDate.ToInt2()[0];
+                    samples = samples.concat(insertSamples(cyclePhase, 3, refDayDate, defVal));
+                    cyclePhase = 0
+                }
+
+                return samples
+            }
+
             function loadAllSample(space, path, meas, maxtries) {
                 if (meas.length === 0) {
                     document.getElementById("loader").style.visibility = "hidden";
@@ -75,13 +181,15 @@ $(document).ready(function () {
                     success: function (rawdata) {
                         // console.log(ip + "/series?type=sample?space=" + space + "?analysis=" + asys + path);
                         meas.pop();
-                        let sampledata;
+                        let jsonData;
                         try {
-                            sampledata = JSON.parse(rawdata);
+                            jsonData = JSON.parse(rawdata);
                         } catch (e) {
                             console.log("received corrupted data")
                         }
-                        if ((sampledata !== undefined) && (sampledata !== null)) {
+                        if ((jsonData !== undefined) && (jsonData !== null)) {
+                            let sampledata = cleanSampleList(jsonData, boundarySamplesVal);
+                            // console.log(sampledata);
                             for (let i = 0; i < sampledata.length; i++) {
                                 dataArraysArchive[meas.length].push({
                                     x: sampledata[i].ts,
@@ -158,7 +266,7 @@ $(document).ready(function () {
                     rawdataSample = [],
                     finalData = {};
                 data += "\n";
-                if (sampledata !== null) {
+                if ((sampledata !== null) && (sampledata !== undefined)) {
                     for (let i = 0; i < sampledata.length; i++) {
                         if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
                             rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
@@ -186,17 +294,25 @@ $(document).ready(function () {
                     }
 
                     for (let i = 0; i < tslist.length; i++) {
-                        let d = new Date(tslist[i]);
-                        var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
-                            d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-                        data += datestring + ", " + Math.trunc(tslist[i] / 1000)
-                            + ", " + finalData[tslist[i]];
-                        data += "\n"
+                        let d = new Date(tslist[i]),
+                            dHS = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2),
+                            incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(dHS.replace(regex, ''), 10))
+                                && (parseInt(dHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
+                        if (incycle) {
+                            var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
+                                d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+                            data += datestring + ", " + Math.trunc(tslist[i] / 1000)
+                                + ", " + finalData[tslist[i]];
+                            data += "\n"
+                        }
                     }
 
                     var blob = new Blob([data], {type: 'text/plain'}),
                         anchor = document.createElement('a');
-                    anchor.download = space + "_" + asys + ".csv";
+                    var currentTime = new Date();
+                    anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                        currentTime.getDate().toString() + "_" + space + "_" + asys + ".csv";
+                    // anchor.download = space + "_" + asys + ".csv";
                     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                     anchor.click();
@@ -215,7 +331,7 @@ $(document).ready(function () {
                     timeout: 100000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
-                        console.log(ip + "/series?type=sample?space=" + api);
+                        // console.log(ip + "/series?type=sample?space=" + api);
                         let sampledata;
                         try {
                             sampledata = JSON.parse(rawdata);
@@ -243,7 +359,7 @@ $(document).ready(function () {
             var myindex = select.selectedIndex,
                 space = select.options[myindex].value;
             select = document.getElementById("reptype");
-            // myindex = select.selectedIndex;
+            myindex = select.selectedIndex;
             var asys = select.options[myindex].value,
                 copyendDate = new Date(endDate),
                 start, end;
@@ -445,7 +561,7 @@ $(document).ready(function () {
                     timeout: 100000,
                     url: ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,
                     success: function (rawdata) {
-                        console.log(ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,);
+                        // console.log(ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,);
                         try {
                             let sampledata = JSON.parse(rawdata);
                             // console.log(sampledata)
@@ -487,7 +603,7 @@ $(document).ready(function () {
                     // load data
                     let current = presenceSets[presenceSets.length - 1];
                     // console.log("DEBUG: ", ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence);
-                    console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
+                    // console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
                     $.ajax({
                         type: 'GET',
                         timeout: 100000,
@@ -572,7 +688,7 @@ $(document).ready(function () {
                 }
                 // console.log(tmppointDays);
                 for (let k in keys) {
-                    console.log(data[keys[k]]);
+                    // console.log(data[keys[k]]);
                     let v = data[keys[k]];
                     let daydatetmp = (v[0].split(" ")[0]).split("-");
                     let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];
