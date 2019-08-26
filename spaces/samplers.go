@@ -163,6 +163,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					}
 					if counter.val < 0 && instNegSkip {
 						counter.val = 0
+						sp.val = 0
 					}
 					if maxOccupancy != 0 {
 						if counter.val > maxOccupancy {
@@ -313,7 +314,9 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 			var multiCycle []DataEntry       // holds averages of various cycles, Ts if not 0 gives a partial cycle
 			leftincycle := samplerIntervalMM // keep track of a multicycle
 
+			// calculates the average presence and the cumulative (or latest) entry values (or flow)
 			average := func(ct spaceEntries, buffer []spaceEntries, cTS int64, modifier int64) spaceEntries {
+				//fmt.Println("==>>",spacename, samplerName, ct, buffer);
 				if len(buffer) == 0 {
 					return ct
 				}
@@ -363,6 +366,8 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 
 				ct.entries = ne
 				ct.ts = cTS
+
+				//fmt.Println("==>>",spacename, samplerName, ct);
 				return ct
 			}
 

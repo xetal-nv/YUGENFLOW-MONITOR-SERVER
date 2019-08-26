@@ -1,7 +1,7 @@
 Target 1.0.0:
 Overall code cleaning
-Make command line interface to the database for debug
-Entry split in and out (only day basis so that net flow stays 0, but first check if we cannot align entries ...)
+Add entry to debug interface
+Entry split in and out
 configurable report
 realistic sensor model (for demo usage)
 move html to git module (see how)

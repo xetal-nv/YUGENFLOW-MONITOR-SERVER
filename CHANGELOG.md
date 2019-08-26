@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
  - Disabling current from servers command option only disables it for reporting
  - Increased default timeout values for API on both server and web app (to accomodate issues with the debug interface and current samples)  
  - Web app interface has been cleaned and adapted to accommodate graphs
+ - Fixed bug creating discrepancies between actual counter and flow value
 
 ## [0.7.0]
 ### Added

@@ -236,6 +236,7 @@ function drawSpace(rawspaces) {
             chartRT.render();
             chartArchive.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
                 currentTime.getDate().toString() + "_" + SelValue + "_Archive";
+            chartArchive.options.title.text = "Archive data: " + SelValue;
             chartArchive.render();
             readPlan(SelValue, false)
         } else {

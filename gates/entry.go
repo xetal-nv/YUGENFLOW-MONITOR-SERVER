@@ -99,7 +99,6 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 }
 
 // implements the algorithm logic od the gate data processing
-// TODO extend to more than 2 devices per gate
 func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[int][]int,
 	scratchPad scratchData) (map[int]sensorData, map[int][]int, scratchData, int) {
 	rt := 0
