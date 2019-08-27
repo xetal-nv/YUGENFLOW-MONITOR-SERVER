@@ -1,7 +1,6 @@
 Target 1.0.0:
 Overall code cleaning
 Add entry to debug interface
-Entry split in and out
 configurable report
 realistic sensor model (for demo usage)
 move html to git module (see how)

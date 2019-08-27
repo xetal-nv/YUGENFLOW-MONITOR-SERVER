@@ -331,7 +331,7 @@ $(document).ready(function () {
                     timeout: 100000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
-                        // console.log(ip + "/series?type=sample?space=" + api);
+                        console.log(ip + "/series?type=sample?space=" + api);
                         let sampledata;
                         try {
                             sampledata = JSON.parse(rawdata);

@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
  - Increased default timeout values for API on both server and web app (to accomodate issues with the debug interface and current samples)  
  - Web app interface has been cleaned and adapted to accommodate graphs
  - Fixed bug creating discrepancies between actual counter and flow value
+ - Moved from entry as net flow to flow in and flow out. Database hase only composing flows, API provides everything
 
 ## [0.7.0]
 ### Added

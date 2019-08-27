@@ -27,7 +27,7 @@ func SetUp() {
 	// add sample type based on DataEntry
 	var sample = dtfuncs{}
 	sample.pf = func(nm string, se spaceEntries) interface{} {
-		return DataEntry{id: nm, Ts: se.ts, Val: se.val}
+		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netflow}
 	}
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "TS")
@@ -45,7 +45,7 @@ func SetUp() {
 		if len(se.entries) > 0 {
 			var entries [][]int
 			for id, v := range se.entries {
-				entries = append(entries, []int{id, v.Val})
+				entries = append(entries, []int{id, v.NetFlow, v.PositiveFlow, v.NegativeFlow})
 			}
 			data.id = nm
 			data.ts = se.ts
@@ -61,7 +61,7 @@ func SetUp() {
 	// add presence type, which is equal to sample
 	var presence = dtfuncs{}
 	presence.pf = func(nm string, se spaceEntries) interface{} {
-		return DataEntry{id: nm, Ts: se.ts, Val: se.val}
+		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netflow}
 	}
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "SD")
@@ -105,12 +105,14 @@ func SetUp() {
 
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
+				//fmt.Println(scanner.Text())
 				data := strings.Split(scanner.Text(), ",")
 				if len(data) == 5 {
 					// any other length implies a wrong data and will be ignored
 					InitData[data[0]][data[1]][data[2]] = []string{data[3], data[4]}
 				}
 			}
+			//fmt.Println(InitData)
 			log.Printf("spaces.setUpDataDBSBank: InitData file imported\n")
 		}
 	} else {
@@ -214,7 +216,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	} else {
 		log.Fatal("spaces.setUpSpaces: fatal error no space has been defined")
 	}
-
+	storage.SpaceInfo = SpaceDef
 	return spaceChannels
 }
 
@@ -303,9 +305,9 @@ func setpUpCounter() {
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
-				//jsTxt = "var openingTime = \"from " + Val[0] + " to " + Val[1] + "\";\n"
-				//jsST = "var opStartTime = \"" + Val[0] + "\";\n"
-				//jsEN = "var opEndTime = \"" + Val[1] + "\";\n"
+				//jsTxt = "var openingTime = \"from " + NetFlow[0] + " to " + NetFlow[1] + "\";\n"
+				//jsST = "var opStartTime = \"" + NetFlow[0] + "\";\n"
+				//jsEN = "var opEndTime = \"" + NetFlow[1] + "\";\n"
 				avgAnalysisSchedule = TimeSchedule{st, en, 0}
 				avgAnalysisSchedule.Duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.Duration += 60000
@@ -399,7 +401,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 								switch dl {
 								case "sample__":
 									if va, e := strconv.Atoi(InitData[dl][name][v.name][1]); e == nil {
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], DataEntry{tag, ts, va})
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], DataEntry{id: tag, Ts: ts, NetFlow: va})
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
 										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
@@ -409,11 +411,13 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 									var va [][]int
 									for _, el := range vas {
 										sd := strings.Split(el, " ")
-										if len(sd) == 2 {
+										if len(sd) == 4 {
 											sd0, e0 := strconv.Atoi(sd[0])
 											sd1, e1 := strconv.Atoi(sd[1])
-											if e0 == nil && e1 == nil {
-												va = append(va, []int{sd0, sd1})
+											sd2, e2 := strconv.Atoi(sd[2])
+											sd3, e3 := strconv.Atoi(sd[3])
+											if e0 == nil && e1 == nil && e2 == nil && e3 == nil {
+												va = append(va, []int{sd0, sd1, sd2, sd3})
 											} else {
 												log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
 											}

@@ -98,7 +98,9 @@ func seriesHTTPhandler() http.Handler {
 				}
 				if tag, ts, vals, e := storage.ReadLastNTS(s, num, params["analysis"] != "current"); e == nil {
 					rt := s.UnmarshalSliceSS(tag, ts, vals)
-					_ = json.NewEncoder(w).Encode(rt)
+					if e := json.NewEncoder(w).Encode(rt); e != nil {
+						_, _ = fmt.Fprintf(w, "")
+					}
 				}
 			}
 		} else {
@@ -142,28 +144,46 @@ func seriesHTTPhandler() http.Handler {
 				case "sample":
 					s0 = &storage.SerieSample{Stag: label, Sts: st}
 					s1 = &storage.SerieSample{Stag: label, Sts: en}
+					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
+						rt = s0.UnmarshalSliceSS(tag, ts, vals)
+					}
+					if e := json.NewEncoder(w).Encode(rt); e != nil {
+						_, _ = fmt.Fprintf(w, "")
+					}
 				case "entry":
 					if !authorised {
 						_, _ = fmt.Fprintf(w, "")
 						return
 					}
+					var convertedRt []storage.JsonSeriesEntries
 					s0 = &storage.SerieEntries{Stag: label, Sts: st}
 					s1 = &storage.SerieEntries{Stag: label, Sts: en}
+					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
+						rt = s0.UnmarshalSliceSS(tag, ts, vals)
+					}
+					for _, v := range rt {
+						convertedTemp := storage.JsonSeriesEntries{}
+						seVal := storage.SerieEntries{}
+						codedVal := v.Marshal()
+						_ = seVal.Unmarshal(codedVal)
+						seVal.Stag = v.Tag()
+						convertedTemp.ExpandEntries(seVal)
+						convertedRt = append(convertedRt, convertedTemp)
+					}
+					if e := json.NewEncoder(w).Encode(convertedRt); e != nil {
+						_, _ = fmt.Fprintf(w, "")
+					}
 				default:
 					_, _ = fmt.Fprintf(w, "")
 					return
 				}
-				//fmt.Println(st,en)
-
-				//var rt []storage.SampleData
-				if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
-					rt = s0.UnmarshalSliceSS(tag, ts, vals)
-				}
-				// the if is added to deal with timeout issues due to the fact this read can eb too long
+				//if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
+				//	rt = s0.UnmarshalSliceSS(tag, ts, vals)
+				//}
 			}
-			if e := json.NewEncoder(w).Encode(rt); e != nil {
-				_, _ = fmt.Fprintf(w, "")
-			}
+			//if e := json.NewEncoder(w).Encode(rt); e != nil {
+			//	_, _ = fmt.Fprintf(w, "")
+			//}
 		}
 	})
 }

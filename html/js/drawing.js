@@ -461,6 +461,7 @@ $(document).ready(function () {
                         dataArraysArchive.push([]);
                         let tmprt = {
                             xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                            markerType: "none",
                             name: allmeasurements[i].name,
                             connectNullData: true,
                             showInLegend: true,

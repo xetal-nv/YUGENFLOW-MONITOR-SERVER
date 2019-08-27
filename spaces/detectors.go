@@ -103,7 +103,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 										if (support.Timestamp() - ts*1000) <= Crashmaxdelay {
 											inc, _ := support.InClosureTime(time.Unix(st, 0), time.Unix(en, 0))
 											recData[data[1]] = IntervalDetector{Id: data[1], Start: time.Unix(st, 0), End: time.Unix(en, 0),
-												incycle: inc, Activity: DataEntry{Ts: ts, id: data[1], Val: val}}
+												incycle: inc, Activity: DataEntry{Ts: ts, id: data[1], NetFlow: val}}
 										}
 									}
 								}
@@ -122,8 +122,8 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						allIntervals[i] = el
 						log.Printf("spaces.detectors: recovered presence definition and value for %v:%v\n", spacename, val.Id)
 						//we need to check is the sample ts is relevant
-						//found, err := support.InClosureTimeFull(val.Start, val.End, time.Unix(el.Activity.Ts, 0))
-						//fmt.Println(val.Id, found, err)
+						//found, err := support.InClosureTimeFull(netflow.Start, netflow.End, time.Unix(el.Activity.Ts, 0))
+						//fmt.Println(netflow.Id, found, err)
 					}
 				}
 			}
@@ -151,7 +151,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 		var sp spaceEntries
 		select {
 		case sp = <-gateChan:
-			//fmt.Println("got", sp.val)
+			//fmt.Println("got", sp.netflow)
 		case <-time.After(timeoutInterval):
 		}
 		if active {
@@ -161,8 +161,8 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				//fmt.Println("checking", allIntervals[i].Id)
 				if found, e := support.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
 					allIntervals[i].incycle = true
-					if sp.val != 0 {
-						allIntervals[i].Activity.Val += 1
+					if sp.netflow != 0 {
+						allIntervals[i].Activity.NetFlow += 1
 						// allIntervals[i].Activity.Ts = support.Timestamp()
 						if support.Debug != 0 {
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
@@ -182,7 +182,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						//if recStart, e := time.Parse(support.TimeLayout, recSH+":"+recSM); e == nil {
 						//fmt.Print(recStart)
 						//if found, e := support.InClosureTime(recStart, allIntervals[i].End); e == nil && found {
-						// if allIntervals[i].Activity.Val >= minTransactionsForDetection && !saved {
+						// if allIntervals[i].Activity.NetFlow >= minTransactionsForDetection && !saved {
 						// 	sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 						// 	saved = true
 						// 	//fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
@@ -204,7 +204,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 					//fmt.Println("exit cycle")
 					//fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 					sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
-					allIntervals[i].Activity.Val = 0
+					allIntervals[i].Activity.NetFlow = 0
 				} else {
 					//fmt.Println("not cycle")
 				}

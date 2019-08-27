@@ -8,7 +8,6 @@ import (
 
 // handler for a DBS with generic value coming from a channel on a generic interface{}
 // a is used to insert the actual value from the generic channel
-// TODO check if ot works
 func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp string) {
 
 	r := func() {
@@ -16,10 +15,11 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 		for {
 			select {
 			case d := <-in:
+				//fmt.Println(id, "received", d)
 				if support.Debug != 3 && support.Debug != 4 {
 					if e := a.Extract(d); e == nil {
-						//fmt.Println("handle",a)
 						if a.Valid() {
+							//fmt.Println(id, "storing", a, tp)
 							switch tp {
 							case "SD":
 								if err := StoreSampleSD(a, !support.Stringending(id, "current", "_")); err != nil {

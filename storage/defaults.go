@@ -31,6 +31,7 @@ var garbage struct {
 }
 
 var timeout int
+var SpaceInfo map[string][]int        // maps a space name to its entries
 var currentDB, statsDB *badger.DB     // databases
 var once sync.Once                    // used fpr one time set-up function
 var currentTTL time.Duration          // provides the TTL value to be used

@@ -3,8 +3,11 @@ package storage
 import (
 	"bytes"
 	"encoding/binary"
+	"gateserver/support"
 	"github.com/pkg/errors"
 	"reflect"
+	"regexp"
+	"strings"
 )
 
 // implements sampledata and servers.genericdata for managing data of type "entry"
@@ -73,8 +76,61 @@ func (ss *SerieEntries) Marshal() (rt []byte) {
 }
 
 // Extract assumes that after Sts there is a extra int that gives the length of the 2s array
+// This function is to extract the database series data structure (not the full version)
 // see spaces.passData in samplers.go
 func (ss *SerieEntries) Extract(i interface{}) (err error) {
+	err = nil
+	if i == nil {
+		err = errors.New("storage.SerieSample.Extract: error illegal data received")
+		return
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			_ = ss.Extract(nil)
+		}
+	}()
+	rv := reflect.ValueOf(i)
+	//fmt.Println("Extract series: ", rv)
+	z := SerieEntries{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int()}
+	var entries [][]int
+	if rv.Field(0).String() != "" {
+		r, _ := regexp.Compile("_+")
+		tmp := r.ReplaceAllString(rv.Field(0).String(), "_")
+		name := support.StringLimit(strings.Split(tmp, "_")[1], support.LabelLength)
+		//fmt.Println(name)
+		for range SpaceInfo[name] {
+			entries = append(entries, []int{0, 0})
+		}
+		//fmt.Println(entries)
+	}
+	ll := int(rv.Field(2).Int())
+	for j := 0; j < ll; j++ {
+		id := rv.Field(3).Index(j).Index(0).Int()
+		pos := int(rv.Field(3).Index(j).Index(2).Int())
+		neg := int(rv.Field(3).Index(j).Index(3).Int())
+		//v := []int{int(rv.Field(3).Index(j).Index(0).Int()),
+		//	int(rv.Field(3).Index(j).Index(1).Int())}
+		//z.Sval = append(z.Sval, v)
+		if entries != nil {
+			if int(id) < len(entries) { // the if is redundant
+				entries[id] = []int{pos, neg}
+			}
+		}
+	}
+	z.Sval = entries
+	*ss = z
+	// testing
+	//fmt.Println(z)
+	//tmp := JsonSeriesEntries{}
+	//tmp.ExpandEntries(*ss)
+	//fmt.Println(tmp)
+	return
+}
+
+// ExtractForRecoveru assumes that after Sts there is a extra int that gives the length of the 2s array
+// This function is to extract the full series data structure (not the database version)
+// see spaces.passData in samplers.go
+func (ss *SerieEntries) ExtractForRecoveru(i interface{}) (err error) {
 	err = nil
 	if i == nil {
 		err = errors.New("storage.SerieSample.Extract: error illegal data received")
@@ -89,8 +145,8 @@ func (ss *SerieEntries) Extract(i interface{}) (err error) {
 	z := SerieEntries{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int()}
 	ll := int(rv.Field(2).Int())
 	for j := 0; j < ll; j++ {
-		v := []int{int(rv.Field(3).Index(j).Index(0).Int()),
-			int(rv.Field(3).Index(j).Index(1).Int())}
+		v := []int{int(rv.Field(3).Index(j).Index(0).Int()), int(rv.Field(3).Index(j).Index(1).Int()),
+			int(rv.Field(3).Index(j).Index(2).Int()), int(rv.Field(3).Index(j).Index(3).Int())}
 		z.Sval = append(z.Sval, v)
 	}
 	*ss = z

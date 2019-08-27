@@ -262,7 +262,7 @@ func setupHTTP() error {
 
 	dataMap = make(map[string]datafunc)
 	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
-	dataMap["entry"] = func() GenericData { return new(storage.SerieEntries) }
+	dataMap["entry"] = func() GenericData { return new(storage.JsonSeriesEntries) }
 
 	dbgMutex.Lock()
 	dbgRegistry = make(map[string]int64)

@@ -2,12 +2,10 @@ package sensormodels
 
 import (
 	"encoding/binary"
-	"fmt"
 	"gateserver/codings"
 	"math/rand"
 	"net"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -32,13 +30,13 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 
 	del := rand.Intn(mxdelay) + 1
 	time.Sleep(2 * time.Second)
-	mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
-	fmt.Printf("FakeSensor %v // %v -> Connect to TCP channel\n", id, mach)
+	//mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
+	//fmt.Printf("FakeSensor %v // %v -> Connect to TCP channel\n", id, mach)
 	port := os.Getenv("TCPPORT")
 	conn, e := net.Dial(os.Getenv("TCPPROT"), "0.0.0.0:"+port)
 	//noinspection GoUnhandledErrorResult
 	if e != nil || conn == nil {
-		fmt.Println("Unable to connect")
+		//fmt.Println("Unable to connect")
 	} else {
 		defer conn.Close()
 		// sensor registers first
@@ -72,11 +70,11 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 						cmd = append(cmd, cmde...)
 					}
 					if e == nil {
-						fmt.Printf("Sensor %v has received data %v\n", mach, cmd)
+						//fmt.Printf("Sensor %v has received data %v\n", mach, cmd)
 						select {
 						case c <- cmd:
 						case <-time.After(40 * time.Second):
-							fmt.Printf("sensor %v timeout\n", mach)
+							//fmt.Printf("sensor %v timeout\n", mach)
 						}
 					}
 				}
@@ -96,7 +94,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 			// fork for either sending a new data value or receiving a command
 			select {
 			case v := <-c:
-				fmt.Printf("sensor %v command accepted\n", mach)
+				//fmt.Printf("sensor %v command accepted\n", mach)
 				crc := codings.Crc8(v[:len(v)-1])
 				if crc == v[len(v)-1] {
 					msg := []byte{v[0]}
@@ -106,10 +104,10 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 					crc = codings.Crc8(msg)
 					msg = append(msg, crc)
 					msg = append(msg, []byte("/")...)
-					fmt.Printf("Sensor %v answering %v to received command\n", mach, msg)
+					//fmt.Printf("Sensor %v answering %v to received command\n", mach, msg)
 					_, e = conn.Write(msg)
 					if v[0] == 14 {
-						fmt.Printf("Sensor %v disconnecting with new id\n", mach)
+						//fmt.Printf("Sensor %v disconnecting with new id\n", mach)
 						go func() {
 							time.Sleep(10 * time.Second)
 							id = int(v[2]) + int(v[1])*256
@@ -130,5 +128,5 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 	}
 	//}
 
-	fmt.Printf("FakeSensor %v // %v disconnecting\n", id, mach)
+	//fmt.Printf("FakeSensor %v // %v disconnecting\n", id, mach)
 }

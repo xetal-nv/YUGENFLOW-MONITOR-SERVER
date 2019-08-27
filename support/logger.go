@@ -16,9 +16,9 @@ var logf *os.File
 var e error
 
 func closeLog() {
-	if logf != nil {
-		_ = logf.Close()
-	}
+	//if logf != nil {
+	_ = logf.Close()
+	//}
 }
 
 func setUpLog(n string, ct time.Time, c chan bool) {

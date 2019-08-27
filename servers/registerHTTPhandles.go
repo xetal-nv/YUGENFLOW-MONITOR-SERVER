@@ -2,6 +2,7 @@ package servers
 
 import (
 	"encoding/json"
+	"fmt"
 	"gateserver/spaces"
 	"gateserver/support"
 	"log"
@@ -47,6 +48,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 						support.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("servers.singleRegisterHTTPhandler: died from: ", e)
+				fmt.Println("servers.singleRegisterHTTPhandler: died from: ", e)
 			}
 		}()
 		//fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
@@ -168,7 +170,7 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 	})
 }
 
-// handles requests for all current data for a given type (samp,l, entry)
+// handles requests for all current data for a given type (sample, entry)
 func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handler {
 	tag := strings.Replace(path[1:], "_", "", -1)
 

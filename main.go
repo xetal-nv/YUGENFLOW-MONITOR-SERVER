@@ -130,15 +130,17 @@ func main() {
 						switch strings.Trim(sam, "_") {
 						case "entry":
 							dt := new(storage.SerieEntries)
-							_ = dt.Extract(<-ch)
+							_ = dt.ExtractForRecoveru(<-ch)
 							//ok = dt.Tag() != "" && dt.Ts() != 0
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
 								data += strconv.FormatInt(cTS, 10) + ","
 								if ok = len(dt.Sval) != 0; ok {
 									data += "["
 									val := dt.Sval
+									//fmt.Println(val)
 									for i := 0; i < len(val); i++ {
-										data += "[" + strconv.Itoa(val[i][0]) + " " + strconv.Itoa(val[i][1]) + "]"
+										data += "[" + strconv.Itoa(val[i][0]) + " " + strconv.Itoa(val[i][1]) +
+											" " + strconv.Itoa(val[i][2]) + " " + strconv.Itoa(val[i][3]) + "]"
 									}
 									data += "]\n"
 								}
@@ -174,11 +176,11 @@ func main() {
 						for _, el := range val {
 							data := space + "," + el.Id + "," + strconv.FormatInt(el.Start.Unix(), 10) + "," +
 								strconv.FormatInt(el.End.Unix(), 10) + "," + strconv.FormatInt(time.Now().Unix(), 10) +
-								"," + strconv.Itoa(el.Activity.Val) + "\n"
+								"," + strconv.Itoa(el.Activity.NetFlow) + "\n"
 							if _, err := f.WriteString(data); err != nil {
 								log.Printf("RECOVERY DATA DETECTORS ERROR %v \n", err.Error())
 							}
-							//fmt.Println(space, el.Id, el.Start.Unix(), el.End.Unix(), el.Activity.Ts, el.Activity.Val)
+							//fmt.Println(space, el.Id, el.Start.Unix(), el.End.Unix(), el.Activity.Ts, el.Activity.NetFlow)
 						}
 					}
 				}
