@@ -376,7 +376,7 @@ function drawSpace(rawspaces) {
             chartArchive.render();
             chartFlows.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
                 currentTime.getDate().toString() + "_" + SelValue + "Flows";
-            chartFlows.options.title.text = "Flow data: " + SelValue;
+            chartFlows.options.title.text = "Real Time Flow data: " + SelValue;
             for (let i = 0; i < dataArraysFlow.length; i++) {
                 dataArraysFlow[i].length = 0;
             }
