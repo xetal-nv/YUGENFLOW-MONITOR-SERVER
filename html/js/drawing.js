@@ -5,6 +5,7 @@ let measurement = "sample";
 let allmeasurements = [];
 let selel = null;
 let repPeriod = 4000;
+let flowWarning = false;
 // let lastTS = [];
 
 let regex = new RegExp(':', 'g');
@@ -19,27 +20,31 @@ if ((!incycle) && (openingTime !== "")) {
 
 let rtdataDefinitions = [];
 let archivedataDefinitions = [];
+let flowdataDefinitions = [];
 let dataArrays = [];
 let dataArraysArchive = [];
+let dataArraysFlow = [];
 // let dataPoints = [];
 let mapnames = {};
 
+var colors = [
+    '#000000', '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+    '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
+];
+
 function toogleRTDataSeries(e) {
-    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-        e.dataSeries.visible = false;
-    } else {
-        e.dataSeries.visible = true;
-    }
+    e.dataSeries.visible = !(typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible);
     chartRT.render();
 }
 
 function toogleArchiveDataSeries(e) {
-    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-        e.dataSeries.visible = false;
-    } else {
-        e.dataSeries.visible = true;
-    }
+    e.dataSeries.visible = !(typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible);
     chartArchive.render();
+}
+
+function toogleFlowDataSeries(e) {
+    e.dataSeries.visible = !(typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible);
+    chartFlows.render();
 }
 
 chartRT = new CanvasJS.Chart("rtchartContainer", {
@@ -53,15 +58,9 @@ chartRT = new CanvasJS.Chart("rtchartContainer", {
     subtitles: [{text: "Data available only " + openingTime}],
     axisY: {
         title: "# People",
-        // scaleBreaks: {
-        //     autoCalculate: true
-        // },
         includeZero: false
     },
     axisX: {
-        // scaleBreaks: {
-        //     autoCalculate: true
-        // }
         valueFormatString: "hh:mm:ss TT",
         labelAngle: -30
     },
@@ -76,6 +75,38 @@ chartRT = new CanvasJS.Chart("rtchartContainer", {
         itemclick: toogleRTDataSeries
     },
     data: rtdataDefinitions
+});
+
+chartFlows = new CanvasJS.Chart("flowchartContainer", {
+    animationEnabled: false,
+    zoomEnabled: true,
+    exportEnabled: true,
+    exportFileName: "chart",
+    title: {
+        text: "Flow data",
+    },
+    subtitles: [{text: "Data valid only " + openingTime}],
+    axisY: {
+        title: "# People",
+        scaleBreaks: {
+            autoCalculate: true
+        }
+    },
+    axisX: {
+        valueFormatString: "DD MMM hh:mm:ss TT",
+        labelAngle: -30,
+    },
+    toolTip: {
+        shared: true
+    },
+    legend: {
+        cursor: "pointer",
+        verticalAlign: "top",
+        horizontalAlign: "center",
+        dockInsidePlotArea: false,
+        itemclick: toogleFlowDataSeries
+    },
+    data: flowdataDefinitions
 });
 
 chartArchive = new CanvasJS.Chart("archivechartContainer", {
@@ -116,6 +147,7 @@ chartArchive = new CanvasJS.Chart("archivechartContainer", {
 
 chartArchive.render();
 chartRT.render();
+chartFlows.render();
 
 function timeConverter(UNIX_timestamp) {
     let a = new Date(UNIX_timestamp);
@@ -137,8 +169,105 @@ function drawSpace(rawspaces) {
     let selectSpace = document.getElementById("spacename");
     let selectDisplay = document.getElementById("displayoption");
     let graphType = document.getElementById("datatypes");
+    let flowFree = true;
     for (i = 0; i < rawspaces.length; i++) {
         spaces[i] = rawspaces[i]["spacename"]
+    }
+
+    function setDisplay() {
+        let myindex = selectDisplay.selectedIndex;
+        let SelValue = selectDisplay.options[myindex].value;
+        // console.log(myindex, SelValue);
+        switch (SelValue) {
+            case "Plan":
+                document.getElementById("svgimage").style.display = "block";
+                document.getElementById("rtvalues").style.display = "table";
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "none";
+                document.getElementById("picker").style.display = "none";
+                document.getElementById("pickerDataset").style.display = "none";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "none";
+                break;
+            case "Graphs":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "block";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "none";
+                document.getElementById("pickerDataset").style.display = "none";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "none";
+                graphType.selectedIndex = 0;
+                chartRT.render();
+                break;
+            case "Reporting":
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("svgimage").style.display = "block";
+                document.getElementById("picker").style.display = "block";
+                document.getElementById("pickerDataset").style.display = "block";
+                document.getElementById("gen").style.display = "block";
+                document.getElementById("graphdata").style.display = "none";
+                break;
+            default:
+                // this should never happen
+                console.log("drawing.js went into an illegal state on the display option");
+        }
+    }
+
+    function setGraph() {
+        let myindex = graphType.selectedIndex;
+        let SelValue = graphType.options[myindex].value;
+        // console.log(myindex, SelValue);
+        switch (SelValue) {
+            case "Real-time":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "block";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("flowchartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "none";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "none";
+                chartRT.render();
+                flowWarning = false;
+                break;
+            case "Archive":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "block";
+                document.getElementById("flowchartContainer").style.display = "none";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "block";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "block";
+                chartArchive.render();
+                flowWarning = false;
+                break;
+            case "Flows":
+                document.getElementById("svgimage").style.display = "none";
+                document.getElementById("rtvalues").style.display = "none";
+                document.getElementById("rtchartContainer").style.display = "none";
+                document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("flowchartContainer").style.display = "block";
+                document.getElementById("datatypes").style.display = "block";
+                document.getElementById("picker").style.display = "block";
+                document.getElementById("gen").style.display = "none";
+                document.getElementById("graphdata").style.display = "block";
+                chartFlows.render();
+                flowWarning = true;
+                break;
+            default:
+                // this should never happen
+                console.log("drawing.js went into an illegal state on the graph data option");
+        }
     }
 
     function resetcanvas() {
@@ -229,100 +358,47 @@ function drawSpace(rawspaces) {
             plan.clear();
             selectDisplay.selectedIndex = 0
         }
-        // need to remove the onclick events
+        // need to clean the canvas ans all graphs when the value changes
         if (SelValue !== "Choose a space") {
             let currentTime = new Date();
             chartRT.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
                 currentTime.getDate().toString() + "_" + SelValue + "_RealTime";
+            for (let i = 0; i < dataArrays.length; i++) {
+                dataArrays[i].length = 0;
+            }
             chartRT.render();
             chartArchive.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
                 currentTime.getDate().toString() + "_" + SelValue + "_Archive";
             chartArchive.options.title.text = "Archive data: " + SelValue;
+            for (let i = 0; i < dataArraysArchive.length; i++) {
+                dataArraysArchive[i].length = 0;
+            }
             chartArchive.render();
+            chartFlows.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                currentTime.getDate().toString() + "_" + SelValue + "Flows";
+            chartFlows.options.title.text = "Flow data: " + SelValue;
+            for (let i = 0; i < dataArraysFlow.length; i++) {
+                dataArraysFlow[i].length = 0;
+            }
+            dataArraysFlow.length = 0;
+            for (let i = 0; i < flowdataDefinitions.length; i++) {
+                flowdataDefinitions[i].length = 0;
+            }
+            flowdataDefinitions.length = 0;
+            chartFlows.render();
+            flowFree = true;
+            flowWarning = true;
             readPlan(SelValue, false)
         } else {
+            flowFree = false;
             resetcanvas()
         }
+        setDisplay()
     };
 
-    selectDisplay.onchange = function () {
-        let myindex = selectDisplay.selectedIndex;
-        let SelValue = selectDisplay.options[myindex].value;
-        // console.log(myindex, SelValue);
-        switch (SelValue) {
-            case "Plan":
-                document.getElementById("svgimage").style.display = "block";
-                document.getElementById("rtvalues").style.display = "table";
-                document.getElementById("rtchartContainer").style.display = "none";
-                document.getElementById("archivechartContainer").style.display = "none";
-                document.getElementById("datatypes").style.display = "none";
-                document.getElementById("picker").style.display = "none";
-                document.getElementById("pickerDataset").style.display = "none";
-                document.getElementById("gen").style.display = "none";
-                document.getElementById("graphdata").style.display = "none";
-                break;
-            case "Graphs":
-                document.getElementById("svgimage").style.display = "none";
-                document.getElementById("rtvalues").style.display = "none";
-                document.getElementById("rtchartContainer").style.display = "block";
-                document.getElementById("archivechartContainer").style.display = "none";
-                document.getElementById("datatypes").style.display = "block";
-                document.getElementById("picker").style.display = "none";
-                document.getElementById("pickerDataset").style.display = "none";
-                document.getElementById("gen").style.display = "none";
-                document.getElementById("graphdata").style.display = "none";
-                graphType.selectedIndex = 0;
-                chartRT.render();
-                break;
-            case "Reporting":
-                document.getElementById("rtchartContainer").style.display = "none";
-                document.getElementById("archivechartContainer").style.display = "none";
-                document.getElementById("datatypes").style.display = "none";
-                document.getElementById("rtvalues").style.display = "none";
-                document.getElementById("svgimage").style.display = "block";
-                document.getElementById("picker").style.display = "block";
-                document.getElementById("pickerDataset").style.display = "block";
-                document.getElementById("gen").style.display = "block";
-                document.getElementById("graphdata").style.display = "none";
-                break;
-            default:
-                // this should never happen
-                console.log("drawing.js went into an illegal state on the display option");
-        }
-    };
+    selectDisplay.onchange = setDisplay;
 
-    graphType.onchange = function () {
-        let myindex = graphType.selectedIndex;
-        let SelValue = graphType.options[myindex].value;
-        // console.log(myindex, SelValue);
-        switch (SelValue) {
-            case "Real-time":
-                document.getElementById("svgimage").style.display = "none";
-                document.getElementById("rtvalues").style.display = "none";
-                document.getElementById("rtchartContainer").style.display = "block";
-                document.getElementById("archivechartContainer").style.display = "none";
-                document.getElementById("datatypes").style.display = "block";
-                document.getElementById("picker").style.display = "none";
-                document.getElementById("gen").style.display = "none";
-                document.getElementById("graphdata").style.display = "none";
-                chartRT.render();
-                break;
-            case "Archive":
-                document.getElementById("svgimage").style.display = "none";
-                document.getElementById("rtvalues").style.display = "none";
-                document.getElementById("rtchartContainer").style.display = "none";
-                document.getElementById("archivechartContainer").style.display = "block";
-                document.getElementById("datatypes").style.display = "block";
-                document.getElementById("picker").style.display = "block";
-                document.getElementById("gen").style.display = "none";
-                document.getElementById("graphdata").style.display = "block";
-                chartArchive.render();
-                break;
-            default:
-                // this should never happen
-                console.log("drawing.js went into an illegal state on the graph data option");
-        }
-    };
+    graphType.onchange = setGraph;
 
     function updatedata() {
         let regex = new RegExp(':', 'g');
@@ -399,7 +475,166 @@ function drawSpace(rawspaces) {
         }
     }
 
-    setInterval(updatedata, repPeriod)
+    function updateFlow() {
+        function loadCounter(tries) {
+            $.ajax({
+                type: 'GET',
+                timeout: 5000,
+                url: ip + "/sample/" + spacename + "/current",
+                success: function (rawdata) {
+                    try {
+                        let sampledata = JSON.parse(rawdata);
+                        loadEntries(sampledata, 0)
+                    } catch (e) {
+                        alert("received corrupted counter data");
+                    }
+                },
+                error: function (error) {
+                    if (tries === maxtries) {
+                        alert("Network error.\n Please try again later.");
+                        console.log("Error samples:" + error);
+                    } else {
+                        // console.log(error);
+                        // loadsamples(header, api, entrieslist, tries + 1)
+                        loadCounter(tries + 1)
+                    }
+                }
+
+            });
+        }
+
+        function loadEntries(counter, tries) {
+            $.ajax({
+                type: 'GET',
+                timeout: 10000,
+                url: ip + "/entry/" + spacename + "/current",
+                success: function (rawdata) {
+                    try {
+                        let sampledata = JSON.parse(rawdata);
+                        if ((sampledata.valid === false) && flowWarning) {
+                            alert("Please enable entry data,\ninserting the authorisation pin.");
+                            flowWarning = false
+                        } else {
+                            if (flowdataDefinitions.length === 0) {
+                                // first sample, we need to set the graph fully
+                                dataArraysFlow.push([]);
+                                let tmpdef = {
+                                    xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                                    markerType: "none",
+                                    name: "Total counter",
+                                    connectNullData: true,
+                                    showInLegend: true,
+                                    xValueType: "dateTime",
+                                    type: "stepLine",
+                                    color: colors[0],
+                                    dataPoints: dataArraysFlow[0]
+                                };
+                                flowdataDefinitions.push(tmpdef);
+                                for (let i = 0; i < sampledata.counter.entries.length; i++) {
+                                    dataArraysFlow.push([]);
+                                    dataArraysFlow.push([]);
+                                    let tmpdefin = {
+                                        xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                                        markerType: "none",
+                                        name: "Flow-in entry: " + sampledata.counter.entries[i].id,
+                                        connectNullData: true,
+                                        showInLegend: true,
+                                        xValueType: "dateTime",
+                                        type: "stepLine",
+                                        color: colors[(i + 1) % colors.length],
+                                        dataPoints: dataArraysFlow[2 * i + 1]
+                                    };
+                                    flowdataDefinitions.push(tmpdefin);
+                                    let tmpdefout = {
+                                        xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                                        markerType: "none",
+                                        name: "Flow-out entry: " + sampledata.counter.entries[i].id,
+                                        connectNullData: true,
+                                        showInLegend: true,
+                                        xValueType: "dateTime",
+                                        type: "stepLine",
+                                        color: colors[(i + 1) % colors.length],
+                                        lineDashType: "dash",
+                                        dataPoints: dataArraysFlow[2 * i + 2]
+                                    };
+                                    flowdataDefinitions.push(tmpdefout);
+                                    // console.log(dataArraysFlow);
+                                }
+                                // console.log("initial definition", flowdataDefinitions, dataArraysFlow);
+                            }
+                            // console.log("extraction of data from ",counter,"and",sampledata.counter.entries);
+                            // for (let j = 0; j < sampledata.counter.entries.length; j++) {
+                            //     console.log(sampledata.counter.entries[j].in);
+                            //     console.log(sampledata.counter.entries[j].out)
+                            // }
+                            // console.log(counter);
+                            if (counter.valid && sampledata.valid) {
+                                dataArraysFlow[0].push({
+                                    x: counter.counter.ts,
+                                    y: counter.counter.val
+                                });
+                                for (let i = 0; i < sampledata.counter.entries.length; i++) {
+                                    dataArraysFlow[2 * i + 1].push({
+                                        x: sampledata.counter.ts,
+                                        y: sampledata.counter.entries[i].in
+                                    });
+                                    dataArraysFlow[2 * i + 2].push({
+                                        x: sampledata.counter.ts,
+                                        y: sampledata.counter.entries[i].out
+                                    });
+                                }
+                                // console.log(counter, sampledata)
+                                // console.log(flowdataDefinitions)
+                                // console.log(dataArraysFlow);
+                                chartFlows.render()
+                            }
+                        }
+                        flowFree = true
+                    } catch (e) {
+                        alert("received corrupted entry data or unauthorised access");
+                        console.log(e)
+                    }
+                },
+                error: function (error) {
+                    if (tries === maxtries) {
+                        alert("Network error.\n Please try again later.");
+                        console.log("Error samples:" + error);
+                    } else {
+                        // console.log(error);
+                        // loadsamples(header, api, entrieslist, tries + 1)
+                        loadEntries(counter, tries + 1)
+                    }
+                }
+
+            });
+        }
+
+        if (flowFree) {
+            flowFree = false;
+            let regex = new RegExp(':', 'g');
+            let timeNow = new Date(),
+                timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
+                incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
+                    && (parseInt(timeNowHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
+
+            if ((spacename !== "") && ((incycle) || (openingTime === ""))) {
+                loadCounter(0)
+            } else {
+                if ((!incycle) && (openingTime !== "") && (dataArraysFlow.length > 0)) {
+                    for (let i = 0; i < dataArraysFlow.length; i++) {
+                        dataArraysFlow[i].length = 0;
+                    }
+                    chartFlows.render();
+                }
+
+            }
+        }
+    }
+
+    setInterval(updatedata, repPeriod);
+    if (rtshow[0] === "dbg") {
+        setInterval(updateFlow, repPeriod)
+    }
 
 }
 
@@ -497,6 +732,7 @@ $(document).ready(function () {
                         mapnames[allmeasurements[i].name] = i;
                         // lastTS.push(0);
                     }
+
                     // console.log(mapnames);
                     $("#analysis").html(html);
                 },

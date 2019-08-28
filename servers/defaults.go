@@ -98,5 +98,5 @@ var RepCon bool                      // enables reporting on current
 // debug access control
 var dbgMutex = &sync.RWMutex{}   // lock to dbgRegistry
 var dbgRegistry map[string]int64 // registry of currently authorised IPs
-const authDbgInterval = 10       // authorisation interval for debug access in minutes
+const authDbgInterval = 60       // authorisation interval for debug access in minutes
 const pindbg = "pippopluto"      // debug pin
