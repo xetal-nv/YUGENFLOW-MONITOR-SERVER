@@ -296,16 +296,9 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 
-	//jsTxt := "var openingTime = \"\";\n"
-	//jsST := "var opStartTime = \"\";\n"
-	//jsEN := "var opEndTime = \"\";\n"
-
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
 		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
 			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
-				//jsTxt = "var openingTime = \"from " + Val[0] + " to " + Val[1] + "\";\n"
-				//jsST = "var opStartTime = \"" + Val[0] + "\";\n"
-				//jsEN = "var opEndTime = \"" + Val[1] + "\";\n"
 				avgAnalysisSchedule = TimeSchedule{st, en, 0}
 				avgAnalysisSchedule.Duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.Duration += 60000
@@ -317,36 +310,6 @@ func setpUpCounter() {
 			log.Fatal("spaces.setpUpCounter: illegal Start ANALYSISWINDOW value", val)
 		}
 	}
-
-	//if strings.Trim(os.Getenv("RTWINDOW"), " ") == "" {
-	//
-	//	//var f *os.File
-	//	//var err error
-	//
-	//	//f, err := os.OpenFile("./html/js/def.js", os.O_APPEND|os.O_WRONLY, 0600)
-	//	f, err := os.Create("./html/js/op.js")
-	//	if err != nil {
-	//		//f, err = os.Create("./html/js/def.js")
-	//		//if err != nil {
-	//			log.Fatal("Fatal error creating def.js: ", err)
-	//		//}
-	//	}
-	//	if _, err := f.WriteString(jsTxt); err != nil {
-	//		_ = f.Close()
-	//		log.Fatal("Fatal error writing to op.js: ", err)
-	//	}
-	//	if _, err := f.WriteString(jsST); err != nil {
-	//		_ = f.Close()
-	//		log.Fatal("Fatal error writing to op.js: ", err)
-	//	}
-	//	if _, err := f.WriteString(jsEN); err != nil {
-	//		_ = f.Close()
-	//		log.Fatal("Fatal error writing to op.js: ", err)
-	//	}
-	//	if err = f.Close(); err != nil {
-	//		log.Fatal("Fatal error closing op.js: ", err)
-	//	}
-	//}
 
 }
 

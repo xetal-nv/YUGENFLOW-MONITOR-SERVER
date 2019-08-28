@@ -31,13 +31,6 @@ func SafeRegDetectors(in, out chan []IntervalDetector) {
 func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalDetector, recovery chan []IntervalDetector,
 	sendDBSchan map[string]chan interface{}, once sync.Once, tn, ntn int) {
 
-	//latestDBSIn[dl][name][v.name] = make(chan interface{})
-	//label := dl + name + v.name
-	//if _, e := storage.SetSeries(label, v.interval, !support.Stringending(label, "current", "_")); e != nil {
-	//	log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
-	//}
-	//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
-
 	timeoutInterval := 5 * chantimeout * time.Millisecond
 	active := true
 	// saved := false
@@ -68,11 +61,6 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						allIntervals = append(allIntervals, IntervalDetector{nm,
 							start, end, false, DataEntry{id: nm}})
 						sendDBSchan[nm] = make(chan interface{})
-						//label := spacename + nm
-						//fmt.Println(nm, int(end.Unix() - start.Unix())/4, SamplingWindow)
-						//os.Exit(1)
-						// this approach is quite slow
-						//if _, e := storage.SetSeries(nm, SamplingWindow*10, true); e != nil {
 						if _, e := storage.SetSeries(nm, 0, true); e != nil {
 							log.Fatalf("spaces.detectors: fatal error setting database %v\n", nm)
 						}
@@ -94,7 +82,6 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 					data := strings.Split(scanner.Text(), ",")
 					if data[0] == spacename {
 						// select only the data for this space
-						// [livlab__ presencelivlab__morning_ -62167190400 -62167183200 0 0]
 						//fmt.Println(spacename, data)
 						if st, err := strconv.ParseInt(data[2], 10, 64); err == nil {
 							if en, err := strconv.ParseInt(data[3], 10, 64); err == nil {
@@ -111,19 +98,10 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						}
 					}
 				}
-				//for _, v := range allIntervals {
-				//	fmt.Println(v)
-				//}
-				//for _, v := range recData {
-				//	fmt.Println(v)
-				//}
 				for i, val := range allIntervals {
 					if el, ok := recData[val.Id]; ok {
 						allIntervals[i] = el
 						log.Printf("spaces.detectors: recovered presence definition and value for %v:%v\n", spacename, val.Id)
-						//we need to check is the sample ts is relevant
-						//found, err := support.InClosureTimeFull(val.Start, val.End, time.Unix(el.Activity.Ts, 0))
-						//fmt.Println(val.Id, found, err)
 					}
 				}
 			}
@@ -145,8 +123,6 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 		}
 	}()
 
-	//fmt.Println(sendDBSchan)
-
 	for {
 		var sp spaceEntries
 		select {
@@ -167,31 +143,6 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						if support.Debug != 0 {
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 						}
-						// 2 activities is the minimum for guaranteed presence and we store it as soon as it happens
-						//var recSH string
-						//if allIntervals[i].End.Hour() >= allIntervals[i].Start.Hour() {
-						//	recSH = "0" + strconv.Itoa((allIntervals[i].End.Hour()-allIntervals[i].Start.Hour())/4+allIntervals[i].Start.Hour())
-						//} else {
-						//	recSH = "0" + strconv.Itoa((24+allIntervals[i].End.Hour()-allIntervals[i].Start.Hour())/4+allIntervals[i].Start.Hour())
-						//
-						//}
-						//recSM := "0" + strconv.Itoa((allIntervals[i].End.Minute()-allIntervals[i].Start.Minute())/4+allIntervals[i].Start.Minute())
-						//recSH = recSH[len(recSH)-2:]
-						//recSM = recSM[len(recSM)-2:]
-						//fmt.Println(recSH, recSM, recSH+":"+recSM)
-						//if recStart, e := time.Parse(support.TimeLayout, recSH+":"+recSM); e == nil {
-						//fmt.Print(recStart)
-						//if found, e := support.InClosureTime(recStart, allIntervals[i].End); e == nil && found {
-						// if allIntervals[i].Activity.Val >= minTransactionsForDetection && !saved {
-						// 	sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
-						// 	saved = true
-						// 	//fmt.Println("space Activity for interval", allIntervals[i].Id, "saved")
-						// } else {
-						// 	//fmt.Println("space Activity for interval", allIntervals[i].Id, "NOT saved")
-						// }
-						//}
-						//}
-						//os.Exit(1)
 					}
 				} else if allIntervals[i].incycle {
 					// sample is saved with a ts adjusted with the timeout
@@ -200,13 +151,9 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						fmt.Println("space Activity for interval", allIntervals[i].Id, " ended as", allIntervals[i].Activity)
 					}
 					allIntervals[i].incycle = false
-					// saved = false
-					//fmt.Println("exit cycle")
-					//fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 					sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 					allIntervals[i].Activity.Val = 0
 				} else {
-					//fmt.Println("not cycle")
 				}
 			}
 			// send the current values to the recovery register

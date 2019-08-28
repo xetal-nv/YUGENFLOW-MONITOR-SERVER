@@ -145,8 +145,6 @@ function drawSpace(rawspaces) {
                             let spaces = JSON.parse(data);
                             // console.log(data);
                             if (spaces["valid"]) {
-                                // if (allmeasurements[i].name === "current") {
-                                // document.getElementById("lastts").innerText = timeConverter(spaces["counter"]["ts"]).toString();
                                 // console.log(new Date());
                                 document.getElementById("lastts").innerText = new Date().toLocaleString();
                                 // }
@@ -176,7 +174,7 @@ function drawSpace(rawspaces) {
                                         break;
                                 }
                                 // console.log(dt);
-                                // in case of corrupted JSON we skip uopating the page
+                                // in case of corrupted JSON we skip updating the page
                                 if (/^-{0,1}\d+$/.test(dt)) {
                                     document.getElementById(allmeasurements[i].name).innerText = dt;
                                 }

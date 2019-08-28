@@ -72,13 +72,6 @@ $(document).ready(function () {
 
         function generatePeriodicReport() {
 
-            // function sortentryEl0(a, b) {
-            //
-            //     if (a[0] < b[0]) return -1;
-            //     if (a[0] > b[0]) return 1;
-            //     return 0;
-            // }
-
             function exportReport(header, sampledata) {
                 let data = header,
                     rawdataSample = [],
@@ -92,7 +85,6 @@ $(document).ready(function () {
                     }
 
                     // Find the minimum interval in changes, normally this is the measurement step
-                    // TODO to be replaced with with dynamically constructed js from conf files
                     let tslist = [];
                     let tsstep = -1;
                     while (rawdataSample.length > 0) {
@@ -198,17 +190,6 @@ $(document).ready(function () {
 
         function generateOverviewReport() {
 
-            // let overviewReportDefs = [
-            //     {name: "at 10:00", start: "", end: "", point: "10:00", precision: 30, presence: "", id: 0},
-            //     {name: "08:00 to 12:00", start: "08:00", end: "12:00", point: "", precision: 0, presence: "", id: 0},
-            //     {name: "at 20:30", start: "", end: "", point: "20:30", precision: 30, presence: "", id: 0},
-            //     {name: "13:00 to 22:00", start: "13:00", end: "22:00", point: "", precision: 0, presence: "", id: 0},
-            //     {name: "active 20:00 to 06:00", start: "", end: "", point: "", precision: 0, presence: "test", id: 0},
-            //     {name: "active 02:00 to 06:00", start: "", end: "", point: "", precision: 0, presence: "test", id: 0},
-            //     {name: "day", start: "08:00", end: "18:00", point: "", precision: 30, presence: "", id: 0, skip: true},
-            //
-            // ];
-
             let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                 'November', 'December'];
@@ -224,11 +205,6 @@ $(document).ready(function () {
             // processavgdata analyses the data from presence averages and start the
             // presence detection data collection
             function processavgdata(header, sampledata, api, analysis, tries) {
-                // console.log(overviewReportDefs);
-                // let data = header;
-                // data += "\n";
-                // console.log(sampledata);
-
                 // identify the presence sets
                 let presenceSets = [];
                 let presenceSetsFlags = [];
@@ -247,11 +223,8 @@ $(document).ready(function () {
                     let currentDay = "", //current days in analysis
                         allResults = {}, // holds all results
                         cycleResult = new Array(overviewReportDefs.length + 1); // hold the current day result
-                    // console.log(sampledata);
                     for (let i = 0; i < sampledata.length; i++) {
-                        // console.log(sampledata[i].ts);
                         let d = new Date(sampledata[i].ts);
-                        // var sampleDate = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + " " + d.getDay(),
                         var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
                             " " + d.getDay(),
                             sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
@@ -271,8 +244,6 @@ $(document).ready(function () {
                             cycleResult[0] = currentDay;
                             // console.log(cycleResult)
                         }
-
-                        // presenceSets = [];
 
                         for (let j = 0; j < overviewReportDefs.length; j++) {
                             if (overviewReportDefs[j].point !== "") {
@@ -341,10 +312,6 @@ $(document).ready(function () {
                                         }
                                     }
                                 }
-                            // } else if (overviewReportDefs[j].presence !== "") {
-                            //     overviewReportDefs[j].id = j;
-                            //     presenceSets.push(overviewReportDefs[j])
-                            // }
                         }
                     }
                     // console.log(allResults);
@@ -365,11 +332,7 @@ $(document).ready(function () {
                     // console.log(filteredPresenceSets);
 
                     // pass the data to the next func for presence
-                    // console.log(allResults);
                     loadpresence(header, allResults, filteredPresenceSets, api, tries)
-
-                    // temporary, to be deleted
-                    // generateOverview(header, allResults);
                 }
             }
 
@@ -402,13 +365,6 @@ $(document).ready(function () {
             }
 
             function loadpresence(header, data, presenceSets, api, tries) {
-                // while (dataLock) {
-                // }
-                // dataLock = true;
-                // for (let i = 0; i < presenceSets.length; i++) {
-                //     console.log(presenceSets[i])
-                // }
-                // console.log(data)
 
                 if (presenceSets.length === 0) {
                     // generate report
@@ -422,17 +378,11 @@ $(document).ready(function () {
                     $.ajax({
                         type: 'GET',
                         timeout: 30000,
-                        // url: ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence,
                         url: ip + "/presence?space=" + api + "?analysis=" + current.presence,
                         success: function (rawdata) {
                             presenceSets.pop();
                             try {
                             let sampledata = JSON.parse(rawdata);
-                            // console.log("DEBUG", current.name, sampledata);
-                            // return;
-                            // console.log(data[5]);
-                            // console.log(current.id);
-                            // data[current.id] = sampledata[0].val;
 
                             // remove presence measure since loaded from the server
                             if ((sampledata !== null) && (sampledata !== undefined)) {
@@ -440,12 +390,9 @@ $(document).ready(function () {
                                     let d = new Date(sampledata[i].ts);
                                     var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
                                         " " + d.getDay();
-                                    // sampleTime = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-                                    // for (let i=0; i<data[sampleDate].length; i++) {console.log(data[sampleDate][i]);}
                                     data[sampleDate][current.id + 1] = sampledata[i].val;
                                 }
                             }} catch (e) {console.log("received corrupted data: ",rawdata)}
-                            // dataLock = false;
                             loadpresence(header, data, presenceSets, api, tries)
                         },
                         error: function (error) {
@@ -454,8 +401,6 @@ $(document).ready(function () {
                                 console.log("Error samples:" + error);
                                 document.getElementById("loader").style.visibility = "hidden";
                             } else {
-                                // loadsamples(header, api, entrieslist, tries + 1)
-                                // dataLock = false;
                                 loadpresence(header, data, presenceSets, api, tries + 1)
                             }
                         }
@@ -465,19 +410,7 @@ $(document).ready(function () {
             }
 
             function generateOverview(header, data) {
-                // TODO HERE - delete fake data
-                // data = {
-                //     "2019-07-31 3": ["31-07-2019 3", , , [0, 0], , , , ,],
-                //     "2019-08-01 4": ["1-08-2019 4", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-02 5": ["2-08-2019 5", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-03 6": ["3-08-2019 6", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-04 0": ["4-08-2019 0", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-05 1": ["5-08-2019 1", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-06 2": ["6-08-2019 2", 22, [0, 9], [0, 5], , , , , [0, 5]],
-                // };
-                // console.log(data);
                 let keys = Object.keys(data);
-                // console.log(keys);
                 let perioddayavg = [];
                 let weekdayavg = [];
                 let periodpointavg;
@@ -487,7 +420,6 @@ $(document).ready(function () {
                 let weeks = [];
                 let incfirstweek = -1;
                 keys.sort();
-                // console.log(periods);
                 if (periods.length !== 0) {
                     tmppointDays = new Array(periods.length);
                     weekpointavg = new Array(periods.length);
@@ -500,14 +432,10 @@ $(document).ready(function () {
                 }
                 // console.log(tmppointDays);
                 for (let k in keys) {
-                    // console.log(data[keys[k]]);
                     let v = data[keys[k]];
                     let daydatetmp = (v[0].split(" ")[0]).split("-");
                     let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];
-                    // console.log(daydatetmp);
                     var dtmp = new Date(parseInt(daydatetmp[0]), parseInt(daydatetmp[1]) - 1, parseInt(daydatetmp[2]));
-                    // console.log(d, d.getWeek());
-                    // return
                     header += daydate + "," + days[parseInt(v[0].split(" ")[1])]+ "," + dtmp.getWeek();
                     let valid = false;
                     for (let a = 1; a < v.length; a++) {
@@ -680,28 +608,6 @@ $(document).ready(function () {
                         // console.log(i, valPoint, weekpointavg[i])
                     }
                 }
-                // console.log(weekpointavg);
-                // write period report if required
-                // if ((periods !== undefined) && (weekdayavg !== undefined)) {
-                //     for (let j = 0; j < periods.length; j++) {
-                //         for (let i = 0; i < weekdayavg.length; i++) {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for week " + i + ", " + weekpointavg[j][i] + "\n";
-                //         }
-                //         let acc = 0;
-                //         for (let i = 0; i < periodpointavg[j].length; i++) {
-                //             acc += periodpointavg[j][i]
-                //             // console.log(periodpointavg[j][i])
-                //         }
-                //         // console.log(acc);
-                //         if (periodpointavg[j].length !== 0) {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
-                //                 Math.round(acc / periodpointavg[j].length) + "\n"
-                //         } else {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
-                //         }
-                //         header += "\n";
-                //     }
-                // console.log(periods);
                 header += "\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
                     if ((i===0) && (incfirstweek===0)) {                    
@@ -756,9 +662,6 @@ $(document).ready(function () {
                 }
                 }
                 header += "Working day average,full period," + perioddayavg[0] + "\n";
-                // console.log(periodavg[0]);
-                // console.log(weekavg);
-                // console.log(header);
                 if (incfirstweek===0) {
                     header += "\n\n* Partial week\n"
                 }
@@ -800,8 +703,6 @@ $(document).ready(function () {
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
                     + reportWarning + "\n\n"
                     +  "#OCCUPANCY REPORT\n\n" 
-                    // + "\"NOTE: all values are averages if not specified otherwise\"\n\n"
-                    // + "Date,Day,";
                     + "Date,Day,Week,";
                 // for (let i in overviewReportDefs) {
                 for (let i = 0; i < overviewReportDefs.length; i++) {
@@ -819,15 +720,10 @@ $(document).ready(function () {
                     }
                 }
                 // console.log(header);
-                // header += "Date, , at 10:00, 08:00 to 12:00, at 14:00, 13:00 to 17:00, activity from 10:00 to 06:00?\n";
                 header = header.substring(0, header.length - 1) + "\n";
                 let path = space + "?start=" + start + "?end=" + end;
 
                 loadavgsamples(header, path, refOverviewAsys, 0);
-
-                // for (let i = 0; i < overviewReportDefs.length; i++) {
-                //     console.log(overviewReportDefs2[i]);
-                // }
 
             }
         }

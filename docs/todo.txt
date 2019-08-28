@@ -1,6 +1,0 @@
-Overall code cleaning
-Give JS analysis specs for proper reporting and simplify code
-Add API (removable at compile time) for databased analysis v0.8
-Entry split in and out v0.8
-log binary (command line) dump data per day
-add graphs as reporting instead of number

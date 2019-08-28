@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased 0.7.0RC3]
+## [0.7.0]
 ### Added
  - Configuration RTWINDOW defining a reporting window for real time data. It overrides ANALYSISWINDOW for reporting only  
  - Overview report mode with configurable template
@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
  - .recovery file renamed .recoveryavg tp specify the datapath it belongs to  
  - Improved resistance of malicious check errors due to channel misalignment  
  - Changed recovery policy from always showing a sample in the webapp if the counter if not too old, independently form how old the sample average is  
+ - Code cleaned
 
 ### Removed
  - Removed redundant check on report generation  

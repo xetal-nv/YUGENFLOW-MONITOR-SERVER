@@ -86,10 +86,7 @@ func presenceHTTPhandler() http.Handler {
 
 			var rt []storage.SampleData
 			if tag, ts, vals, e := storage.ReadSeriesSD(s0, s1, true); e == nil {
-				//fmt.Println(tag, ts, vals)
-				//for _, val := range ts {
-				//	fmt.Println(time.Unix(val/1000, 0))
-				//}
+
 				rt = s0.UnmarshalSliceSS(tag, ts, vals)
 			}
 			// the if is added to deal with timeout issues due to the fact this read can eb too long

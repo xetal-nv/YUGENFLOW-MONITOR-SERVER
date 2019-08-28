@@ -18,8 +18,6 @@ type Jsoncmdrt struct {
 // handles the commands to the sensors
 func commandHTTHandler() http.Handler {
 
-	//params := make(map[string]string)
-
 	cors := false
 	if os.Getenv("CORS") != "" {
 		cors = true

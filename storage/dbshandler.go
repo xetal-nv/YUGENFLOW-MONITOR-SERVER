@@ -8,7 +8,6 @@ import (
 
 // handler for a DBS with generic value coming from a channel on a generic interface{}
 // a is used to insert the actual value from the generic channel
-// TODO check if ot works
 func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp string) {
 
 	r := func() {
