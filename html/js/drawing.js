@@ -535,26 +535,26 @@ function drawSpace(rawspaces) {
                                     dataArraysFlow.push([]);
                                     let tmpdefin = {
                                         xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
-                                        markerType: "none",
                                         name: "Flow-in entry: " + sampledata.counter.entries[i].id,
                                         connectNullData: true,
                                         showInLegend: true,
                                         xValueType: "dateTime",
                                         type: "stepLine",
                                         color: colors[(i + 1) % colors.length],
+                                        markerType: "cross",
                                         dataPoints: dataArraysFlow[2 * i + 1]
                                     };
                                     flowdataDefinitions.push(tmpdefin);
                                     let tmpdefout = {
                                         xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
-                                        markerType: "none",
                                         name: "Flow-out entry: " + sampledata.counter.entries[i].id,
                                         connectNullData: true,
                                         showInLegend: true,
                                         xValueType: "dateTime",
                                         type: "stepLine",
                                         color: colors[(i + 1) % colors.length],
-                                        lineDashType: "dash",
+                                        markerType: "triangle",
+                                        // lineDashType: "dash",
                                         dataPoints: dataArraysFlow[2 * i + 2]
                                     };
                                     flowdataDefinitions.push(tmpdefout);
