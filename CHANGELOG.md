@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
  - Web app interface has been cleaned and adapted to accommodate graphs
  - Fixed bug creating discrepancies between actual counter and flow value
  - Moved from entry as net flow to flow in and flow out. Database hase only composing flows, API provides everything
+ - Period of API call in the webapp is not dependent on the periodicity of the data itself
 
 ## [0.7.0]
 ### Added

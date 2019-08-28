@@ -4,6 +4,7 @@ let spacename = "";
 let measurement = "sample";
 let allmeasurements = [];
 let selel = null;
+let repPeriod = 4000;
 // let lastTS = [];
 
 let regex = new RegExp(':', 'g');
@@ -398,7 +399,7 @@ function drawSpace(rawspaces) {
         }
     }
 
-    setInterval(updatedata, 4000)
+    setInterval(updatedata, repPeriod)
 
 }
 
@@ -414,7 +415,19 @@ $(document).ready(function () {
                 success: function (data) {
                     let jsObj = JSON.parse(data);
                     let rp = document.getElementById("reptype");
-                    // console.log(jsObj)
+                    // console.log(jsObj);
+                    if ((rtshow[0] !== "dbg") && (jsObj.length > 0)) {
+                        repPeriod = parseInt(jsObj[0].qualifier, 10);
+                        for (let i = 1; i < jsObj.length; i++) {
+                            let tmp = parseInt(jsObj[i].qualifier, 10);
+                            if (tmp < repPeriod) {
+                                repPeriod = tmp
+                            }
+                        }
+                        repPeriod -= 1;
+                        repPeriod *= 1000;
+                    }
+                    // console.log(repPeriod);
                     if (overviewReport) {
                         let ch = document.createElement("option");
                         ch.textContent = "overview";

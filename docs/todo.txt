@@ -1,7 +1,6 @@
 Target 1.0.0:
-Overall code cleaning
-Add entry to debug interface
-configurable report
-realistic sensor model (for demo usage)
-move html to git module (see how)
-make js sampling depending on smallest measurement and samwindow for dbs.
+Overall code cleaning (1.0)
+Add entry to debug interface (0.8)
+configurable report (0.9)
+realistic sensor model (for demo usage) (0.8)
+move html to git module (0.9)

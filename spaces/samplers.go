@@ -187,10 +187,28 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						} else {
 							if v, ok := counter.entries[sp.id]; ok {
 								v.NetFlow += sp.netflow
+								// over and underflow needs to force reset of values with a correct difference
+								// this can happen when no closure time has been defined
 								if sp.netflow > 0 {
-									v.PositiveFlow += sp.netflow
+									tmp := v.PositiveFlow + sp.netflow
+									if tmp < v.PositiveFlow {
+										// overflow
+										v.PositiveFlow += v.NegativeFlow + sp.netflow
+										v.NegativeFlow = 0
+									} else {
+										v.PositiveFlow = tmp
+									}
+									//v.PositiveFlow += sp.netflow
 								} else {
-									v.NegativeFlow += sp.netflow
+									tmp := v.NegativeFlow + sp.netflow
+									if tmp > v.PositiveFlow {
+										// underflow
+										v.NegativeFlow += v.PositiveFlow + sp.netflow
+										v.PositiveFlow = 0
+									} else {
+										v.NegativeFlow = tmp
+									}
+									//v.NegativeFlow += sp.netflow
 								}
 								counter.entries[sp.id] = v
 							} else {
