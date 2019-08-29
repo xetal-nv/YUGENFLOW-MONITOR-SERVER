@@ -1,7 +1,7 @@
 Target 1.0.0:
 Overall code cleaning (1.0)
 Add entry to web app (0.9)
-Add entry to debug interface (0.8)
 configurable report (0.9)
 realistic sensor model and test case with two plans(for demo usage) (0.8)
+allow alias for analysis (0.8)
 move html to git module (0.9)

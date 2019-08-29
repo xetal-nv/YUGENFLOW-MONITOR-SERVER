@@ -5,7 +5,7 @@ let measurement = "sample";
 let allmeasurements = [];
 let selel = null;
 let repPeriod = 4000;
-let flowWarning = false;
+// let flowWarning = false;
 // let lastTS = [];
 
 let regex = new RegExp(':', 'g');
@@ -184,6 +184,7 @@ function drawSpace(rawspaces) {
                 document.getElementById("rtvalues").style.display = "table";
                 document.getElementById("rtchartContainer").style.display = "none";
                 document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("flowchartContainer").style.display = "none";
                 document.getElementById("datatypes").style.display = "none";
                 document.getElementById("picker").style.display = "none";
                 document.getElementById("pickerDataset").style.display = "none";
@@ -195,6 +196,7 @@ function drawSpace(rawspaces) {
                 document.getElementById("rtvalues").style.display = "none";
                 document.getElementById("rtchartContainer").style.display = "block";
                 document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("flowchartContainer").style.display = "none";
                 document.getElementById("datatypes").style.display = "block";
                 document.getElementById("picker").style.display = "none";
                 document.getElementById("pickerDataset").style.display = "none";
@@ -206,6 +208,7 @@ function drawSpace(rawspaces) {
             case "Reporting":
                 document.getElementById("rtchartContainer").style.display = "none";
                 document.getElementById("archivechartContainer").style.display = "none";
+                document.getElementById("flowchartContainer").style.display = "none";
                 document.getElementById("datatypes").style.display = "none";
                 document.getElementById("rtvalues").style.display = "none";
                 document.getElementById("svgimage").style.display = "block";
@@ -236,7 +239,7 @@ function drawSpace(rawspaces) {
                 document.getElementById("gen").style.display = "none";
                 document.getElementById("graphdata").style.display = "none";
                 chartRT.render();
-                flowWarning = false;
+                // flowWarning = false;
                 break;
             case "Archive":
                 document.getElementById("svgimage").style.display = "none";
@@ -249,7 +252,7 @@ function drawSpace(rawspaces) {
                 document.getElementById("gen").style.display = "none";
                 document.getElementById("graphdata").style.display = "block";
                 chartArchive.render();
-                flowWarning = false;
+                // flowWarning = false;
                 break;
             case "Flows":
                 document.getElementById("svgimage").style.display = "none";
@@ -262,7 +265,7 @@ function drawSpace(rawspaces) {
                 document.getElementById("gen").style.display = "none";
                 document.getElementById("graphdata").style.display = "block";
                 chartFlows.render();
-                flowWarning = true;
+                // flowWarning = true;
                 break;
             default:
                 // this should never happen
@@ -387,7 +390,7 @@ function drawSpace(rawspaces) {
             flowdataDefinitions.length = 0;
             chartFlows.render();
             flowFree = true;
-            flowWarning = true;
+            // flowWarning = true;
             readPlan(SelValue, false)
         } else {
             flowFree = false;
@@ -511,10 +514,11 @@ function drawSpace(rawspaces) {
                 success: function (rawdata) {
                     try {
                         let sampledata = JSON.parse(rawdata);
-                        if ((sampledata.valid === false) && flowWarning) {
-                            alert("Please enable entry data,\ninserting the authorisation pin.");
-                            flowWarning = false
-                        } else {
+                        // if ((sampledata.valid === false) && flowWarning) {
+                        //     alert("Please enable entry data,\ninserting the authorisation pin.");
+                        //     flowWarning = false
+                        // } else {
+                        if (sampledata.valid === true) {
                             if (flowdataDefinitions.length === 0) {
                                 // first sample, we need to set the graph fully
                                 dataArraysFlow.push([]);
@@ -562,6 +566,7 @@ function drawSpace(rawspaces) {
                                 }
                                 // console.log("initial definition", flowdataDefinitions, dataArraysFlow);
                             }
+
                             // console.log("extraction of data from ",counter,"and",sampledata.counter.entries);
                             // for (let j = 0; j < sampledata.counter.entries.length; j++) {
                             //     console.log(sampledata.counter.entries[j].in);
@@ -573,15 +578,17 @@ function drawSpace(rawspaces) {
                                     x: counter.counter.ts,
                                     y: counter.counter.val
                                 });
-                                for (let i = 0; i < sampledata.counter.entries.length; i++) {
-                                    dataArraysFlow[2 * i + 1].push({
-                                        x: sampledata.counter.ts,
-                                        y: sampledata.counter.entries[i].in
-                                    });
-                                    dataArraysFlow[2 * i + 2].push({
-                                        x: sampledata.counter.ts,
-                                        y: sampledata.counter.entries[i].out
-                                    });
+                                if ((sampledata.counter.entries !== undefined) && ((sampledata.counter.entries !== null))) {
+                                    for (let i = 0; i < sampledata.counter.entries.length; i++) {
+                                        dataArraysFlow[2 * i + 1].push({
+                                            x: sampledata.counter.ts,
+                                            y: sampledata.counter.entries[i].in
+                                        });
+                                        dataArraysFlow[2 * i + 2].push({
+                                            x: sampledata.counter.ts,
+                                            y: sampledata.counter.entries[i].out
+                                        });
+                                    }
                                 }
                                 // console.log(counter, sampledata)
                                 // console.log(flowdataDefinitions)
@@ -589,6 +596,7 @@ function drawSpace(rawspaces) {
                                 chartFlows.render()
                             }
                         }
+                        // }
                         flowFree = true
                     } catch (e) {
                         alert("received corrupted entry data or unauthorised access");
