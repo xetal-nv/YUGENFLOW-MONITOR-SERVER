@@ -293,31 +293,31 @@ function drawSpace(rawspaces) {
                 plan = draw.svg(planDataRaw["qualifier"]);
                 if (!od) {
                     spacename = name;
-                    for (let i = 0; i < rawspaces.length; i++) {
-                        // console.log(rawspaces[i])
-                        if (rawspaces[i]["spacename"] === name) {
-                            for (let j = 0; j < rawspaces[i]["entries"].length; j++) {
-                                let nm = rawspaces[i]["entries"][j]["entryid"];
-                                let el = document.getElementById(nm);
-                                if (el != null) {
-                                    el.onmousedown = function () {
-                                        // console.log("found " + nm);
-                                        measurement = "entry_" + nm;
-                                        if (selel != null) selel.setAttribute("class", "st1");
-                                        el.setAttribute("class", "st2");
-                                        selel = el;
-                                        for (let i = 0; i < allmeasurements.length; i++) {
-                                            document.getElementById(allmeasurements[i].name).innerText = "";
-                                            if (allmeasurements[i].name !== "current") {
-                                                document.getElementById(allmeasurements[i].name + "_").style.color = "lightgray";
-                                            }
-                                        }
-                                    };
-                                }
-                            }
-                            break;
-                        }
-                    }
+                    // for (let i = 0; i < rawspaces.length; i++) {
+                    //     // console.log(rawspaces[i])
+                    //     if (rawspaces[i]["spacename"] === name) {
+                    //         for (let j = 0; j < rawspaces[i]["entries"].length; j++) {
+                    //             let nm = rawspaces[i]["entries"][j]["entryid"];
+                    //             let el = document.getElementById(nm);
+                    //             if (el != null) {
+                    //                 el.onmousedown = function () {
+                    //                     // console.log("found " + nm);
+                    //                     measurement = "entry_" + nm;
+                    //                     if (selel != null) selel.setAttribute("class", "st1");
+                    //                     el.setAttribute("class", "st2");
+                    //                     selel = el;
+                    //                     for (let i = 0; i < allmeasurements.length; i++) {
+                    //                         document.getElementById(allmeasurements[i].name).innerText = "";
+                    //                         if (allmeasurements[i].name !== "current") {
+                    //                             document.getElementById(allmeasurements[i].name + "_").style.color = "lightgray";
+                    //                         }
+                    //                     }
+                    //                 };
+                    //             }
+                    //         }
+                    //         break;
+                    //     }
+                    // }
                     // let total = document.getElementById(name);
                     // selel = total;
                     // total.setAttribute("class", "st2");
@@ -519,66 +519,66 @@ function drawSpace(rawspaces) {
                         //     flowWarning = false
                         // } else {
                         if (sampledata.valid === true) {
-                            if (flowdataDefinitions.length === 0) {
-                                // first sample, we need to set the graph fully
-                                dataArraysFlow.push([]);
-                                let tmpdef = {
-                                    xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
-                                    markerType: "none",
-                                    name: "Total counter",
-                                    connectNullData: true,
-                                    showInLegend: true,
-                                    xValueType: "dateTime",
-                                    type: "stepLine",
-                                    color: colors[0],
-                                    dataPoints: dataArraysFlow[0]
-                                };
-                                flowdataDefinitions.push(tmpdef);
-                                for (let i = 0; i < sampledata.counter.entries.length; i++) {
+                            if ((sampledata.counter.entries !== undefined) && ((sampledata.counter.entries !== null))) {
+                                if (flowdataDefinitions.length === 0) {
+                                    // first sample, we need to set the graph fully
                                     dataArraysFlow.push([]);
-                                    dataArraysFlow.push([]);
-                                    let tmpdefin = {
+                                    let tmpdef = {
                                         xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
-                                        name: "Flow-in entry: " + sampledata.counter.entries[i].id,
+                                        markerType: "none",
+                                        name: "Total counter",
                                         connectNullData: true,
                                         showInLegend: true,
                                         xValueType: "dateTime",
                                         type: "stepLine",
-                                        color: colors[(i + 1) % colors.length],
-                                        markerType: "cross",
-                                        dataPoints: dataArraysFlow[2 * i + 1]
+                                        color: colors[0],
+                                        dataPoints: dataArraysFlow[0]
                                     };
-                                    flowdataDefinitions.push(tmpdefin);
-                                    let tmpdefout = {
-                                        xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
-                                        name: "Flow-out entry: " + sampledata.counter.entries[i].id,
-                                        connectNullData: true,
-                                        showInLegend: true,
-                                        xValueType: "dateTime",
-                                        type: "stepLine",
-                                        color: colors[(i + 1) % colors.length],
-                                        markerType: "triangle",
-                                        // lineDashType: "dash",
-                                        dataPoints: dataArraysFlow[2 * i + 2]
-                                    };
-                                    flowdataDefinitions.push(tmpdefout);
-                                    // console.log(dataArraysFlow);
+                                    flowdataDefinitions.push(tmpdef);
+                                    for (let i = 0; i < sampledata.counter.entries.length; i++) {
+                                        dataArraysFlow.push([]);
+                                        dataArraysFlow.push([]);
+                                        let tmpdefin = {
+                                            xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                                            name: "Flow-in entry: " + sampledata.counter.entries[i].id,
+                                            connectNullData: true,
+                                            showInLegend: true,
+                                            xValueType: "dateTime",
+                                            type: "stepLine",
+                                            color: colors[(i + 1) % colors.length],
+                                            markerType: "cross",
+                                            dataPoints: dataArraysFlow[2 * i + 1]
+                                        };
+                                        flowdataDefinitions.push(tmpdefin);
+                                        let tmpdefout = {
+                                            xValueFormatString: "DD MMM, YYYY @ hh:mm:ss TT",
+                                            name: "Flow-out entry: " + sampledata.counter.entries[i].id,
+                                            connectNullData: true,
+                                            showInLegend: true,
+                                            xValueType: "dateTime",
+                                            type: "stepLine",
+                                            color: colors[(i + 1) % colors.length],
+                                            markerType: "triangle",
+                                            // lineDashType: "dash",
+                                            dataPoints: dataArraysFlow[2 * i + 2]
+                                        };
+                                        flowdataDefinitions.push(tmpdefout);
+                                        // console.log(dataArraysFlow);
+                                    }
+                                    // console.log("initial definition", flowdataDefinitions, dataArraysFlow);
                                 }
-                                // console.log("initial definition", flowdataDefinitions, dataArraysFlow);
-                            }
 
-                            // console.log("extraction of data from ",counter,"and",sampledata.counter.entries);
-                            // for (let j = 0; j < sampledata.counter.entries.length; j++) {
-                            //     console.log(sampledata.counter.entries[j].in);
-                            //     console.log(sampledata.counter.entries[j].out)
-                            // }
-                            // console.log(counter);
-                            if (counter.valid && sampledata.valid) {
-                                dataArraysFlow[0].push({
-                                    x: counter.counter.ts,
-                                    y: counter.counter.val
-                                });
-                                if ((sampledata.counter.entries !== undefined) && ((sampledata.counter.entries !== null))) {
+                                // console.log("extraction of data from ",counter,"and",sampledata.counter.entries);
+                                // for (let j = 0; j < sampledata.counter.entries.length; j++) {
+                                //     console.log(sampledata.counter.entries[j].in);
+                                //     console.log(sampledata.counter.entries[j].out)
+                                // }
+                                // console.log(counter);
+                                if (counter.valid && sampledata.valid) {
+                                    dataArraysFlow[0].push({
+                                        x: counter.counter.ts,
+                                        y: counter.counter.val
+                                    });
                                     for (let i = 0; i < sampledata.counter.entries.length; i++) {
                                         dataArraysFlow[2 * i + 1].push({
                                             x: sampledata.counter.ts,

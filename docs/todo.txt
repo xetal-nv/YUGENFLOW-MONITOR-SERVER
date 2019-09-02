@@ -1,5 +1,5 @@
 Target 1.0.0:
-Overall code cleaning (1.0)
+Overall code cleaning including test files (1.0)
 Add entry to web app (0.9)
 configurable report (0.9)
 realistic sensor model and test case with two plans(for demo usage) (0.8)

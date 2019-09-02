@@ -1,9 +1,12 @@
 package support
 
 import (
+	crypto_rand "crypto/rand"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
@@ -184,4 +187,19 @@ func TimeDifferenceInSecs(start, end string) (int64, error) {
 		}
 	}
 	return 0, errors.New("Invalid data")
+}
+
+// True random generator
+
+func RandomInit() {
+	var b [8]byte
+	_, err := crypto_rand.Read(b[:])
+	if err != nil {
+		panic("cannot seed math/rand package with cryptographically secure random number generator")
+	}
+	rand.Seed(int64(binary.LittleEndian.Uint64(b[:])))
+}
+
+func RandInt(min int, max int) int {
+	return min + rand.Intn(1+max-min)
 }
