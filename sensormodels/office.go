@@ -35,6 +35,7 @@ type person struct {
 	deskHolder bool       // true is an deskHolder, false is a visitor (or similar)
 	timing     [][]string // provide timing as [arrival, morning_pause, lunch, afternoon_pause, exit]
 	pauses     []int      // provides [pauses_taken max_number_pauses] for the day
+	fridayExit []string   // timing for friday ending, if "" it is set as normal time
 }
 
 // installation information
@@ -63,7 +64,7 @@ var floor2Entries = [][]int{
 var startDayTime string = "00:01"
 
 // define a new person, timings and pauses provide the reference and they get randomized by the constructor
-func newPerson(entries [][]int, timings []string, longmod []int, pauses int, deskHolder bool) (p person) {
+func newPerson(entries [][]int, timings []string, longmod []int, pauses int, deskHolder bool, friday string) (p person) {
 
 	f := func(tm string, delta int) (t []string) {
 		var hour, mins int
@@ -106,6 +107,11 @@ func newPerson(entries [][]int, timings []string, longmod []int, pauses int, des
 	p.pauses = []int{0, 1 + pauses + support.RandInt(0, 3)}
 	for i, v := range timings {
 		p.timing = append(p.timing, f(v, support.RandInt(1, longmod[i])))
+	}
+	if friday == "" {
+		p.fridayExit = p.timing[len(p.timing)-1]
+	} else {
+		p.fridayExit = []string{friday, strconv.Itoa(longmod[len(longmod)-1])}
 	}
 
 	return p
@@ -185,10 +191,14 @@ func (p person) activate() (valid bool, ev []pass) {
 					event = -1
 					//noinspection GoNilness
 					lv = ev[len(ev)-1].ts
+					// check if friday (5) and set the start at 15:45
+					if today := int(time.Now().Weekday()); today == 5 {
+						v = strings.Split(p.fridayExit[0], ":")
+					}
 				}
-				// TODO check if friday and set the start at 15:45
-				if ok, v := f(v, event, closure{ts: 0}, lv); ok {
-					ev = append(ev, v)
+
+				if ok, vi := f(v, event, closure{ts: 0}, lv); ok {
+					ev = append(ev, vi)
 				}
 			} else if p.deskHolder {
 				v := strings.Split(tm[0], ":")
@@ -227,6 +237,10 @@ func (p person) activate() (valid bool, ev []pass) {
 					//var ok bool
 					vin := pass{ts: 0}
 					//vout := pass{ts: 0}
+					// check if friday (5), if person is set to leave early, remove afteroon pauses
+					if today := int(time.Now().Weekday()); today == 5 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
+						npAfternoon = 0
+					}
 					for j := 0; j <= npAfternoon; j++ {
 						//noinspection GoNilness
 						if ok, vout := f(v, -1, closure{ts: vin.ts, min: 10, max: 15}, ev[len(ev)-1].ts); ok {
@@ -268,7 +282,9 @@ func gate(in chan int, sensors []int) {
 		// send associated macSensors addresses
 
 	} else {
+		//noinspection GoUnhandledErrorResult
 		defer connS1.Close()
+		//noinspection GoUnhandledErrorResult
 		defer connS2.Close()
 		//noinspection GoUnhandledErrorResult
 		connS1.Write(macSensors[sensors[0]-1])
@@ -383,25 +399,25 @@ func Office() {
 	for i := 0; i < 10; i++ {
 		// employees floor1
 		allPeople = append(allPeople, newPerson(floor1Entries, []string{"9:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
-			2, true))
+			2, true, "15:00"))
 		// employees floor2
 		allPeople = append(allPeople, newPerson(floor2Entries, []string{"9:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
-			2, true))
+			2, true, "15:00"))
 	}
 	for i := 0; i < 5; i++ {
 		// employees both floors
 		allPeople = append(allPeople, newPerson(allEntries, []string{"9:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
-			2, true))
+			2, true, ""))
 	}
 
 	// Visitors
 	for i := 0; i < support.RandInt(0, 10); i++ {
 		allPeople = append(allPeople, newPerson(allEntries, []string{"9:00", "", "", "", "16:00"}, []int{30, 30, 15, 15, 45},
-			0, false))
+			0, false, ""))
 	}
 	//guard
 	allPeople = append(allPeople, newPerson(allEntries, []string{"19:45", "", "", "", "22:00"}, []int{30, 30, 15, 15, 30},
-		0, false))
+		0, false, ""))
 
 	//// for debug
 	//tmpH := time.Now().Hour()
@@ -479,34 +495,13 @@ func Office() {
 				return dayEvents[p].ts < dayEvents[q].ts
 			})
 
-			// for debug
-			//count := 0
-			//for _, el := range dayEvents {
-			//	//fmt.Println(el)
-			//	count += el.event
-			//	if count < 0 {
-			//		//	fmt.Println(count, el)
-			//		//} else {
-			//		fmt.Println("==>", count, el)
-			//		os.Exit(1)
-			//	}
-			//
-			//	//if count < 0 {
-			//	//	fmt.Println("error", el)
-			//	//	for i, k := range dayEvents2 {
-			//	//		fmt.Println(k, dayEvents[i])
-			//	//	}
-			//	//	os.Exit(1)
-			//	//}
-			//}
-			//}
+			//for debug
 			//os.Exit(1)
-
-			// for debug
 			//for _, v := range dayEvents {
 			//	fmt.Println("OFFICE TEST: ", time.Unix(v.ts, 0), v)
 			//}
 			//fmt.Println("")
+			//os.Exit(1)
 
 			timeNow := time.Now().Unix()
 
