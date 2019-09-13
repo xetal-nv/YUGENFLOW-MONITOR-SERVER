@@ -136,7 +136,7 @@ $(document).ready(function () {
                     success: function (rawdata) {
                         let sampledata;
                         try {
-                        sampledata = JSON.parse(rawdata);} catch (e) {console.log("received corrupted data: ",rawdata)}
+                        sampledata = JSON.parse(rawdata);} catch (e) {console.log("received corrupted data: ")}
                         // console.log(sampledata)
                         exportReport(header, sampledata);
                     },
@@ -392,7 +392,7 @@ $(document).ready(function () {
                                         " " + d.getDay();
                                     data[sampleDate][current.id + 1] = sampledata[i].val;
                                 }
-                            }} catch (e) {console.log("received corrupted data: ",rawdata)}
+                            }} catch (e) {console.log("received corrupted data: ")}
                             loadpresence(header, data, presenceSets, api, tries)
                         },
                         error: function (error) {
@@ -463,7 +463,11 @@ $(document).ready(function () {
                                 tmpDays = [v[v.length - 1][1]];
                                 if (tmppointDays.length !== 0) {
                                     for (let i = 0; i < periods.length; i++) {
-                                        tmppointDays[i].push(v[periods[i] + 1][1]);
+                                        if (v[periods[i]+1 !== undefined]) {
+                                            if(v[periods[i+1]].length === 2){
+                                                tmppointDays[i].push(v[periods[i] + 1][1]);
+                                            }
+                                        }
                                         tmppointDays[i].push(-1);
                                     }
                                 }
@@ -492,8 +496,13 @@ $(document).ready(function () {
                                         if ((v[periods[i] + 1] === undefined) && (k !== (keys.length - 1).toString())) {
                                             v[periods[i] + 1] = [0, 0]
                                         }
-                                        if (v[periods[i] + 1] !== undefined) {
-                                            tmppointDays[i].push(v[periods[i] + 1][1])
+                                        // if (v[periods[i] + 1] !== undefined) {
+                                        //     tmppointDays[i].push(v[periods[i] + 1][1])
+                                        // }
+                                        if (v[periods[i]+1 !== undefined]) {
+                                            if(v[periods[i+1]].length === 2){
+                                                tmppointDays[i].push(v[periods[i] + 1][1]);
+                                            }
                                         }
                                     }
                                 }
@@ -697,7 +706,7 @@ $(document).ready(function () {
                 }
                 let header = "sep=,\n" +
                     "#Xetal Flow Monitoring: " + version + " \n"
-                    + "\"#user: " + user + " \"\n"
+                    + "\"#edition: " + user + " \"\n"
                     + "\"#space: " + space + " \"\n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
