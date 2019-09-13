@@ -186,6 +186,7 @@ func (p person) activate() (valid bool, ev []pass) {
 					//noinspection GoNilness
 					lv = ev[len(ev)-1].ts
 				}
+				// TODO check if friday and set the start at 15:45
 				if ok, v := f(v, event, closure{ts: 0}, lv); ok {
 					ev = append(ev, v)
 				}
@@ -381,25 +382,25 @@ func Office() {
 	// Employees
 	for i := 0; i < 10; i++ {
 		// employees floor1
-		allPeople = append(allPeople, newPerson(floor1Entries, []string{"8:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
+		allPeople = append(allPeople, newPerson(floor1Entries, []string{"9:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
 			2, true))
 		// employees floor2
-		allPeople = append(allPeople, newPerson(floor2Entries, []string{"8:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
+		allPeople = append(allPeople, newPerson(floor2Entries, []string{"9:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
 			2, true))
 	}
 	for i := 0; i < 5; i++ {
 		// employees both floors
-		allPeople = append(allPeople, newPerson(allEntries, []string{"8:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
+		allPeople = append(allPeople, newPerson(allEntries, []string{"9:00", "10:00", "12:30", "15:15", "17:30"}, []int{30, 30, 15, 15, 45},
 			2, true))
 	}
 
 	// Visitors
 	for i := 0; i < support.RandInt(0, 10); i++ {
-		allPeople = append(allPeople, newPerson(allEntries, []string{"8:00", "", "", "", "16:00"}, []int{30, 30, 15, 15, 45},
+		allPeople = append(allPeople, newPerson(allEntries, []string{"9:00", "", "", "", "16:00"}, []int{30, 30, 15, 15, 45},
 			0, false))
 	}
 	//guard
-	allPeople = append(allPeople, newPerson(allEntries, []string{"13:45", "", "", "", "13:55"}, []int{30, 30, 15, 15, 30},
+	allPeople = append(allPeople, newPerson(allEntries, []string{"19:45", "", "", "", "22:00"}, []int{30, 30, 15, 15, 30},
 		0, false))
 
 	//// for debug

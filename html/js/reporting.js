@@ -107,7 +107,7 @@ $(document).ready(function () {
                 return retVal
             }
 
-            // removes all saples ooutside of the working period and creates boundary values set to defVal
+            // removes all samples ooutside of the working period and creates boundary values set to defVal
             function cleanSampleList(trace, defVal) {
 
                 let startDate = new Date("2019 08 19"),
@@ -174,6 +174,15 @@ $(document).ready(function () {
                     return
                 }
                 let asys = meas[meas.length - 1].name;
+                // console.log(meas[meas.length - 1].name);
+                // TODO for alias
+                foundMeas = Object.keys(aliasMeasurement).filter(function(key) {
+                    return aliasMeasurement[key] == asys;
+                })
+                if (foundMeas.length !== 0) {
+                    asys = foundMeas[0]
+                }
+                // console.log(asys);
                 $.ajax({
                     type: 'GET',
                     timeout: 100000,
@@ -331,7 +340,7 @@ $(document).ready(function () {
                     timeout: 100000,
                     url: ip + "/series?type=sample?space=" + api,
                     success: function (rawdata) {
-                        console.log(ip + "/series?type=sample?space=" + api);
+                        // console.log(ip + "/series?type=sample?space=" + api);
                         let sampledata;
                         try {
                             sampledata = JSON.parse(rawdata);
@@ -376,8 +385,16 @@ $(document).ready(function () {
                 }
                 let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
                     + "\"#space: " + space + " \"\n"
-                    + "\"#dataset: " + asys + " \"\n"
-                    + "\"#start: " + startDate + " \"\n"
+                    + "\"#dataset: " + asys + " \"\n";
+                // TODO for alias
+                foundMeas = Object.keys(aliasMeasurement).filter(function(key) {
+                    return aliasMeasurement[key] == asys;
+                })
+                if (foundMeas.length !== 0) {
+                    asys = foundMeas[0]
+                }
+                // console.log(asys);
+                header += "\"#start: " + startDate + " \"\n"
                     + "\"#end: " + copyendDate + " \"\n\n";
                 header += "Date/Time, Epoch Time (s), average presence";
                 let path = space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
@@ -498,7 +515,7 @@ $(document).ready(function () {
                                         }
                                     }
                                     // the if below is for development and will be removed
-                                } else if (!developmentflag) {
+                                } else if (!noSamplePresenceCheck) {
                                     // check for presence, including closure time check
                                     // when presence can be determined for all days no need to enquire the server
                                     let name = api.split("?")[0];

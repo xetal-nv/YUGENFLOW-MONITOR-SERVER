@@ -32,8 +32,6 @@ const colors = [
     '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
 ];
 
-// TODO is the table reset when changing office ???
-
 function toogleRTDataSeries(e) {
     e.dataSeries.visible = !(typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible);
     chartRT.render();
@@ -397,8 +395,12 @@ function drawSpace(rawspaces) {
                                 let tag = sampledata.counters[i].counter.tag;
                                 tag = tag.replace(/\_+/g, " ");
                                 tag = tag.split(" ")[2];
-                                // console.log(tag);
+                                // TODO for aliases
+                                if (tag in aliasMeasurement) {
+                                    tag = aliasMeasurement[tag]
+                                }
                                 if (tag in mapnames) {
+                                    // console.log(tag);
                                     // servedData.push(tag);
                                     let index = mapnames[tag];
                                     // if (tag === "current") {
@@ -407,11 +409,12 @@ function drawSpace(rawspaces) {
                                         x: currentTS,
                                         y: sampledata.counters[i].counter.val
                                     });
+                                    // console.log(dataArrays);
                                     validData[tag] = sampledata.counters[i].counter.val;
                                     for (let i = 0; i < allmeasurements.length; i++) {
-                                        let refTag = allmeasurements[i].name.substring(0, labellength);
-                                        if (validData[refTag]) {
-                                            document.getElementById(allmeasurements[i].name).innerText = validData[refTag];
+                                        // let refTag = allmeasurements[i].name.substring(0, labellength);
+                                        if (validData[allmeasurements[i].name]) {
+                                            document.getElementById(allmeasurements[i].name).innerText = validData[allmeasurements[i].name];
                                             // console.log(allmeasurements[i].name, validData[refTag]);
                                         }
                                     }
@@ -523,7 +526,7 @@ function drawSpace(rawspaces) {
                                             type: "stepLine",
                                             color: colors[(i + 1) % colors.length],
                                             markerType: "triangle",
-                                            // lineDashType: "dash",
+                                            lineDashType: "dash",
                                             dataPoints: dataArraysFlow[2 * i + 2]
                                         };
                                         flowdataDefinitions.push(tmpdefout);
@@ -604,9 +607,9 @@ function drawSpace(rawspaces) {
     }
 
     setInterval(updatedata, repPeriod);
-    if (rtshow[0] === "dbg") {
+    // if (rtshow[0] === "dbg") {
         setInterval(updateFlow, repPeriod)
-    }
+    // }
 
 }
 
@@ -650,12 +653,16 @@ $(document).ready(function () {
                     if (rtshow.length !== 0) {
                         for (let i = 0; i < jsObj.length; i++) {
                             let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                            if ((rtshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
+                            // TODO  here for aliases
+                            if (el.name in aliasMeasurement) {
+                                el.name = aliasMeasurement[el.name]
+                            }
+                            if ((rtshow.indexOf(jsObj[i]["name"]) > -1) || (rtshow[0] === "dbg")) {
                                 allmeasurements.push(el);
                             }
-                            if ((repshow.indexOf(el.name) > -1) || (rtshow[0] === "dbg")) {
+                            if ((repshow.indexOf(jsObj[i]["name"]) > -1) || (rtshow[0] === "dbg")) {
                                 let ch = document.createElement("option");
-                                ch.textContent = jsObj[i]["name"];
+                                ch.textContent = el.name;
                                 rp.appendChild(ch);
                             }
                         }

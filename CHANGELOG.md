@@ -1,12 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.x]
+### Refer to CHANGELOG in the [v.0.8.x] branch
+
 ## [0.8.0]
 ### Added
  - Debug webapp at dbg.html
  - Pin controlled access to entry data, uses API command?pin= and cen be entered also form debug webapp
- - Added graphs for current values and archived intervals, including export of graphs
+ - Added graphs for current values (including flows) and archived intervals, supports export of graphs
  - Realistic office simulation for test and demo
+ - Added alias for measurement names in bypass.js
  
 ### Changed
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
@@ -24,6 +28,9 @@ All notable changes to this project will be documented in this file.
  
 ### Removed
  - Pin requirement for real time entry data
+
+## [0.7.x]
+### Refer to CHANGELOG in the [v.0.7.x] branch
 
 ## [0.7.0]
 ### Added
