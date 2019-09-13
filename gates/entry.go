@@ -91,7 +91,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		if e := spaces.SendData(id, nv); e != nil {
 			log.Println(e)
 		}
-		if support.Debug > 0 {
+		if support.Debug != 0 {
 			fmt.Printf("\nEntry %v has calculated datapoint at %v as %v\n", id, support.Timestamp(), nv)
 		}
 	}

@@ -30,7 +30,7 @@ func SendData(dev int, val int) error {
 			} else {
 				val = int(int8(val & 255))
 			}
-			if support.Debug > 0 {
+			if support.Debug != 0 {
 				fmt.Printf("\nDevice %v sent data %v at %v\n", dev, val, support.Timestamp())
 			}
 			go func() { c <- sensorData{id: dev, ts: support.Timestamp(), val: val} }()

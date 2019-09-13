@@ -58,6 +58,8 @@ func main() {
 				if del > 0 {
 					log.Println("Waiting till", *st, "before starting server")
 					time.Sleep(del)
+				} else {
+					log.Println("!!! WARNING CANNOT WAIT IN THE PAST !!!")
 				}
 			}
 		}
@@ -210,6 +212,11 @@ func main() {
 	spaces.SetUp()
 
 	switch *dmode {
+	case 3:
+		go func() {
+			time.Sleep(10 * time.Second)
+			sensormodels.Office()
+		}()
 	case 2:
 		for i := 100; i < 300; i++ {
 			mac := []byte{'a', 'b', 'c'}

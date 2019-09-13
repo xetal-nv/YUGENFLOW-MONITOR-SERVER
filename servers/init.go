@@ -235,16 +235,16 @@ func setJSenvironment() {
 		log.Fatal("Fatal error writing to def.js: ", err)
 	}
 
-	jsTxt = "var spaceDefinitions = "
+	jsTxt = "var spaceDefinitions = {"
 	for nm, df := range spaces.SpaceDef {
 		nm = strings.Replace(nm, "_", "", -1)
-		jsTxt += "{\"" + nm + "\": ["
+		jsTxt += "\"" + nm + "\": ["
 		for _, en := range df {
 			jsTxt += strconv.Itoa(en) + ","
 		}
-		jsTxt = strings.Trim(jsTxt, ",") + "]},"
+		jsTxt = strings.Trim(jsTxt, ",") + "],"
 	}
-	jsTxt = strings.Trim(jsTxt, ",") + ";"
+	jsTxt = strings.Trim(jsTxt, ",") + "};"
 	if _, err := f.WriteString(jsTxt); err != nil {
 		_ = f.Close()
 		log.Fatal("Fatal error writing to def.js: ", err)

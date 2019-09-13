@@ -3,7 +3,7 @@ var repvisile = (reportCurrent) || (repshow.length !== 0);
 let spacename = "";
 let measurement = "sample";
 let allmeasurements = [];
-let selel = null;
+// let selel = null;
 let repPeriod = 4000;
 // let flowWarning = false;
 // let lastTS = [];
@@ -27,10 +27,12 @@ let dataArraysFlow = [];
 // let dataPoints = [];
 let mapnames = {};
 
-var colors = [
+const colors = [
     '#000000', '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
     '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
 ];
+
+// TODO is the table reset when changing office ???
 
 function toogleRTDataSeries(e) {
     e.dataSeries.visible = !(typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible);
@@ -149,17 +151,17 @@ chartArchive.render();
 chartRT.render();
 chartFlows.render();
 
-function timeConverter(UNIX_timestamp) {
-    let a = new Date(UNIX_timestamp);
-    let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    let year = a.getFullYear();
-    let month = months[a.getMonth()];
-    let date = a.getDate();
-    let hour = a.getHours();
-    let min = a.getMinutes();
-    let sec = a.getSeconds();
-    return date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
-}
+// function timeConverter(UNIX_timestamp) {
+//     let a = new Date(UNIX_timestamp);
+//     let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+//     let year = a.getFullYear();
+//     let month = months[a.getMonth()];
+//     let date = a.getDate();
+//     let hour = a.getHours();
+//     let min = a.getMinutes();
+//     let sec = a.getSeconds();
+//     return date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+// }
 
 function drawSpace(rawspaces) {
 
@@ -170,7 +172,7 @@ function drawSpace(rawspaces) {
     let selectDisplay = document.getElementById("displayoption");
     let graphType = document.getElementById("datatypes");
     let flowFree = true;
-    for (i = 0; i < rawspaces.length; i++) {
+    for (let i = 0; i < rawspaces.length; i++) {
         spaces[i] = rawspaces[i]["spacename"]
     }
 
@@ -178,6 +180,7 @@ function drawSpace(rawspaces) {
         let myindex = selectDisplay.selectedIndex;
         let SelValue = selectDisplay.options[myindex].value;
         // console.log(myindex, SelValue);
+        resetcanvas(false);
         switch (SelValue) {
             case "Plan":
                 document.getElementById("svgimage").style.display = "block";
@@ -273,14 +276,16 @@ function drawSpace(rawspaces) {
         }
     }
 
-    function resetcanvas() {
-        spacename = "";
-        readPlan("logo", true);
+    function resetcanvas(full) {
+        if (full) {
+            spacename = "";
+            readPlan("logo", true);
+        }
         document.getElementById("lastts").innerText = "";
         for (let i = 0; i < allmeasurements.length; i++) {
-            document.getElementById(allmeasurements[i].name).innerText = ""
+            document.getElementById(allmeasurements[i].name).innerText = "----"
         }
-        selel = null;
+        // selel = null;
     }
 
     function readPlan(name, od) {
@@ -293,47 +298,6 @@ function drawSpace(rawspaces) {
                 plan = draw.svg(planDataRaw["qualifier"]);
                 if (!od) {
                     spacename = name;
-                    // for (let i = 0; i < rawspaces.length; i++) {
-                    //     // console.log(rawspaces[i])
-                    //     if (rawspaces[i]["spacename"] === name) {
-                    //         for (let j = 0; j < rawspaces[i]["entries"].length; j++) {
-                    //             let nm = rawspaces[i]["entries"][j]["entryid"];
-                    //             let el = document.getElementById(nm);
-                    //             if (el != null) {
-                    //                 el.onmousedown = function () {
-                    //                     // console.log("found " + nm);
-                    //                     measurement = "entry_" + nm;
-                    //                     if (selel != null) selel.setAttribute("class", "st1");
-                    //                     el.setAttribute("class", "st2");
-                    //                     selel = el;
-                    //                     for (let i = 0; i < allmeasurements.length; i++) {
-                    //                         document.getElementById(allmeasurements[i].name).innerText = "";
-                    //                         if (allmeasurements[i].name !== "current") {
-                    //                             document.getElementById(allmeasurements[i].name + "_").style.color = "lightgray";
-                    //                         }
-                    //                     }
-                    //                 };
-                    //             }
-                    //         }
-                    //         break;
-                    //     }
-                    // }
-                    // let total = document.getElementById(name);
-                    // selel = total;
-                    // total.setAttribute("class", "st2");
-                    // total.onmousedown = function () {
-                    //     // console.log("found " + name)
-                    //     measurement = "sample";
-                    //     if (selel != null) selel.setAttribute("class", "st1");
-                    //     total.setAttribute("class", "st2");
-                    //     selel = total;
-                    //     for (let i = 0; i < allmeasurements.length; i++) {
-                    //         document.getElementById(allmeasurements[i].name).innerText = "";
-                    //         if (allmeasurements[i].name !== "current") {
-                    //             document.getElementById(allmeasurements[i].name + "_").style.color = "black";
-                    //         }
-                    //     }
-                    // };
                 }
             },
             error: function (error) {
@@ -352,7 +316,7 @@ function drawSpace(rawspaces) {
         selectSpace.appendChild(el);
     }
 
-    resetcanvas();
+    resetcanvas(true);
 
     selectSpace.onchange = function () {
         let myindex = selectSpace.selectedIndex;
@@ -394,7 +358,7 @@ function drawSpace(rawspaces) {
             readPlan(SelValue, false)
         } else {
             flowFree = false;
-            resetcanvas()
+            resetcanvas(true)
         }
         setDisplay()
     };
@@ -404,7 +368,7 @@ function drawSpace(rawspaces) {
     graphType.onchange = setGraph;
 
     function updatedata() {
-        let regex = new RegExp(':', 'g');
+        // let regex = new RegExp(':', 'g');
         let timeNow = new Date(),
             timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
             incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
@@ -619,7 +583,7 @@ function drawSpace(rawspaces) {
 
         if (flowFree) {
             flowFree = false;
-            let regex = new RegExp(':', 'g');
+            // let regex = new RegExp(':', 'g');
             let timeNow = new Date(),
                 timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
                 incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
