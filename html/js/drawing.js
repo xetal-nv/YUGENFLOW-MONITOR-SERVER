@@ -479,12 +479,14 @@ function drawSpace(rawspaces) {
                 timeout: 10000,
                 url: ip + "/entry/" + spacename + "/current",
                 success: function (rawdata) {
+                    // console.log(ip + "/entry/" + spacename + "/current")
                     try {
                         let sampledata = JSON.parse(rawdata);
                         // if ((sampledata.valid === false) && flowWarning) {
                         //     alert("Please enable entry data,\ninserting the authorisation pin.");
                         //     flowWarning = false
                         // } else {
+                            // console.log(sampledata);
                         if (sampledata.valid === true) {
                             if ((sampledata.counter.entries !== undefined) && ((sampledata.counter.entries !== null))) {
                                 if (flowdataDefinitions.length === 0) {

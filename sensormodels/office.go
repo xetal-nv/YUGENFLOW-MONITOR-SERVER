@@ -192,7 +192,8 @@ func (p person) activate() (valid bool, ev []pass) {
 					//noinspection GoNilness
 					lv = ev[len(ev)-1].ts
 					// check if friday (5) and set the start at 15:45
-					if today := int(time.Now().Weekday()); today == 5 {
+					// if today := int(time.Now().Weekday()); today == 5 { // uncomment
+					if today := int(time.Now().Weekday()); today == 4 { // comment
 						v = strings.Split(p.fridayExit[0], ":")
 					}
 				}
@@ -238,7 +239,9 @@ func (p person) activate() (valid bool, ev []pass) {
 					vin := pass{ts: 0}
 					//vout := pass{ts: 0}
 					// check if friday (5), if person is set to leave early, remove afteroon pauses
-					if today := int(time.Now().Weekday()); today == 5 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
+					// if today := int(time.Now().Weekday()); today == 5 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
+					if today := int(time.Now().Weekday()); today == 4 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
+
 						npAfternoon = 0
 					}
 					for j := 0; j <= npAfternoon; j++ {
@@ -466,7 +469,8 @@ func Office() {
 		// generate the current day events
 
 		// We exclude the week end
-		if today := time.Now().Weekday(); today != 6 && today != 7 && !isHolidays {
+		if today := int(time.Now().Weekday()); today != 6 && today != 0 && !isHolidays {
+			// fmt.Println(int(today))
 			fmt.Println("OFFICE TEST: Starting a new working day:", time.Now().Weekday(), time.Now().Day(), ",", time.Now().Month(), ",", time.Now().Year())
 			var dayEvents []pass
 
@@ -503,10 +507,10 @@ func Office() {
 			//fmt.Println("")
 			//os.Exit(1)
 
-			timeNow := time.Now().Unix()
-
 			// remove all older samples (useful for the first run only)
 			i := 0
+			// below must be uncommented
+			timeNow := time.Now().Unix()
 			loop := true
 			for loop {
 				if i >= len(dayEvents) {
@@ -520,7 +524,9 @@ func Office() {
 
 			for i < len(dayEvents) {
 				//fmt.Println("serving", dayEvents[i], "with index", i)
-				for timeNow >= dayEvents[i].ts-60 {
+
+				for timeNow >= dayEvents[i].ts-60 { // must be uncommented
+
 					// for debug
 					//fmt.Println(time.Unix(timeNow, 0), "-> ", time.Unix(dayEvents[i].ts, 0))
 					//if dayEvents[i].entry-1 > len(out) {
@@ -534,9 +540,11 @@ func Office() {
 					if i += 1; i >= len(dayEvents) {
 						break
 					}
-				}
-				time.Sleep(40 * time.Second)
-				timeNow = time.Now().Unix()
+				} // must be uncommented
+				time.Sleep(40 * time.Second) // must be uncommented
+				timeNow = time.Now().Unix()  // must be uncommented
+
+				// time.Sleep(2 * time.Second) // must be commented
 			}
 		} else {
 			if isHolidays {
@@ -545,6 +553,8 @@ func Office() {
 				fmt.Println("OFFICE TEST: Today is WE")
 			}
 		}
+
+		fmt.Println("Wait for next day")
 
 		// wait for the next day
 		if ns, err := time.Parse(support.TimeLayout, startDayTime); err != nil {

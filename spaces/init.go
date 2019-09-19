@@ -203,6 +203,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 						log.Fatal("spaces.setUpSpaces: fatal error entry name", val)
 					}
 				}
+				sort.Ints(sg)
 				SpaceDef[name] = sg
 				log.Printf("spaces.setUpSpaces: found space [%v] with entry %v\n", name, sg)
 				for _, g := range sg {

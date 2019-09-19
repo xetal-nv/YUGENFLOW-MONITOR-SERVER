@@ -11,8 +11,8 @@ var reportWarning = "";
 
 // measurement aliases, need to be inserted manually once
 var aliasMeasurement = {
-"20secs": "AVG last 20s", 
-"20mins": "AVG last 20m", 
-"hour": "AVG last hour", 
-"day": "AVG last 24h"
+// "20secs": "AVG last 20s", 
+// "20mins": "AVG last 20m", 
+// "hour": "AVG last hour", 
+// "day": "AVG last 24h"
 }

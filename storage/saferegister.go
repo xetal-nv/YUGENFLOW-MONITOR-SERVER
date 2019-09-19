@@ -24,11 +24,13 @@ func SafeRegGeneric(tag string, in, out chan interface{}, init ...interface{}) {
 			data = init[0]
 			log.Printf("Register %v initialised with %v\n", tag, data)
 		}
-		//fmt.Println(tag, "started")
+		// fmt.Println(tag, "started")
 		for {
+			// fmt.Println(tag, data)
 			select {
 			case data = <-in:
 			case out <- data:
+				// fmt.Println(tag, data)
 			}
 		}
 	}

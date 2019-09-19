@@ -109,10 +109,9 @@ $(document).ready(function () {
 
             // removes all samples ooutside of the working period and creates boundary values set to defVal
             function cleanSampleList(trace, defVal) {
+                // console.log(trace);
 
-                let startDate = new Date("2019 08 19"),
-                    endDate = new Date("2019 08 22"),
-                    startAn = startDate.ToInt2()[0],
+                let startAn = startDate.ToInt2()[0],
                     endAn = endDate.ToInt2()[0],
                     startRef = parseInt(opStartTime.replace(":", "") + "00", 10),
                     endRef = parseInt(opEndTime.replace(":", "") + "00", 10),
@@ -164,6 +163,8 @@ $(document).ready(function () {
                     cyclePhase = 0
                 }
 
+                // console.log(samples);
+
                 return samples
             }
 
@@ -196,9 +197,10 @@ $(document).ready(function () {
                         } catch (e) {
                             console.log("received corrupted data")
                         }
+                        console.log(jsonData);
                         if ((jsonData !== undefined) && (jsonData !== null)) {
                             let sampledata = cleanSampleList(jsonData, boundarySamplesVal);
-                            // console.log(sampledata);
+                            console.log(sampledata);
                             for (let i = 0; i < sampledata.length; i++) {
                                 dataArraysArchive[meas.length].push({
                                     x: sampledata[i].ts,
@@ -206,7 +208,7 @@ $(document).ready(function () {
                                 });
                             }
                         }
-                        // console.log(sampledata);
+                        // console.log(dataArraysArchive[meas.length]);
                         loadAllSample(space, path, meas, 0);
                     },
                     error: function (error) {
@@ -384,6 +386,7 @@ $(document).ready(function () {
                     end = copyendDate.getUnixTime();
                 }
                 let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
+                + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + space + " \"\n"
                     + "\"#dataset: " + asys + " \"\n";
                 // TODO for alias

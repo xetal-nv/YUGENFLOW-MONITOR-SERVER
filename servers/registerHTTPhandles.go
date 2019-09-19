@@ -77,20 +77,27 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 
 		rt := Register{true, "", dataMap[ref]()}
 
+		// fmt.Println(sp, ref)
+
 		//if authorised || (!authorised && sp[0] != "entry___") {
 		if spaces.LatestBankOut[sp[0]][sp[1]][sp[2]] == nil {
 			log.Println("HTTP got a nil channel")
+			// fmt.Println("HTTP got a nil channel")
 		}
 		select {
 		case data := <-spaces.LatestBankOut[sp[0]][sp[1]][sp[2]]:
+			// fmt.Println(data)
 			if data != nil {
 				if e := rt.Data.Extract(data); e != nil {
+					// fmt.Println("1")
 					rt.Valid = false
 					rt.Error = "ID"
 				} else {
+					// fmt.Println(rt.Data)
 					rt.Data.SetTag(tag)
 				}
 			} else {
+				// fmt.Println("3")
 				rt.Valid = false
 				rt.Error = "NIL"
 			}
@@ -104,6 +111,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		//} else {
 		//	rt.Valid = false
 		//}
+		// fmt.Println(rt.Data)
 
 		//noinspection GoUnhandledErrorResult
 		json.NewEncoder(w).Encode(rt)
