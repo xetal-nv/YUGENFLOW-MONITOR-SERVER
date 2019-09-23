@@ -41,6 +41,7 @@ NOTE: series API supports types: sample, entry (debug mode only). Data for the c
 NOTE: cmd API to be deprecated, do not use  
 
 **List HTTP pages:**  
+If HTTPSPORTS[0] is the same of HTTPSPORTS[1], only one server will be started for all services
 HTTPSPORTS[0]/ -> webapp
 HTTPSPORTS[0]/dbg.html -> debug webapp  
 

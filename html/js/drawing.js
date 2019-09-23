@@ -27,6 +27,8 @@ let dataArraysFlow = [];
 // let dataPoints = [];
 let mapnames = {};
 
+var ip = "http://" + location.hostname + ":" + port;
+
 const colors = [
     '#000000', '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
     '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
@@ -262,9 +264,9 @@ function drawSpace(rawspaces) {
                 document.getElementById("archivechartContainer").style.display = "none";
                 document.getElementById("flowchartContainer").style.display = "block";
                 document.getElementById("datatypes").style.display = "block";
-                document.getElementById("picker").style.display = "block";
+                document.getElementById("picker").style.display = "none";
                 document.getElementById("gen").style.display = "none";
-                document.getElementById("graphdata").style.display = "block";
+                document.getElementById("graphdata").style.display = "none";
                 chartFlows.render();
                 // flowWarning = true;
                 break;

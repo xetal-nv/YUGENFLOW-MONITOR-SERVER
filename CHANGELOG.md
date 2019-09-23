@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
  - Added graphs for current values (including flows) and archived intervals, supports export of graphs
  - Realistic office simulation for test and demo
  - Added alias for measurement names in bypass.js
+ - Support for single server serving both API and webapp
  
 ### Changed
  - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible

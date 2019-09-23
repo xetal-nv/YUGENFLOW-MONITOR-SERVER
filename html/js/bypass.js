@@ -15,4 +15,4 @@ var aliasMeasurement = {
 // "20mins": "AVG last 20m", 
 // "hour": "AVG last hour", 
 // "day": "AVG last 24h"
-}
+};

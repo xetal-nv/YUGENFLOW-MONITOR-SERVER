@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// determines the number of HTTP server to run (minimum 2)
 const SIZE int = 2
 
 // device commands describer for conversion from/to binary to/from param execution
@@ -21,6 +22,7 @@ type datafunc func() GenericData
 var addServer [SIZE]string                  // server addresses
 var sdServer [SIZE + 1]chan context.Context // channel for closure of servers
 var hMap [SIZE]map[string]http.Handler      // server handler maps
+var mergeHTMLservers = false                // allows every HTTP server to serve the HTML app
 var crcUsed bool                            // CRC used flag
 var strictFlag bool                         // indicate is MAC strict mode is being used
 var mutexSensorMacs = &sync.RWMutex{}       // this mutex is used to avoid concurrent writes on start-up on sensorMacID, sensorMacID, SensorCmdID, SensorCmdMac

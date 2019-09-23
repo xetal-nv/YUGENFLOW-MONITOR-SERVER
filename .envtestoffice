@@ -1,7 +1,7 @@
 ##### SERVER SETUP #####
 ## ADDRESSES
-## HTTPSPORTS = app port, api port
-HTTPSPORTS = 8080, 8090
+## HTTPSPORTS = app port, api port ## If the ports are the same, one server only will be activates
+HTTPSPORTS = 8080, 8080
 IP = localhost
 #IP = 192.168.0.2
 TCPPORT = 3333
@@ -100,8 +100,8 @@ ANALYSISPERIOD = 20secs 20; 20mins 1200;hour 3600; day 86000
 
 ## PRESENCE INTERVAL DEFINITION
 ## Defines internals of time where only presence detection is relevant, no counting
-## Time is providedin the HH:MM format
-##PRESENCE_spacename = detectorname start end; ...
+## Time is provided in the HH:MM format
+##PRESENCE_spacename = detector name start end; ...
 PRESENCE_livlab = morning 08:00 12:30; afternoon 13:00 18:00; night 18:00 06:00
 PRESENCE_office = morning 08:00 12:30; afternoon 13:00 18:00; night 18:00 06:00
 
@@ -131,8 +131,8 @@ RTSHOW = 20secs 20mins hour day
 OVERVIEWREPORT = 08:00 19:00
 
 ## Defines the report structure. Three type of data are available
-## 'presence' provides of there was activity in the given interval based on a given presence defintion from PRESENCE_
-## 'point' provides the arevage count at the moment in time with a given precision in minutes
+## 'presence' provides of there was activity in the given interval based on a given presence definition from PRESENCE_
+## 'point' provides the average count at the moment in time with a given precision in minutes
 ## 'period' provides the average count int he given period
 ## The declaration order will be reflected in the reported order as well
 ##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...

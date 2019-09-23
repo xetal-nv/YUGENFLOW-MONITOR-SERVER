@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const version = "v. 0.7.0" // version
+const version = "v. 0.8.0" // version
 
 func main() {
 	folder, _ := support.GetCurrentExecDir()
@@ -257,7 +257,6 @@ func main() {
 		os.Exit(1)
 	}()
 
-	// comment below for TCP debug
 	// Set-up and start servers
 	servers.StartServers()
 

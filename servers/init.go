@@ -43,11 +43,13 @@ func setJSenvironment() {
 		} else {
 			log.Fatal("ServersSetup: fatal error: invalid addresses")
 		}
-		for j, c := range addServer {
-			if addServer[i] == c && i != j {
-				log.Fatal("ServersSetup: fatal error: invalid addresses")
-			}
-		}
+		//if !mergeHTMLservers {
+		//	for j, c := range addServer {
+		//		if addServer[i] == c && i != j {
+		//			log.Fatal("ServersSetup: fatal error: invalid addresses")
+		//		}
+		//	}
+		//}
 	}
 
 	f, err := os.Create("./html/js/def.js")
@@ -61,7 +63,8 @@ func setJSenvironment() {
 		ip = support.GetOutboundIP().String()
 	}
 
-	js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
+	//js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
+	js := "var port = \"" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
 		log.Fatal("Fatal error writing to def.js: ", err)
@@ -268,10 +271,16 @@ func setupHTTP() error {
 	dbgRegistry = make(map[string]int64)
 	dbgMutex.Unlock()
 
-	// enable web server
-	hMap[0] = map[string]http.Handler{
-		"./html/": nil,
+	// enable web server - if ports are different
+	//fmt.Println(addServer)
+	if addServer[0] == addServer[1] {
+		mergeHTMLservers = true
+	} else {
+		hMap[0] = map[string]http.Handler{
+			"./html/": nil,
+		}
 	}
+	//os.Exit(1)
 
 	hMap[1] = make(map[string]http.Handler)
 	// development log API
@@ -354,11 +363,11 @@ func setupHTTP() error {
 		} else {
 			log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
 		}
-		for j, c := range addServer {
-			if addServer[i] == c && i != j {
-				log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
-			}
-		}
+		//for j, c := range addServer {
+		//	if addServer[i] == c && i != j {
+		//		log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
+		//	}
+		//}
 	}
 	return nil
 }
@@ -404,8 +413,12 @@ func StartServers() {
 
 		for i := range addServer {
 			// Start HTTP servers
-			sdServer[i] = make(chan context.Context)
-			startHTTP(addServer[i], sdServer[i], hMap[i])
+			if len(hMap[i]) == 0 {
+				log.Printf("servers.StartServers: skipping server %v since it serves no paths\n", addServer[i])
+			} else {
+				sdServer[i] = make(chan context.Context)
+				startHTTP(addServer[i], sdServer[i], hMap[i])
+			}
 		}
 
 		sdServer[len(sdServer)-1] = ctcp

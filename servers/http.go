@@ -54,8 +54,9 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 		}
 		if stc != "" {
 			mx.PathPrefix("/").Handler(http.FileServer(http.Dir(stc)))
+		} else if mergeHTMLservers {
+			mx.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
 		}
-
 		log.Println("servers.startHTTP: Listening on server server: ", add)
 		log.Panic("servers.startHTTP: serve error: ", server.ListenAndServe())
 	}()
