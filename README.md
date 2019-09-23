@@ -45,11 +45,8 @@ If HTTPSPORTS[0] is the same of HTTPSPORTS[1], only one server will be started f
 HTTPSPORTS[0]/ -> webapp
 HTTPSPORTS[0]/dbg.html -> debug webapp  
 
-**SVG convention:**  
-Elements triggering data from a entry need to have as ID the entry id as from the configuration file (disabled)  
-Elements triggering data from the full counter need to have as ID the space name (disabled)  
-Two classes need to be defined, st1 for unselected trigger and st2 for selected trigger  
-NOTE: If the server does no have a svg for a given space, the space will be ignored  
+**SVG convention:**   
+NOTE: If the server does no have a svg for a given space, the space will be assigned an empty.svg  
 
 **SYSTEM VARIABLES:**  
 GATESERVER is set to the application folder  

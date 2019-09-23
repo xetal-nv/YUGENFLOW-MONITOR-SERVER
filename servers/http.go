@@ -44,19 +44,20 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 			}
 		}()
 
-		stc := ""
+		//stc := ""
 		for p, h := range mh {
-			if h != nil {
-				mx.Handle(p, h)
-			} else {
-				stc = p
-			}
+			mx.Handle(p, h)
+			//if h != nil {
+			//	mx.Handle(p, h)
+			//} else {
+			//	stc = p
+			//}
 		}
-		if stc != "" {
-			mx.PathPrefix("/").Handler(http.FileServer(http.Dir(stc)))
-		} else if mergeHTMLservers {
-			mx.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
-		}
+		//if stc != "" {
+		//	mx.PathPrefix("/").Handler(http.FileServer(http.Dir(stc)))
+		//} else if mergeHTMLservers {
+		mx.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
+		//}
 		log.Println("servers.startHTTP: Listening on server server: ", add)
 		log.Panic("servers.startHTTP: serve error: ", server.ListenAndServe())
 	}()

@@ -36,21 +36,23 @@ func setJSenvironment() {
 		log.Fatal("servers.setJSenvironment: fatal error cannot retrieve dbs/dat")
 	}
 
-	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
-	for i, v := range ports {
-		if port := strings.Trim(v, " "); port != "" {
-			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
-		} else {
-			log.Fatal("ServersSetup: fatal error: invalid addresses")
-		}
-		//if !mergeHTMLservers {
-		//	for j, c := range addServer {
-		//		if addServer[i] == c && i != j {
-		//			log.Fatal("ServersSetup: fatal error: invalid addresses")
-		//		}
-		//	}
-		//}
-	}
+	//ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
+	//ports := os.Getenv("HTTPSPORTS")
+	addServer = "0.0.0.0:" + strings.Trim(os.Getenv("HTTPSPORTS"), " ")
+	//for i, v := range ports {
+	//	if port := strings.Trim(v, " "); port != "" {
+	//		addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
+	//	} else {
+	//		log.Fatal("ServersSetup: fatal error: invalid addresses")
+	//	}
+	//if !mergeHTMLservers {
+	//	for j, c := range addServer {
+	//		if addServer[i] == c && i != j {
+	//			log.Fatal("ServersSetup: fatal error: invalid addresses")
+	//		}
+	//	}
+	//}
+	//}
 
 	f, err := os.Create("./html/js/def.js")
 	if err != nil {
@@ -58,19 +60,19 @@ func setJSenvironment() {
 	}
 	//}
 
-	ip := ""
-	if ip = os.Getenv("IP"); ip == "" {
-		ip = support.GetOutboundIP().String()
-	}
+	//ip := ""
+	//if ip = os.Getenv("IP"); ip == "" {
+	//	ip = support.GetOutboundIP().String()
+	//}
 
 	//js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
-	js := "var port = \"" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
-	if _, err := f.WriteString(js); err != nil {
-		_ = f.Close()
-		log.Fatal("Fatal error writing to def.js: ", err)
-	}
+	//js := "var port = \"" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
+	//if _, err := f.WriteString(js); err != nil {
+	//	_ = f.Close()
+	//	log.Fatal("Fatal error writing to def.js: ", err)
+	//}
 
-	js = "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;\n"
+	js := "var samplingWindow = " + strconv.Itoa(spaces.SamplingWindow) + " * 1000;\n"
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
 		log.Fatal("Fatal error writing to def.js: ", err)
@@ -273,55 +275,55 @@ func setupHTTP() error {
 
 	// enable web server - if ports are different
 	//fmt.Println(addServer)
-	if addServer[0] == addServer[1] {
-		mergeHTMLservers = true
-	} else {
-		hMap[0] = map[string]http.Handler{
-			"./html/": nil,
-		}
-	}
+	//if addServer[0] == addServer[1] {
+	//	mergeHTMLservers = true
+	//} else {
+	//	hMap[0] = map[string]http.Handler{
+	//		"./html/": nil,
+	//	}
+	//}
 	//os.Exit(1)
 
-	hMap[1] = make(map[string]http.Handler)
+	hMap = make(map[string]http.Handler)
 	// development log API
 	if Dvl {
-		hMap[1]["/dvl"] = dvlHTTHandler()
+		hMap["/dvl"] = dvlHTTHandler()
 		log.Println("WARNING: Developer Logfile enabled")
 	}
 	// installation information API
-	hMap[1]["/info"] = infoHTTHandler()
+	hMap["/info"] = infoHTTHandler()
 	// Series data retrieval API
-	hMap[1]["/series"] = seriesHTTPhandler()
+	hMap["/series"] = seriesHTTPhandler()
 	// Presence data retrieval API
-	hMap[1]["/presence"] = presenceHTTPhandler()
+	hMap["/presence"] = presenceHTTPhandler()
 	// Sensor command API
-	hMap[1]["/cmd"] = commandHTTHandler() // to be deprecated
-	hMap[1]["/command"] = commandHTTHandler()
+	hMap["/cmd"] = commandHTTHandler() // to be deprecated
+	hMap["/command"] = commandHTTHandler()
 	// analysis information API
-	hMap[1]["/asys"] = asysHTTHandler()
+	hMap["/asys"] = asysHTTHandler()
 	// unused registered device API
-	hMap[1]["/und"] = unusedDeviceHTTPHandler()
+	hMap["/und"] = unusedDeviceHTTPHandler()
 	// pending registered device API
-	hMap[1]["/pending"] = pendingDeviceHTTPHandler()
+	hMap["/pending"] = pendingDeviceHTTPHandler()
 	// unknown registered device API and its variants
-	hMap[1]["/udef"] = undefinedDeviceHTTPHandler("")
-	hMap[1]["/udef/active"] = undefinedDeviceHTTPHandler("active")
-	hMap[1]["/udef/defined"] = undefinedDeviceHTTPHandler("defined")
-	hMap[1]["/udef/undefined"] = undefinedDeviceHTTPHandler("undefined")
-	hMap[1]["/udef/notactive"] = undefinedDeviceHTTPHandler("notactive")
+	hMap["/udef"] = undefinedDeviceHTTPHandler("")
+	hMap["/udef/active"] = undefinedDeviceHTTPHandler("active")
+	hMap["/udef/defined"] = undefinedDeviceHTTPHandler("defined")
+	hMap["/udef/undefined"] = undefinedDeviceHTTPHandler("undefined")
+	hMap["/udef/notactive"] = undefinedDeviceHTTPHandler("notactive")
 	// unused registered device API
-	hMap[1]["/active"] = usedDeviceHTTPHandler()
+	hMap["/active"] = usedDeviceHTTPHandler()
 	// if enabled it register the kill switch API
 	if Kswitch {
-		hMap[1]["/ks"] = killswitchHTTPHandler()
+		hMap["/ks"] = killswitchHTTPHandler()
 	}
 
 	// add SVG API for installation graphs
 	for spn := range spaces.SpaceDef {
 		name := strings.Replace(spn, "_", "", -1)
-		hMap[1]["/plan/"+name] = planHTTPHandler(name)
+		hMap["/plan/"+name] = planHTTPHandler(name)
 	}
-	hMap[1]["/plan/logo"] = planHTTPHandler("logo")
+	hMap["/plan/logo"] = planHTTPHandler("logo")
 
 	// Real time data retrieval API
 	for dtn, dt := range spaces.LatestBankOut {
@@ -337,38 +339,39 @@ func setupHTTP() error {
 
 				if _, ok := dataMap[ref]; ok {
 					log.Println("servers.ServersSetup: Serving API", path)
-					hMap[1][path] = singleRegisterHTTPhandler(path, ref)
+					hMap[path] = singleRegisterHTTPhandler(path, ref)
 				}
 			}
 			ref := strings.Trim(dtn, "_")
 			if _, ok := dataMap[ref]; ok {
 				log.Println("servers.ServersSetup: Serving API", subpath)
-				hMap[1][subpath] = spaceRegisterHTTPhandler(subpath, keysType, ref)
+				hMap[subpath] = spaceRegisterHTTPhandler(subpath, keysType, ref)
 			}
 			keysSpaces[spn] = keysType
 		}
 		p := "/" + strings.Trim(dtn, "_")
 		log.Println("servers.ServersSetup: Serving API", p)
-		hMap[1][p] = datatypeRegisterHTTPhandler(p, keysSpaces)
+		hMap[p] = datatypeRegisterHTTPhandler(p, keysSpaces)
 	}
 	if os.Getenv("MACSTRICT") != "0" {
 		strictFlag = true
 	} else {
 		strictFlag = false
 	}
-	ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
-	for i, v := range ports {
-		if port := strings.Trim(v, " "); port != "" {
-			addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
-		} else {
-			log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
-		}
-		//for j, c := range addServer {
-		//	if addServer[i] == c && i != j {
-		//		log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
-		//	}
-		//}
-	}
+	addServer = "0.0.0.0:" + strings.Trim(os.Getenv("HTTPSPORTS"), " ")
+	//ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
+	//for i, v := range ports {
+	//	if port := strings.Trim(v, " "); port != "" {
+	//		addServer[i] = "0.0.0.0:" + strings.Trim(v, " ")
+	//	} else {
+	//		log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
+	//	}
+	//	//for j, c := range addServer {
+	//	//	if addServer[i] == c && i != j {
+	//	//		log.Fatal("servers.ServersSetup: fatal error: invalid addresses")
+	//	//	}
+	//	//}
+	//}
 	return nil
 }
 
@@ -410,16 +413,17 @@ func StartServers() {
 		go StartTCP(ctcp)
 
 		// Starts all HTTP service servers
+		startHTTP(addServer, sdServer[0], hMap)
 
-		for i := range addServer {
-			// Start HTTP servers
-			if len(hMap[i]) == 0 {
-				log.Printf("servers.StartServers: skipping server %v since it serves no paths\n", addServer[i])
-			} else {
-				sdServer[i] = make(chan context.Context)
-				startHTTP(addServer[i], sdServer[i], hMap[i])
-			}
-		}
+		//for i := range addServer {
+		//	// Start HTTP servers
+		//	if len(hMap[i]) == 0 {
+		//		log.Printf("servers.StartServers: skipping server %v since it serves no paths\n", addServer[i])
+		//	} else {
+		//		sdServer[i] = make(chan context.Context)
+		//		startHTTP(addServer[i], sdServer[i], hMap[i])
+		//	}
+		//}
 
 		sdServer[len(sdServer)-1] = ctcp
 

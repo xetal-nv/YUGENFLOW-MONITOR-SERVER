@@ -1,9 +1,7 @@
 ##### SERVER SETUP #####
 ## ADDRESSES
 ## HTTPSPORTS = app port, api port ## If the ports are the same, one server only will be activates
-HTTPSPORTS = 8080, 8080
-IP = localhost
-#IP = 192.168.0.2
+HTTPSPORTS = 8080
 TCPPORT = 3333
 
 ##### Defines edition type #####
