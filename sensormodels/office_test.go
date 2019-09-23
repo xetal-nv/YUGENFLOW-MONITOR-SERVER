@@ -15,7 +15,7 @@ import (
 
 func Test_office(t *testing.T) {
 
-	if e := godotenv.Load("../.envtest_office"); e != nil {
+	if e := godotenv.Load("../.envtestoffice"); e != nil {
 		panic("Fatal error:" + e.Error())
 	}
 	if e := godotenv.Load("../.systemenv"); e != nil {

@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -192,8 +191,7 @@ func (p person) activate() (valid bool, ev []pass) {
 					//noinspection GoNilness
 					lv = ev[len(ev)-1].ts
 					// check if friday (5) and set the start at 15:45
-					// if today := int(time.Now().Weekday()); today == 5 { // uncomment
-					if today := int(time.Now().Weekday()); today == 4 { // comment
+					if today := int(time.Now().Weekday()); today == 5 { // uncomment
 						v = strings.Split(p.fridayExit[0], ":")
 					}
 				}
@@ -238,9 +236,8 @@ func (p person) activate() (valid bool, ev []pass) {
 					//var ok bool
 					vin := pass{ts: 0}
 					//vout := pass{ts: 0}
-					// check if friday (5), if person is set to leave early, remove afteroon pauses
-					// if today := int(time.Now().Weekday()); today == 5 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
-					if today := int(time.Now().Weekday()); today == 4 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
+					// check if friday (5), if person is set to leave early, remove afternoon pauses
+					if today := int(time.Now().Weekday()); today == 5 && (p.fridayExit[0] != p.timing[len(p.timing)-1][0]) {
 
 						npAfternoon = 0
 					}
@@ -271,8 +268,8 @@ func (p person) sickDay() {
 	}
 }
 
-var count = 0
-var mutex = &sync.Mutex{}
+//var count = 0
+//var mutex = &sync.Mutex{}
 
 // gate implements a gate and need to serve two sensors on two TCP channels in the proper manner
 func gate(in chan int, sensors []int) {
@@ -347,10 +344,10 @@ func gate(in chan int, sensors []int) {
 			select {
 			case data := <-in:
 
-				mutex.Lock()
-				count += data
-				fmt.Println("count is", count)
-				mutex.Unlock()
+				//mutex.Lock()
+				//count += data
+				//fmt.Println("count is", count)
+				//mutex.Unlock()
 
 				bs1 := make([]byte, 4)
 				binary.BigEndian.PutUint32(bs1, uint32(sensors[0]))
