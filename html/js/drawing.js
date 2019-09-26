@@ -1,6 +1,7 @@
 var repvisile = (reportCurrent) || (repshow.length !== 0);
 
 let spacename = "";
+let spacenameUncoded = "";
 let measurement = "sample";
 let allmeasurements = [];
 // let selel = null;
@@ -152,30 +153,19 @@ chartArchive.render();
 chartRT.render();
 chartFlows.render();
 
-// function timeConverter(UNIX_timestamp) {
-//     let a = new Date(UNIX_timestamp);
-//     let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-//     let year = a.getFullYear();
-//     let month = months[a.getMonth()];
-//     let date = a.getDate();
-//     let hour = a.getHours();
-//     let min = a.getMinutes();
-//     let sec = a.getSeconds();
-//     return date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
-// }
-
 function drawSpace(rawspaces) {
 
     let spaces = [];
     let draw = SVG('svgimage');
     let plan;
-    let selectSpace = document.getElementById("spacename");
     let selectDisplay = document.getElementById("displayoption");
     let graphType = document.getElementById("datatypes");
     let flowFree = true;
     for (let i = 0; i < rawspaces.length; i++) {
         spaces[i] = rawspaces[i]["spacename"]
     }
+    let selectSpace = document.getElementById("spacename");
+
 
     function setDisplay() {
         let myindex = selectDisplay.selectedIndex;
@@ -243,7 +233,6 @@ function drawSpace(rawspaces) {
                 document.getElementById("gen").style.display = "none";
                 document.getElementById("graphdata").style.display = "none";
                 chartRT.render();
-                // flowWarning = false;
                 break;
             case "Archive":
                 document.getElementById("svgimage").style.display = "none";
@@ -256,7 +245,6 @@ function drawSpace(rawspaces) {
                 document.getElementById("gen").style.display = "none";
                 document.getElementById("graphdata").style.display = "block";
                 chartArchive.render();
-                // flowWarning = false;
                 break;
             case "Flows":
                 document.getElementById("svgimage").style.display = "none";
@@ -286,7 +274,6 @@ function drawSpace(rawspaces) {
         for (let i = 0; i < allmeasurements.length; i++) {
             document.getElementById(allmeasurements[i].name).innerText = "----"
         }
-        // selel = null;
     }
 
     function readPlan(name, od) {
@@ -295,7 +282,6 @@ function drawSpace(rawspaces) {
             url: ip + "/plan/" + name,
             success: function (data) {
                 let planDataRaw = JSON.parse(data);
-                // console.log(planDataRaw);
                 plan = draw.svg(planDataRaw["qualifier"]);
                 if (!od) {
                     spacename = name;
@@ -309,8 +295,10 @@ function drawSpace(rawspaces) {
     }
 
     for (let i = 0; i < spaces.length; i++) {
-        // console.log(spaces[i])
         let opt = spaces[i];
+        if (opt in aliasSpacenames) {
+            opt = aliasSpacenames[opt]
+        }
         let el = document.createElement("option");
         el.textContent = opt;
         el.value = opt;
@@ -320,31 +308,39 @@ function drawSpace(rawspaces) {
     resetcanvas(true);
 
     selectSpace.onchange = function () {
-        let myindex = selectSpace.selectedIndex;
-        let SelValue = selectSpace.options[myindex].value;
+        let myindex = selectSpace.selectedIndex,
+            SelValue = selectSpace.options[myindex].value;
+        spacenameUncoded = SelValue;
+        const keys = Object.keys(aliasSpacenames);
+        for (let i = 0; i < keys.length; i++) {
+            if (SelValue === aliasSpacenames[keys[i]]) {
+                SelValue = keys[i];
+                break
+            }
+        }
         if (plan != null) {
             plan.clear();
             selectDisplay.selectedIndex = 0
         }
-        // need to clean the canvas ans all graphs when the value changes
+        // need to clean the canvas and all graphs when the value changes
         if (SelValue !== "Choose a space") {
             let currentTime = new Date();
             chartRT.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                currentTime.getDate().toString() + "_" + SelValue + "_RealTime";
+                currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_")  + "_RealTime";
             for (let i = 0; i < dataArrays.length; i++) {
                 dataArrays[i].length = 0;
             }
             chartRT.render();
             chartArchive.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                currentTime.getDate().toString() + "_" + SelValue + "_Archive";
-            chartArchive.options.title.text = "Archive data: " + SelValue;
+                currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_")  + "_Archive";
+            chartArchive.options.title.text = "Archive data: " + spacenameUncoded;
             for (let i = 0; i < dataArraysArchive.length; i++) {
                 dataArraysArchive[i].length = 0;
             }
             chartArchive.render();
             chartFlows.options.exportFileName = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                currentTime.getDate().toString() + "_" + SelValue + "Flows";
-            chartFlows.options.title.text = "Real Time Flow data: " + SelValue;
+                currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_")  + "Flows";
+            chartFlows.options.title.text = "Real Time Flow data: " + spacenameUncoded;
             for (let i = 0; i < dataArraysFlow.length; i++) {
                 dataArraysFlow[i].length = 0;
             }
@@ -369,7 +365,6 @@ function drawSpace(rawspaces) {
     graphType.onchange = setGraph;
 
     function updatedata() {
-        // let regex = new RegExp(':', 'g');
         let timeNow = new Date(),
             timeNowHS = ("0" + timeNow.getHours()).slice(-2) + ":" + ("0" + timeNow.getMinutes()).slice(-2),
             incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(timeNowHS.replace(regex, ''), 10))
@@ -377,7 +372,6 @@ function drawSpace(rawspaces) {
 
         if ((spacename !== "") && ((incycle) || (openingTime === ""))) {
             let urlv = ip + "/" + measurement.split("_")[0] + "/" + spacename;
-            // console.log(urlv);
 
             $.ajax({
                 type: 'GET',
@@ -387,9 +381,7 @@ function drawSpace(rawspaces) {
                     try {
                         let sampledata = JSON.parse(rawdata);
                         document.getElementById("lastts").innerText = new Date().toLocaleString();
-                        // console.log("DEBUG", sampledata.counters);
                         let validData = {};
-                        // let servedData = [];
                         let currentTS = new Date();
                         let myindex = graphType.selectedIndex;
                         let SelValue = graphType.options[myindex].value;
@@ -489,7 +481,7 @@ function drawSpace(rawspaces) {
                         //     alert("Please enable entry data,\ninserting the authorisation pin.");
                         //     flowWarning = false
                         // } else {
-                            // console.log(sampledata);
+                        // console.log(sampledata);
                         if (sampledata.valid === true) {
                             if ((sampledata.counter.entries !== undefined) && ((sampledata.counter.entries !== null))) {
                                 if (flowdataDefinitions.length === 0) {
@@ -613,7 +605,7 @@ function drawSpace(rawspaces) {
 
     setInterval(updatedata, repPeriod);
     // if (rtshow[0] === "dbg") {
-        setInterval(updateFlow, repPeriod)
+    setInterval(updateFlow, repPeriod)
     // }
 
 }

@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.0]
+### Not started yet
+
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch
 
@@ -10,7 +13,7 @@ All notable changes to this project will be documented in this file.
  - Pin controlled access to entry data, uses API command?pin= and cen be entered also form debug webapp
  - Added graphs for current values (including flows) and archived intervals, supports export of graphs
  - Realistic office simulation for test and demo
- - Added alias for measurement names in bypass.js
+ - Added alias for measurement and office names in bypass.js
  - Support for single server serving both API and webapp (BREAKS BACK COMPATIBILITY)
  
 ### Changed

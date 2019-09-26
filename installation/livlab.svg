@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 23.0.6, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-     viewBox="0 0 800 700" style="enable-background:new 0 0 800 700;" xml:space="preserve">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 800 700" style="enable-background:new 0 0 800 700;" xml:space="preserve">
 <style type="text/css">
 	.st0{fill:none;stroke:#000000;stroke-width:3;stroke-miterlimit:10;}
-	.st1{enable-background:new    ;}
+	.st1{font-family:'ArialMT';}
+	.st2{font-size:12px;}
 </style>
-    <line class="st0" x1="148.8" y1="115.4" x2="420.9" y2="115.4"/>
-    <line class="st0" x1="420.9" y1="74.5" x2="598.8" y2="74.5"/>
-    <line class="st0" x1="420.9" y1="74.5" x2="420.9" y2="115.4"/>
-    <line class="st0" x1="598.8" y1="74.5" x2="598.8" y2="317.8"/>
-    <line class="st0" x1="598.8" y1="317.8" x2="148.8" y2="317.8"/>
-    <line class="st0" x1="148.8" y1="115.4" x2="148.8" y2="162.7"/>
-    <line class="st0" x1="148.8" y1="317.8" x2="148.8" y2="265"/>
-    <line class="st0" x1="148.8" y1="162.7" x2="73.6" y2="162.7"/>
-    <line class="st0" x1="148.8" y1="265" x2="73.6" y2="265"/>
-    <line class="st0" x1="73.6" y1="265" x2="73.6" y2="162.7"/>
-
-    <text transform="matrix(1 0 0 1 320 140)">Living Lab</text>
-    <text transform="matrix(1 0 0 1 500 220)">Entry_1</text>
-    <text transform="matrix(1 0 0 1 100 220)">Entry_0</text>
-
+<line class="st0" x1="73.6" y1="74.5" x2="598.8" y2="74.5"/>
+<line class="st0" x1="430" y1="317.8" x2="430" y2="425"/>
+<line class="st0" x1="598.8" y1="74.5" x2="598.8" y2="425"/>
+<line class="st0" x1="430" y1="317.8" x2="148.8" y2="317.8"/>
+<line class="st0" x1="148.8" y1="317.8" x2="148.8" y2="265"/>
+<line class="st0" x1="598.8" y1="425" x2="430" y2="425"/>
+<line class="st0" x1="148.8" y1="265" x2="73.6" y2="265"/>
+<line class="st0" x1="73.6" y1="265" x2="73.6" y2="74.5"/>
+<text transform="matrix(1 0 0 1 347 91)" class="st1 st2">Office 1F</text>
+<text transform="matrix(1 0 0 1 500 413)" class="st1 st2">Entry_1</text>
+<text transform="matrix(1 0 0 1 85 164)" class="st1 st2">Entry_0</text>
 </svg>
