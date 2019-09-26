@@ -1,4 +1,5 @@
 $(document).ready(function () {
+        // NOTE: gets spacename and spacenameUncoded from drawing.js
         document.getElementById("loader").style.visibility = "hidden";
         Date.prototype.getUnixTime = function () {
             return (this.getTime() / 1000 | 0) * 1000
@@ -175,15 +176,13 @@ $(document).ready(function () {
                     return
                 }
                 let asys = meas[meas.length - 1].name;
-                // console.log(meas[meas.length - 1].name);
-                // TODO for alias
-                foundMeas = Object.keys(aliasMeasurement).filter(function(key) {
-                    return aliasMeasurement[key] == asys;
-                })
+                // used for alias
+                foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
+                    return aliasMeasurement[key] === asys;
+                });
                 if (foundMeas.length !== 0) {
                     asys = foundMeas[0]
                 }
-                // console.log(asys);
                 $.ajax({
                     type: 'GET',
                     timeout: 100000,
@@ -197,10 +196,10 @@ $(document).ready(function () {
                         } catch (e) {
                             console.log("received corrupted data")
                         }
-                        console.log(jsonData);
+                        // console.log(jsonData);
                         if ((jsonData !== undefined) && (jsonData !== null)) {
                             let sampledata = cleanSampleList(jsonData, boundarySamplesVal);
-                            console.log(sampledata);
+                            // console.log(sampledata);
                             for (let i = 0; i < sampledata.length; i++) {
                                 dataArraysArchive[meas.length].push({
                                     x: sampledata[i].ts,
@@ -224,13 +223,14 @@ $(document).ready(function () {
                 });
             }
 
-            let select = document.getElementById("spacename");
-            var myindex = select.selectedIndex,
-                space = select.options[myindex].value;
+            // let select = document.getElementById("spacename");
+            // var myindex = select.selectedIndex,
+            // space = select.options[myindex].value;
+            // let space = spacename;
             var copyendDate = new Date(endDate),
                 start, end;
             if ((startDate !== undefined) && (endDate !== undefined)
-                && (space !== "Choose a space")) {
+                && (spacename !== "Choose a space")) {
                 document.getElementById("loader").style.visibility = "visible";
                 start = startDate.getUnixTime();
                 copyendDate.setHours(endDate.getHours() + 23);
@@ -245,7 +245,7 @@ $(document).ready(function () {
                 }
                 let path = "?start=" + start + "?end=" + end;
 
-                loadAllSample(space, path, allmeasurements.slice(), 0);
+                loadAllSample(spacename, path, allmeasurements.slice(), 0);
 
 
             }
@@ -255,11 +255,11 @@ $(document).ready(function () {
         function generateReport() {
 
             let select = document.getElementById("spacename");
-            var myindex = select.selectedIndex;
+            let myindex = select.selectedIndex;
             if (repvisile || (rtshow[0] === "dbg")) {
                 select = document.getElementById("reptype");
                 myindex = select.selectedIndex;
-                var asys = select.options[myindex].value;
+                let asys = select.options[myindex].value;
                 if (asys === "overview") {
                     generateOverviewReport()
                 } else {
@@ -322,7 +322,7 @@ $(document).ready(function () {
                         anchor = document.createElement('a');
                     var currentTime = new Date();
                     anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                        currentTime.getDate().toString() + "_" + space + "_" + asys + ".csv";
+                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_") + "_" + asys + ".csv";
                     // anchor.download = space + "_" + asys + ".csv";
                     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
@@ -366,16 +366,16 @@ $(document).ready(function () {
                 });
             }
 
-            let select = document.getElementById("spacename");
-            var myindex = select.selectedIndex,
-                space = select.options[myindex].value;
-            select = document.getElementById("reptype");
-            myindex = select.selectedIndex;
-            var asys = select.options[myindex].value,
+            // let select = document.getElementById("spacename");
+            // var myindex = select.selectedIndex,
+            // space = select.options[myindex].value;
+            let select = document.getElementById("reptype"),
+                myindex = select.selectedIndex,
+                asys = select.options[myindex].value,
                 copyendDate = new Date(endDate),
                 start, end;
             if ((startDate !== undefined) && (endDate !== undefined)
-                && (space !== "Choose a space") && (asys !== "Choose a dataset")) {
+                && (spacename !== "Choose a space") && (asys !== "Choose a dataset")) {
                 document.getElementById("loader").style.visibility = "visible";
                 start = startDate.getUnixTime();
                 copyendDate.setHours(endDate.getHours() + 23);
@@ -386,13 +386,13 @@ $(document).ready(function () {
                     end = copyendDate.getUnixTime();
                 }
                 let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
-                + "\"#edition: " + edition + " \"\n"
-                    + "\"#space: " + space + " \"\n"
+                    + "\"#edition: " + edition + " \"\n"
+                    + "\"#space: " + spacenameUncoded + " \"\n"
                     + "\"#dataset: " + asys + " \"\n";
                 // TODO for alias
-                foundMeas = Object.keys(aliasMeasurement).filter(function(key) {
-                    return aliasMeasurement[key] == asys;
-                })
+                foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
+                    return aliasMeasurement[key] === asys;
+                });
                 if (foundMeas.length !== 0) {
                     asys = foundMeas[0]
                 }
@@ -400,9 +400,10 @@ $(document).ready(function () {
                 header += "\"#start: " + startDate + " \"\n"
                     + "\"#end: " + copyendDate + " \"\n\n";
                 header += "Date/Time, Epoch Time (s), average presence";
-                let path = space + "?analysis=" + asys + "?start=" + start + "?end=" + end;
+                let path = spacename + "?analysis=" + asys + "?start=" + start + "?end=" + end;
 
                 // start_report(header, path, 0);
+                // console.log(path);
                 loadsamples(header, path, 0);
 
 
@@ -673,19 +674,7 @@ $(document).ready(function () {
             }
 
             function generateOverview(header, data) {
-                // TODO HERE - delete fake data
-                // data = {
-                //     "2019-07-31 3": ["31-07-2019 3", , , [0, 0], , , , ,],
-                //     "2019-08-01 4": ["1-08-2019 4", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-02 5": ["2-08-2019 5", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-03 6": ["3-08-2019 6", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-04 0": ["4-08-2019 0", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-05 1": ["5-08-2019 1", 22, [0, 9], [0, 5], [0, 25], [0, 3], 22, 22, [0, 5]],
-                //     "2019-08-06 2": ["6-08-2019 2", 22, [0, 9], [0, 5], , , , , [0, 5]],
-                // };
-                // console.log(data);
                 let keys = Object.keys(data);
-                // console.log(keys);
                 let perioddayavg = [];
                 let weekdayavg = [];
                 let periodpointavg;
@@ -987,23 +976,20 @@ $(document).ready(function () {
                     anchor = document.createElement('a');
                 var currentTime = new Date();
                 anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                    currentTime.getDate().toString() + "_" + space + "_" + asys + ".csv";
+                    currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_")  + "_" + asys + ".csv";
                 anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();
                 document.getElementById("loader").style.visibility = "hidden";
             }
 
-            let select = document.getElementById("spacename");
-            var myindex = select.selectedIndex,
-                space = select.options[myindex].value;
             // select = document.getElementById("reptype");
             // myindex = select.selectedIndex;
-            var asys = "overview",
+            let asys = "overview",
                 copyendDate = new Date(endDate),
                 start, end;
             if ((startDate !== undefined) && (endDate !== undefined)
-                && (space !== "Choose a space")) {
+                && (spacename !== "Choose a space")) {
                 document.getElementById("loader").style.visibility = "visible";
                 start = startDate.getUnixTime();
                 copyendDate.setHours(endDate.getHours() + 23);
@@ -1016,7 +1002,7 @@ $(document).ready(function () {
                 let header = "sep=,\n" +
                     "#Xetal Flow Monitoring: " + version + " \n"
                     + "\"#edition: " + edition + " \"\n"
-                    + "\"#space: " + space + " \"\n"
+                    + "\"#space: " + spacenameUncoded + " \"\n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
                     + reportWarning + "\n\n"
@@ -1042,7 +1028,9 @@ $(document).ready(function () {
                 // console.log(header);
                 // header += "Date, , at 10:00, 08:00 to 12:00, at 14:00, 13:00 to 17:00, activity from 10:00 to 06:00?\n";
                 header = header.substring(0, header.length - 1) + "\n";
-                let path = space + "?start=" + start + "?end=" + end;
+                let path = spacename + "?start=" + start + "?end=" + end;
+
+                // console.log(path);
 
                 loadavgsamples(header, path, refOverviewAsys, 0);
 
