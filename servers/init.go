@@ -297,7 +297,6 @@ func setupHTTP() error {
 	// Presence data retrieval API
 	hMap["/presence"] = presenceHTTPhandler()
 	// Sensor command API
-	hMap["/cmd"] = commandHTTHandler() // to be deprecated
 	hMap["/command"] = commandHTTHandler()
 	// analysis information API
 	hMap["/asys"] = asysHTTHandler()

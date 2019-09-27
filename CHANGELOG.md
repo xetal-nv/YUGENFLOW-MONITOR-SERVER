@@ -2,7 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.9.0]
-### Not started yet
+### Added
+ - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup
+
+### Changed
+ - API BREAKING CHANGE: cmd api has been removed
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch

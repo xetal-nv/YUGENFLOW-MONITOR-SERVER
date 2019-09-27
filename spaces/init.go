@@ -2,6 +2,7 @@ package spaces
 
 import (
 	"bufio"
+	"fmt"
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
@@ -107,8 +108,17 @@ func SetUp() {
 			for scanner.Scan() {
 				//fmt.Println(scanner.Text())
 				data := strings.Split(scanner.Text(), ",")
+				// any other length implies a wrong data and will be ignored
 				if len(data) == 5 {
-					// any other length implies a wrong data and will be ignored
+					// this is a redundant check
+					if InitData[data[0]] == nil {
+						fmt.Println("spaces.setUpDataDBSBank: fatal error reading initial values")
+						os.Exit(1)
+					}
+					if InitData[data[0]][data[1]] == nil {
+						fmt.Println("spaces.setUpDataDBSBank: fatal error reading initial values")
+						os.Exit(1)
+					}
 					InitData[data[0]][data[1]][data[2]] = []string{data[3], data[4]}
 				}
 			}
