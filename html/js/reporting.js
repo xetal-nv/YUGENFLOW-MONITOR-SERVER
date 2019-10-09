@@ -271,6 +271,28 @@ $(document).ready(function () {
         }
 
         function generatePeriodicReport() {
+            let select = document.getElementById("repdatatype"),
+                myindex = select.selectedIndex,
+                type = select.options[myindex].value;
+            if (type === "Sample") {
+                generatePeriodicReportSample()
+            } else {
+                generatePeriodicReportEntry()
+            }
+        }
+
+        function generateOverviewReport() {
+            let select = document.getElementById("repdatatype"),
+                myindex = select.selectedIndex,
+                type = select.options[myindex].value;
+            if (type === "Sample") {
+                generateOverviewReportSample()
+            } else {
+                generateOverviewReportEntry()
+            }
+        }
+
+        function generatePeriodicReportSample() {
 
             function exportReport(header, sampledata) {
                 let data = header,
@@ -322,7 +344,7 @@ $(document).ready(function () {
                         anchor = document.createElement('a');
                     var currentTime = new Date();
                     anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_") + "_" + asys + ".csv";
+                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g, "_") + "_" + asys + ".csv";
                     // anchor.download = space + "_" + asys + ".csv";
                     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
@@ -388,7 +410,8 @@ $(document).ready(function () {
                 let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
-                    + "\"#dataset: " + asys + " \"\n";
+                    + "\"#dataset: " + asys + " \"\n"
+                    + "\"#datatype: sample \n";
                 // TODO for alias
                 foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
                     return aliasMeasurement[key] === asys;
@@ -405,12 +428,10 @@ $(document).ready(function () {
                 // start_report(header, path, 0);
                 // console.log(path);
                 loadsamples(header, path, 0);
-
-
             }
         }
 
-        function generateOverviewReport() {
+        function generateOverviewReportSample() {
 
             let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
@@ -798,8 +819,6 @@ $(document).ready(function () {
                                     } else {
                                         if (overviewReportDefs[j].presence !== "") {
                                             let et = parseInt(overviewReportDefs[j].end.replace(':', ''), 10);
-                                            // let st = parseInt(overviewReportDefs[j].start.replace(':', ''), 10);
-                                            // if (st > et) {st = 0};
                                             let ct0 = new Date();
                                             let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
                                             // console.log(st,et, ct);
@@ -824,7 +843,6 @@ $(document).ready(function () {
                                     }
                                 }
                             }
-                            // console.log(keys[k], data[keys[k]])
                         }
                     }
                     header += "\n";
@@ -862,7 +880,6 @@ $(document).ready(function () {
                                 periodpointavg[i].push(tmppointDays[i][j])
                             } else {
                                 if (valPoint.length !== 0) {
-                                    // console.log(valPoint);
                                     let acc = 0;
                                     for (let k = 0; k < valPoint.length; k++) {
                                         acc += valPoint[k]
@@ -872,12 +889,10 @@ $(document).ready(function () {
                                     } else {
                                         weekpointavg[i].push(0)
                                     }
-                                    // console.log(i, valPoint, weekpointavg[i]);
                                 }
                                 valPoint = []
                             }
                         }
-                        // console.log(valPoint);
                         let acc = 0;
                         for (let k = 0; k < valPoint.length; k++) {
                             acc += valPoint[k]
@@ -887,31 +902,8 @@ $(document).ready(function () {
                         } else {
                             weekpointavg[i].push(0)
                         }
-                        // console.log(i, valPoint, weekpointavg[i])
                     }
                 }
-                // console.log(weekpointavg);
-                // write period report if required
-                // if ((periods !== undefined) && (weekdayavg !== undefined)) {
-                //     for (let j = 0; j < periods.length; j++) {
-                //         for (let i = 0; i < weekdayavg.length; i++) {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for week " + i + ", " + weekpointavg[j][i] + "\n";
-                //         }
-                //         let acc = 0;
-                //         for (let i = 0; i < periodpointavg[j].length; i++) {
-                //             acc += periodpointavg[j][i]
-                //             // console.log(periodpointavg[j][i])
-                //         }
-                //         // console.log(acc);
-                //         if (periodpointavg[j].length !== 0) {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, " +
-                //                 Math.trunc(acc / periodpointavg[j].length) + "\n"
-                //         } else {
-                //             header += "Presence average " + overviewReportDefs[periods[j]].name + " for the full period, 0"
-                //         }
-                //         header += "\n";
-                //     }
-                // console.log(periods);
                 header += "\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
                     if ((i === 0) && (incfirstweek === 0)) {
@@ -931,16 +923,13 @@ $(document).ready(function () {
                     }
                     header += "\n"
                 }
-                // console.log(periodpointavg);
                 header += "Average full period,,,";
-                // for (let i = 0; i < periods.length; i++) {
                 for (let k = 0; k < overviewReportDefs.length; k++) {
                     j = periods.indexOf(k);
                     if (j !== -1) {
                         let acc = 0;
                         for (let i = 0; i < periodpointavg[j].length; i++) {
                             acc += periodpointavg[j][i]
-                            // console.log(periodpointavg[j][i])
                         }
                         if (periodpointavg[j].length !== 0) {
                             header += (Math.trunc(Math.round(acc) * 10 / periodpointavg[j].length) / 10) + ","
@@ -951,7 +940,6 @@ $(document).ready(function () {
                         header += ","
                     }
                 }
-                // }
                 header += "\n\n\n";
                 header += "#SUMMARY OCCUPANCY\n"
                     + "\"#working day: from " + overviewReportDefs[overviewReportDefs.length - 1].start
@@ -966,9 +954,6 @@ $(document).ready(function () {
                     }
                 }
                 header += "Working day average,full period," + perioddayavg[0] + "\n";
-                // console.log(periodavg[0]);
-                // console.log(weekavg);
-                // console.log(header);
                 if (incfirstweek === 0) {
                     header += "\n\n* Partial week\n"
                 }
@@ -976,15 +961,13 @@ $(document).ready(function () {
                     anchor = document.createElement('a');
                 var currentTime = new Date();
                 anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                    currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_")  + "_" + asys + ".csv";
+                    currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g, "_") + "_" + asys + ".csv";
                 anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();
                 document.getElementById("loader").style.visibility = "hidden";
             }
 
-            // select = document.getElementById("reptype");
-            // myindex = select.selectedIndex;
             let asys = "overview",
                 copyendDate = new Date(endDate),
                 start, end;
@@ -1003,14 +986,12 @@ $(document).ready(function () {
                     "#Xetal Flow Monitoring: " + version + " \n"
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
+                    + "\"#datatype: sample \n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
                     + reportWarning + "\n\n"
                     + "#OCCUPANCY REPORT\n\n"
-                    // + "\"NOTE: all values are averages if not specified otherwise\"\n\n"
-                    // + "Date,Day,";
                     + "Date,Day,Week,";
-                // for (let i in overviewReportDefs) {
                 for (let i = 0; i < overviewReportDefs.length; i++) {
                     if (!overviewReportDefs[i].skip) {
                         if (overviewReportDefs[i].presence === "") {
@@ -1025,19 +1006,155 @@ $(document).ready(function () {
                         header += overviewReportDefs[i].name + ",";
                     }
                 }
-                // console.log(header);
-                // header += "Date, , at 10:00, 08:00 to 12:00, at 14:00, 13:00 to 17:00, activity from 10:00 to 06:00?\n";
                 header = header.substring(0, header.length - 1) + "\n";
                 let path = spacename + "?start=" + start + "?end=" + end;
 
-                // console.log(path);
-
                 loadavgsamples(header, path, refOverviewAsys, 0);
 
-                // for (let i = 0; i < overviewReportDefs.length; i++) {
-                //     console.log(overviewReportDefs2[i]);
-                // }
+            }
+        }
 
+        function generateOverviewReportEntry() {
+            console.log("to be done");
+        }
+
+        function generatePeriodicReportEntry() {
+
+            console.log("being done");
+
+            function exportReport(header, sampledata) {
+                let data = header,
+                    rawdataSample = [],
+                    finalData = {};
+                data += "\n";
+                if ((sampledata !== null) && (sampledata !== undefined)) {
+                    for (let i = 0; i < sampledata.length; i++) {
+                        if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
+                            rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
+                        }
+                    }
+
+                    // Find the minimum interval in changes, normally this is the measurement step
+                    let tslist = [];
+                    let tsstep = -1;
+                    while (rawdataSample.length > 0) {
+                        let sam = rawdataSample.shift();
+                        tslist.push(sam[0]);
+                        if (tsstep < 0) {
+                            tsstep += 1
+                        } else {
+                            let cds = tslist[tslist.length - 1] - tslist[tslist.length - 2];
+                            if (tsstep === 0) {
+                                tsstep = cds
+                            } else {
+                                tsstep = Math.min(tsstep, cds)
+                            }
+                        }
+
+                        finalData[sam[0]] = sam[1];
+                    }
+
+                    for (let i = 0; i < tslist.length; i++) {
+                        let d = new Date(tslist[i]),
+                            dHS = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2),
+                            incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(dHS.replace(regex, ''), 10))
+                                && (parseInt(dHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
+                        if (incycle) {
+                            var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
+                                d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+                            data += datestring + ", " + Math.trunc(tslist[i] / 1000)
+                                + ", " + finalData[tslist[i]];
+                            data += "\n"
+                        }
+                    }
+
+                    var blob = new Blob([data], {type: 'text/plain'}),
+                        anchor = document.createElement('a');
+                    var currentTime = new Date();
+                    anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
+                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g, "_") + "_" + asys + ".csv";
+                    // anchor.download = space + "_" + asys + ".csv";
+                    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+                    anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+                    anchor.click();
+                } else {
+                    alert("No data available for the selected time.");
+                }
+
+                document.getElementById("loader").style.visibility = "hidden";
+            }
+
+            function loadsamples(header, api, tries) {
+                $.ajax({
+                    type: 'GET',
+                    timeout: 100000,
+                    url: ip + "/series?type=entry?space=" + api,
+                    success: function (rawdata) {
+                        console.log(ip + "/series?type=entryspace=" + api);
+                        let sampledata;
+                        try {
+                            sampledata = JSON.parse(rawdata);
+                        } catch (e) {
+                            console.log("received corrupted data")
+                        }
+                        console.log(sampledata)
+                        // exportReport(header, sampledata);
+                    },
+                    error: function (error) {
+                        if (tries === maxtries) {
+                            alert("Range of data requested too large or network error.\n Please try a shorter period or try again later.");
+                            console.log("Error samples:" + error);
+                            document.getElementById("loader").style.visibility = "hidden";
+                        } else {
+                            // loadsamples(header, api, entrieslist, tries + 1)
+                            loadsamples(header, api, tries + 1)
+                        }
+                    }
+
+                });
+            }
+
+            let entryList = spaceDefinitions[spacename],
+                select = document.getElementById("reptype"),
+                myindex = select.selectedIndex,
+                asys = select.options[myindex].value,
+                copyendDate = new Date(endDate),
+                start, end;
+            if ((startDate !== undefined) && (endDate !== undefined)
+                && (spacename !== "Choose a space") && (asys !== "Choose a dataset") && (entryList.length !== 0)) {
+                // console.log(entryList);
+                document.getElementById("loader").style.visibility = "visible";
+                start = startDate.getUnixTime();
+                copyendDate.setHours(endDate.getHours() + 23);
+                copyendDate.setMinutes(endDate.getMinutes() + 59);
+                if (copyendDate.getUnixTime() > Date.now()) {
+                    end = Date.now();
+                } else {
+                    end = copyendDate.getUnixTime();
+                }
+                // console.log(start, end);
+                let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
+                    + "\"#edition: " + edition + " \"\n"
+                    + "\"#space: " + spacenameUncoded + " \"\n"
+                    + "\"#dataset: " + asys + " \"\n"
+                    + "\"#datatype: entry \n";
+                // TODO for alias
+                foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
+                    return aliasMeasurement[key] === asys;
+                });
+                if (foundMeas.length !== 0) {
+                    asys = foundMeas[0]
+                }
+                // console.log(asys);
+                header += "\"#start: " + startDate + " \"\n"
+                    + "\"#end: " + copyendDate + " \"\n\n";
+                header += "Date/Time, Epoch Time (s), average presence";
+                let path = spacename + "?analysis=" + asys + "?start=" + start + "?end=" + end;
+                // console.log(header, path);
+
+                // start_report(header, path, 0);
+                // console.log(path);
+                // loadsamples(header, path, 0);
             }
         }
 

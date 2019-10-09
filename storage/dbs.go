@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"gateserver/support"
 	"log"
 	"os"
@@ -46,7 +47,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 
 	if !fd {
 		if os.Getenv("FORCEDBS") == "1" {
-			force = true
+			force = tr
 		}
 	} else {
 		force = true
@@ -56,16 +57,16 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		_ = os.Remove(folder + "/current/LOCK")
 		_ = os.Remove(folder + "/statsDB/LOCK")
 
-		if files, e := filepath.Glob(folder + "/current/*.vlog"); e == nil {
-			for _, f := range files {
-				_ = os.Remove(f)
-			}
-		}
-		if files, e := filepath.Glob(folder + "/statsDB/*.vlog"); e == nil {
-			for _, f := range files {
-				_ = os.Remove(f)
-			}
-		}
+		//if files, e := filepath.Glob(folder + "/current/*.vlog"); e == nil {
+		//	for _, f := range files {
+		//		_ = os.Remove(f)
+		//	}
+		//}
+		//if files, e := filepath.Glob(folder + "/statsDB/*.vlog"); e == nil {
+		//	for _, f := range files {
+		//		_ = os.Remove(f)
+		//	}
+		//}
 	}
 	var err error
 	tagStart = make(map[string][]int64)
@@ -113,6 +114,15 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 			optsStats.Truncate = true
 			optsStats.Dir = folder + "/statsDB"
 			optsStats.ValueDir = folder + "/statsDB"
+			//s := reflect.ValueOf(&optsCurr).Elem()
+			//typeOfT := s.Type()
+			//
+			//for i := 0; i < s.NumField(); i++ {
+			//	f := s.Field(i)
+			//	fmt.Printf("%d: %s %s = %v\n", i,
+			//		typeOfT.Field(i).Name, f.Type(), f.Interface())
+			//}
+			//os.Exit(1)
 			currentDB, err = badger.Open(optsCurr)
 			if err == nil {
 				statsDB, err = badger.Open(optsStats)
