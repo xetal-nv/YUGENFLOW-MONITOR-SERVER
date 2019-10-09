@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.1]
+### Changed
+ - Removed issue with brutal crashes causing data loss on database
+
 ## [0.7.0]
 ### Added
  - Configuration RTWINDOW defining a reporting window for real time data. It overrides ANALYSISWINDOW for reporting only  
