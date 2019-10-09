@@ -6,7 +6,6 @@ import (
 	"gateserver/support"
 	"log"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -56,16 +55,16 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		_ = os.Remove(folder + "/current/LOCK")
 		_ = os.Remove(folder + "/statsDB/LOCK")
 
-		if files, e := filepath.Glob(folder + "/current/*.vlog"); e == nil {
-			for _, f := range files {
-				_ = os.Remove(f)
-			}
-		}
-		if files, e := filepath.Glob(folder + "/statsDB/*.vlog"); e == nil {
-			for _, f := range files {
-				_ = os.Remove(f)
-			}
-		}
+		//if files, e := filepath.Glob(folder + "/current/*.vlog"); e == nil {
+		//	for _, f := range files {
+		//		_ = os.Remove(f)
+		//	}
+		//}
+		//if files, e := filepath.Glob(folder + "/statsDB/*.vlog"); e == nil {
+		//	for _, f := range files {
+		//		_ = os.Remove(f)
+		//	}
+		//}
 	}
 	var err error
 	tagStart = make(map[string][]int64)

@@ -1,9 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.8.x]
-### Refer to CHANGELOG in the [v.0.8.x] branch
-
 ## [0.8.0]
 ### Added
  - Debug webapp at dbg.html
@@ -14,18 +11,20 @@ All notable changes to this project will be documented in this file.
  - Support for single server serving both API and webapp (BREAKS BACK COMPATIBILITY)
  
 ### Changed
- - Split configuration file in system configuration (.systemenv) and installation configutation (.env or other). Back compatible
+ - Split configuration file in system configuration (.systemenv) and installation configuration (.env or other). Back compatible
  - Reporting average use trunc.round instead of round
  - API 'cmd' renamed 'command', both path valid for back compatibility. Path 'cmd' will be removed in 0.9.0
  - Improved speed and network usage of real time values in the webapp by using the SPACE API instead of the REGISTER one
  - Web app will not provide data for the current day, web app for debug does
  - Added support for absence of plan, a message is displayed instead
  - Disabling current from servers command option only disables it for reporting
- - Increased default timeout values for API on both server and web app (to accomodate issues with the debug interface and current samples)  
+ - Increased default timeout values for API on both server and web app (to accommodate issues with the debug interface and current samples)  
  - Web app interface has been cleaned and adapted to accommodate graphs
  - Fixed bug creating discrepancies between actual counter and flow value
- - Moved from entry as net flow to flow in and flow out. Database hase only composing flows, API provides everything
+ - Moved from entry as net flow to flow in and flow out. Database has only composing flows, API provides everything
  - Period of API call in the webapp is not dependent on the periodicity of the data itself
+ - Removed issue with brutal crashes causing data loss on database
+
  
 ### Removed
  - Pin requirement for real time entry data
@@ -45,7 +44,7 @@ All notable changes to this project will be documented in this file.
  - Add recovery for detection presence datapath  
  - Added support for point reporting weekly and period averages 
  - Added support for fall back analysis of data if presence data not available yet for reporting  
- - Added bypass.js for forcing JS changes without restart of the server and for sing new JS on old server verions  
+ - Added bypass.js for forcing JS changes without restart of the server and for sing new JS on old server versions  
  - Added optimised DB driver for presence detection (IP)  
  - Changelog file
  - Period averages extended to all reported values
