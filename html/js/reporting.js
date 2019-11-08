@@ -1090,7 +1090,7 @@ $(document).ready(function () {
                     timeout: 100000,
                     url: ip + "/series?type=entry?space=" + api,
                     success: function (rawdata) {
-                        console.log(ip + "/series?type=entryspace=" + api);
+                        console.log(ip + "/series?type=entry?space=" + api);
                         let sampledata;
                         try {
                             sampledata = JSON.parse(rawdata);
@@ -1154,7 +1154,7 @@ $(document).ready(function () {
 
                 // start_report(header, path, 0);
                 // console.log(path);
-                // loadsamples(header, path, 0);
+                loadsamples(header, path, 0);
             }
         }
 

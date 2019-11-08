@@ -3,11 +3,9 @@ package storage
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"gateserver/support"
 	"log"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -47,7 +45,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 
 	if !fd {
 		if os.Getenv("FORCEDBS") == "1" {
-			force = tr
+			force = true
 		}
 	} else {
 		force = true
