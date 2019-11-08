@@ -6,7 +6,6 @@ import (
 	"gateserver/support"
 	"log"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
