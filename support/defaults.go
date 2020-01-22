@@ -1,19 +1,20 @@
 package support
 
 import (
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 var Debug int
 var LabelLength int
 var Dellogs = false
 var MalOn = true
-var RstON = true
+var RstON = false
 
 const logfilename string = "gnl" // logfile name
 const TimeLayout = "15:04"       // time layout used to read the configuration file

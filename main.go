@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const version = "v. 0.8.0" // version
+const version = "v. 0.9.0" // version
 
 func main() {
 	folder, _ := support.GetCurrentExecDir()
@@ -32,7 +32,8 @@ func main() {
 	var env = flag.String("env", "", "configuration filename")
 	var ks = flag.Bool("ks", false, "enable kill switch")
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
-	var norst = flag.Bool("norst", false, "disable start-up device reset")
+	var norst = flag.Bool("norst", false, "disable start-up device reset - deprecated now default")
+	var forcerst = flag.Bool("forcerst", false, "enable start-up device reset")
 	var repcon = flag.Bool("repcon", false, "enable reporting on current data ")
 	var ri = flag.Int("ri", 360, "set ri")
 	var rs = flag.Int64("rs", 10000000, "set rs")
@@ -85,8 +86,11 @@ func main() {
 	if *noml {
 		log.Printf("!!! WARNING MALICIOUS CHECKS DISABLED !!!\n")
 	}
+	if *forcerst {
+		log.Printf("!!! WARNING START-UP RESET ENABLED !!!\n")
+	}
 	if *norst {
-		log.Printf("!!! WARNING START-UP DEVICE RESET DISABLED !!!\n")
+		log.Printf("!!! WARNING NORST COMMAND IS DEPRECATED !!!\n")
 	}
 	if *cdelay != 300 {
 		log.Printf("!!! WARNING RECOVERY DELAY CHANGED !!!\n")
@@ -101,7 +105,7 @@ func main() {
 	support.RotSize = *rs
 	support.Dellogs = *dl
 	support.MalOn = !*noml
-	support.RstON = !*norst
+	support.RstON = *forcerst
 	spaces.Crashmaxdelay = int64(*cdelay) * 1000
 	servers.Kswitch = *ks
 	servers.RepCon = *repcon
