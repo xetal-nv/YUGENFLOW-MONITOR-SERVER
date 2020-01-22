@@ -60,7 +60,8 @@ See .envtest and .systemenv files for configuration example
 -env String : specifies the configuration file, uses .env if not specified  
 -ks : enable killswitch API  
 -nomal : disable malicious attack control  
--norst : disable start-up device reset  
+-norst : disable start-up device reset (deprecated and set as default)  
+-forcerst : enable start-up device reset  
 -repcon : enables current reporting in JS
 -ri Int : set log ri  
 -rs Int64 : set log rs  
