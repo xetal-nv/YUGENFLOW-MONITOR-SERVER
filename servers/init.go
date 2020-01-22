@@ -22,7 +22,7 @@ func setJSenvironment() {
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
 		f, err := os.Create("./html/js/dat.js")
 		if err != nil {
-			log.Fatal("Fatal error creating ip.js: ", err)
+			log.Fatal("Fatal error creating dat.js: ", err)
 		}
 		js := "var StartDat = " + string(dat) + ";"
 		if _, err := f.WriteString(js); err != nil {

@@ -2,6 +2,7 @@
 ## ADDRESSES
 ## HTTPSPORTS = app port, api port
 HTTPSPORTS = 8080
+TCPPORT = 3333
 
 ##### Defines edition type #####
 EDITION = XETAL
