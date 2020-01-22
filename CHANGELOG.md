@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.1]
+### adapted from [v.0.7.2] version
+
 ## [0.8.0]
 ### Added
  - Debug webapp at dbg.html
