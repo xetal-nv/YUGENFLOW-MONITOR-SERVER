@@ -3,7 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.0]
 ### Added
- - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup
+ - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup  
+ - reset gate if one sensor sends sensibly more messages (TBD)  
+
 
 ### Changed
  - API BREAKING CHANGE: cmd api has been removed
