@@ -4,13 +4,13 @@ All notable changes to this project will be documented in this file.
 NOTE: we need to add changes carried over from 0.7.2 when finished
 
 ## [0.9.0]
+### adapted from [v.0.7.2] version
 ### Added
  - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup  
 
 ### Changed
  - API BREAKING CHANGE: cmd api has been removed
  - command line norst is made default (deprecated) and command forcerst added to force reset of a sensor at first connect  
- - fixed issue with period reset  
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch
