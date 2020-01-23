@@ -3,12 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [0.7.2]
 ### Add
- - reset gate if one sensor sends sensibly more messages (TBD)  
+ - reset gate if one sensor sends sensibly more messages (TBD) 
+ 
+ ### Changed
+  - Fixed issue with periodic reset (move to other versions too)
+ 
 
 ## [0.7.1]
 ### Changed
  - Removed issue with brutal crashes causing data loss on database
- - Fixed issue with periodic reset (move to other versions too)
 
 ## [0.7.0]
 ### Added
