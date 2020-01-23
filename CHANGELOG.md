@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 ## [0.7.2]
 ### Add
  - reset gate if one sensor sends sensibly more messages (TBD) 
+ - added database recover API (TBD)  
  
  ### Changed
-  - Fixed issue with periodic reset (move to other versions too)
+  - Fixed issue with periodic reset  
  
 
 ## [0.7.1]
