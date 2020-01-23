@@ -9,7 +9,8 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
 
 ### Changed
  - API BREAKING CHANGE: cmd api has been removed
- - command line norst is made default (deprecated) and command forcerst added to force reset of a sensor at first connect
+ - command line norst is made default (deprecated) and command forcerst added to force reset of a sensor at first connect  
+ - fixed issue with period reset  
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch

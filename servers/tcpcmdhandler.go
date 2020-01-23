@@ -198,7 +198,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 	}
 	if v, e := json.Marshal(val); e != nil {
 		return Jsoncmdrt{"", false}
-	} else {
+	} else if len(val) != 0 {
 		params["val"] = string(v)
 	}
 	params["cmd"] = cmd
