@@ -17,7 +17,7 @@ func handlerReset(id int) {
 		}()
 		return
 	}
-	log.Printf("servers.handlerReset: reset enabled for Device %v\n", id)
+	log.Printf("servers.handlerReset: reset enabled for Device %v\n from %v to %v every %v/n", id, resetbg.start, resetbg.end, resetbg.interval*time.Minute)
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
@@ -30,21 +30,23 @@ func handlerReset(id int) {
 	done := false
 	for {
 		time.Sleep(resetbg.interval * time.Minute)
+		//fmt.Println("resetting device", id)
 		if doit, e := support.InClosureTime(resetbg.start, resetbg.end); e == nil {
 			if doit {
 				if !done {
 					rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
 					if rt.State {
+						//fmt.Println(rt.State)
 						done = true
-						//go func() {
-						//	support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
-						//		support.Timestamp(), "", []int{1}, true}
-						//}()
+						go func() {
+							support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
+								support.Timestamp(), "", []int{1}, true}
+						}()
 					} else {
-						//go func() {
-						//	support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
-						//		support.Timestamp(), "", []int{1}, true}
-						//}()
+						go func() {
+							support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
+								support.Timestamp(), "", []int{1}, true}
+						}()
 					}
 				}
 			} else {

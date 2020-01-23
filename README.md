@@ -66,3 +66,4 @@ See .envtest file for configuration example
 -rs Int64 : set log rs  
 -st string : set start time, time specified as HH:MM
 
+TODO: add way to delete data on database

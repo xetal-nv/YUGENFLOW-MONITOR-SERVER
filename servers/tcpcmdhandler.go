@@ -19,6 +19,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 	rv = Jsoncmdrt{"", false}
 	//mutexSensorMacs.RLock()
 	if params["cmd"] != "" || params["id"] != "" {
+		//fmt.Println("1", params)
 		if params["cmd"] == "list" {
 			keys := ""
 			for k := range cmdAPI {
@@ -27,9 +28,11 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 			rv.Rt = keys + "list, macid"
 			rv.State = true
 		} else {
+			//fmt.Println("2", params)
 			id, eid := strconv.Atoi(params["id"])
 			mace := params["mac"]
 			if eid == nil || mace != "" {
+				//fmt.Println("3", params)
 				if params["cmd"] == "macid" {
 					var mac []byte
 					if c, e := net.ParseMAC(params["val"]); e == nil {
@@ -102,6 +105,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 						rv.Rt = "error: invalic mac address given"
 					}
 				} else {
+					//fmt.Println("4", params)
 					var ch chan []byte
 					var ok bool
 					if mace == "" {
@@ -115,9 +119,10 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 						mutexSensorMacs.RUnlock()
 					}
 					if ok {
-						if support.Debug != 0 {
-							fmt.Println("CMD: found CMD channel")
-						}
+						//fmt.Println("5", params)
+						//if support.Debug != 0 {
+						//fmt.Println("CMD: found CMD channel")
+						//}
 						if v, ok := cmdAPI[params["cmd"]]; ok {
 							if support.Debug != 0 {
 								fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
@@ -187,6 +192,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 		}
 	}
 	//mutexSensorMacs.RUnlock()
+	//fmt.Println(rv)
 	return
 }
 
@@ -198,7 +204,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 	}
 	if v, e := json.Marshal(val); e != nil {
 		return Jsoncmdrt{"", false}
-	} else {
+	} else if len(val) != 0 {
 		params["val"] = string(v)
 	}
 	params["cmd"] = cmd
@@ -206,6 +212,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 	if support.Debug != 0 {
 		log.Printf("servers.exeBinaryCommand received and executing %v\n", params)
 	}
+	//fmt.Printf("servers.exeBinaryCommand received and executing %v\n", params)
 	return exeParamCommand(params)
 }
 
