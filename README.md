@@ -30,7 +30,7 @@ HTTPSPORTS[1]/cmd?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w 
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
 HTTPSPORTS[1]/cmd?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
-HTTPSPORTS[1]/command?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
+HTTPSPORTS[1]/command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 HTTPSPORTS[1]/command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/command?list -> lists all available commands  
 HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
