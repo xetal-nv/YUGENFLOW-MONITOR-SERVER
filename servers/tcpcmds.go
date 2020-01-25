@@ -75,7 +75,9 @@ func handlerReset(id int) {
 					select {
 					case <-resetChannel:
 						// TODO serve request for debug
-						fmt.Println("resetting device", id)
+						//fmt.Println("resetting device", id)
+						//noinspection GoUnusedCallResult
+						exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
 					case <-time.After(500 * time.Millisecond):
 					}
 				}
