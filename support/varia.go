@@ -10,8 +10,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+// bool variable with RW lock
+type MutexBool struct {
+	sync.RWMutex
+	Val bool
+}
 
 // provide the time now as timestamp in ms
 func Timestamp() int64 {

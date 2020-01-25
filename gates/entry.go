@@ -7,21 +7,24 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 )
 
 // set-up for the processing of sensor/gate data into flow values for the associated entry id
-// new sensor data is passed by means of the in channel snd send to the proper space via a spaces.SendData call
-func entryProcessingSetUp(id int, in chan sensorData, entrylist EntryDef) {
+// new sensor data is passed by means of the in Channel snd send to the proper space via a spaces.SendData call
+func entryProcessingSetUp(id int, in chan sensorData, entryList EntryDef) {
 	var scratchPad scratchData
 	sensorListEntry := make(map[int]sensorData)
-	gateListEntry := entrylist.Gates
+	sensorToGate := make(map[int]int)
+	sensorSensorDifferential := make(map[int][]int)
+	//gateListEntry := entryList.Gates
 
 	scratchPad.senData = make(map[int]sensorData)
 	scratchPad.unusedSampleSumIn = make(map[int]int)
 	scratchPad.unusedSampleSumOut = make(map[int]int)
 
 	//for i := range EntryList[id].SenDef {
-	for i := range entrylist.SenDef {
+	for i := range entryList.SenDef {
 		scratchPad.senData[i] = sensorData{i, 0, 0}
 		sensorListEntry[i] = sensorData{i, 0, 0}
 	}
@@ -29,17 +32,32 @@ func entryProcessingSetUp(id int, in chan sensorData, entrylist EntryDef) {
 		scratchPad.unusedSampleSumIn[i] = 0
 		scratchPad.unusedSampleSumOut[i] = 0
 	}
-	entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
+
+	for ind, el := range entryList.Gates {
+		for _, sen := range el {
+			sensorToGate[sen] = ind
+			sensorSensorDifferential[ind] = append(sensorSensorDifferential[ind], 0)
+		}
+	}
+
+	entryProcessingCore(id, in, sensorListEntry, entryList.Gates, scratchPad, sensorToGate, sensorSensorDifferential)
 
 }
 
 // implements the core logic od the sensor/gate data processing
+// it also checks if a gate sensor is more active than another one and initiate reset of all sensors in the gate when needed
 func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sensorData,
-	gateListEntry map[int][]int, scratchPad scratchData) {
+	gateListEntry map[int][]int, scratchPad scratchData, sensorToGate map[int]int, sensorSensorDifferential map[int][]int) {
 	var f *os.File
 	var err error
+	var tryResetMux sync.RWMutex
+	tryReset := make(map[int]bool)
 	if LogToFileAll {
 		f, err = os.Create("log/entry_" + strconv.Itoa(id) + ".txt")
+	}
+
+	for senId := range sensorToGate {
+		tryReset[senId] = true
 	}
 	defer func() {
 		if e := recover(); e != nil {
@@ -51,13 +69,67 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 				_ = f.Close()
 			}
 			log.Printf("Gates.entryProcessingCore: recovering for entry %v due to %v\n ", id, e)
-			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad)
+			go entryProcessingCore(id, in, sensorListEntry, gateListEntry, scratchPad, sensorToGate, sensorSensorDifferential)
 		}
 	}()
 	log.Printf("Gates.entry: Processing: setting entry %v\n", id)
 	for {
 		data := <-in
 		nv := data.val
+		// check for asymmetry in gate sensor dictating reset
+		for i, r := range gateListEntry[sensorToGate[data.id]] {
+			if r == data.id {
+				//fmt.Println(id, sensorSensorDifferential)
+				// if there is no pending reset request, check for a need for reset
+				tryResetMux.RLock()
+				if tryReset[r] {
+					// this array does not need locking, races are not possible despite the go routine on it
+					sensorSensorDifferential[sensorToGate[r]][i] += 1
+					tryResetMux.RUnlock()
+					var min, max int
+					for i, e := range sensorSensorDifferential[sensorToGate[r]] {
+						if i == 0 || e < min {
+							min = e
+						}
+					}
+					for i, e := range sensorSensorDifferential[sensorToGate[r]] {
+						if i == 0 || e > max {
+							max = e
+						}
+						sensorSensorDifferential[sensorToGate[r]][i] -= min
+					}
+					//fmt.Println(sensorToGate[r], max, min, r)
+					if max-min >= maximumAsymmetry {
+						//tryReset.Lock() // this locking is redundant
+						tryReset[r] = false
+						//tryReset.Unlock() // this locking is redundant
+						go func(id int) {
+							// we do not wait for a success as failure to execute will eventually result in another reset request
+							SensorRst.RLock()
+							resetChannel, ok := SensorRst.Channel[id]
+							SensorRst.RUnlock()
+							if ok {
+								resetChannel <- true
+								//fmt.Println("sent reset request for id", id)
+							}
+							// ok false means that the self reset was not enabled
+							for i := range sensorSensorDifferential[sensorToGate[id]] {
+								sensorSensorDifferential[sensorToGate[id]][i] = 0
+							}
+							// for safety of races we should use a RW lock on tryReset
+							tryResetMux.Lock()
+							tryReset[r] = true
+							tryResetMux.Unlock()
+						}(r)
+					}
+				} else {
+					tryResetMux.RUnlock()
+					//fmt.Println("reset request pending for gate", sensorToGate[r])
+				}
+				break
+			}
+		}
+		// calculates the next sample
 		if support.Debug != 2 && support.Debug != 4 && support.Debug != -1 {
 			sensorListEntry[data.id] = data
 			sensorListEntry, gateListEntry, scratchPad, nv = trackPeople(id, sensorListEntry, gateListEntry, scratchPad)

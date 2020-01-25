@@ -13,6 +13,10 @@ import (
 
 func SetUp() {
 	var revdev []int
+	SensorRst.Lock()
+	SensorRst.Channel = make(map[int]chan bool)
+	SensorRst.Unlock()
+
 	devgate := [2]int{2, 2}
 	// Commented since currently no other configuration is allowed
 	//if data := os.Getenv("DEVPERGATE"); data != "" {
@@ -32,6 +36,18 @@ func SetUp() {
 	//		}
 	//	}
 	//}
+
+	if da := os.Getenv("DEVICEASYM"); da == "" {
+		maximumAsymmetry = 10
+	} else {
+		if v, e := strconv.Atoi(da); e != nil {
+			log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
+		} else {
+			maximumAsymmetry = v
+		}
+	}
+	log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %vs\n", maximumAsymmetry)
+
 	log.Println("gateList.SetUp: defined gate composition range in devices as", devgate)
 	if data := os.Getenv("REVERSE"); data != "" {
 		for _, v := range strings.Split(data, " ") {

@@ -41,6 +41,9 @@ SAMWINDOW = 5
 ## RANGE OF DEVICES PER GATE - UNSUPPORTED
 #DEVPERGATE = 2 2
 
+## MAXIMUM DEVICE ASYMMETRY PER GATE
+DEVICEASYM = 3
+
 ## TIMEOURS (TO) IN S
 ## Defives the device, database and malicious connection timeouts
 DEVICETO = 10
@@ -134,9 +137,9 @@ SPACES_NAMES = livlab
 SPACE_livlab = 0 1
 
 ## RESET DECLARATION
-## Define interval for resetting sensors, interval 0 turns it off
-## RESET = start as xx:xx; end as xx:xx; sampling interval in minutes
-RESETSLOT = 23:30; 00:30; 30
+## Define interval for periodic and self resetting sensors, interval 0 turns it off
+## RESET = start as xx:xx; end as xx:xx; sampling interval for self-reset in minutes
+RESETSLOT = 23:30; 00:30; 1
 
 ##### AVERAGE ANALYSIS #####
 ## DESCRIPTION: provides average number of people and flow, also in real time

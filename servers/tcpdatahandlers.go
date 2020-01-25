@@ -368,10 +368,15 @@ func handlerTCPRequest(conn net.Conn) {
 											sensorChanID[deviceId] = ci         // assign a channel to the id
 											SensorCmdID[deviceId] = ce          // assign a command channel to the id
 											sensorChanUsedID[deviceId] = true   // enable flag for TCP/Channel pair
+											gates.SensorRst.Lock()
 											go func(id int) { devid <- id }(deviceId)
+											// enable periodic and self reset procedure
 											if resetbg.valid {
+												// without reset enables the channel will not be created causing the self rest to simply do nothing
+												gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
 												go handlerReset(deviceId)
 											}
+											gates.SensorRst.Unlock()
 										} else {
 											// this is either a known device or an attack using a known/used ID
 											if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {

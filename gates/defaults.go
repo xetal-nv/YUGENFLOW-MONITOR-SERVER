@@ -4,7 +4,7 @@ import "sync"
 
 // sensor data as identified id, timestamp ts and value val
 type sensorData struct {
-	id  int   // gate number
+	id  int   // sensor number
 	ts  int64 // timestamp
 	val int   // data received
 }
@@ -12,7 +12,7 @@ type sensorData struct {
 // sensor definition as identified id, is reversed mounted (reversed), to which gates it belongs
 // (slice gate) amd to which entry it belongs (slice entry)
 type SensorDef struct {
-	id       int               // gate number
+	id       int               // gate or sensor number
 	Reversed bool              // reverse flag
 	gate     []int             //  gate ids
 	entry    []chan sensorData // entry channels for the sensors
@@ -45,3 +45,8 @@ var EntryList map[int]EntryDef             // maps devices to entries
 var MutexDeclaredDevices = &sync.RWMutex{} // this mutex is used to avoid concurrent DeclaredDevices
 var DeclaredDevices map[string]int         // maps the declared mac with the id of a used device
 var LogToFileAll bool                      // flag of all entry activity has to be logged to a file
+var maximumAsymmetry int                   // maximum difference of activity on sensors per gate, provided via configuration file
+var SensorRst struct {                     // array of channels to reset handler
+	sync.RWMutex
+	Channel map[int]chan bool
+}
