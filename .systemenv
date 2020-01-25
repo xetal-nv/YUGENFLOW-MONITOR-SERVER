@@ -27,6 +27,9 @@ SAMWINDOW = 5
 ## RANGE OF DEVICES PER GATE - UNSUPPORTED
 #DEVPERGATE = 2 2
 
+## MAXIMUM DEVICE ASYMMETRY PER GATE
+DEVICEASYM = 3
+
 ## TIMEOURS (TO) IN S
 ## Defives the device, database and malicious connection timeouts
 DEVICETO = 10
