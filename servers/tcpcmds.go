@@ -1,6 +1,8 @@
 package servers
 
 import (
+	"fmt"
+	"gateserver/gates"
 	"gateserver/support"
 	"log"
 	"net"
@@ -40,6 +42,19 @@ func handlerReset(id int) {
 							support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
 								support.Timestamp(), "", []int{1}, true}
 						}()
+						// releases possible request on rstReq
+						// missing a reset request is impossible since the reset just happened
+						gates.SensorRst.RLock()
+						if resetChannel, ok := gates.SensorRst.Channel[id]; ok {
+							go func(req chan bool) {
+								select {
+								case <-req:
+									fmt.Println("emptied reset channel", id)
+								case <-time.After(500 * time.Millisecond):
+								}
+							}(resetChannel)
+						}
+						gates.SensorRst.RUnlock()
 					} else {
 						go func() {
 							support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
@@ -49,6 +64,20 @@ func handlerReset(id int) {
 				}
 			} else {
 				done = false
+				// check if there is a reset request pending
+				//fmt.Println("checking pending reset request for", id)
+				gates.SensorRst.RLock()
+				resetChannel, ok := gates.SensorRst.Channel[id]
+				gates.SensorRst.RUnlock()
+				if ok {
+					select {
+					case <-resetChannel:
+						//fmt.Println("resetting device", id)
+						_ = exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
+					case <-time.After(500 * time.Millisecond):
+					}
+				}
+
 			}
 		} else {
 			log.Printf("servers.handlerReset: device %v has reset error %v\n", id, e)
