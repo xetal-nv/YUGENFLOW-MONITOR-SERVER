@@ -358,16 +358,20 @@ func handlerTCPRequest(conn net.Conn) {
 									if !idKnown {
 										oldMac, ok1 := sensorMacID[deviceId]
 										oldId, ok2 := sensorIdMAC[string(mac)]
+										mutexChanID.RLock()
 										_, ok3 := sensorChanID[deviceId]
+										mutexChanID.RUnlock()
 										_, ok4 := SensorCmdID[deviceId]
 										//  We check all entries as redundant check vs possible crashes or injection attacks
 										if !(ok1 && ok2 && ok3 && ok4) {
 											// this is a new device not previously connected
 											sensorMacID[deviceId] = mac         // assign a mac to the id
 											sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
-											sensorChanID[deviceId] = ci         // assign a channel to the id
-											SensorCmdID[deviceId] = ce          // assign a command channel to the id
-											sensorChanUsedID[deviceId] = true   // enable flag for TCP/Channel pair
+											mutexChanID.Lock()
+											sensorChanID[deviceId] = ci // assign a channel to the id
+											mutexChanID.Unlock()
+											SensorCmdID[deviceId] = ce        // assign a command channel to the id
+											sensorChanUsedID[deviceId] = true // enable flag for TCP/Channel pair
 											gates.SensorRst.Lock()
 											go func(id int) { devid <- id }(deviceId)
 											// enable periodic and self reset procedure
@@ -446,6 +450,7 @@ func handlerTCPRequest(conn net.Conn) {
 								v -= 1
 							}
 							if v == 0 {
+								mutexChanID.RLock()
 								// this will never happen when CRC8 is used
 								sensorChanID[deviceId] <- cmd
 								// if the answer is incorrect the channel will be closed
@@ -456,6 +461,7 @@ func handlerTCPRequest(conn net.Conn) {
 									}
 
 								}
+								mutexChanID.RUnlock()
 							} else {
 								cmdd := make([]byte, v)
 								if _, e := conn.Read(cmdd); e != nil {
@@ -475,6 +481,7 @@ func handlerTCPRequest(conn net.Conn) {
 										}
 									}
 									if valid {
+										mutexChanID.RLock()
 										select {
 										case sensorChanID[deviceId] <- cmd[:len(cmd)-1]:
 											// in case we receive a valid answer to setid, we close the channel
@@ -483,10 +490,11 @@ func handlerTCPRequest(conn net.Conn) {
 											}
 										case <-time.After(time.Duration(timeout) * time.Second):
 											// internal issue, all goroutines will close on time out including the channel
-											go func() { sensorChanID[deviceId] <- cmd }()
+											go func() { mutexChanID.RLock(); sensorChanID[deviceId] <- cmd; mutexChanID.RUnlock() }()
 											log.Printf("servers.handlerTCPRequest: hanging operation in sending "+
 												"command answer %v to user\n", cmd)
 										}
+										mutexChanID.RUnlock()
 									}
 								}
 							}

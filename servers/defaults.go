@@ -28,6 +28,7 @@ var mutexUnknownMac = &sync.RWMutex{}       // this mutex is used to avoid concu
 var mutexPendingDevices = &sync.RWMutex{}   // this mutex is used to avoid concurrent writes on mutexPendingDevices
 var mutexUnusedDevices = &sync.RWMutex{}    // this mutex is used to avoid concurrent writes on unusedDevice
 var mutexConnMAC = &sync.RWMutex{}          // this mutex is used to avoid concurrent writes on sensorConnMAC
+var mutexChanID = &sync.RWMutex{}           // this mutex is used to avoid concurrent writes on sensorChanID
 var unknownMacChan map[string]chan net.Conn // map of sensor id to sensor MAC as provided by the sensor itself
 var pendingDevice map[string]bool           // map of mac of devices pending registration
 var unkownDevice map[string]bool            // map of mac of devices registered with id equal to 0xff

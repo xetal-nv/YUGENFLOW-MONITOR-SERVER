@@ -393,6 +393,62 @@ func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
 	return nil
 }
 
+// delete a SD series, all values between the timestamps included in s0 and s1 are deleted
+// err: reports the error is any
+func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
+	// returns all values between s1 and s2, extremes included
+	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
+		return errors.New("storage.DeleteSeriesSD: type not supported: " + reflect.TypeOf(s0).String())
+	}
+	tag := s0.Tag()
+	ts0 := s0.Ts() / 1000
+	ts1 := int64((s1.Ts()/1000)/86400)*86400 + 86399
+	//fmt.Println(ts0,ts1)
+	tagMutex.RLock()
+	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
+		////fmt.Println(st, s0, s1)
+		if ts1 != st[0] {
+			if ts0 < st[0]/1000 {
+				ts0 = st[0] / 1000 // force to skip non existent samples
+			}
+
+			for i := ts0; i <= ts1; i += 86400 {
+				time0 := time.Unix(i, 0)
+				lab := tag + strconv.Itoa(time0.Year()) + "_" + strconv.Itoa(int(time0.Month())) + "_" + strconv.Itoa(time0.Day())
+				// fmt.Println("delete SD", lab)
+				co := make(chan dbOutChan)
+				if sDB {
+					select {
+					case statsChanDel <- dbOutCommChan{id: []byte(lab), co: co}:
+					case <-time.After(time.Duration(timeout) * time.Minute):
+						return errors.New("DeleteSeriesSD " + tag + " stats time out")
+					}
+				} else {
+					select {
+					case currentChanOut <- dbOutCommChan{id: []byte(lab), co: co}:
+					case <-time.After(time.Duration(timeout) * time.Minute):
+						return errors.New("DeleteSeriesSD " + tag + " current time out")
+					}
+				}
+				select {
+				case ans := <-co:
+					if ans.err != nil {
+						return ans.err
+					}
+				case <-time.After(time.Duration(timeout) * time.Minute):
+					return errors.New("DeleteSeriesSD " + tag + " receive time out")
+				}
+				i += 1
+			}
+		}
+	} else {
+		tagMutex.RUnlock()
+		return errors.New("Serie " + tag + " not found")
+	}
+	return nil
+}
+
 // reads a TS series, all values between the timestamps included in s0 and s1 are reads
 // values are returns as a set of values
 // tag: identified of the series
@@ -466,7 +522,7 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
-		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
+		err = errors.New("storage.ReadSeriesTS: type not supported: " + reflect.TypeOf(s0).String())
 		return
 	}
 	tag = s0.Tag()

@@ -2,7 +2,6 @@ package storage
 
 import (
 	"bufio"
-	"fmt"
 	"gateserver/support"
 	"os"
 	"strconv"
@@ -30,7 +29,7 @@ func string2epoch(val string) (rt int64, err error) {
 // day, space_name, measurement_name, [time24h/value]
 // Example
 // January 15 2019, living, 20min, 10:30/15, 14:30/10
-// Furthermore, recovery files will be rejected of older than MAXAGE hours
+// Furthermore, recovery files will be rejected of older than MAXAGE hours (TBD)
 // Comments in the recovery file need to start with the symbol #
 func RetrieveSampleFromFile() {
 	//fmt.Println("retrieveSampleFromFile")
@@ -100,7 +99,7 @@ func RetrieveSampleFromFile() {
 								}()
 							} else {
 								go func() {
-									support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retieved sample data",
+									support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved sample data",
 										[]int{1}, true}
 								}()
 							}
@@ -126,7 +125,95 @@ func RetrieveSampleFromFile() {
 
 // start database sample values retrieval following format given in .recoverypresence
 // this includes also removal of all sample data in the given interval
+// the recovery files needs to respect the following format. For each day to be retrieved
+// day, space_name, measurement_name, time24h, value
+// Example
+// January 15 2019, living, morning, 10:30, 15
+// Furthermore, recovery files will be rejected of older than MAXAGE hours (TBD)
+// Comments in the recovery file need to start with the symbol #
 func RetrievePresenceFromFile() {
-	// TODO everything
-	fmt.Println("RetrievePresenceFromFile")
+	//fmt.Println("RetrievePresenceFromFile")
+	if file, err := os.Open(".recoverypresence"); err != nil {
+		go func() {
+			support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "err", []int{1}, true}
+		}()
+	} else {
+		defer file.Close()
+		//var newData [][]string
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			if string(strings.Trim(scanner.Text(), " ")[0]) != "#" {
+				lineData := strings.Split(scanner.Text(), ",")
+				if v, e := string2epoch(lineData[0]); e == nil {
+					//lineData[0] = strconv.Itoa(int(v))
+					//newData = append(newData, lineData)
+					label := support.StringLimit("presence", support.LabelLength)
+					label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
+					label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+					s0 := &SerieSample{Stag: label, Sts: v * 1000}
+					s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
+					//fmt.Println(s0, s1)
+					//var rt []SampleData
+					//fmt.Println("New cycle")
+					//if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
+					//	fmt.Println(tag, ts, vals)
+					//	//for _, el := range s0.UnmarshalSliceSS(tag, ts, vals) {
+					//	//	fmt.Println(el)
+					//}
+					//fmt.Println(DeleteSeriesTS(s0, s1, true))
+					if err := DeleteSeriesSD(s0, s1, true); err == nil {
+						//for i := 3; i < len(lineData); i++ {
+						sampleRaw := strings.Split(strings.Trim(lineData[3], " "), "/")
+						//fmt.Println(sampleRaw)
+						if th, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[0], 10, 64); err == nil {
+							th *= 3600
+							if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
+								tm *= 60
+								if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
+									newSample := new(SerieSample)
+									newSample.Stag = label
+									newSample.Sts = (th + tm + v) * 1000
+									newSample.Sval = val
+									//fmt.Println(newSample)
+									//fmt.Println(StoreSampleTS(newSample, true))
+									if err := StoreSampleSD(newSample, true); err != nil {
+										go func() {
+											support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing data",
+												[]int{1}, true}
+										}()
+									} else {
+										go func() {
+											support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved presence data",
+												[]int{1}, true}
+										}()
+									}
+								}
+							}
+						}
+
+						//}
+						//if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
+						//	//fmt.Println(tag, ts, vals)
+						//	readData := s0.UnmarshalSliceSS(tag, ts, vals)
+						//	for _, el := range readData {
+						//		fmt.Println(el)
+						//	}
+						//}
+					} else {
+						go func() {
+							support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
+						}()
+					}
+				}
+			}
+		}
+		// newData is an array containing the DBS data with epoch instead of the readable data format as in FORM
+		//fmt.Println(newData)
+
+		if err := scanner.Err(); err != nil {
+			go func() {
+				support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error reading .recoverysamples", []int{1}, true}
+			}()
+		}
+	}
 }

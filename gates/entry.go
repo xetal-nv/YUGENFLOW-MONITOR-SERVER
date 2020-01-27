@@ -96,13 +96,15 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 						if i == 0 || e > max {
 							max = e
 						}
+						tryResetMux.Lock() // this locking is redundant but still required by the compiler
 						sensorSensorDifferential[sensorToGate[r]][i] -= min
+						tryResetMux.Unlock() // this locking is redundant but still required by the compiler
 					}
 					//fmt.Println(sensorToGate[r], max, min, r)
 					if max-min >= maximumAsymmetry {
-						//tryReset.Lock() // this locking is redundant
+						tryResetMux.Lock() // this locking is redundant but still required by the compiler
 						tryReset[r] = false
-						//tryReset.Unlock() // this locking is redundant
+						tryResetMux.Unlock() // this locking is redundant but still required by the compiler
 						go func(id int) {
 							// we do not wait for a success as failure to execute will eventually result in another reset request
 							SensorRst.RLock()
@@ -113,11 +115,11 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 								//fmt.Println("sent reset request for id", id)
 							}
 							// ok false means that the self reset was not enabled
+							tryResetMux.Lock()
 							for i := range sensorSensorDifferential[sensorToGate[id]] {
 								sensorSensorDifferential[sensorToGate[id]][i] = 0
 							}
 							// for safety of races we should use a RW lock on tryReset
-							tryResetMux.Lock()
 							tryReset[r] = true
 							tryResetMux.Unlock()
 						}(r)
