@@ -74,7 +74,10 @@ func handlerReset(id int) {
 				if ok {
 					select {
 					case <-resetChannel:
-						// TODO serve request for debug
+						go func() {
+							support.DLog <- support.DevData{"servers.handlerReset: reset due to sensor asymmetry " + strconv.Itoa(id),
+								support.Timestamp(), "", []int{1}, true}
+						}()
 						//fmt.Println("resetting device", id)
 						//noinspection GoUnusedCallResult
 						exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})

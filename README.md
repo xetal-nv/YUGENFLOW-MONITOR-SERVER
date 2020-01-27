@@ -11,7 +11,7 @@ Need to be cloned to go/src for compilation
 
 **List API:**  
 HTTPSPORTS[1]/ks -> if enabled, kills the server  
-HTTPSPORTS[1]/dvl -> latest developer log (IF ENABLED via -dvl)  
+HTTPSPORTS[1]/dvl -> if enabled, shows latest developer log 
 HTTPSPORTS[1]/asys -> information on all current analyses  
 HTTPSPORTS[1]/info -> installation information  
 HTTPSPORTS[1]/pending -> list all devices pending for connection approval (only current connections)    
@@ -29,6 +29,8 @@ HTTPSPORTS[1]/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type pre
 HTTPSPORTS[1]/cmd?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
+HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples  
+HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence  
   
 NOTE: values in val are specified as x,y,n,..   
 NOTE: all commands need to be fully tested via mac and id  

@@ -298,6 +298,9 @@ func setupHTTP() error {
 	if Kswitch {
 		hMap[1]["/ks"] = killswitchHTTPHandler()
 	}
+	// Api for dbs management
+	hMap[1]["/dbs/retrieve/samples"] = retrieveDBSsamples()
+	hMap[1]["/dbs/retrieve/presence"] = retrieveDBSpresence()
 
 	// add SVG API for installation graphs
 	for spn := range spaces.SpaceDef {
