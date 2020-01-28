@@ -2,7 +2,6 @@ package storage
 
 import (
 	"bufio"
-	"fmt"
 	"gateserver/support"
 	"os"
 	"strconv"
@@ -217,13 +216,13 @@ func RetrievePresenceFromFile() {
 							}
 
 							//}
-							if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
-								//fmt.Println(tag, ts, vals)
-								readData := s0.UnmarshalSliceSS(tag, ts, vals)
-								for _, el := range readData {
-									fmt.Println(el)
-								}
-							}
+							//if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
+							//	//fmt.Println(tag, ts, vals)
+							//	readData := s0.UnmarshalSliceSS(tag, ts, vals)
+							//	for _, el := range readData {
+							//		fmt.Println(el)
+							//	}
+							//}
 						} else {
 							go func() {
 								support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
