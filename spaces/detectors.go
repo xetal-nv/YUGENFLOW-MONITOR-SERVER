@@ -38,6 +38,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 	//}
 	//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
 
+	var copyAllIntervals []IntervalDetector
 	timeoutInterval := 5 * chantimeout * time.Millisecond
 	active := true
 	// saved := false
@@ -158,6 +159,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 			// check for proper Activity falling in an interval and save at the End of the interval
 			// we have some Activity
 			for i := range allIntervals {
+				copy(copyAllIntervals, allIntervals)
 				//fmt.Println("checking", allIntervals[i].Id)
 				if found, e := support.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
 					allIntervals[i].incycle = true
@@ -210,7 +212,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				}
 			}
 			// send the current values to the recovery register
-			recovery <- allIntervals
+			recovery <- copyAllIntervals
 		}
 	}
 
