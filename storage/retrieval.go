@@ -61,64 +61,66 @@ func RetrieveSampleFromFile() {
 		//var newData [][]string
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			if string(strings.Trim(scanner.Text(), " ")[0]) != "#" {
-				lineData := strings.Split(scanner.Text(), ",")
-				if v, e := string2epoch(lineData[0]); e == nil {
-					//lineData[0] = strconv.Itoa(int(v))
-					//newData = append(newData, lineData)
-					label := support.StringLimit("sample", support.LabelLength)
-					label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
-					label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
-					s0 := &SerieSample{Stag: label, Sts: v * 1000}
-					s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
-					//if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
-					//	fmt.Println(tag, ts, vals)
-					//}
-					//fmt.Println(DeleteSeriesTS(s0, s1, true))
-					if err := DeleteSeriesTS(s0, s1, true); err == nil {
-						var testData []SerieSample
-						for i := 3; i < len(lineData); i++ {
-							sampleRaw := strings.Split(strings.Trim(lineData[i], " "), "/")
-							//fmt.Println(sampleRaw)
-							if th, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[0], 10, 64); err == nil {
-								th *= 3600
-								if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
-									tm *= 60
-									if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
-										newSample := new(SerieSample)
-										newSample.Stag = label
-										newSample.Sts = (th + tm + v) * 1000
-										newSample.Sval = val
-										testData = append(testData, *newSample)
-										if err := StoreSampleTS(newSample, true); err != nil {
-											go func() {
-												support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing data",
-													[]int{1}, true}
-											}()
+			if strings.Trim(scanner.Text(), " ") != "" {
+				if string(strings.Trim(scanner.Text(), " ")[0]) != "#" {
+					lineData := strings.Split(scanner.Text(), ",")
+					if v, e := string2epoch(lineData[0]); e == nil {
+						//lineData[0] = strconv.Itoa(int(v))
+						//newData = append(newData, lineData)
+						label := support.StringLimit("sample", support.LabelLength)
+						label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
+						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+						s0 := &SerieSample{Stag: label, Sts: v * 1000}
+						s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
+						//if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
+						//	fmt.Println(tag, ts, vals)
+						//}
+						//fmt.Println(DeleteSeriesTS(s0, s1, true))
+						if err := DeleteSeriesTS(s0, s1, true); err == nil {
+							var testData []SerieSample
+							for i := 3; i < len(lineData); i++ {
+								sampleRaw := strings.Split(strings.Trim(lineData[i], " "), "/")
+								//fmt.Println(sampleRaw)
+								if th, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[0], 10, 64); err == nil {
+									th *= 3600
+									if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
+										tm *= 60
+										if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
+											newSample := new(SerieSample)
+											newSample.Stag = label
+											newSample.Sts = (th + tm + v) * 1000
+											newSample.Sval = val
+											testData = append(testData, *newSample)
+											if err := StoreSampleTS(newSample, true); err != nil {
+												go func() {
+													support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing data",
+														[]int{1}, true}
+												}()
+											}
 										}
 									}
 								}
-							}
 
-						}
-						if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
-							readData := s0.UnmarshalSliceSS(tag, ts, vals)
-							if len(readData) != len(testData) {
-								go func() {
-									support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing all data",
-										[]int{1}, true}
-								}()
-							} else {
-								go func() {
-									support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved sample data",
-										[]int{1}, true}
-								}()
 							}
+							if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
+								readData := s0.UnmarshalSliceSS(tag, ts, vals)
+								if len(readData) != len(testData) {
+									go func() {
+										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing all data",
+											[]int{1}, true}
+									}()
+								} else {
+									go func() {
+										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved sample data",
+											[]int{1}, true}
+									}()
+								}
+							}
+						} else {
+							go func() {
+								support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
+							}()
 						}
-					} else {
-						go func() {
-							support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
-						}()
 					}
 				}
 			}
@@ -168,63 +170,65 @@ func RetrievePresenceFromFile() {
 		defer file.Close()
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			if string(strings.Trim(scanner.Text(), " ")[0]) != "#" {
-				lineData := strings.Split(scanner.Text(), ",")
-				if v, e := string2epoch(lineData[0]); e == nil {
-					label := support.StringLimit("presence", support.LabelLength)
-					label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
-					label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
-					s0 := &SerieSample{Stag: label, Sts: v * 1000}
-					s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
-					//fmt.Println(s0, s1)
-					//fmt.Println("New cycle")
-					//if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
-					//for _, el := range s0.UnmarshalSliceSS(tag, ts, vals) {
-					//	fmt.Println(el)
-					//}
-					//fmt.Println(DeleteSeriesTS(s0, s1, true))
-					if err := DeleteSeriesSD(s0, s1, true); err == nil {
-						//for i := 3; i < len(lineData); i++ {
-						sampleRaw := strings.Split(strings.Trim(lineData[3], " "), "/")
-						//fmt.Println(sampleRaw)
-						if th, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[0], 10, 64); err == nil {
-							th *= 3600
-							if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
-								tm *= 60
-								if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
-									newSample := new(SerieSample)
-									newSample.Stag = label
-									newSample.Sts = (th + tm + v) * 1000
-									newSample.Sval = val
-									//fmt.Println(newSample)
-									//fmt.Println(StoreSampleTS(newSample, true))
-									if err := StoreSampleSD(newSample, true); err != nil {
-										go func() {
-											support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error writing data",
-												[]int{1}, true}
-										}()
-									} else {
-										go func() {
-											support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "retrieved presence data",
-												[]int{1}, true}
-										}()
+			if strings.Trim(scanner.Text(), " ") != "" {
+				if string(strings.Trim(scanner.Text(), " ")[0]) != "#" {
+					lineData := strings.Split(scanner.Text(), ",")
+					if v, e := string2epoch(lineData[0]); e == nil {
+						label := support.StringLimit("presence", support.LabelLength)
+						label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
+						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+						s0 := &SerieSample{Stag: label, Sts: v * 1000}
+						s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
+						//fmt.Println(s0, s1)
+						//fmt.Println("New cycle")
+						//if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
+						//for _, el := range s0.UnmarshalSliceSS(tag, ts, vals) {
+						//	fmt.Println(el)
+						//}
+						//fmt.Println(DeleteSeriesTS(s0, s1, true))
+						if err := DeleteSeriesSD(s0, s1, true); err == nil {
+							//for i := 3; i < len(lineData); i++ {
+							sampleRaw := strings.Split(strings.Trim(lineData[3], " "), "/")
+							//fmt.Println(sampleRaw)
+							if th, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[0], 10, 64); err == nil {
+								th *= 3600
+								if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
+									tm *= 60
+									if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
+										newSample := new(SerieSample)
+										newSample.Stag = label
+										newSample.Sts = (th + tm + v) * 1000
+										newSample.Sval = val
+										//fmt.Println(newSample)
+										//fmt.Println(StoreSampleTS(newSample, true))
+										if err := StoreSampleSD(newSample, true); err != nil {
+											go func() {
+												support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error writing data",
+													[]int{1}, true}
+											}()
+										} else {
+											go func() {
+												support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "retrieved presence data",
+													[]int{1}, true}
+											}()
+										}
 									}
 								}
 							}
-						}
 
-						//}
-						if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
-							//fmt.Println(tag, ts, vals)
-							readData := s0.UnmarshalSliceSS(tag, ts, vals)
-							for _, el := range readData {
-								fmt.Println(el)
+							//}
+							if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
+								//fmt.Println(tag, ts, vals)
+								readData := s0.UnmarshalSliceSS(tag, ts, vals)
+								for _, el := range readData {
+									fmt.Println(el)
+								}
 							}
+						} else {
+							go func() {
+								support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
+							}()
 						}
-					} else {
-						go func() {
-							support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
-						}()
 					}
 				}
 			}
