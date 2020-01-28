@@ -130,6 +130,11 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 					currentChanOut = make(chan dbOutCommChan, bufsize)
 					go dbReadDriver(statsChanOut, *statsDB)
 					go dbReadDriver(currentChanOut, *currentDB)
+					statsChanDel = make(chan dbOutCommChan, bufsize)
+					currentChanDel = make(chan dbOutCommChan, bufsize)
+					go dbDeleteDriver(statsChanDel, *statsDB)
+					go dbDeleteDriver(currentChanDel, *currentDB)
+
 				}
 			}
 			go handlerGarbage([]*badger.DB{currentDB, statsDB})
@@ -296,8 +301,6 @@ func StoreSampleTS(d SampleData, sDB bool, updatehead ...bool) (err error) {
 }
 
 // stores a SD sample, optionally it updates the header
-// TODO check if it works, WRONG TS is in writing or reading?
-// not working?
 func StoreSampleSD(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	//fmt.Println("store SD", d)
 	ts := d.Ts()
@@ -334,7 +337,64 @@ func StoreSampleSD(d SampleData, sDB bool, updatehead ...bool) (err error) {
 	return err
 }
 
-// reads a TS series, all values between the timestamos included in s0 and s1 are reads
+// delete a TS series, all values between the timestamps included in s0 and s1 are deleted
+// err: reports the error is any
+func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
+	// returns all values between s1 and s2, extremes included
+	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
+		return errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
+	}
+	tag := s0.Tag()
+	ts0 := s0.Ts()
+	ts1 := s1.Ts()
+	tagMutex.RLock()
+	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
+		//fmt.Println(st, s0, s1)
+		if ts1 != st[0] {
+			if ts0 <= (st[0] + st[1]*1000) {
+				ts0 = st[0] + st[1]*1000 // offset to skip the header
+			}
+			i := (ts0 - st[0]) / (st[1] * 1000)
+			i1 := (ts1 - st[0]) / (st[1] * 1000)
+			//fmt.Println(i, i1)
+			for i <= i1 {
+				lab := []byte(tag + strconv.Itoa(int(i)))
+				//fmt.Println(tag + strconv.Itoa(int(i)), sDB)
+				co := make(chan dbOutChan)
+				if sDB {
+					select {
+					case statsChanDel <- dbOutCommChan{id: lab, co: co}:
+					case <-time.After(time.Duration(timeout) * time.Minute):
+						return errors.New("ReadSeriesTS " + tag + " stats time out")
+					}
+				} else {
+					select {
+					case currentChanDel <- dbOutCommChan{id: lab, co: co}:
+					case <-time.After(time.Duration(timeout) * time.Minute):
+						return errors.New("ReadSeriesTS " + tag + " current time out")
+					}
+				}
+				select {
+				case ans := <-co:
+					//fmt.Println(ans.err)
+					if ans.err != nil {
+						return ans.err
+					}
+				case <-time.After(time.Duration(timeout) * time.Minute):
+					return errors.New("ReadSeriesTS " + tag + " receive time out")
+				}
+				i += 1
+			}
+		}
+	} else {
+		tagMutex.RUnlock()
+		return errors.New("Serie " + tag + " not found")
+	}
+	return nil
+}
+
+// reads a TS series, all values between the timestamps included in s0 and s1 are reads
 // values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
@@ -398,7 +458,63 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 	return tag, rts, rt, err
 }
 
-// reads a SD series, all values between the timestamos included in s0 and s1 are reads
+// delete a SD series, all values between the timestamps included in s0 and s1 are deleted
+// err: reports the error is any
+func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
+	// returns all values between s1 and s2, extremes included
+	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
+		return errors.New("storage.DeleteSeriesSD: type not supported: " + reflect.TypeOf(s0).String())
+	}
+	tag := s0.Tag()
+	ts0 := s0.Ts() / 1000
+	ts1 := int64((s1.Ts()/1000)/86400)*86400 + 86399
+	//fmt.Println(ts0,ts1)
+	tagMutex.RLock()
+	if st, ok := tagStart[tag]; ok {
+		tagMutex.RUnlock()
+		////fmt.Println(st, s0, s1)
+		if ts1 != st[0] {
+			if ts0 < st[0]/1000 {
+				ts0 = st[0] / 1000 // force to skip non existent samples
+			}
+
+			for i := ts0; i <= ts1; i += 86400 {
+				time0 := time.Unix(i, 0)
+				lab := tag + strconv.Itoa(time0.Year()) + "_" + strconv.Itoa(int(time0.Month())) + "_" + strconv.Itoa(time0.Day())
+				// fmt.Println("delete SD", lab)
+				co := make(chan dbOutChan)
+				if sDB {
+					select {
+					case statsChanDel <- dbOutCommChan{id: []byte(lab), co: co}:
+					case <-time.After(time.Duration(timeout) * time.Minute):
+						return errors.New("DeleteSeriesSD " + tag + " stats time out")
+					}
+				} else {
+					select {
+					case currentChanOut <- dbOutCommChan{id: []byte(lab), co: co}:
+					case <-time.After(time.Duration(timeout) * time.Minute):
+						return errors.New("DeleteSeriesSD " + tag + " current time out")
+					}
+				}
+				select {
+				case ans := <-co:
+					if ans.err != nil {
+						return ans.err
+					}
+				case <-time.After(time.Duration(timeout) * time.Minute):
+					return errors.New("DeleteSeriesSD " + tag + " receive time out")
+				}
+				i += 1
+			}
+		}
+	} else {
+		tagMutex.RUnlock()
+		return errors.New("Serie " + tag + " not found")
+	}
+	return nil
+}
+
+// reads a SD series, all values between the timestamps included in s0 and s1 are reads
 // values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
@@ -535,7 +651,7 @@ func GetDefinition(tag string) []int64 {
 	return a
 }
 
-// Read read an entry, when l==0, it assumes it is a variable length element
+// Read read an entry, when l==0, it assumes it is a variable length element (entry data like)
 // and it retrieves the length from the element first (maximum number of fields in 16 bit)
 func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
 
@@ -648,13 +764,41 @@ func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 }
 
 // Delete deletes an entry
-//func delEntry(id []byte, db badger.DB) error {
-//	err := db.Update(func(txn *badger.Txn) error {
-//		err := txn.Delete(id)
-//		return err
-//	})
-//	return err
-//}
+func delEntry(id []byte, db badger.DB) error {
+	err := db.Update(func(txn *badger.Txn) error {
+		err := txn.Delete(id)
+		return err
+	})
+	return err
+}
+
+// dbDeleteDriver delete an entry, when l==0, it assumes it is a variable length element
+// and it retrieves the length from the element first (maximum number of fields in 16 bit)
+// this version acts as a buffered thread to a database, requires time-out and closure on the receiving end
+func dbDeleteDriver(ch chan dbOutCommChan, db badger.DB) {
+	defer func() {
+		if e := recover(); e != nil {
+			go func() {
+				support.DLog <- support.DevData{"storage.dbDeleteDriver: recovering server",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+			//fmt.Println("recovering")
+			go dbDeleteDriver(ch, db)
+		}
+	}()
+
+	for {
+		req := <-ch
+		go func(req dbOutCommChan, db badger.DB) {
+			var e error
+			e = delEntry(req.id, db)
+			select {
+			case req.co <- dbOutChan{[]byte{}, e}:
+			case <-time.After(time.Duration(timeout) * time.Second):
+			}
+		}(req, db)
+	}
+}
 
 // update updates updates an entry as a function
 func update(a []byte, id []byte, db badger.DB, ttl bool) (err error) {
