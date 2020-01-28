@@ -127,7 +127,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 		var sp spaceEntries
 		select {
 		case sp = <-gateChan:
-			//fmt.Println("got", sp.val)
+			//fmt.Println("detector got value", sp.val)
 		case <-time.After(timeoutInterval):
 		}
 		if active {
