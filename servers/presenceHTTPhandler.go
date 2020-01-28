@@ -12,7 +12,6 @@ import (
 	"strings"
 )
 
-// TODO check if ok
 func presenceHTTPhandler() http.Handler {
 	var cmds = []string{"space", "analysis", "start", "end"}
 
