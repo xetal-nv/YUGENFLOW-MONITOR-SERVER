@@ -33,6 +33,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 
 	timeoutInterval := 5 * chantimeout * time.Millisecond
 	active := true
+	var copyAllIntervals []IntervalDetector
 	// saved := false
 	// load the configuration, this is done only once even when recovering
 	once.Do(func() {
@@ -134,6 +135,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 			// check for proper Activity falling in an interval and save at the End of the interval
 			// we have some Activity
 			for i := range allIntervals {
+				copy(copyAllIntervals, allIntervals)
 				//fmt.Println("checking", allIntervals[i].Id)
 				if found, e := support.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
 					allIntervals[i].incycle = true
@@ -157,7 +159,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				}
 			}
 			// send the current values to the recovery register
-			recovery <- allIntervals
+			recovery <- copyAllIntervals
 		}
 	}
 
