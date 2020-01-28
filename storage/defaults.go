@@ -39,5 +39,7 @@ var tagMutex = &sync.RWMutex{}        // this mutex is used to avoid concurrent 
 var tagStart map[string][]int64       // map of definition for all series currently in use
 var statsChanIn chan dbInChan         // channel for storing to the statistical DB
 var currentChanIn chan dbInChan       // channel for storing to the current DB
-var statsChanOut chan dbOutCommChan   // channel for reading to the statistical DB
-var currentChanOut chan dbOutCommChan // channel for reading to the current DB
+var statsChanOut chan dbOutCommChan   // channel for reading from the statistical DB
+var currentChanOut chan dbOutCommChan // channel for reading from the current DB
+var statsChanDel chan dbOutCommChan   // channel for deleting in the statistical DB
+var currentChanDel chan dbOutCommChan // channel for deleting in the current DB
