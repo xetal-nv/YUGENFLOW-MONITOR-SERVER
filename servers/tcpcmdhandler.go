@@ -218,7 +218,8 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 
 // handles all command received internal from channel CE and interacts with the associated device and
 // handlerTCPRequest (via ci channel) for proper execution.
-func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, devid chan int, id ...int) {
+//func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, devid chan int, id ...int) {
+func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devid chan int, id ...int) {
 	//loop := true
 	if len(id) == 0 {
 		id = []int{-1}
@@ -229,10 +230,15 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, dev
 				support.DLog <- support.DevData{"servers.handlerCommandAnswer: recovering server",
 					support.Timestamp(), "", []int{1}, true}
 			}()
+			//if len(id) == 1 {
+			//	handlerCommandAnswer(conn, ci, ce, stop, devid, id[0])
+			//} else {
+			//	handlerCommandAnswer(conn, ci, ce, stop, devid)
+			//}
 			if len(id) == 1 {
-				handlerCommandAnswer(conn, ci, ce, stop, devid, id[0])
+				handlerCommandAnswer(mac, ci, ce, stop, devid, id[0])
 			} else {
-				handlerCommandAnswer(conn, ci, ce, stop, devid)
+				handlerCommandAnswer(mac, ci, ce, stop, devid)
 			}
 		}
 	}()
@@ -268,10 +274,21 @@ func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, dev
 				cmd = append(cmd, codings.Crc8(cmd))
 				ready := make(chan bool)
 				go func(ba []byte) {
-					if _, e := conn.Write(ba); e == nil {
-						ready <- true
+
+					mutexConnMAC.RLock()
+					conn, ok := sensorConnMAC[mac]
+					mutexConnMAC.RUnlock()
+					if ok {
+						if _, e := conn.Write(ba); e == nil {
+							ready <- true
+						} else {
+							ready <- false
+						}
 					} else {
-						ready <- false
+						go func() {
+							support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
+								support.Timestamp(), "command to closed TCP channel", []int{1}, true}
+						}()
 					}
 				}(cmd)
 				select {

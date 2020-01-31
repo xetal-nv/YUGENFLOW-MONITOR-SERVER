@@ -263,7 +263,8 @@ func handlerTCPRequest(conn net.Conn) {
 					SensorCmdMac[mach] = append(SensorCmdMac[mach], ce)
 					SensorIDCMDMac[mach] = devid
 					mutexSensorMacs.Unlock()
-					go handlerCommandAnswer(conn, ci, ce, stop, devid)
+					//go handlerCommandAnswer(conn, ci, ce, stop, devid)
+					go handlerCommandAnswer(string(mac), ci, ce, stop, devid)
 				} else {
 					if devid, found = SensorIDCMDMac[mach]; !found {
 						mutexSensorMacs.RUnlock()
