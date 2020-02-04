@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 ## [0.7.2]
 ### Add
  - Reset gate if one sensor sends sensibly more messages, configurable via configuration file  
- - added database recover API (TBD)  
+ - added database recover API  
+ - added self reset of device eeprom (if enabled), needs to be tested  
  
  ### Changed
   - Fixed issue with periodic reset  
-   - Periodic reset is now self-reset  
+  - Periodic reset is now self-reset  
  
 
 ## [0.7.1]

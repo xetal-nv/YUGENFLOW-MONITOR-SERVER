@@ -26,11 +26,11 @@ var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination d
 func SetUp(envf string) {
 	if envf == "" {
 		if e := godotenv.Load(); e != nil {
-			panic("Fatal error:" + e.Error())
+			panic("Cannot find .env file")
 		}
 	} else {
 		if e := godotenv.Load(envf); e != nil {
-			panic("Fatal error:" + e.Error())
+			panic("Cannot find " + envf + " file")
 		}
 	}
 

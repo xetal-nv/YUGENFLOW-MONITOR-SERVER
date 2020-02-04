@@ -32,7 +32,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 
 	del := rand.Intn(mxdelay) + 1
 	time.Sleep(2 * time.Second)
-	mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
+	mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":")
 	//fmt.Printf("FakeSensor %v // %v -> Connect to TCP channel\n", id, mach)
 	port := os.Getenv("TCPPORT")
 	conn, e := net.Dial(os.Getenv("TCPPROT"), "0.0.0.0:"+port)

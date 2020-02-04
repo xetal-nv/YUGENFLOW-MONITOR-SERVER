@@ -21,6 +21,7 @@ import (
 const version = "v. 0.7.2" // version
 
 func main() {
+
 	folder, _ := support.GetCurrentExecDir()
 	var cdelay = flag.Int("cdelay", 90, "recovery delay in secs")
 	var dbs = flag.String("dbs", "", "databases root folder")
@@ -34,9 +35,10 @@ func main() {
 	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset")
 	var repcon = flag.Bool("repcon", false, "enable reporting on current data ")
-	var ri = flag.Int("ri", 360, "set ri")
-	var rs = flag.Int64("rs", 10000000, "set rs")
+	var ri = flag.Int("ri", 360, "set log rotation interval")
+	var rs = flag.Int64("rs", 10000000, "set log rotation size")
 	var st = flag.String("start", "", "cstart time expressed as HH:MM")
+	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -92,6 +94,9 @@ func main() {
 	if *repcon {
 		log.Printf("!!! WARNING CURRENT REPORTING ENABLED !!!\n")
 	}
+	if *eeprom {
+		log.Printf("!!! WARNING SENSOR EEPROM REFRESH ENABLED !!!\n")
+	}
 
 	servers.Dvl = *dvl
 	support.Debug = *dbug
@@ -104,6 +109,7 @@ func main() {
 	servers.Kswitch = *ks
 	servers.RepCon = *repcon
 	gates.LogToFileAll = *de
+	servers.SensorEEPROMResetEnables = *eeprom
 
 	folder = os.Getenv("GATESERVER")
 

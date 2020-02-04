@@ -58,23 +58,25 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 										binary.BigEndian.PutUint16(bs, uint16(id))
 										cmd = append(cmd, bs...)
 										cmd = append(cmd, codings.Crc8(cmd))
-										if _, err := conn.Write(cmd); err != nil {
-											rv.Rt = "error: command failed"
-										} else {
-											rv.Rt = "Device restarting"
-											rv.State = true
-											mutexUnknownMac.Lock()
-											unkownDevice[string(mac)] = true
-											mutexUnknownMac.Unlock()
-											// read and discard answer
-											c := make(chan bool)
-											go func(c chan bool) {
-												_, _ = conn.Read(make([]byte, 256))
-												c <- true
-											}(c)
-											select {
-											case <-c:
-											case <-time.After(time.Duration(timeout) * time.Second):
+										if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
+											if _, err := conn.Write(cmd); err != nil {
+												rv.Rt = "error: command failed"
+											} else {
+												rv.Rt = "Device restarting"
+												rv.State = true
+												mutexUnknownMac.Lock()
+												unkownDevice[string(mac)] = true
+												mutexUnknownMac.Unlock()
+												// read and discard answer
+												c := make(chan bool)
+												go func(c chan bool) {
+													_, _ = conn.Read(make([]byte, 256))
+													c <- true
+												}(c)
+												select {
+												case <-c:
+												case <-time.After(time.Duration(timeout) * time.Second):
+												}
 											}
 										}
 										select {
@@ -114,9 +116,16 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 						mutexSensorMacs.RUnlock()
 					} else {
 						mutexSensorMacs.RLock()
-						ok = true
-						ch = SensorCmdMac[mace][1]
+						tmp, ok := SensorCmdMac[mace]
 						mutexSensorMacs.RUnlock()
+						if ok {
+							ch = tmp[1]
+						} else {
+							go func() {
+								support.DLog <- support.DevData{"servers.exeParamCommand: missing connection to mac " + mace,
+									support.Timestamp(), "illegal request", []int{1}, true}
+							}()
+						}
 					}
 					if ok {
 						//fmt.Println("5", params)
@@ -159,12 +168,13 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 								}
 							} else if (v.lgt != 0 && params["val"] == "") || (v.lgt == 0 && params["val"] != "") {
 								cmd = nil
-								rv.Rt = "insufficient parameters"
+								rv.Rt = "wrong parameters"
 							}
 							if cmd != nil {
 								if support.Debug != 0 {
 									fmt.Println("CMD: Executing command")
 								}
+								fmt.Println("CMD: sent command", cmd)
 								select {
 								case ch <- cmd:
 									if support.Debug != 0 {
@@ -279,10 +289,12 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devid 
 					conn, ok := sensorConnMAC[mac]
 					mutexConnMAC.RUnlock()
 					if ok {
-						if _, e := conn.Write(ba); e == nil {
-							ready <- true
-						} else {
-							ready <- false
+						if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
+							if _, e := conn.Write(ba); e == nil {
+								ready <- true
+							} else {
+								ready <- false
+							}
 						}
 					} else {
 						go func() {

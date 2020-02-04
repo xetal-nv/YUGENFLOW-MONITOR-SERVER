@@ -331,6 +331,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 					}
 				}
 				// introduces an error in stages after the first. Its relevance depends on the ration between analysis periods
+				//noinspection GoRedundantConversion
 				acc += float64(buffer[len(buffer)-1].val) * float64(cTS-buffer[len(buffer)-1].ts) / float64(period)
 				ct.val = int(math.Round(acc))
 				if ct.val < 0 && avgNegSkip {
@@ -427,7 +428,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										// no data outside the cycle is used
 										counter = average(counter, buffer, support.Timestamp(), samplerIntervalMM-duration)
 										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-											int(avgAnalysis[avgID-1].interval/2*1000))
+											avgAnalysis[avgID-1].interval/2*1000)
 
 										buffer = []spaceEntries{} // redundant
 										if support.Debug == -1 {
@@ -468,7 +469,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											counter.ts = cTS
 											counter.val = int(math.Round(acc))
 											passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-												int(avgAnalysis[avgID-1].interval/2*1000))
+												avgAnalysis[avgID-1].interval/2*1000)
 											leftincycle = samplerIntervalMM
 											if support.Debug == -1 {
 
@@ -492,7 +493,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										//average(buffer, cTS, samplerIntervalMM)
 										counter = average(counter, buffer, cTS, 0)
 										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-											int(avgAnalysis[avgID-1].interval/2*1000))
+											avgAnalysis[avgID-1].interval/2*1000)
 										buffer[len(buffer)-1].ts = cTS
 										buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
 									} else {
@@ -501,7 +502,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										counter.ts = cTS
 										counter.val = 0
 										buffer = append(buffer, counter)
-										passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
+										passData(spacename, samplerName, counter, nextStageChan, chantimeout, avgAnalysis[avgID-1].interval/2*1000)
 									}
 								} else {
 									// multi-cycle analysis
@@ -510,7 +511,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 									ct.ts = cTS
 									multiCycle = append(multiCycle, DataEntry{Val: ct.val})
 									acc := float64(0)
-									nc := int(samplerInterval / 86400)
+									nc := samplerInterval / 86400
 									for _, sm := range multiCycle {
 										if sm.Ts == 0 {
 											acc += float64(sm.Val / nc)
@@ -521,7 +522,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 									counter.ts = cTS
 									counter.val = int(math.Round(acc))
 									passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-										int(avgAnalysis[avgID-1].interval/2*1000))
+										avgAnalysis[avgID-1].interval/2*1000)
 									// we prepare for the next sample Ts
 									refts = duration - cTS
 									buffer = append([]spaceEntries{}, buffer[len(buffer)-1])

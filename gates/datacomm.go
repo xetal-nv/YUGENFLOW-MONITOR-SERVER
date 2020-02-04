@@ -1,9 +1,9 @@
 package gates
 
 import (
+	"errors"
 	"fmt"
 	"gateserver/support"
-	"github.com/pkg/errors"
 	"strconv"
 )
 

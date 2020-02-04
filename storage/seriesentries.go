@@ -3,7 +3,7 @@ package storage
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/pkg/errors"
+	"errors"
 	"reflect"
 )
 
@@ -19,6 +19,7 @@ func (ss *SerieEntries) SetTag(nm string) {
 	ss.Stag = nm
 }
 
+//noinspection GoUnusedParameter
 func (ss *SerieEntries) SetVal(v ...int) {
 	// this does nothing
 }
