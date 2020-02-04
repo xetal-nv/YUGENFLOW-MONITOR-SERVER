@@ -49,7 +49,7 @@ NOTE: If the server does no have a svg for a given space, the space will be igno
 GATESERVER is set to the application folder  
 
 **CONFIGURATION:**  
-See .envtest file for configuration example
+See .envtest file for configuration example  
 
 **COMMAND LINE OPTIONS:**  
 -dbs Path : specifies path where to store the database, './DBS' used if not specified  
