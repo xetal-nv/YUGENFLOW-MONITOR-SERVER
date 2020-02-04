@@ -27,7 +27,7 @@ HTTPSPORTS[1]/series?last=x?type=y?space=z?analysis=y -> last x samples of type 
 HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
 HTTPSPORTS[1]/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type presence from space z and analysis y from timestamp x0 to timestamp x1, the value is set to 2 when activity is detected in the period and the value is equal to the number of detection at the end of the period  
 HTTPSPORTS[1]/cmd?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
-HTTPSPORTS[1]/cmd?cmd=macid?id=y?{val,mac}=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
+HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
 HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples  
 HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence  
