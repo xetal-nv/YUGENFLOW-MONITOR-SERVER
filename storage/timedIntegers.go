@@ -12,6 +12,7 @@ type DataCt struct {
 // IntCell implement a single input (n) single output (o)
 // non-blocking integer register.
 // d is its default value at start, if not given -1 will be used
+//noinspection GoUnusedFunction
 func _TimedIntCell(_ string, in, out chan DataCt, d ...DataCt) { // is
 	r := func() {
 		var data DataCt

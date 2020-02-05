@@ -60,7 +60,7 @@ var floor2Entries = [][]int{
 	{4, 3},
 }
 
-var startDayTime string = "00:01"
+var startDayTime = "00:01"
 
 // define a new person, timings and pauses provide the reference and they get randomized by the constructor
 func newPerson(entries [][]int, timings []string, longmod []int, pauses int, deskHolder bool, friday string) (p person) {
@@ -448,7 +448,7 @@ func Office() {
 		_ = ioutil.WriteFile(filename, file, 0644)
 	} else {
 		fmt.Println("OFFICE TEST: Read Holidays file:", filename)
-		_ = json.Unmarshal([]byte(file), &holidays)
+		_ = json.Unmarshal(file, &holidays)
 	}
 
 	// starts the daily cycle

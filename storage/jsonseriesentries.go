@@ -48,6 +48,7 @@ func (ss *JsonSeriesEntries) SetTag(nm string) {
 	ss.Stag = nm
 }
 
+//noinspection GoUnusedParameter
 func (ss *JsonSeriesEntries) SetVal(v ...int) {
 	// this does nothing
 }

@@ -33,7 +33,7 @@ func (hd *Headerdata) Marshal() (r []byte) {
 func (hd *Headerdata) Unmarshal(c []byte) error {
 
 	if len(c) != 28 {
-		return errors.New("Invalid raw data provided")
+		return errors.New("invalid raw data provided")
 	}
 	hd.fromRst = binary.LittleEndian.Uint64(c[0:8])
 	hd.step = binary.LittleEndian.Uint32(c[8:12])

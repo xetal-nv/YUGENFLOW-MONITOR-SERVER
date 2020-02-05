@@ -30,7 +30,7 @@ function repRead() {
         url: "http://localhost:8090/sample",
         // url: "http://localhost:8090/entry",
         success: function (data) {
-            var jsObj = JSON.parse(data)
+            var jsObj = JSON.parse(data);
             // document.write(data)
             $('textarea').text(JSON.stringify(jsObj, null, '  '));
 

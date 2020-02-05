@@ -476,7 +476,7 @@ func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
 	}
 	tag := s0.Tag()
 	ts0 := s0.Ts() / 1000
-	ts1 := int64((s1.Ts()/1000)/86400)*86400 + 86399
+	ts1 := (s1.Ts()/1000)/86400*86400 + 86399
 	//fmt.Println(ts0,ts1)
 	tagMutex.RLock()
 	if st, ok := tagStart[tag]; ok {
@@ -537,7 +537,7 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 	}
 	tag = s0.Tag()
 	ts0 := s0.Ts() / 1000
-	ts1 := int64((s1.Ts()/1000)/86400)*86400 + 86399
+	ts1 := (s1.Ts()/1000)/86400*86400 + 86399
 	tagMutex.RLock()
 	if st, ok := tagStart[tag]; ok {
 		tagMutex.RUnlock()

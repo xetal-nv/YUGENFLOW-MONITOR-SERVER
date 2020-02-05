@@ -33,7 +33,7 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 								log.Printf("storage.TimedIntDBS: DBS handler %v wrong data type %v\n", id, tp)
 							}
 						} else {
-							log.Printf("storage.TimedIntDBS: DBS handler discarded empty data % v for %v\n", a, id)
+							log.Printf("storage.TimedIntDBS: DBS handler discarded empty data %v for %v\n", a, id)
 						}
 					} else {
 						log.Println(e.Error(), d)

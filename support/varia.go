@@ -1,7 +1,7 @@
 package support
 
 import (
-	crypto_rand "crypto/rand"
+	cryptoRand "crypto/rand"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -94,6 +94,7 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 }
 
 // true if given time in between start and end
+//noinspection GoUnusedExportedFunction
 func InClosureTimeFull(start, end, now time.Time) (rt bool, err error) {
 	if start == end {
 		return false, nil
@@ -129,6 +130,7 @@ func inTimeSpan(start, end, check time.Time) bool {
 }
 
 // Get preferred outbound ip of this machine
+//noinspection GoUnusedExportedFunction
 func GetOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
@@ -179,21 +181,21 @@ func TimeDifferenceInSecs(start, end string) (int64, error) {
 					t0s := (h0*3600 + m0*60) * 1000
 					t1s := (h1*3600 + m1*60) * 1000
 					if t0s > t1s {
-						return 0, errors.New("End later than start")
+						return 0, errors.New("end later than start")
 					}
 					return int64(t1s - t0s), nil
 				}
 			}
 		}
 	}
-	return 0, errors.New("Invalid data")
+	return 0, errors.New("invalid data")
 }
 
 // True random generator
 
 func RandomInit() {
 	var b [8]byte
-	_, err := crypto_rand.Read(b[:])
+	_, err := cryptoRand.Read(b[:])
 	if err != nil {
 		panic("cannot seed math/rand package with cryptographically secure random number generator")
 	}

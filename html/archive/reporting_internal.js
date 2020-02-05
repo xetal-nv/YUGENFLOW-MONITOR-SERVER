@@ -37,7 +37,7 @@ $(document).ready(function () {
         _startDate = startPicker.getDate(),
         _endDate = endPicker.getDate();
 
-    maxtries = 10
+    maxtries = 10;
 
 
     if (_startDate) {

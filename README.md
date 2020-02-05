@@ -69,4 +69,5 @@ See .envtest and .systemenv files for configuration example
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -st string : set start time, time specified as HH:MM
+-eeprom : enables refresh of device eeprom at every connection
 
