@@ -26,7 +26,7 @@ HTTPSPORTS[1]/x/y/z -> actual value for data x in space y on averaging z
 HTTPSPORTS[1]/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
 HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
 HTTPSPORTS[1]/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type presence from space z and analysis y from timestamp x0 to timestamp x1, the value is set to 2 when activity is detected in the period and the value is equal to the number of detection at the end of the period  
-HTTPSPORTS[1]/cmd?cmd=x?id=y?chan=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
+HTTPSPORTS[1]/cmd?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
 HTTPSPORTS[1]/cmd?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
@@ -72,4 +72,6 @@ See .envtest and .systemenv files for configuration example
 -ri Int : set log ri  
 -rs Int64 : set log rs  
 -st string : set start time, time specified as HH:MM
+-eeprom : enables refresh of device eeprom at every connection
+
 

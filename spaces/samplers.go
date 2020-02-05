@@ -424,7 +424,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 						counter = spaceEntries{ts: support.Timestamp(), netflow: 0}
 						buffer = []spaceEntries{counter}
 					} else {
-						buffer = []spaceEntries{spaceEntries{ts: support.Timestamp(), netflow: 0}}
+						buffer = []spaceEntries{{ts: support.Timestamp(), netflow: 0}}
 					}
 
 					// refts is used yo track multicycles situations that can End during a cycle.
@@ -463,7 +463,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										// no data outside the cycle is used
 										counter = average(counter, buffer, support.Timestamp(), samplerIntervalMM-duration)
 										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-											int(avgAnalysis[avgID-1].interval/2*1000))
+											avgAnalysis[avgID-1].interval/2*1000)
 
 										buffer = []spaceEntries{} // redundant
 										if support.Debug == -1 {
@@ -504,7 +504,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 											counter.ts = cTS
 											counter.netflow = int(math.Round(acc))
 											passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-												int(avgAnalysis[avgID-1].interval/2*1000))
+												avgAnalysis[avgID-1].interval/2*1000)
 											leftincycle = samplerIntervalMM
 											if support.Debug == -1 {
 
@@ -528,7 +528,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										//average(buffer, cTS, samplerIntervalMM)
 										counter = average(counter, buffer, cTS, 0)
 										passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-											int(avgAnalysis[avgID-1].interval/2*1000))
+											avgAnalysis[avgID-1].interval/2*1000)
 										buffer[len(buffer)-1].ts = cTS
 										buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
 									} else {
@@ -537,7 +537,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 										counter.ts = cTS
 										counter.netflow = 0
 										buffer = append(buffer, counter)
-										passData(spacename, samplerName, counter, nextStageChan, chantimeout, int(avgAnalysis[avgID-1].interval/2*1000))
+										passData(spacename, samplerName, counter, nextStageChan, chantimeout, avgAnalysis[avgID-1].interval/2*1000)
 									}
 								} else {
 									// multi-cycle analysis
@@ -546,7 +546,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 									ct.ts = cTS
 									multiCycle = append(multiCycle, DataEntry{NetFlow: ct.netflow})
 									acc := float64(0)
-									nc := int(samplerInterval / 86400)
+									nc := samplerInterval / 86400
 									for _, sm := range multiCycle {
 										if sm.Ts == 0 {
 											acc += float64(sm.NetFlow / nc)
@@ -557,7 +557,7 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 									counter.ts = cTS
 									counter.netflow = int(math.Round(acc))
 									passData(spacename, samplerName, counter, nextStageChan, chantimeout,
-										int(avgAnalysis[avgID-1].interval/2*1000))
+										avgAnalysis[avgID-1].interval/2*1000)
 									// we prepare for the next sample Ts
 									refts = duration - cTS
 									buffer = append([]spaceEntries{}, buffer[len(buffer)-1])

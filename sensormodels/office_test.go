@@ -71,7 +71,7 @@ func Test_HAPI(t *testing.T) {
 		_ = ioutil.WriteFile(filename, file, 0644)
 	} else {
 		fmt.Println("Read file")
-		_ = json.Unmarshal([]byte(file), &holidays)
+		_ = json.Unmarshal(file, &holidays)
 	}
 
 	today := strconv.Itoa(time.Now().Year()) + "-" + strconv.Itoa(int(time.Now().Month())) + "-" + strconv.Itoa(time.Now().Day())

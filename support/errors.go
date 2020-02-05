@@ -1,5 +1,7 @@
 package support
 
+import "os"
+
 type fn func()
 
 // RunWithRecovery runs function f() and in case of panic
@@ -14,4 +16,14 @@ func RunWithRecovery(f, r fn) {
 		}
 	}()
 	f()
+}
+
+// fileExists checks if a file exists and is not a directory before we
+// try using it to prevent further errors.
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

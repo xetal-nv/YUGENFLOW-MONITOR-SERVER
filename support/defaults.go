@@ -22,25 +22,25 @@ var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination d
 
 // set-ups all support variables according to the configuration file .env
 
-func SupportSetUp(envf string) {
+func SetUp(envf string) {
 	if envf == "" {
 		if _, err := os.Stat(".systemenv"); err == nil {
 			if e := godotenv.Load(".systemenv"); e != nil {
-				panic("Fatal error:" + e.Error())
+				panic("Cannot find .env file")
 			}
 		} else {
 			if e := godotenv.Load(); e != nil {
-				panic("Fatal error:" + e.Error())
+				panic("Cannot find .env file")
 			}
 		}
 	} else {
 		if _, err := os.Stat(".systemenv"); err == nil {
 			if e := godotenv.Load(".systemenv", envf); e != nil {
-				panic("Fatal error:" + e.Error())
+				panic("Cannot find .env file")
 			}
 		} else {
 			if e := godotenv.Load(envf); e != nil {
-				panic("Fatal error:" + e.Error())
+				panic("Cannot find .env file")
 			}
 		}
 		//if e := godotenv.Load(envf); e != nil {
@@ -66,6 +66,6 @@ func SupportSetUp(envf string) {
 	log.Println("Maximum label length set to", LabelLength)
 }
 
-func SupportTerminate() {
+func Terminate() {
 	closeLog()
 }

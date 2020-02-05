@@ -1,7 +1,9 @@
 package servers
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"gateserver/spaces"
 	"gateserver/storage"
 	"gateserver/support"
@@ -16,7 +18,7 @@ import (
 	"time"
 )
 
-var Dvl bool = false
+var Dvl = false
 
 func setJSenvironment() {
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
@@ -378,6 +380,146 @@ func setupHTTP() error {
 	return nil
 }
 
+/*
+	setSensorParameters read all sensor parameters ignoring any data being sent.
+	The data is contained in the file .sensorsettings and each line specifies on sensor as:
+
+	{mac} {srate} {savg} {bgth*16} {occth*16}
+
+	- comments start with #
+	- a mac set to * (wildcard) indicated settings valid for every sensor
+	- a setting set to _ either takes the value from the mac wildcard (if given) or ignore the setting
+
+*/
+func readSensorParameters() {
+
+	if SensorEEPROMResetEnables {
+		if support.FileExists(sensorEEPROMfile) {
+			log.Println("Setting sensor settings from file " + sensorEEPROMfile)
+
+			refGen := false
+			commonSensorSpecsLocal := sensorSpecs{0, 0, 0, 0}
+			sensorDataLocal := make(map[string]sensorSpecs)
+
+			readSpecs := func(line string, ref bool) (specs sensorSpecs, el string, refGen bool, e error) {
+				refGen = ref
+				values := strings.Split(line, " ")
+				if len(values) != 5 {
+					log.Println("Error illegal sensor settings:", line)
+				} else {
+					el = strings.Trim(values[0], " ")
+					var e1, e2, e3, e4 error
+					if strings.Trim(values[1], " ") == "_" {
+						refGen = true
+						specs.srate = -1
+					} else {
+						specs.srate, e1 = strconv.Atoi(values[1])
+					}
+					if strings.Trim(values[2], " ") == "_" {
+						refGen = true
+						specs.savg = -1
+					} else {
+						specs.savg, e2 = strconv.Atoi(values[2])
+					}
+					if strings.Trim(values[3], " ") == "_" {
+						refGen = true
+						specs.bgth = -1
+					} else {
+						specs.bgth, e3 = strconv.ParseFloat(values[3], 64)
+					}
+					if strings.Trim(values[4], " ") == "_" {
+						refGen = true
+						specs.occth = -1
+					} else {
+						specs.occth, e4 = strconv.ParseFloat(values[4], 64)
+					}
+
+					if e1 != nil || e2 != nil || e3 != nil || e4 != nil {
+						//log.Println("Error illegal sensor settings:", line)
+						return sensorSpecs{}, "", ref, errors.New("Error illegal sensor settings: " + line)
+					}
+
+					if specs.srate == 0 || specs.savg == 0 || specs.bgth == 0 || specs.occth == 0 {
+						//log.Println("Error illegal sensor settings:", line)
+						return sensorSpecs{}, "", ref, errors.New("Error illegal sensor setting values: " + line)
+					}
+
+					if el == "*" && (specs.srate == -1 || specs.savg == -1 || specs.bgth == -1 || specs.occth == -1) {
+						//log.Println("Error illegal sensor settings:", line)
+						return sensorSpecs{}, "", ref, errors.New("Error illegal sensor setting values: " + line)
+					}
+
+				}
+				return
+			}
+
+			expandSpecs := func() error {
+				if commonSensorSpecsLocal.srate == 0 || commonSensorSpecsLocal.savg == 0 || commonSensorSpecsLocal.bgth == 0 || commonSensorSpecsLocal.occth == 0 {
+					//log.Println("Error illegal sensor settings:", line)
+					return errors.New("error illegal global sensor setting values")
+				}
+
+				for i, val := range sensorDataLocal {
+					if val.srate == -1 {
+						val.srate = commonSensorSpecsLocal.srate
+					}
+					if val.savg == -1 {
+						val.savg = commonSensorSpecsLocal.savg
+					}
+					if val.bgth == -1 {
+						val.bgth = commonSensorSpecsLocal.bgth
+					}
+					if val.occth == -1 {
+						val.occth = commonSensorSpecsLocal.occth
+					}
+					sensorDataLocal[i] = val
+				}
+
+				return nil
+			}
+
+			if file, err := os.Open(sensorEEPROMfile); err == nil {
+				//noinspection GoUnhandledErrorResult
+				defer file.Close()
+
+				scanner := bufio.NewScanner(file)
+				for scanner.Scan() {
+					line := strings.Trim(scanner.Text(), "")
+					if string(line[0]) != "#" {
+						if tempSpecs, id, refGenTmp, err := readSpecs(line, refGen); err != nil {
+							log.Println(err.Error())
+						} else {
+							refGen = refGenTmp
+							if id == "*" {
+								commonSensorSpecsLocal = tempSpecs
+							} else {
+								sensorDataLocal[id] = tempSpecs
+							}
+						}
+					}
+				}
+				if err := scanner.Err(); err != nil {
+					log.Fatal("Error reading setting sensor settings from file " + sensorEEPROMfile)
+				}
+
+				if refGen {
+					if err := expandSpecs(); err == nil {
+						//commonSensorSpecs = commonSensorSpecsLocal
+						sensorData = sensorDataLocal
+					} else {
+						log.Fatal(err.Error())
+					}
+				}
+
+			} else {
+				log.Fatal("Error opening setting sensor settings from file " + sensorEEPROMfile)
+			}
+		} else {
+			log.Fatal("File " + sensorEEPROMfile + " does not exists")
+		}
+	}
+}
+
 // StartServers starts all required HTTP/TCP servers
 func StartServers() {
 
@@ -409,6 +551,9 @@ func StartServers() {
 	if e := setupHTTP(); e != nil {
 		log.Println("servers.StartServers: server set-up error:", e)
 	} else {
+
+		// read Sensor specs
+		readSensorParameters()
 
 		// Starts first the TCP server for data collection
 

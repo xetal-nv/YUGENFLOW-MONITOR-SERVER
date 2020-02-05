@@ -8,10 +8,23 @@ import (
 	"time"
 )
 
+const maxsensors = 200                     // maximum number of allowed processors
+const mindelayrefusedconnection = 30       // mininum delay for refused connection
+const sensorEEPROMfile = ".sensorsettings" // file containing the sensor eerpom values
+const eepromResetTries = 3                 // how many times the server tries to reset the sensor eeprom before reporting an error
+
 // device commands describer for conversion from/to binary to/from param execution
 type cmdspecs struct {
 	cmd byte // command binary value
 	lgt int  // number of bytes of arguments excluding cmd (1 byte) and the id (2 bytes)
+}
+
+// sensorSpecs captures the data for setSensorParameters
+type sensorSpecs struct {
+	srate int
+	savg  int
+	bgth  float64
+	occth float64
 }
 
 type datafunc func() GenericData
@@ -88,12 +101,13 @@ var cmdAPI = map[string]cmdspecs{
 	"setid":     {14, 2},
 }
 
-const maxsensors = 200               // maximum number of allowed processors
-const mindelayrefusedconnection = 30 // minimum delay for refused connection
-var errormngt = [3]int{1, 5, 15}     // [min penalty, max penalty, max number of consecutive errors]
-var tcpTokens chan bool              // token for accepting a TCP request
-var Kswitch bool                     // kill switch flag
-var RepCon bool                      // enables reporting on current
+var errormngt = [3]int{1, 5, 15} // [min penalty, max penalty, max number of consecutive errors]
+var tcpTokens chan bool          // token for accepting a TCP request
+var Kswitch bool                 // kill switch flag
+var RepCon bool                  // enables reporting on current
+//var commonSensorSpecs sensorSpecs     // specs valid for all sensors
+var sensorData map[string]sensorSpecs // specs valid for a given sensor mac
+var SensorEEPROMResetEnables bool     // if true the sensor EEPROM is reset at every connection
 
 // debug access control
 var dbgMutex = &sync.RWMutex{}   // lock to dbgRegistry
