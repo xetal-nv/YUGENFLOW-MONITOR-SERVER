@@ -551,7 +551,6 @@ func StartServers() {
 	if e := setupHTTP(); e != nil {
 		log.Println("servers.StartServers: server set-up error:", e)
 	} else {
-
 		// read Sensor specs
 		readSensorParameters()
 
