@@ -37,16 +37,26 @@ func SetUp() {
 	//	}
 	//}
 
-	if da := os.Getenv("DEVICEASYM"); da == "" {
-		maximumAsymmetry = 10
-	} else {
-		if v, e := strconv.Atoi(da); e != nil {
-			log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
-		} else {
-			maximumAsymmetry = v
+	maximumAsymmetry = 0
+	if v, e := strconv.Atoi(strings.Trim(os.Getenv("RESETPERIOD"), " ")); e == nil {
+		if v != 0 {
+			if da := os.Getenv("DEVICEASYM"); da == "" {
+				maximumAsymmetry = 10
+			} else {
+				if v, e := strconv.Atoi(da); e != nil {
+					log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
+				} else {
+					maximumAsymmetry = v
+				}
+			}
 		}
 	}
-	log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %vs\n", maximumAsymmetry)
+	if maximumAsymmetry == 0 {
+		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS NOT ENABLED !!!\n")
+	} else {
+		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS ENABLED !!!\n")
+		log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %v\n", maximumAsymmetry)
+	}
 
 	log.Println("gateList.SetUp: defined gate composition range in devices as", devgate)
 	if data := os.Getenv("REVERSE"); data != "" {

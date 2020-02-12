@@ -481,9 +481,9 @@ func readSensorParameters() {
 					log.Fatal("Error reading setting sensor settings from file " + sensorEEPROMfile)
 				}
 
+				commonSensorSpecs = commonSensorSpecsLocal
 				if refGen {
 					if err := expandSpecs(); err == nil {
-						//commonSensorSpecs = commonSensorSpecsLocal
 						sensorData = sensorDataLocal
 					} else {
 						log.Fatal(err.Error())
@@ -497,6 +497,9 @@ func readSensorParameters() {
 			log.Fatal("File " + sensorEEPROMfile + " does not exists")
 		}
 	}
+	//fmt.Println(sensorData)
+	//fmt.Println(commonSensorSpecs)
+	//os.Exit(1)
 }
 
 // StartServers starts all required HTTP/TCP servers
@@ -596,17 +599,20 @@ func setUpTCP() {
 		maltimeout = v
 	}
 
-	resetbg.start, resetbg.end, resetbg.interval, resetbg.valid = time.Time{}, time.Time{}, time.Duration(0), false
+	resetbg.start, resetbg.end, resetbg.valid = time.Time{}, time.Time{}, false
 	rng := strings.Split(strings.Trim(os.Getenv("RESETSLOT"), ";"), ";")
-	if len(rng) == 3 {
-		if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
-			resetbg.start = v
-			if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
-				resetbg.end = v
-				if v, e := strconv.Atoi(strings.Trim(rng[2], " ")); e == nil {
-					if v != 0 {
-						resetbg.interval = time.Duration(v)
-						resetbg.valid = true
+
+	if v, e := strconv.Atoi(strings.Trim(os.Getenv("RESETPERIOD"), " ")); e == nil {
+		if v != 0 {
+			resetbg.interval = time.Duration(v)
+			if len(rng) == 3 {
+				if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+					resetbg.start = v
+					if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+						resetbg.end = v
+						if strings.Trim(rng[2], " ") != "0" {
+							resetbg.valid = true
+						}
 					}
 				}
 			}
@@ -614,7 +620,10 @@ func setUpTCP() {
 	}
 
 	if !resetbg.valid {
-		log.Println("servers.StartTCP: Warning RESETSLOT has invalid data", os.Getenv("RESETSLOT"))
+		log.Println("servers.StartTCP: WARNING RESETSLOT has invalid data or is disabled:", os.Getenv("RESETSLOT"))
+	} else {
+		log.Println("servers.StartTCP: WARNING RESETSLOT is set from ", strings.Trim(rng[0], " "), "to", strings.Trim(rng[1], " "))
+
 	}
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)

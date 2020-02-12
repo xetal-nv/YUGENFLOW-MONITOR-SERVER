@@ -62,7 +62,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 											if _, err := conn.Write(cmd); err != nil {
 												rv.Rt = "error: command failed"
 											} else {
-												rv.Rt = "Device restarting"
+												rv.Rt = "Device id changed"
 												rv.State = true
 												mutexUnknownMac.Lock()
 												unkownDevice[string(mac)] = true
@@ -78,11 +78,14 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 												case <-time.After(time.Duration(timeout) * time.Second):
 												}
 											}
-										}
-										select {
-										case ch <- nil:
-										case <-time.After(time.Duration(timeout) * time.Second):
-											rv.Rt = "warning: command probably failed"
+											//}
+											select {
+											case ch <- nil:
+											case <-time.After(time.Duration(timeout) * time.Second):
+												rv.Rt = "warning: command probably failed"
+											}
+										} else {
+											rv.Rt = "warning: sensor has not yet indicated any id, valid or not"
 										}
 									case <-time.After(time.Duration(timeout) * time.Second):
 										rv.Rt = "error: command failed"
@@ -174,7 +177,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 								if support.Debug != 0 {
 									fmt.Println("CMD: Executing command")
 								}
-								fmt.Println("CMD: sent command", cmd)
+								//fmt.Println("CMD: sent command", cmd)
 								select {
 								case ch <- cmd:
 									if support.Debug != 0 {

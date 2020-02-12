@@ -78,6 +78,10 @@ func handlerTCPRequest(conn net.Conn) {
 		// Add here a part to reset all sensor parameters.
 		// in case of errors the connection is closed/refused
 		if e := setSensorParameters(conn, mach); e == nil {
+
+			if SensorEEPROMResetEnables {
+				log.Printf("servers.handlerTCPRequest: eeprom refresh executed for device %v//%v\n", ipc, mach)
+			}
 			// Start reading data
 
 			// define a malicious report function that, depending if on strict mode, also kills the connection
@@ -291,6 +295,12 @@ func handlerTCPRequest(conn net.Conn) {
 				}
 			}
 			malfcheck = 0
+			// It reset all possible TCP deadline that might be pending form previous operations
+			// in case of failure it closes the channel
+			if e := conn.SetDeadline(time.Time{}); e != nil {
+				log.Printf("servers.handlerTCPRequest: timeout reset error %v with device %v//%v\n", e.Error(), ipc, mach)
+				loop = false
+			}
 			for loop {
 				cmd := make([]byte, 1)
 				if _, e := conn.Read(cmd); e != nil {
@@ -299,6 +309,7 @@ func handlerTCPRequest(conn net.Conn) {
 						// in case of channel closed (EOF) it gets logged and the handler terminated
 						log.Printf("servers.handlerTCPRequest: connection lost with device %v//%v\n", ipc, mach)
 					} else {
+						//log.Printf("servers.handlerTCPRequest: pippo\n")
 						log.Printf("servers.handlerTCPRequest: error reading from %v//%v : %v\n", ipc, mach, e)
 					}
 					loop = false

@@ -77,58 +77,68 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		data := <-in
 		nv := data.val
 		// check for asymmetry in gate sensor dictating reset
-		for i, r := range gateListEntry[sensorToGate[data.id]] {
-			if r == data.id {
-				//fmt.Println(id, sensorSensorDifferential)
-				// if there is no pending reset request, check for a need for reset
-				tryResetMux.RLock()
-				if tryReset[r] {
-					// this array does not need locking, races are not possible despite the go routine on it
-					sensorSensorDifferential[sensorToGate[r]][i] += 1
-					tryResetMux.RUnlock()
-					var min, max int
-					for i, e := range sensorSensorDifferential[sensorToGate[r]] {
-						if i == 0 || e < min {
-							min = e
-						}
-					}
-					for i, e := range sensorSensorDifferential[sensorToGate[r]] {
-						if i == 0 || e > max {
-							max = e
-						}
-						tryResetMux.Lock() // this locking is redundant but still required by the compiler
-						sensorSensorDifferential[sensorToGate[r]][i] -= min
-						tryResetMux.Unlock() // this locking is redundant but still required by the compiler
-					}
-					//fmt.Println(sensorToGate[r], max, min, r)
-					if max-min >= maximumAsymmetry {
-						tryResetMux.Lock() // this locking is redundant but still required by the compiler
-						tryReset[r] = false
-						tryResetMux.Unlock() // this locking is redundant but still required by the compiler
-						go func(id int) {
-							// we do not wait for a success as failure to execute will eventually result in another reset request
-							SensorRst.RLock()
-							resetChannel, ok := SensorRst.Channel[id]
-							SensorRst.RUnlock()
-							if ok {
-								resetChannel <- true
-								//fmt.Println("sent reset request for id", id)
+		// the algorithm supports also mroe than two devices per gate even if not supported by the algorithm yet
+		if maximumAsymmetry != 0 {
+			//fmt.Println(gateListEntry)
+			//os.Exit(1)
+			for i, r := range gateListEntry[sensorToGate[data.id]] {
+				if r == data.id {
+					//fmt.Println(id, sensorSensorDifferential)
+					// if there is no pending reset request, check for a need for reset
+					tryResetMux.RLock()
+					if tryReset[r] {
+						// this array does not need locking, races are not possible despite the go routine on it
+						sensorSensorDifferential[sensorToGate[r]][i] += 1
+						tryResetMux.RUnlock()
+						var min, max int
+						for i, e := range sensorSensorDifferential[sensorToGate[r]] {
+							if i == 0 || e < min {
+								min = e
 							}
-							// ok false means that the self reset was not enabled
-							tryResetMux.Lock()
-							for i := range sensorSensorDifferential[sensorToGate[id]] {
-								sensorSensorDifferential[sensorToGate[id]][i] = 0
+						}
+						for i, e := range sensorSensorDifferential[sensorToGate[r]] {
+							if i == 0 || e > max {
+								max = e
 							}
-							// for safety of races we should use a RW lock on tryReset
-							tryReset[r] = true
-							tryResetMux.Unlock()
-						}(r)
+							tryResetMux.Lock() // this locking is redundant but still required by the compiler
+							sensorSensorDifferential[sensorToGate[r]][i] -= min
+							tryResetMux.Unlock() // this locking is redundant but still required by the compiler
+						}
+						//fmt.Println(sensorToGate[r], max, min, r)
+						if max-min >= maximumAsymmetry {
+							tryResetMux.Lock() // this locking is redundant but still required by the compiler
+							tryReset[r] = false
+							tryResetMux.Unlock() // this locking is redundant but still required by the compiler
+							go func(ids []int) {
+								for _, deviceId := range ids {
+									// we do not wait for a success as failure to execute will eventually result in another reset request
+									SensorRst.RLock()
+									resetChannel, ok := SensorRst.Channel[deviceId]
+									SensorRst.RUnlock()
+									if ok {
+										resetChannel <- true
+										//log.Println("sent asymmetric reset request for device", deviceId)
+										//fmt.Println("sent asymmetric reset request for device", deviceId)
+									} else {
+										//log.Printf("cannot reset device %v since not connected\n", deviceId)
+										//fmt.Printf("cannot reset device %v since not connected or reset not enabled\n", deviceId)
+									}
+								}
+								tryResetMux.Lock()
+								for i := range sensorSensorDifferential[sensorToGate[id]] {
+									sensorSensorDifferential[sensorToGate[id]][i] = 0
+								}
+								// for safety of races we should use a RW lock on tryReset
+								tryReset[r] = true
+								tryResetMux.Unlock()
+							}(gateListEntry[sensorToGate[data.id]])
+						}
+					} else {
+						tryResetMux.RUnlock()
+						//fmt.Println("reset request pending for gate", sensorToGate[r])
 					}
-				} else {
-					tryResetMux.RUnlock()
-					//fmt.Println("reset request pending for gate", sensorToGate[r])
+					break
 				}
-				break
 			}
 		}
 		// calculates the next sample

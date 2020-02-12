@@ -42,9 +42,6 @@ SAMWINDOW = 5
 ## RANGE OF DEVICES PER GATE - UNSUPPORTED
 #DEVPERGATE = 2 2
 
-## MAXIMUM DEVICE ASYMMETRY PER GATE
-DEVICEASYM = 10
-
 ## TIMEOURS (TO) IN S
 ## Defives the device, database and malicious connection timeouts
 DEVICETO = 10
@@ -122,9 +119,17 @@ SPACE_d2 = 0 1
 SPACE_d3 = 2 3
 
 ## RESET DECLARATION
-## Define interval for periodic and self resetting sensors, interval 0 turns it off
-## RESET = start as xx:xx; end as xx:xx; sampling interval for self-reset in minutes
-RESETSLOT = 23:30; 00:30; 30
+## RESETSLOT defines the interval for periodic and self resetting sensors, interval 0 turns it off
+## DEVICEASYM declares the maximum asymmetry between devices in a gate forcing reset of all gate devices, set to zero to disable
+## RESETPERIOD declares the reset check period, all resets are off if this value is 0, a standard value is used if not specified
+##
+## RESETSLOT = start as xx:xx; end as xx:xx; 0 for disable
+## DEVICEASYM = asymmetry value
+## RESETPERIOD = period in minutes
+
+RESETSLOT = 23:30; 00:30; 1
+DEVICEASYM = 3
+RESETPERIOD = 1
 
 ##### ANALYSIS #####
 
