@@ -39,9 +39,6 @@ AVERAGENEG = 0
 ## SAMPLING INTERVAL IN SECONDS FOR CURRENT READINGS
 SAMWINDOW = 5
 
-## RANGE OF DEVICES PER GATE - UNSUPPORTED
-#DEVPERGATE = 2 2
-
 ## TIMEOURS (TO) IN S
 ## Defives the device, database and malicious connection timeouts
 DEVICETO = 10
@@ -84,7 +81,7 @@ MACSTRICT = 0
 #SPARES = mac1 mac2 ...
 
 ## GATE COMPOSITION
-## Gates are defined by at least two devices, number has to be crescent without gaps
+## Gates are defined by one to two devices, number has to be crescent without gaps
 ## Device order follows from the first device to the last while entering
 ## IMPORTANT: Devices CANNOT be shared among gates and server DOES NOT SET the device ID
 #GATE_number = device_id device_id ...

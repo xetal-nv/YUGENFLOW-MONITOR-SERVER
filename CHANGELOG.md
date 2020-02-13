@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
  ### Changed
   - Fixed issue with periodic reset  
   - Periodic reset is now self-reset  
+  - !!! Check JS bug on point data as it seems it take data only 30 minutes before the set time (TBD)  
+  - Added support for single sensor per gate  
  
 
 ## [0.7.1]

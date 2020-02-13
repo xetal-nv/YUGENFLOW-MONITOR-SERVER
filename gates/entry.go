@@ -56,6 +56,9 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		f, err = os.Create("log/entry_" + strconv.Itoa(id) + ".txt")
 	}
 
+	//fmt.Println(sensorListEntry)
+	//os.Exit(1)
+
 	for senId := range sensorToGate {
 		tryReset[senId] = true
 	}
@@ -76,14 +79,11 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 	for {
 		data := <-in
 		nv := data.val
-		// check for asymmetry in gate sensor dictating reset
-		// the algorithm supports also mroe than two devices per gate even if not supported by the algorithm yet
-		if maximumAsymmetry != 0 {
-			//fmt.Println(gateListEntry)
-			//os.Exit(1)
+
+		// check for asymmetry in gate sensor dictating reset if there is more than one device in the gate
+		if maximumAsymmetry != 0 && len(gateListEntry[sensorToGate[data.id]]) > 1 {
 			for i, r := range gateListEntry[sensorToGate[data.id]] {
 				if r == data.id {
-					//fmt.Println(id, sensorSensorDifferential)
 					// if there is no pending reset request, check for a need for reset
 					tryResetMux.RLock()
 					if tryReset[r] {
@@ -104,7 +104,6 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 							sensorSensorDifferential[sensorToGate[r]][i] -= min
 							tryResetMux.Unlock() // this locking is redundant but still required by the compiler
 						}
-						//fmt.Println(sensorToGate[r], max, min, r)
 						if max-min >= maximumAsymmetry {
 							tryResetMux.Lock() // this locking is redundant but still required by the compiler
 							tryReset[r] = false
@@ -117,11 +116,9 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 									SensorRst.RUnlock()
 									if ok {
 										resetChannel <- true
-										//log.Println("sent asymmetric reset request for device", deviceId)
-										//fmt.Println("sent asymmetric reset request for device", deviceId)
+										log.Println("sent asymmetric reset request for device", deviceId)
 									} else {
-										//log.Printf("cannot reset device %v since not connected\n", deviceId)
-										//fmt.Printf("cannot reset device %v since not connected or reset not enabled\n", deviceId)
+										log.Printf("cannot reset device %v since not connected\n", deviceId)
 									}
 								}
 								tryResetMux.Lock()
@@ -135,7 +132,6 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 						}
 					} else {
 						tryResetMux.RUnlock()
-						//fmt.Println("reset request pending for gate", sensorToGate[r])
 					}
 					break
 				}
@@ -212,65 +208,73 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 	}
 
 	for _, gate := range gateListEntry {
-		if scratchPad.unusedSampleSumIn[gate[0]] > 0 && scratchPad.unusedSampleSumIn[gate[1]] > 0 { //in
-			tmp := support.Min(support.Abs(scratchPad.unusedSampleSumIn[gate[0]]),
-				support.Abs(scratchPad.unusedSampleSumIn[gate[1]]))
-			rt += tmp
-			scratchPad.unusedSampleSumIn[gate[0]] -= tmp
-			scratchPad.unusedSampleSumIn[gate[1]] -= tmp
-			if scratchPad.unusedSampleSumIn[gate[0]] < 0 {
-				scratchPad.unusedSampleSumIn[gate[0]] = 0
+		if len(gate) == 1 {
+			// in case of single device the data is passed as it
+			rt = scratchPad.senData[gate[0]].val
+			scratchPad.unusedSampleSumIn[gate[0]] = 0
+			scratchPad.unusedSampleSumOut[gate[0]] = 0
+		} else {
+			if scratchPad.unusedSampleSumIn[gate[0]] > 0 && scratchPad.unusedSampleSumIn[gate[1]] > 0 { //in
+				tmp := support.Min(support.Abs(scratchPad.unusedSampleSumIn[gate[0]]),
+					support.Abs(scratchPad.unusedSampleSumIn[gate[1]]))
+				rt += tmp
+				scratchPad.unusedSampleSumIn[gate[0]] -= tmp
+				scratchPad.unusedSampleSumIn[gate[1]] -= tmp
+				if scratchPad.unusedSampleSumIn[gate[0]] < 0 {
+					scratchPad.unusedSampleSumIn[gate[0]] = 0
+				}
+				if scratchPad.unusedSampleSumIn[gate[1]] < 0 {
+					scratchPad.unusedSampleSumIn[gate[1]] = 0
+				}
 			}
-			if scratchPad.unusedSampleSumIn[gate[1]] < 0 {
-				scratchPad.unusedSampleSumIn[gate[1]] = 0
+			if scratchPad.unusedSampleSumOut[gate[0]] < 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 { //out
+				tmp := support.Min(support.Abs(scratchPad.unusedSampleSumOut[gate[0]]),
+					support.Abs(scratchPad.unusedSampleSumOut[gate[1]]))
+				rt -= tmp
+				scratchPad.unusedSampleSumOut[gate[0]] += tmp
+				scratchPad.unusedSampleSumOut[gate[1]] += tmp
+				if scratchPad.unusedSampleSumOut[gate[0]] > 0 {
+					scratchPad.unusedSampleSumOut[gate[0]] = 0
+				}
+				if scratchPad.unusedSampleSumOut[gate[1]] > 0 {
+					scratchPad.unusedSampleSumOut[gate[1]] = 0
+				}
 			}
 		}
-		if scratchPad.unusedSampleSumOut[gate[0]] < 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 { //out
-			tmp := support.Min(support.Abs(scratchPad.unusedSampleSumOut[gate[0]]),
-				support.Abs(scratchPad.unusedSampleSumOut[gate[1]]))
-			rt -= tmp
-			scratchPad.unusedSampleSumOut[gate[0]] += tmp
-			scratchPad.unusedSampleSumOut[gate[1]] += tmp
-			if scratchPad.unusedSampleSumOut[gate[0]] > 0 {
-				scratchPad.unusedSampleSumOut[gate[0]] = 0
-			}
-			if scratchPad.unusedSampleSumOut[gate[1]] > 0 {
-				scratchPad.unusedSampleSumOut[gate[1]] = 0
-			}
-		}
-
 	}
 
 	for _, gate := range gateListEntry {
-		// in - not detected by sensor 1
-		if flag[gate[1]] && scratchPad.senData[gate[1]].val == 0 && scratchPad.unusedSampleSumIn[gate[0]] > 0 {
-			// if flag in the scratchPad it needs to be reset
-			rt++
-			scratchPad.unusedSampleSumIn[gate[0]]--
-		}
-		// out - not detected by sensor 0
-		if flag[gate[0]] && scratchPad.senData[gate[0]].val == 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 {
-			// if flag in the scratchPad it needs to be reset
-			rt--
-			scratchPad.unusedSampleSumOut[gate[1]]++
-		}
+		if len(gate) > 1 {
+			// in - not detected by sensor 1
+			if flag[gate[1]] && scratchPad.senData[gate[1]].val == 0 && scratchPad.unusedSampleSumIn[gate[0]] > 0 {
+				// if flag in the scratchPad it needs to be reset
+				rt++
+				scratchPad.unusedSampleSumIn[gate[0]]--
+			}
+			// out - not detected by sensor 0
+			if flag[gate[0]] && scratchPad.senData[gate[0]].val == 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 {
+				// if flag in the scratchPad it needs to be reset
+				rt--
+				scratchPad.unusedSampleSumOut[gate[1]]++
+			}
 
-		// cleaning in case or large asymmetries due to defected sensor
-		if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
-			rt += 1
-			scratchPad.unusedSampleSumIn[gate[0]] -= 1
-		}
-		if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
-			rt += 1
-			scratchPad.unusedSampleSumIn[gate[1]] -= 1
-		}
-		if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
-			rt -= 1
-			scratchPad.unusedSampleSumOut[gate[0]] += 1
-		}
-		if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
-			rt -= 1
-			scratchPad.unusedSampleSumOut[gate[1]] += 1
+			// cleaning in case or large asymmetries due to defected sensor
+			if scratchPad.unusedSampleSumIn[gate[0]] > 2 {
+				rt += 1
+				scratchPad.unusedSampleSumIn[gate[0]] -= 1
+			}
+			if scratchPad.unusedSampleSumIn[gate[1]] > 2 {
+				rt += 1
+				scratchPad.unusedSampleSumIn[gate[1]] -= 1
+			}
+			if scratchPad.unusedSampleSumOut[gate[0]] < -2 {
+				rt -= 1
+				scratchPad.unusedSampleSumOut[gate[0]] += 1
+			}
+			if scratchPad.unusedSampleSumOut[gate[1]] < -2 {
+				rt -= 1
+				scratchPad.unusedSampleSumOut[gate[1]] += 1
+			}
 		}
 	}
 
