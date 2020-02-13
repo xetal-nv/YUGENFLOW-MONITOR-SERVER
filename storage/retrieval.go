@@ -17,7 +17,7 @@ const PRESENCEFILE = ".recoverypresence"
 // covert a string to its epoch value using as form FORM
 func string2epoch(val string) (rt int64, err error) {
 	// Parse the string according to the form.
-	r, e := time.Parse(FORM, val)
+	r, e := time.ParseInLocation(FORM, val, time.Now().Location())
 	if e == nil {
 		rt = r.Unix()
 	}
@@ -90,6 +90,7 @@ func RetrieveSampleFromFile() {
 											newSample.Sts = (th + tm + v) * 1000
 											newSample.Sval = val
 											testData = append(testData, *newSample)
+											//fmt.Println(newSample)
 											if err := StoreSampleTS(newSample, true); err != nil {
 												go func() {
 													support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing data",

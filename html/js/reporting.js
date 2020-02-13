@@ -52,6 +52,11 @@ $(document).ready(function () {
 
         document.getElementById("gen").addEventListener("click", generateReport);
 
+        function timeLikeDiff(first, second) {
+            return (Math.trunc(first / 100) - Math.trunc(second / 100)) * 60 +
+                Math.round(((first / 100 - Math.floor(first / 100)) - (second / 100 - Math.floor(second / 100))) * 100)
+        }
+
         function generateReport() {
 
             let select = document.getElementById("spacename");
@@ -136,7 +141,10 @@ $(document).ready(function () {
                     success: function (rawdata) {
                         let sampledata;
                         try {
-                        sampledata = JSON.parse(rawdata);} catch (e) {console.log("received corrupted data: ")}
+                            sampledata = JSON.parse(rawdata);
+                        } catch (e) {
+                            console.log("received corrupted data: ")
+                        }
                         // console.log(sampledata)
                         exportReport(header, sampledata);
                     },
@@ -196,7 +204,7 @@ $(document).ready(function () {
             // let dataLock = false;
             let periods = [];
 
-            Date.prototype.getWeek = function() {
+            Date.prototype.getWeek = function () {
                 var onejan = new Date(this.getFullYear(), 0, 1);
                 return Math.ceil((((this - onejan) / 86400000) + onejan.getDay() + 1) / 7);
             };
@@ -245,26 +253,31 @@ $(document).ready(function () {
                             // console.log(cycleResult)
                         }
 
+                        // console.log(sampledata[i]);
+
                         for (let j = 0; j < overviewReportDefs.length; j++) {
                             if (overviewReportDefs[j].point !== "") {
                                 // console.log(sampleTime);
                                 // this is a point measure
                                 let refT = parseInt(overviewReportDefs[j].point.replace(':', ''), 10),
                                     newT = parseInt(sampleTime.replace(':', ''), 10);
+                                // console.log(refT, newT, Math.abs(refT - newT), timeLikeDiff(refT, newT));
                                 if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === null)) {
                                     // this is the first sample
-                                    if (Math.abs(refT - newT) <= overviewReportDefs[j].precision) {
-                                        cycleResult[j + 1] = [sampleTime, sampledata[i].val]
-                                        // console.log("first sample");
+                                    // console.log("first sample", refT, newT, Math.abs(refT - newT), overviewReportDefs[j].precision, sampledata[i]);
+                                    if (Math.abs(timeLikeDiff(refT, newT)) <= overviewReportDefs[j].precision + 1) {
+                                        cycleResult[j + 1] = [sampleTime, sampledata[i].val];
+                                        // console.log("first sample", sampleTime);
                                         // console.log(refT, newT), sampledata[i].val;
                                     }
                                 } else {
+                                    // console.log("not first sample", refT, newT, Math.abs(refT - newT), overviewReportDefs[j].precision, sampledata[i]);
                                     // we need to take the closest sample
                                     let oldT = parseInt(cycleResult[j + 1][0].replace(':', ''), 10);
-                                    if ((Math.abs(refT - newT) <= overviewReportDefs[j].precision)
-                                        && (Math.abs(refT - newT) <= Math.abs(refT - oldT))) {
+                                    if ((Math.abs(timeLikeDiff(refT, newT)) <= overviewReportDefs[j].precision + 1)
+                                        && (Math.abs(timeLikeDiff(refT, newT)) <= Math.abs(timeLikeDiff(refT, oldT)))) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val];
-                                        // console.log("next sample");
+                                        // console.log("next sample", sampleTime);
                                         // console.log(refT, oldT, newT,sampledata[i].val);
                                     }
                                 }
@@ -342,10 +355,11 @@ $(document).ready(function () {
                     timeout: 5000,
                     url: ip + "/series?type=sample?space=" + api + "?analysis=" + analysis,
                     success: function (rawdata) {
-                        try{
-                        let sampledata = JSON.parse(rawdata);
-                    // console.log(sampledata)
-                    processavgdata(header, sampledata, api, analysis, tries);} catch (e) {
+                        try {
+                            let sampledata = JSON.parse(rawdata);
+                            // console.log(sampledata)
+                            processavgdata(header, sampledata, api, analysis, tries);
+                        } catch (e) {
                             alert("received corrupted data: " + rawdata);
                             document.getElementById("loader").style.visibility = "hidden";
                         }
@@ -374,7 +388,7 @@ $(document).ready(function () {
                     // load data
                     let current = presenceSets[presenceSets.length - 1];
                     // console.log("DEBUG: ", ip + "/series?type=presence?space=" + api + "?analysis=" + current.presence);
-                    console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
+                    // console.log("DEBUG: ", ip + "/presence?space=" + api + "?analysis=" + current.presence);
                     $.ajax({
                         type: 'GET',
                         timeout: 30000,
@@ -382,17 +396,20 @@ $(document).ready(function () {
                         success: function (rawdata) {
                             presenceSets.pop();
                             try {
-                            let sampledata = JSON.parse(rawdata);
+                                let sampledata = JSON.parse(rawdata);
 
-                            // remove presence measure since loaded from the server
-                            if ((sampledata !== null) && (sampledata !== undefined)) {
-                                for (let i = 0; i < sampledata.length; i++) {
-                                    let d = new Date(sampledata[i].ts);
-                                    var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
-                                        " " + d.getDay();
-                                    data[sampleDate][current.id + 1] = sampledata[i].val;
+                                // remove presence measure since loaded from the server
+                                if ((sampledata !== null) && (sampledata !== undefined)) {
+                                    for (let i = 0; i < sampledata.length; i++) {
+                                        let d = new Date(sampledata[i].ts);
+                                        var sampleDate = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
+                                            " " + d.getDay();
+                                        data[sampleDate][current.id + 1] = sampledata[i].val;
+                                    }
                                 }
-                            }} catch (e) {console.log("received corrupted data: ")}
+                            } catch (e) {
+                                console.log("received corrupted data: ")
+                            }
                             loadpresence(header, data, presenceSets, api, tries)
                         },
                         error: function (error) {
@@ -436,7 +453,7 @@ $(document).ready(function () {
                     let daydatetmp = (v[0].split(" ")[0]).split("-");
                     let daydate = daydatetmp[2] + " " + months[parseInt(daydatetmp[1]) - 1] + " " + daydatetmp[0];
                     var dtmp = new Date(parseInt(daydatetmp[0]), parseInt(daydatetmp[1]) - 1, parseInt(daydatetmp[2]));
-                    header += daydate + "," + days[parseInt(v[0].split(" ")[1])]+ "," + dtmp.getWeek();
+                    header += daydate + "," + days[parseInt(v[0].split(" ")[1])] + "," + dtmp.getWeek();
                     let valid = false;
                     for (let a = 1; a < v.length; a++) {
                         if (v[a] !== undefined) {
@@ -449,7 +466,9 @@ $(document).ready(function () {
                             // start week, calculate and store average, reset tmp array
                             let val = 0;
                             weeks.push(dtmp.getWeek());
-                            if (incfirstweek === -1) {incfirstweek=1}
+                            if (incfirstweek === -1) {
+                                incfirstweek = 1
+                            }
                             for (let i = 0; i < tmpDays.length; i++) {
                                 val += tmpDays[i]
                             }
@@ -463,8 +482,8 @@ $(document).ready(function () {
                                 tmpDays = [v[v.length - 1][1]];
                                 if (tmppointDays.length !== 0) {
                                     for (let i = 0; i < periods.length; i++) {
-                                        if (v[periods[i]+1 !== undefined]) {
-                                            if(v[periods[i+1]].length === 2){
+                                        if (v[periods[i] + 1 !== undefined]) {
+                                            if (v[periods[i + 1]].length === 2) {
                                                 tmppointDays[i].push(v[periods[i] + 1][1]);
                                             }
                                         }
@@ -482,7 +501,10 @@ $(document).ready(function () {
                             // console.log(tmp);
                         } else {
                             // console.log(v[v.length-1][1]);
-                            if (incfirstweek === -1) {incfirstweek=0;weeks.push(dtmp.getWeek());}
+                            if (incfirstweek === -1) {
+                                incfirstweek = 0;
+                                weeks.push(dtmp.getWeek());
+                            }
                             if (overviewSkipDays.indexOf(data[keys[k]][0].split(" ")[1]) === -1) {
                                 if (v[v.length - 1] === undefined) {
                                     v[v.length - 1] = [0, 0]
@@ -499,8 +521,8 @@ $(document).ready(function () {
                                         // if (v[periods[i] + 1] !== undefined) {
                                         //     tmppointDays[i].push(v[periods[i] + 1][1])
                                         // }
-                                        if (v[periods[i]+1 !== undefined]) {
-                                            if(v[periods[i+1]].length === 2){
+                                        if (v[periods[i] + 1 !== undefined]) {
+                                            if (v[periods[i + 1]].length === 2) {
                                                 tmppointDays[i].push(v[periods[i] + 1][1]);
                                             }
                                         }
@@ -535,7 +557,7 @@ $(document).ready(function () {
                                             let ct = parseInt(ct0.getHours() + ("0" + ct0.getMinutes()).slice(-2), 10);
                                             // console.log(st,et, ct);
                                             if (ct > et) {
-                                                switch(defaultPresence) {
+                                                switch (defaultPresence) {
                                                     case 0:
                                                         header += ",false";
                                                         break;
@@ -545,9 +567,13 @@ $(document).ready(function () {
                                                     default:
                                                         header += ","
                                                 }
-                                            } else {header += ","}
-                                        } else {header += ","}
-                                        
+                                            } else {
+                                                header += ","
+                                            }
+                                        } else {
+                                            header += ","
+                                        }
+
                                     }
                                 }
                             }
@@ -619,12 +645,12 @@ $(document).ready(function () {
                 }
                 header += "\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
-                    if ((i===0) && (incfirstweek===0)) {                    
+                    if ((i === 0) && (incfirstweek === 0)) {
                         header += "Average weekly*,, " + weeks[i] + ",";
-                } else {
-                    header += "Average weekly,, " + weeks[i] + ",";
-                }
-                    
+                    } else {
+                        header += "Average weekly,, " + weeks[i] + ",";
+                    }
+
                     for (let k = 0; k < overviewReportDefs.length; k++) {
                         let j = periods.indexOf(k);
                         // console.log(j, k)
@@ -658,20 +684,20 @@ $(document).ready(function () {
                 }
                 // }
                 header += "\n\n\n";
-                header += "#SUMMARY OCCUPANCY\n" 
-                      + "\"#working day: from " + overviewReportDefs[overviewReportDefs.length - 1].start 
-                      + " to " + overviewReportDefs[overviewReportDefs.length - 1].end + " \"\n"
-                      +"\n";
+                header += "#SUMMARY OCCUPANCY\n"
+                    + "\"#working day: from " + overviewReportDefs[overviewReportDefs.length - 1].start
+                    + " to " + overviewReportDefs[overviewReportDefs.length - 1].end + " \"\n"
+                    + "\n";
                 header += "Description, Week, Average\n";
                 for (let i = 0; i < weekdayavg.length; i++) {
-                    if ((i===0) && (incfirstweek===0)) {                    
+                    if ((i === 0) && (incfirstweek === 0)) {
                         header += "Working day average*, " + weeks[i] + "," + weekdayavg[i] + "\n";
-                } else {
-                    header += "Working day average, " + weeks[i] + "," + weekdayavg[i] + "\n";
-                }
+                    } else {
+                        header += "Working day average, " + weeks[i] + "," + weekdayavg[i] + "\n";
+                    }
                 }
                 header += "Working day average,full period," + perioddayavg[0] + "\n";
-                if (incfirstweek===0) {
+                if (incfirstweek === 0) {
                     header += "\n\n* Partial week\n"
                 }
                 var blob = new Blob([header], {type: 'text/plain'}),
@@ -711,7 +737,7 @@ $(document).ready(function () {
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
                     + reportWarning + "\n\n"
-                    +  "#OCCUPANCY REPORT\n\n" 
+                    + "#OCCUPANCY REPORT\n\n"
                     + "Date,Day,Week,";
                 // for (let i in overviewReportDefs) {
                 for (let i = 0; i < overviewReportDefs.length; i++) {
