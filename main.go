@@ -213,9 +213,6 @@ func main() {
 
 	gates.SetUp()
 	spaces.SetUp()
-	//if !*nosample {
-	//	time.Sleep(5*time.Second)
-	//}
 	storage.RetrieveSampleFromFile(!*nosample)
 
 	switch *dmode {

@@ -473,7 +473,7 @@ func readSensorParameters() {
 			}
 
 			if file, err := os.Open(sensorEEPROMfile); err == nil {
-				defer file.Close()
+				//defer file.Close()
 
 				scanner := bufio.NewScanner(file)
 				for scanner.Scan() {
@@ -503,7 +503,7 @@ func readSensorParameters() {
 						log.Fatal(err.Error())
 					}
 				}
-
+				_ = file.Close()
 			} else {
 				log.Fatal("Error opening setting sensor settings from file " + sensorEEPROMfile)
 			}

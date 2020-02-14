@@ -37,7 +37,8 @@ func string2epoch(val string) (rt int64, err error) {
 func RetrieveSampleFromFile(startup bool) {
 	//fmt.Println("retrieveSampleFromFile")
 
-	fixes := 0
+	sampleCorruptions := 0
+	flowCorruptions := 0
 
 	if fileStat, err := os.Stat(SAMPLEFILE); err == nil {
 		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 && !startup {
@@ -85,10 +86,12 @@ func RetrieveSampleFromFile(startup bool) {
 						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
 						s0 := &SerieSample{Stag: label, Sts: v * 1000}
 						s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
+
 						//if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
 						//	fmt.Println(tag, ts, vals)
 						//}
 						//fmt.Println(DeleteSeriesTS(s0, s1, true))
+
 						if err := DeleteSeriesTS(s0, s1, true); err == nil {
 							var testData []SerieSample
 							for i := 3; i < len(lineData); i++ {
@@ -114,7 +117,6 @@ func RetrieveSampleFromFile(startup bool) {
 										}
 									}
 								}
-
 							}
 							if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
 								//fmt.Println(tag,ts,vals)
@@ -131,14 +133,27 @@ func RetrieveSampleFromFile(startup bool) {
 										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved sample data",
 											[]int{1}, true}
 									}()
+									// entry/flow data is also removed
+									labelEntry := support.StringLimit("entry", support.LabelLength)
+									labelEntry += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
+									labelEntry += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+									s0e := &SerieEntries{Stag: labelEntry, Sts: v * 1000}
+									s1e := &SerieEntries{Stag: labelEntry, Sts: (v + 86399) * 1000}
+									if err := DeleteSeriesTS(s0e, s1e, true); err != nil {
+										go func() {
+											support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting entry/flow data", []int{1}, true}
+										}()
+									} else {
+										flowCorruptions += 1
+									}
 									if startup {
-										fixes += 1
+										sampleCorruptions += 1
 									}
 								}
 							}
 						} else {
 							go func() {
-								support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
+								support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting sample data", []int{1}, true}
 							}()
 						}
 					}
@@ -155,7 +170,7 @@ func RetrieveSampleFromFile(startup bool) {
 		}
 		_ = file.Close()
 		if startup {
-			log.Printf("!!! WARNING DATABASE INTEGRITY CHECK COMPLETED: %v DATA CORRUPTION REMOVED !!!", fixes)
+			log.Printf("!!! WARNING DATABASE INTEGRITY CHECK COMPLETED: %v DATA and %v FLOW CORRUPTIONS REMOVED !!!", sampleCorruptions, flowCorruptions)
 			_ = os.Remove(SAMPLEFILE)
 		}
 	}
@@ -170,6 +185,7 @@ func RetrieveSampleFromFile(startup bool) {
 // Furthermore, recovery files will be rejected of older than MAXAGE hours (TBD)
 // Comments in the recovery file need to start with the symbol #
 // TODO to be tested it in a real installation
+//noinspection GoUnusedParameter
 func RetrievePresenceFromFile(startup bool) {
 	//fmt.Println("RetrievePresenceFromFile")
 

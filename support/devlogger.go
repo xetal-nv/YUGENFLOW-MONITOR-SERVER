@@ -93,6 +93,7 @@ func devLogger(data chan DevData, out chan string) {
 					if _, err := fn.WriteString(r(d) + "\n"); err != nil {
 						log.Println("support.devLogger: error creating log: ", err)
 					}
+					//noinspection GoUnhandledErrorResult
 					fn.Close()
 				}
 			} else {
