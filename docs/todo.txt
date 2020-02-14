@@ -2,5 +2,5 @@ Target 1.0.0:
 Overall code cleaning including test files (1.0)
 configurable report (0.9)
 move html to git module (1.0)
-
 Add entry reporting to (0.9)
+Check integrity of all imports from 0.7.2
