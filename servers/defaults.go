@@ -101,11 +101,11 @@ var cmdAPI = map[string]cmdspecs{
 	"setid":     {14, 2},
 }
 
-var errormngt = [3]int{1, 5, 15} // [min penalty, max penalty, max number of consecutive errors]
-var tcpTokens chan bool          // token for accepting a TCP request
-var Kswitch bool                 // kill switch flag
-var RepCon bool                  // enables reporting on current
-//var commonSensorSpecs sensorSpecs     // specs valid for all sensors
+var errormngt = [3]int{1, 5, 15}      // [min penalty, max penalty, max number of consecutive errors]
+var tcpTokens chan bool               // token for accepting a TCP request
+var Kswitch bool                      // kill switch flag
+var RepCon bool                       // enables reporting on current
+var commonSensorSpecs sensorSpecs     // specs valid for all sensors
 var sensorData map[string]sensorSpecs // specs valid for a given sensor mac
 var SensorEEPROMResetEnables bool     // if true the sensor EEPROM is reset at every connection
 

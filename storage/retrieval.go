@@ -17,7 +17,7 @@ const PRESENCEFILE = ".recoverypresence"
 // covert a string to its epoch value using as form FORM
 func string2epoch(val string) (rt int64, err error) {
 	// Parse the string according to the form.
-	r, e := time.Parse(FORM, val)
+	r, e := time.ParseInLocation(FORM, val, time.Now().Location())
 	if e == nil {
 		rt = r.Unix()
 	}

@@ -61,6 +61,12 @@ $(document).ready(function () {
         document.getElementById("gen").addEventListener("click", generateReport);
         document.getElementById("graphdata").addEventListener("click", loadGraphsData);
 
+        function timeLikeDiff(first, second) {
+            return (Math.trunc(first / 100) - Math.trunc(second / 100)) * 60 +
+                Math.round(((first / 100 - Math.floor(first / 100)) - (second / 100 - Math.floor(second / 100))) * 100)
+        }
+
+
         function loadGraphsData() {
 
             // returns two integers in unix format for date and time
@@ -322,7 +328,7 @@ $(document).ready(function () {
                         anchor = document.createElement('a');
                     var currentTime = new Date();
                     anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_") + "_" + asys + ".csv";
+                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g, "_") + "_" + asys + ".csv";
                     // anchor.download = space + "_" + asys + ".csv";
                     anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                     anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
@@ -485,7 +491,7 @@ $(document).ready(function () {
                                     newT = parseInt(sampleTime.replace(':', ''), 10);
                                 if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === null)) {
                                     // this is the first sample
-                                    if (Math.abs(refT - newT) <= overviewReportDefs[j].precision) {
+                                    if (Math.abs(timeLikeDiff(refT, newT)) <= overviewReportDefs[j].precision + 1) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val]
                                         // console.log("first sample");
                                         // console.log(refT, newT);
@@ -493,8 +499,8 @@ $(document).ready(function () {
                                 } else {
                                     // we need to take the closest sample
                                     let oldT = parseInt(cycleResult[j + 1][0].replace(':', ''), 10);
-                                    if ((Math.abs(refT - newT) <= overviewReportDefs[j].precision)
-                                        && (Math.abs(refT - newT) <= Math.abs(refT - oldT))) {
+                                    if ((Math.abs(timeLikeDiff(refT, newT)) <= overviewReportDefs[j].precision + 1)
+                                        && (Math.abs(timeLikeDiff(refT, newT)) <= Math.abs(timeLikeDiff(refT, oldT)))) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val];
                                         // console.log("next sample");
                                         // console.log(refT, oldT, newT);
@@ -976,7 +982,7 @@ $(document).ready(function () {
                     anchor = document.createElement('a');
                 var currentTime = new Date();
                 anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                    currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g,"_")  + "_" + asys + ".csv";
+                    currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g, "_") + "_" + asys + ".csv";
                 anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();

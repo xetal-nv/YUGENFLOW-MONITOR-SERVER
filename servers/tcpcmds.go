@@ -3,7 +3,6 @@ package servers
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"gateserver/codings"
 	"gateserver/gates"
 	"gateserver/support"
@@ -23,7 +22,7 @@ func handlerReset(id int) {
 		}()
 		return
 	}
-	log.Printf("servers.handlerReset: reset enabled for Device %v\n", id)
+	log.Printf("servers.handlerReset: valid data received, reset enabled for Device %v\n", id)
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
@@ -36,38 +35,42 @@ func handlerReset(id int) {
 	done := false
 	for {
 		time.Sleep(resetbg.interval * time.Minute)
+		//fmt.Println("resetting device", id)
 		if doit, e := support.InClosureTime(resetbg.start, resetbg.end); e == nil {
-			if doit {
-				if !done {
-					rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
-					if rt.State {
-						done = true
-						go func() {
-							support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
-								support.Timestamp(), "", []int{1}, true}
-						}()
-						// releases possible request on rstReq
-						// missing a reset request is impossible since the reset just happened
-						gates.SensorRst.RLock()
-						if resetChannel, ok := gates.SensorRst.Channel[id]; ok {
-							go func(req chan bool) {
-								select {
-								case <-req:
-									fmt.Println("emptied reset channel", id)
-								case <-time.After(500 * time.Millisecond):
-								}
-							}(resetChannel)
-						}
-						gates.SensorRst.RUnlock()
-					} else {
-						go func() {
-							support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
-								support.Timestamp(), "", []int{1}, true}
-						}()
+			if doit && !done {
+				//if !done {
+				rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
+				if rt.State {
+					//fmt.Println(rt.State)
+					done = true
+					go func() {
+						support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
+							support.Timestamp(), "", []int{1}, true}
+					}()
+					// releases possible request on rstReq
+					// missing a reset request is impossible since the reset just happened
+					gates.SensorRst.RLock()
+					if resetChannel, ok := gates.SensorRst.Channel[id]; ok {
+						go func(req chan bool) {
+							select {
+							case <-req:
+								//fmt.Println("emptied reset channel", id)
+							case <-time.After(500 * time.Millisecond):
+							}
+						}(resetChannel)
 					}
+					gates.SensorRst.RUnlock()
+				} else {
+					go func() {
+						support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
+							support.Timestamp(), "", []int{1}, true}
+					}()
 				}
+				//}
 			} else {
-				done = false
+				if !doit {
+					done = false
+				}
 				// check if there is a reset request pending
 				//fmt.Println("checking pending reset request for", id)
 				gates.SensorRst.RLock()
@@ -81,11 +84,15 @@ func handlerReset(id int) {
 								support.Timestamp(), "", []int{1}, true}
 						}()
 						//fmt.Println("resetting device", id)
-						_ = exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
+						log.Printf("servers.handlerReset: resetting device to asymmetric behaviour %v\n", id)
+						//fmt.Printf("servers.handlerReset: resetting device to asymmetric behaviour %v\n", id)
+						//noinspection GoUnusedCallResult
+						rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
+						log.Printf("servers.handlerReset: reset due to sensor asymmetry for %v has answered %v\n", id, rt.State)
+						//fmt.Printf("servers.handlerReset: reset due to sensor asymmetry for %v has answered %v\n", id, rt.State)
 					case <-time.After(500 * time.Millisecond):
 					}
 				}
-
 			}
 		} else {
 			log.Printf("servers.handlerReset: device %v has reset error %v\n", id, e)
@@ -105,13 +112,12 @@ func assingID(st chan bool, conn net.Conn, com chan net.Conn, _mac []byte) {
 }
 
 // setSensorParameters sets the sensor parameter TBD (try few times before making error)
-// TODO to be tested on the field
 func setSensorParameters(conn net.Conn, mac string) (err error) {
 
 	// sends the command for a maximum of eepromResetTries times before reporting error
 	sendCommand := func(command string, value uint32) (e error) {
 		e = errors.New("server.setSensorParameters: Failed to execute command " + command)
-		timeout := 1
+		//timeout := 1
 		//mainLoop:
 		for i := 0; i < eepromResetTries; i++ {
 			if v, ok := cmdAPI[command]; ok {
@@ -123,12 +129,13 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 				cmd = append(cmd, codings.Crc8(cmd))
 				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
 					if _, e := conn.Write(cmd); e == nil {
+						log.Printf("Sent %x on device %v\n", cmd, mac)
 						// loop on read till we find a significant answer
 					readLoop:
 						for {
 							ans := make([]byte, 1)
 							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
-								if _, e := conn.Read(ans); e != nil {
+								if _, e := conn.Read(ans); e == nil {
 									switch ans[0] {
 									case 1:
 										// sensor data, discard the rest of the message
@@ -144,15 +151,21 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 										if crcUsed {
 											_, _ = conn.Read(make([]byte, 1))
 										}
+										log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
 										//break mainLoop
 										return nil
 									default:
+										log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
 										// illegal answer
 										break readLoop
 									}
+								} else {
+									log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
 								}
 							}
 						}
+					} else {
+						log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
 					}
 				}
 			}
@@ -161,10 +174,16 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 	}
 
 	if !SensorEEPROMResetEnables {
+		//fmt.Println("SensorEEPROMResetEnables disabled")
 		return
 	} else {
-		if specs, ok := sensorData[mac]; ok {
-
+		//fmt.Println("SensorEEPROMResetEnables enabled")
+		if specs, ok := sensorData[mac]; ok || commonSensorSpecs.savg != 0 {
+			//fmt.Println(" found")
+			//os.Exit(1)
+			if !ok {
+				specs = commonSensorSpecs
+			}
 			eLab := "("
 			if e := sendCommand("srate", uint32(specs.srate)); e != nil {
 				log.Println(e)
@@ -182,16 +201,20 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 				log.Println(e)
 				eLab += "occth "
 			}
-			if eLab != "" {
+			if eLab != "(" {
 				err = errors.New("Failed to execute commands " + eLab + ") for device " + mac)
 			}
 		} else {
+			//fmt.Println("not found")
+			//os.Exit(1)
 			go func() {
 				support.DLog <- support.DevData{"servers.SensorEEPROMResetEnables: sensorData cache is corrupted",
 					support.Timestamp(), "", []int{1}, true}
 			}()
 			err = errors.New("servers.SensorEEPROMResetEnables: sensorData cache is corrupted for device " + mac)
 		}
+		//fmt.Println(err)
+		//os.Exit(1)
 		return
 	}
 }
