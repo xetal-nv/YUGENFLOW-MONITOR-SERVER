@@ -4,3 +4,6 @@ configurable report (0.9)
 move html to git module (1.0)
 Add entry reporting to (0.9)
 Check integrity of all imports from 0.7.2
+Add recovery flow data (0.9)
+Add removal flow data on recovery sample data (0.9, 0.8)
+Add better entry algorithm (all versions)
