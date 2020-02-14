@@ -11,3 +11,5 @@ logfile
 /log/
 .recoveryavg
 .recoverypres
+gateserver
+gateserver.exe

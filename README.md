@@ -68,3 +68,4 @@ See .envtest file for configuration example
 -rs Int64 : set log rs  
 -st string : set start time, time specified as HH:MM
 -eeprom : enables refresh of device eeprom at every connection
+-nosample : disable automatic check for database recovery

@@ -39,6 +39,7 @@ func main() {
 	var rs = flag.Int64("rs", 10000000, "set log rotation size")
 	var st = flag.String("start", "", "cstart time expressed as HH:MM")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
+	var nosample = flag.Bool("nosample", false, "disable automatic check for database recovery")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -109,7 +110,7 @@ func main() {
 	servers.Kswitch = *ks
 	servers.RepCon = *repcon
 	gates.LogToFileAll = *de
-	servers.SensorEEPROMResetEnables = *eeprom
+	servers.SensorEEPROMResetEnabled = *eeprom
 
 	folder = os.Getenv("GATESERVER")
 
@@ -212,6 +213,10 @@ func main() {
 
 	gates.SetUp()
 	spaces.SetUp()
+	//if !*nosample {
+	//	time.Sleep(5*time.Second)
+	//}
+	storage.RetrieveSampleFromFile(!*nosample)
 
 	switch *dmode {
 	case 2:

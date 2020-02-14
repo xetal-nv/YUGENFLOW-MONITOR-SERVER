@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"gateserver/support"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -33,30 +34,43 @@ func string2epoch(val string) (rt int64, err error) {
 // January 15 2019, living, 20min, 10:30/15, 14:30/10
 // Furthermore, recovery files will be rejected of older than MAXAGE hours (TBD)
 // Comments in the recovery file need to start with the symbol #
-func RetrieveSampleFromFile() {
+func RetrieveSampleFromFile(startup bool) {
 	//fmt.Println("retrieveSampleFromFile")
 
+	fixes := 0
+
 	if fileStat, err := os.Stat(SAMPLEFILE); err == nil {
-		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 {
+		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 && !startup {
 			go func() {
 				support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "attempted to use an old .recoverysamples", []int{1}, true}
 			}()
 			return
 		}
+		if startup {
+			log.Println("!!! WARNING DATABASE INTEGRITY CHECK INITIATED !!!")
+		}
 	} else {
-		go func() {
-			support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
-		}()
-		return
+		if !startup {
+			go func() {
+				support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
+			}()
+			return
+		} else {
+			log.Println("!!! WARNING DATABASE INTEGRITY CHECK NOT REQUIRED !!!")
+			return
+		}
 	}
 
 	if file, err := os.Open(SAMPLEFILE); err != nil {
 		go func() {
 			support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
 		}()
+		if startup {
+			log.Println("!!! WARNING DATABASE RECOVERY ERROR !!!")
+		}
 	} else {
 		//noinspection GoUnhandledErrorResult
-		defer file.Close()
+		//defer file.Close()
 		//var newData [][]string
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
@@ -103,17 +117,23 @@ func RetrieveSampleFromFile() {
 
 							}
 							if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
+								//fmt.Println(tag,ts,vals)
 								readData := s0.UnmarshalSliceSS(tag, ts, vals)
 								if len(readData) != len(testData) {
 									go func() {
 										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing all data",
 											[]int{1}, true}
 									}()
+									//fmt.Println(readData)
+									//fmt.Println(testData)
 								} else {
 									go func() {
 										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved sample data",
 											[]int{1}, true}
 									}()
+									if startup {
+										fixes += 1
+									}
 								}
 							}
 						} else {
@@ -133,6 +153,11 @@ func RetrieveSampleFromFile() {
 				}()
 			}
 		}
+		_ = file.Close()
+		if startup {
+			log.Printf("!!! WARNING DATABASE INTEGRITY CHECK COMPLETED: %v DATA CORRUPTION REMOVED !!!", fixes)
+			_ = os.Remove(SAMPLEFILE)
+		}
 	}
 }
 
@@ -145,7 +170,7 @@ func RetrieveSampleFromFile() {
 // Furthermore, recovery files will be rejected of older than MAXAGE hours (TBD)
 // Comments in the recovery file need to start with the symbol #
 // TODO to be tested it in a real installation
-func RetrievePresenceFromFile() {
+func RetrievePresenceFromFile(startup bool) {
 	//fmt.Println("RetrievePresenceFromFile")
 
 	if fileStat, err := os.Stat(PRESENCEFILE); err == nil {

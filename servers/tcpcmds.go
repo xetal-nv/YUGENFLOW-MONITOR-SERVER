@@ -120,6 +120,7 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 		//timeout := 1
 		//mainLoop:
 		for i := 0; i < eepromResetTries; i++ {
+			time.Sleep(time.Duration(sensorEEPROMResetStep) * time.Second)
 			if v, ok := cmdAPI[command]; ok {
 				cmd := []byte{v.cmd}
 				bs := make([]byte, 4)
@@ -132,9 +133,10 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 						log.Printf("Sent %x on device %v\n", cmd, mac)
 						// loop on read till we find a significant answer
 					readLoop:
-						for {
+						// we give it a maximum of 3 * eepromResetTries for the sensor to answer to the command
+						for j := 0; j < 3*eepromResetTries; j++ {
 							ans := make([]byte, 1)
-							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
+							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(10*timeout) * time.Second)); e == nil {
 								if _, e := conn.Read(ans); e == nil {
 									switch ans[0] {
 									case 1:
@@ -147,7 +149,7 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 										}
 										_, _ = conn.Read(data)
 									case cmd[0]:
-										// answer to command, discard CRC if rpesent
+										// answer to command, discard CRC if present
 										if crcUsed {
 											_, _ = conn.Read(make([]byte, 1))
 										}
@@ -168,16 +170,19 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 						log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
 					}
 				}
+				// reset the all deadlines
+				_ = conn.SetDeadline(time.Time{})
 			}
 		}
 		return
 	}
 
-	if !SensorEEPROMResetEnables {
-		//fmt.Println("SensorEEPROMResetEnables disabled")
+	if !SensorEEPROMResetEnabled {
+		//fmt.Println("SensorEEPROMResetEnabled disabled")
 		return
 	} else {
-		//fmt.Println("SensorEEPROMResetEnables enabled")
+		time.Sleep(time.Duration(sensorEEPROMResetDelay) * time.Second)
+		//fmt.Println("SensorEEPROMResetEnabled enabled")
 		if specs, ok := sensorData[mac]; ok || commonSensorSpecs.savg != 0 {
 			//fmt.Println(" found")
 			//os.Exit(1)
@@ -208,10 +213,10 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 			//fmt.Println("not found")
 			//os.Exit(1)
 			go func() {
-				support.DLog <- support.DevData{"servers.SensorEEPROMResetEnables: sensorData cache is corrupted",
+				support.DLog <- support.DevData{"servers.SensorEEPROMResetEnabled: sensorData cache is corrupted",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			err = errors.New("servers.SensorEEPROMResetEnables: sensorData cache is corrupted for device " + mac)
+			err = errors.New("servers.SensorEEPROMResetEnabled: sensorData cache is corrupted for device " + mac)
 		}
 		//fmt.Println(err)
 		//os.Exit(1)
