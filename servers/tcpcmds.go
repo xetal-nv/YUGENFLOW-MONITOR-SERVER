@@ -130,7 +130,7 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 				cmd = append(cmd, codings.Crc8(cmd))
 				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
 					if _, e := conn.Write(cmd); e == nil {
-						log.Printf("Sent %x on device %v\n", cmd, mac)
+						//log.Printf("Sent %x on device %v\n", cmd, mac)
 					readLoop:
 						// we give it a maximum of max (4, eepromResetTries) for the sensor to answer to the command
 						for j := 0; j < int(math.Max(float64(4), float64(eepromResetTries))); j++ {
@@ -152,21 +152,21 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 										if crcUsed {
 											_, _ = conn.Read(make([]byte, 1))
 										}
-										log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
+										//log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
 										//break mainLoop
 										return nil
 									default:
-										log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
+										//log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
 										// illegal answer
 										break readLoop
 									}
 								} else {
-									log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
+									//log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
 								}
 							}
 						}
 					} else {
-						log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
+						//log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
 					}
 				}
 				// reset the all deadlines
@@ -190,19 +190,19 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 			}
 			eLab := "("
 			if e := sendCommand("srate", uint32(specs.srate)); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "srate "
 			}
 			if e := sendCommand("savg", uint32(specs.savg)); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "savg "
 			}
 			if e := sendCommand("bgth", uint32(math.Round(specs.bgth*16))); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "bgth "
 			}
 			if e := sendCommand("occth", uint32(math.Round(specs.occth*16))); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "occth "
 			}
 			if eLab != "(" {

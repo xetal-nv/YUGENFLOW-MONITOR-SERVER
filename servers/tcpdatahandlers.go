@@ -418,7 +418,8 @@ func handlerTCPRequest(conn net.Conn) {
 											mutexUnusedDevices.Lock()
 											if _, ok := unusedDevice[deviceId]; !ok {
 												unusedDevice[deviceId] = string(mac)
-												log.Println(e)
+												// commented to reduce log clutter
+												//log.Println(e)
 											}
 											mutexUnusedDevices.Unlock()
 										}
