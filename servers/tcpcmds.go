@@ -131,10 +131,9 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
 					if _, e := conn.Write(cmd); e == nil {
 						log.Printf("Sent %x on device %v\n", cmd, mac)
-						// loop on read till we find a significant answer
 					readLoop:
-						// we give it a maximum of 3 * eepromResetTries for the sensor to answer to the command
-						for j := 0; j < 3*eepromResetTries; j++ {
+						// we give it a maximum of max (4, eepromResetTries) for the sensor to answer to the command
+						for j := 0; j < int(math.Max(float64(4), float64(eepromResetTries))); j++ {
 							ans := make([]byte, 1)
 							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(10*timeout) * time.Second)); e == nil {
 								if _, e := conn.Read(ans); e == nil {
