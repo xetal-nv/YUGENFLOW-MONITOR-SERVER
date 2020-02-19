@@ -61,6 +61,12 @@ $(document).ready(function () {
         document.getElementById("gen").addEventListener("click", generateReport);
         document.getElementById("graphdata").addEventListener("click", loadGraphsData);
 
+
+        function timeLikeDiff(first, second) {
+            return (Math.trunc(first / 100) - Math.trunc(second / 100)) * 60 +
+                Math.round(((first / 100 - Math.floor(first / 100)) - (second / 100 - Math.floor(second / 100))) * 100)
+        }
+
         function loadGraphsData() {
 
             // returns two integers in unix format for date and time
@@ -506,7 +512,7 @@ $(document).ready(function () {
                                     newT = parseInt(sampleTime.replace(':', ''), 10);
                                 if ((cycleResult[j + 1] === undefined) || (cycleResult[j + 1] === null)) {
                                     // this is the first sample
-                                    if (Math.abs(refT - newT) <= overviewReportDefs[j].precision) {
+                                    if (Math.abs(timeLikeDiff(refT, newT)) <= overviewReportDefs[j].precision + 1) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val]
                                         // console.log("first sample");
                                         // console.log(refT, newT);
@@ -514,8 +520,8 @@ $(document).ready(function () {
                                 } else {
                                     // we need to take the closest sample
                                     let oldT = parseInt(cycleResult[j + 1][0].replace(':', ''), 10);
-                                    if ((Math.abs(refT - newT) <= overviewReportDefs[j].precision)
-                                        && (Math.abs(refT - newT) <= Math.abs(refT - oldT))) {
+                                    if ((Math.abs(timeLikeDiff(refT, newT)) <= overviewReportDefs[j].precision + 1)
+                                        && (Math.abs(timeLikeDiff(refT, newT)) <= Math.abs(timeLikeDiff(refT, oldT)))) {
                                         cycleResult[j + 1] = [sampleTime, sampledata[i].val];
                                         // console.log("next sample");
                                         // console.log(refT, oldT, newT);
@@ -1097,8 +1103,8 @@ $(document).ready(function () {
                         } catch (e) {
                             console.log("received corrupted data")
                         }
-                        console.log(sampledata)
-                        // exportReport(header, sampledata);
+                        // console.log(sampledata)
+                        exportReport(header, sampledata);
                     },
                     error: function (error) {
                         if (tries === maxtries) {
