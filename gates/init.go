@@ -16,11 +16,12 @@ func SetUp() {
 	SensorRst.Lock()
 	SensorRst.Channel = make(map[int]chan bool)
 	SensorRst.Unlock()
+
 	maximumAsymmetry = 0
 	if v, e := strconv.Atoi(strings.Trim(os.Getenv("RESETPERIOD"), " ")); e == nil {
 		if v != 0 {
 			if da := os.Getenv("DEVICEASYM"); da == "" {
-				maximumAsymmetry = 10
+				maximumAsymmetry = 5
 			} else {
 				if v, e := strconv.Atoi(da); e != nil {
 					log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
@@ -33,8 +34,17 @@ func SetUp() {
 	if maximumAsymmetry == 0 {
 		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS NOT ENABLED !!!\n")
 	} else {
+		if da := os.Getenv("DEVICEASYMCMAX"); da == "" {
+			maximumAsymmetryIter = 4
+		} else {
+			if v, e := strconv.Atoi(da); e != nil {
+				log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYMCMAX")
+			} else {
+				maximumAsymmetryIter = v
+			}
+		}
 		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS ENABLED !!!\n")
-		log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %v\n", maximumAsymmetry)
+		log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %v with maximum iters at %v\n", maximumAsymmetry, maximumAsymmetryIter)
 	}
 
 	if data := os.Getenv("REVERSE"); data != "" {

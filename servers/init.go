@@ -393,8 +393,20 @@ func setupHTTP() error {
 */
 func readSensorParameters() {
 
-	if SensorEEPROMResetEnables {
+	if SensorEEPROMResetEnabled {
 		if support.FileExists(sensorEEPROMfile) {
+			if v, e := strconv.Atoi(os.Getenv("EEPROMDELAY")); e != nil {
+				sensorEEPROMResetDelay = 10
+			} else {
+				sensorEEPROMResetDelay = v
+			}
+			if v, e := strconv.Atoi(os.Getenv("EEPROMSTEP")); e != nil {
+				sensorEEPROMResetStep = 10
+			} else {
+				sensorEEPROMResetStep = v
+			}
+
+			log.Printf("EEPROM refresh rate is set at %v with delay %v", sensorEEPROMResetStep, sensorEEPROMResetDelay)
 			log.Println("Setting sensor settings from file " + sensorEEPROMfile)
 
 			refGen := false

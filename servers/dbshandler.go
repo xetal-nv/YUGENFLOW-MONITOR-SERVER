@@ -33,7 +33,7 @@ func retrieveDBSsamples() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		go storage.RetrieveSampleFromFile()
+		go storage.RetrieveSampleFromFile(false)
 
 		_, _ = fmt.Fprintf(w, "Sample DBS retrieval initiated")
 	})
@@ -63,7 +63,7 @@ func retrieveDBSpresence() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		go storage.RetrievePresenceFromFile()
+		go storage.RetrievePresenceFromFile(false)
 
 		_, _ = fmt.Fprintf(w, "Presence DBS retrieval initiated")
 	})

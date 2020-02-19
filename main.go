@@ -38,6 +38,7 @@ func main() {
 	var rs = flag.Int64("rs", 10000000, "set log rotation size")
 	var st = flag.String("start", "", "cstart time expressed as HH:MM")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
+	var nosample = flag.Bool("nosample", false, "disable automatic check for database recovery")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -110,7 +111,7 @@ func main() {
 	servers.Kswitch = *ks
 	servers.RepCon = *repcon
 	gates.LogToFileAll = *de
-	servers.SensorEEPROMResetEnables = *eeprom
+	servers.SensorEEPROMResetEnabled = *eeprom
 
 	folder = os.Getenv("GATESERVER")
 
@@ -216,6 +217,8 @@ func main() {
 	gates.SetUp()
 	spaces.SetUp()
 
+	storage.RetrieveSampleFromFile(!*nosample)
+
 	switch *dmode {
 	case 3:
 		go func() {
@@ -241,11 +244,11 @@ func main() {
 		}
 	case 1:
 		go sensormodels.SensorModel(0, 7000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
-		go sensormodels.SensorModel(1, 7000, 30, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '2'})
-		go sensormodels.SensorModel(20, 5000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
+		//go sensormodels.SensorModel(1, 7000, 30, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '2'})
+		//go sensormodels.SensorModel(20, 5000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
 		go sensormodels.SensorModel(21, 5500, 30, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '4'})
-		go sensormodels.SensorModel(2340, 900, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '5'})
-		go sensormodels.SensorModel(65535, 500, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '6'})
+		//go sensormodels.SensorModel(2340, 900, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '5'})
+		//go sensormodels.SensorModel(65535, 500, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '6'})
 	default:
 	}
 

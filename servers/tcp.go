@@ -60,7 +60,7 @@ func StartTCP(sd chan context.Context) {
 				}
 			}
 			// Handle connections in a new goroutine.
-			log.Printf("servers.StartTCP: a decice has connected.\n")
+			log.Printf("servers.StartTCP: a device has connected.\n")
 			go handlerTCPRequest(conn)
 		default:
 			support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",

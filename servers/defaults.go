@@ -107,7 +107,9 @@ var Kswitch bool                      // kill switch flag
 var RepCon bool                       // enables reporting on current
 var commonSensorSpecs sensorSpecs     // specs valid for all sensors
 var sensorData map[string]sensorSpecs // specs valid for a given sensor mac
-var SensorEEPROMResetEnables bool     // if true the sensor EEPROM is reset at every connection
+var SensorEEPROMResetEnabled bool     // if true the sensor EEPROM is reset at every connection
+var sensorEEPROMResetDelay int        // number of seconds of delay before initiating the eeprom refresh
+var sensorEEPROMResetStep int         // number of seconds of delay between refresh commands
 
 // debug access control
 var dbgMutex = &sync.RWMutex{}   // lock to dbgRegistry

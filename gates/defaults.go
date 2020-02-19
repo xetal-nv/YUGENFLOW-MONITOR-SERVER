@@ -49,6 +49,7 @@ var MutexDeclaredDevices = &sync.RWMutex{} // this mutex is used to avoid concur
 var DeclaredDevices map[string]int         // maps the declared mac with the id of a used device
 var LogToFileAll bool                      // flag of all entry activity has to be logged to a file
 var maximumAsymmetry int                   // maximum difference of activity on sensors per gate, provided via configuration file
+var maximumAsymmetryIter int               // maximum times a sensor is restarted for asymmetry before being disabled
 var SensorRst struct {                     // array of channels to reset handler
 	sync.RWMutex
 	Channel map[int]chan bool

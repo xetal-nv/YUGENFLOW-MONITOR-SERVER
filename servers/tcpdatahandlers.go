@@ -79,7 +79,7 @@ func handlerTCPRequest(conn net.Conn) {
 		// in case of errors the connection is closed/refused
 		if e := setSensorParameters(conn, mach); e == nil {
 
-			if SensorEEPROMResetEnables {
+			if SensorEEPROMResetEnabled {
 				log.Printf("servers.handlerTCPRequest: eeprom refresh executed for device %v//%v\n", ipc, mach)
 			}
 
@@ -413,7 +413,7 @@ func handlerTCPRequest(conn net.Conn) {
 											mutexUnusedDevices.Lock()
 											if _, ok := unusedDevice[deviceId]; !ok {
 												unusedDevice[deviceId] = string(mac)
-												log.Println(e)
+												//log.Println(e)
 											}
 											mutexUnusedDevices.Unlock()
 										}
