@@ -22,11 +22,11 @@ func handlerTCPRequest(conn net.Conn) {
 	loop := true            // control variable
 	pending := true         // control variable
 	idKnown := false        // flags to know if the device has been recognised and initialised
-	stop := make(chan bool) // channels used to reset the assocoated command thread
+	stop := make(chan bool) // channels used to reset the associated command thread
 	mac := make([]byte, 6)  // received amc address
 	var ci, ce chan []byte  // channel for the API command
 	var devid chan int      // channel for the API command
-	cks := errormngt[2]
+	cks := errorMngt[2]
 	malfcheck := 0 // count number fo suspicions of attacks
 
 	defer func() {
@@ -77,6 +77,10 @@ func handlerTCPRequest(conn net.Conn) {
 
 		if e := setSensorParameters(conn, mach); e == nil {
 
+			if SensorEEPROMResetEnables {
+				log.Printf("servers.handlerTCPRequest: eeprom refresh executed for device %v//%v\n", ipc, mach)
+			}
+
 			// Start reading data
 
 			// define a malicious report function that, depending if on strict mode, also kills the connection
@@ -91,7 +95,7 @@ func handlerTCPRequest(conn net.Conn) {
 								support.Timestamp(), "", []int{}, true}
 						}()
 						tsnow := support.Timestamp()
-						for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
+						for (tsnow + int64(malTimeout*1000)) > support.Timestamp() {
 							if _, e := conn.Read(make([]byte, 256)); e != nil {
 								break
 							}
@@ -168,7 +172,7 @@ func handlerTCPRequest(conn net.Conn) {
 							malf()
 							//malf(true)
 						}
-					case <-time.After(time.Duration(maltimeout-timeout) * time.Second):
+					case <-time.After(time.Duration(malTimeout-timeout) * time.Second):
 						malfcheck += 1
 						malf()
 						//malf(true)
@@ -199,7 +203,7 @@ func handlerTCPRequest(conn net.Conn) {
 					mutexSensorMacs.RLock()
 					mutexUnknownMac.RLock()
 					_, ok1 := sensorIdMAC[string(mac)]
-					_, ok2 := unkownDevice[string(mac)]
+					_, ok2 := unknownDevice[string(mac)]
 					mutexUnknownMac.RUnlock()
 					mutexSensorMacs.RUnlock()
 					if !(ok1 || ok2) {
@@ -241,7 +245,7 @@ func handlerTCPRequest(conn net.Conn) {
 						}(c)
 						select {
 						case loop = <-c:
-						case <-time.After(time.Duration(maltimeout) * time.Second):
+						case <-time.After(time.Duration(malTimeout) * time.Second):
 							if support.Debug != 0 {
 								log.Printf("servers.handlerTCPRequest: timeout on reset of device %v//%v\n", ipc, mach)
 							}
@@ -289,6 +293,13 @@ func handlerTCPRequest(conn net.Conn) {
 				}
 			}
 			malfcheck = 0
+			// It reset all possible TCP deadline that might be pending form previous operations
+			// in case of failure it closes the channel
+			if e := conn.SetDeadline(time.Time{}); e != nil {
+				log.Printf("servers.handlerTCPRequest: timeout reset error %v with device %v//%v\n", e.Error(), ipc, mach)
+				loop = false
+			}
+
 			for loop {
 				cmd := make([]byte, 1)
 				if _, e := conn.Read(cmd); e != nil {
@@ -376,7 +387,7 @@ func handlerTCPRequest(conn net.Conn) {
 												gates.SensorRst.Lock()
 												go func(id int) { devid <- id }(deviceId)
 												// enable periodic and self reset procedure
-												if resetbg.valid {
+												if resetBG.valid {
 													gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
 													go handlerReset(deviceId)
 												}
@@ -408,7 +419,7 @@ func handlerTCPRequest(conn net.Conn) {
 								} else {
 									mutexUnknownMac.Lock()
 									// Connected device has invalid ID, needs to be set
-									unkownDevice[string(mac)] = false
+									unknownDevice[string(mac)] = false
 									if _, ok := unknownMacChan[string(mac)]; !ok {
 										log.Printf("servers.handlerTCPRequest: new device with undefined id %v//%v\n", ipc, mach)
 										unknownMacChan[string(mac)] = make(chan net.Conn)
@@ -439,7 +450,7 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 							}
 						}
-						cks = errormngt[2]
+						cks = errorMngt[2]
 					default:
 						if !idKnown {
 							log.Printf("servers.handlerTCPRequest: rejected data %v from a device %v//%v with no valid ID yet\n", cmd[0], ipc, mach)
@@ -494,7 +505,7 @@ func handlerTCPRequest(conn net.Conn) {
 										}
 									}
 								}
-								cks = errormngt[2]
+								cks = errorMngt[2]
 							} else {
 								if cks = cks - 1; cks <= 0 {
 									loop = false

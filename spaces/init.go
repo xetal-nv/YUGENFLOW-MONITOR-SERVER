@@ -17,25 +17,25 @@ import (
 // set-up of all space threads, channels and variables based on configuration file .env
 func SetUp() {
 	// set-up the data types and conversions
-	dtypes = make(map[string]dtfuncs)
+	dataTypes = make(map[string]dtFunctions)
 
-	// all possible data to be stored and distributed needs to have an entry in dtypes
+	// all possible data to be stored and distributed needs to have an entry in dataTypes
 	// the data type needs to implement the following interfaces:
 	//  storage.sampledata, servers.genericdata
 	// currently defined are: sample, entry, presence
-	// track usage of dtypes and use proper conditional statements
+	// track usage of dataTypes and use proper conditional statements
 
 	// add sample type based on DataEntry
-	var sample = dtfuncs{}
+	var sample = dtFunctions{}
 	sample.pf = func(nm string, se spaceEntries) interface{} {
 		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netflow}
 	}
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "TS")
 	}
-	dtypes[support.StringLimit("sample", support.LabelLength)] = sample
+	dataTypes[support.StringLimit("sample", support.LabelLength)] = sample
 	// add entry type
-	var entry = dtfuncs{}
+	var entry = dtFunctions{}
 	entry.pf = func(nm string, se spaceEntries) interface{} {
 		data := struct {
 			id      string
@@ -58,23 +58,23 @@ func SetUp() {
 	entry.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SeriesEntryDBS(id, in, rst, "TS")
 	}
-	dtypes[support.StringLimit("entry", support.LabelLength)] = entry
+	dataTypes[support.StringLimit("entry", support.LabelLength)] = entry
 	// add presence type, which is equal to sample
-	var presence = dtfuncs{}
+	var presence = dtFunctions{}
 	presence.pf = func(nm string, se spaceEntries) interface{} {
 		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netflow}
 	}
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "SD")
 	}
-	dtypes[support.StringLimit("presence", support.LabelLength)] = presence
+	dataTypes[support.StringLimit("presence", support.LabelLength)] = presence
 
-	// set multicycleonlydays
+	// set multiCycleOnlyDays
 	if data := os.Getenv("MULTICYCLEDAYSONLY"); data != "" {
-		multicycleonlydays = true
+		multiCycleOnlyDays = true
 		log.Printf("spaces.setUpDataDBSBank: MULTICYCLEDAYSONLY enabled\n")
 	} else {
-		multicycleonlydays = false
+		multiCycleOnlyDays = false
 	}
 	// load initial values is present (note maximum line size 64k characters)
 	MutexInitData.Lock()
@@ -82,7 +82,7 @@ func SetUp() {
 		spaces := strings.Split(data, " ")
 
 		InitData = make(map[string]map[string]map[string][]string)
-		for i := range dtypes {
+		for i := range dataTypes {
 			// filter out data that do not need Start value form recovery
 			switch i {
 			case "presence":
@@ -148,9 +148,9 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	if data := os.Getenv("SPACES_NAMES"); data != "" {
 		SpaceMaxOccupancy = make(map[string]int)
 		spaces := strings.Split(data, " ")
-		bufsize = 50
+		bufferSize = 50
 		if v, e := strconv.Atoi(os.Getenv("INTBUFFSIZE")); e == nil {
-			bufsize = v
+			bufferSize = v
 		}
 
 		// extracts the paces names and their maximum occupancy is defined
@@ -193,11 +193,11 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 				// the go routines below Start the relevant processing threads
 				// sampling and averaging threads
-				spaceChannels[name] = make(chan spaceEntries, bufsize)
+				spaceChannels[name] = make(chan spaceEntries, bufferSize)
 				go sampler(name, spaceChannels[name], nil, nil, nil, 0, sync.Once{}, 0, 0)
 
 				// presence detection threads
-				spacePresenceChannels[name] = make(chan spaceEntries, bufsize)
+				spacePresenceChannels[name] = make(chan spaceEntries, bufferSize)
 				LatestDetectorOut[name] = make(chan []IntervalDetector)
 				detectCh := make(chan []IntervalDetector)
 				go SafeRegDetectors(detectCh, LatestDetectorOut[name])
@@ -233,11 +233,11 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 // set-up counters thread and data flow structure based on the provided configuration
 func setpUpCounter() {
-	cmode = os.Getenv("CMODE")
-	if cmode == "" {
-		cmode = "0"
+	compressionMode = os.Getenv("CMODE")
+	if compressionMode == "" {
+		compressionMode = "0"
 	}
-	log.Printf("Compression mode set to %v\n", cmode)
+	log.Printf("Compression mode set to %v\n", compressionMode)
 
 	if os.Getenv("INSTANTNEG") == "1" {
 		instNegSkip = false
@@ -375,7 +375,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 	latestDBSIn = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
 	//_ResetDBS = make(map[string]map[string]map[string]chan bool, len(spaceChannels))
 
-	for dl, dt := range dtypes {
+	for dl, dt := range dataTypes {
 
 		// Add all possible processing data thread needing the database
 		switch dl {
@@ -407,7 +407,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 						tag := dl + name + v.name
 						if ts, err := strconv.ParseInt(InitData[dl][name][v.name][0], 10, 64); err == nil {
 							// found valid InitData data
-							if (now - ts) < Crashmaxdelay {
+							if (now - ts) < CrashMaxDelay {
 								// data is fresh enough
 								switch dl {
 								case "sample__":

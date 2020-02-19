@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-const maxsensors = 200                     // maximum number of allowed processors
-const mindelayrefusedconnection = 30       // mininum delay for refused connection
+const maxSensors = 200                     // maximum number of allowed processors
+const minDelayRefusedConnection = 30       // mininum delay for refused connection
 const sensorEEPROMfile = ".sensorsettings" // file containing the sensor eerpom values
 const eepromResetTries = 3                 // how many times the server tries to reset the sensor eeprom before reporting an error
 
 // device commands describer for conversion from/to binary to/from param execution
-type cmdspecs struct {
+type cmdSpecs struct {
 	cmd byte // command binary value
 	lgt int  // number of bytes of arguments excluding cmd (1 byte) and the id (2 bytes)
 }
@@ -28,7 +28,7 @@ type sensorSpecs struct {
 	occth float64
 }
 
-type datafunc func() GenericData
+type dataFunc func() GenericData
 
 //var addServer [SIZE]string                  // server address
 var addServer string                 // server addresses
@@ -44,7 +44,7 @@ var mutexUnusedDevices = &sync.RWMutex{}    // this mutex is used to avoid concu
 var mutexConnMAC = &sync.RWMutex{}          // this mutex is used to avoid concurrent writes on sensorConnMAC
 var unknownMacChan map[string]chan net.Conn // map of sensor id to sensor MAC as provided by the sensor itself
 var pendingDevice map[string]bool           // map of mac of devices pending registration
-var unkownDevice map[string]bool            // map of mac of devices registered with id equal to 0xff
+var unknownDevice map[string]bool           // map of mac of devices registered with id equal to 0xff
 var unusedDevice map[int]string             // map of id's of unused registered devices (as in not in the .env file)
 var sensorMacID map[int][]byte              // map of sensor id to sensor MAC as provided by the sensor itself
 var sensorIdMAC map[string]int              // map of sensor MAC to sensor id as provided by the sensor itself
@@ -54,7 +54,7 @@ var sensorChanUsedID map[int]bool           // flag indicating if thw channel is
 var SensorCmdID map[int]chan []byte         // externally visible channel to handler managing commands to each connected sensor via ID
 var SensorCmdMac map[string][]chan []byte   // externally visible channel to handler managing commands to each connected sensor via mac
 var SensorIDCMDMac map[string]chan int      // externally visible channel to handler managing commands to each connected sensor via mac
-var dataMap map[string]datafunc             // used for HTTP API handling of different data types
+var dataMap map[string]dataFunc             // used for HTTP API handling of different data types
 var cmdAnswerLen = map[byte]int{            // provides length for legal server2gate commands
 	2:  1,
 	3:  1,
@@ -70,8 +70,8 @@ var cmdAnswerLen = map[byte]int{            // provides length for legal server2
 	9:  3,
 	11: 3,
 }
-var timeout, maltimeout int
-var resetbg struct {
+var timeout, malTimeout int
+var resetBG struct {
 	start    time.Time
 	end      time.Time
 	interval time.Duration
@@ -79,14 +79,14 @@ var resetbg struct {
 }
 
 // index for the map[string]string argument of exeParamCommand
-var cmds = []string{"cmd", "val", "async", "id", "timeout", "mac"}
+var commandNames = []string{"cmd", "val", "async", "id", "timeout", "mac"}
 
 // provides length for legal server2gate commands
 // server also has commands
 // list : lists all commands
 // macid " assigns the id at the device with mac specified in val
 // lgt is max 4 (bytes)
-var cmdAPI = map[string]cmdspecs{
+var cmdAPI = map[string]cmdSpecs{
 	"srate":     {2, 1},
 	"savg":      {3, 1},
 	"bgth":      {4, 2},
@@ -102,11 +102,11 @@ var cmdAPI = map[string]cmdspecs{
 	"setid":     {14, 2},
 }
 
-var errormngt = [3]int{1, 5, 15} // [min penalty, max penalty, max number of consecutive errors]
-var tcpTokens chan bool          // token for accepting a TCP request
-var Kswitch bool                 // kill switch flag
-var RepCon bool                  // enables reporting on current
-//var commonSensorSpecs sensorSpecs     // specs valid for all sensors
+var errorMngt = [3]int{1, 5, 15}      // [min penalty, max penalty, max number of consecutive errors]
+var tcpTokens chan bool               // token for accepting a TCP request
+var KSwitch bool                      // kill switch flag
+var RepCon bool                       // enables reporting on current
+var commonSensorSpecs sensorSpecs     // specs valid for all sensors
 var sensorData map[string]sensorSpecs // specs valid for a given sensor mac
 var SensorEEPROMResetEnables bool     // if true the sensor EEPROM is reset at every connection
 
@@ -114,4 +114,4 @@ var SensorEEPROMResetEnables bool     // if true the sensor EEPROM is reset at e
 var dbgMutex = &sync.RWMutex{}   // lock to dbgRegistry
 var dbgRegistry map[string]int64 // registry of currently authorised IPs
 const authDbgInterval = 60       // authorisation interval for debug access in minutes
-const pindbg = "pippopluto"      // debug pin
+const pinDbg = "pippopluto"      // debug pin

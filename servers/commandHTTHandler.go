@@ -40,7 +40,7 @@ func commandHTTHandler() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 		params := make(map[string]string)
-		for _, i := range cmds {
+		for _, i := range commandNames {
 			params[i] = ""
 		}
 		// command pin is not exposed to the user with the list command
@@ -60,7 +60,7 @@ func commandHTTHandler() http.Handler {
 		}
 
 		if params["pin"] != "" {
-			if params["pin"] == pindbg {
+			if params["pin"] == pinDbg {
 				ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
 				dbgMutex.Lock()
 				dbgRegistry[ip] = support.Timestamp()

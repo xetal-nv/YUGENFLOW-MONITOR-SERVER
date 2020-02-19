@@ -24,7 +24,7 @@ MACSTRICT = 0
 #SPARES = 0a:1c:74:66:66:67 0a:1c:74:66:66:68
 
 ## GATE COMPOSITION
-## Gates are defined by at least two devices, number has to be crescent without gaps
+## Gates are defined by at least one devices, number has to be crescent without gaps
 ## Device order follows from the first device to the last while entering
 ## IMPORTANT: Devices CANNOT be shared among gates and server DOES NOT SET the device ID
 #GATE_number = device_id device_id ...
@@ -57,11 +57,6 @@ SPACES_NAMES = livlab office
 ##SPACE_x = id_entry  id_entry ...
 SPACE_livlab = 0 1
 SPACE_office = 2 3
-
-## RESET DECLARATION
-## Define interval for periodic and self resetting sensors, interval 0 turns it off
-## RESET = start as xx:xx; end as xx:xx; sampling interval for self-reset in minutes
-RESETSLOT = 23:30; 00:30; 5
 
 ##### AVERAGE ANALYSIS #####
 ## DESCRIPTION: provides average number of people and flow, also in real time

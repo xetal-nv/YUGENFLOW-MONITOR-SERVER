@@ -7,7 +7,7 @@ var command = map[byte][]byte{
 	[]byte("\x0d")[0]: []byte("\x0d\x0d"),
 }
 
-var cmdargs = map[byte]int{
+var cmdArgs = map[byte]int{
 	[]byte("\x02")[0]: 1,
 	[]byte("\x03")[0]: 1,
 	[]byte("\x04")[0]: 2,

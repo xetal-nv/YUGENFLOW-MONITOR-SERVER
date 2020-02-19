@@ -22,31 +22,31 @@ type TimeSchedule struct {
 type IntervalDetector struct {
 	Id         string    // entry Id as string to support entry data in the entire communication pipe
 	Start, End time.Time // Start and End of the interval
-	incycle    bool      // track if it si in cycle
+	inCycle    bool      // track if it si in cycle
 	Activity   DataEntry // Activity count
 }
 
-type pfunc func(string, spaceEntries) interface{}
-type cfunc func(string, chan interface{}, chan bool)
-type dtfuncs struct {
-	pf pfunc
-	cf cfunc
+type pFunc func(string, spaceEntries) interface{}
+type cFunc func(string, chan interface{}, chan bool)
+type dtFunctions struct {
+	pf pFunc
+	cf cFunc
 }
 
 // Constants
-const chantimeout = 100
+const chanTimeout = 100
 
 //const minTransactionsForDetection = 2
 
 // variables defined via options/configuration file
-var Crashmaxdelay int64
-var multicycleonlydays bool
+var CrashMaxDelay int64
+var multiCycleOnlyDays bool
 
 // Internal variables - some might be turned into local variables
-var dtypes map[string]dtfuncs                                      // holds the datatypes and the associated prep functions for space.passData
+var dataTypes map[string]dtFunctions                               // holds the data types and the associated prep functions for space.passData
 var instNegSkip bool                                               // skips instantaneous negative counters
 var avgNegSkip bool                                                // skips instantaneous negative counters
-var bufsize int                                                    // size of channel buffer among samplers
+var bufferSize int                                                 // size of channel buffer among samplers
 var entrySpaceSamplerChannels map[int][]chan spaceEntries          // channels from entry to associated space sampler
 var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels from entry to associated space presence detector
 var SamplingWindow int                                             // internal for the averaging of data
@@ -63,6 +63,6 @@ var LatestDetectorOut map[string]chan []IntervalDetector            // contains 
 var SpaceDef map[string][]int                                       // maps a space name to its entries
 var SpaceMaxOccupancy map[string]int                                // maps a space name to its maximum occupancy, if defined
 var SpaceTimes map[string]TimeSchedule                              // maps a space name to its closure times
-var cmode string                                                    // data compression mode
+var compressionMode string                                          // data compression mode
 var MutexInitData = &sync.RWMutex{}                                 // mutex for InitData
 var InitData map[string]map[string]map[string][]string              // holds values from a previous run loaded from file .recoveryavg

@@ -13,26 +13,26 @@ import (
 
 // implements sampledata and servers.genericdata for managing data of type "entry"
 
-type SerieEntries struct {
+type SeriesEntries struct {
 	Stag string  `json:"tag"`
 	Sts  int64   `json:"ts"`
 	Sval [][]int `json:"val"`
 }
 
-func (ss *SerieEntries) SetTag(nm string) {
+func (ss *SeriesEntries) SetTag(nm string) {
 	ss.Stag = nm
 }
 
 //noinspection GoUnusedParameter
-func (ss *SerieEntries) SetVal(v ...int) {
+func (ss *SeriesEntries) SetVal(v ...int) {
 	// this does nothing
 }
 
-func (ss *SerieEntries) SetTs(ts int64) {
+func (ss *SeriesEntries) SetTs(ts int64) {
 	ss.Sts = ts
 }
 
-func (ss *SerieEntries) Valid() bool {
+func (ss *SeriesEntries) Valid() bool {
 	if ss.Sts > 0 && len(ss.Sval) > 0 {
 		return true
 	} else {
@@ -41,20 +41,20 @@ func (ss *SerieEntries) Valid() bool {
 }
 
 // it needs the variable read from the DBS with md = 12, fs = 8
-func (ss *SerieEntries) MarshalSize() int { return 0 }
+func (ss *SeriesEntries) MarshalSize() int { return 0 }
 
 // returns the recurrent data size (Sval) and the offset data size for database read
-func (ss *SerieEntries) MarshalSizeModifiers() []int { return []int{8, 8} }
+func (ss *SeriesEntries) MarshalSizeModifiers() []int { return []int{8, 8} }
 
-func (ss *SerieEntries) Ts() int64 { return ss.Sts }
+func (ss *SeriesEntries) Ts() int64 { return ss.Sts }
 
-func (ss *SerieEntries) Tag() string { return ss.Stag }
+func (ss *SeriesEntries) Tag() string { return ss.Stag }
 
-func (ss *SerieEntries) Val() [][]int { return ss.Sval }
+func (ss *SeriesEntries) Val() [][]int { return ss.Sval }
 
 // FORMAT fiels:N_units:unit_in_bytes
 // FORMAT (LENGTH:2:1, TS:1:1, VAL:(LENGTH):8
-func (ss *SerieEntries) Marshal() (rt []byte) {
+func (ss *SeriesEntries) Marshal() (rt []byte) {
 	ll := len(ss.Sval)
 	msg := make([]byte, 2)
 	binary.LittleEndian.PutUint16(msg, uint16(ll))
@@ -80,11 +80,11 @@ func (ss *SerieEntries) Marshal() (rt []byte) {
 // Extract assumes that after Sts there is a extra int that gives the length of the 2s array
 // This function is to extract the database series data structure (not the full version)
 // see spaces.passData in samplers.go
-func (ss *SerieEntries) Extract(i interface{}) (err error) {
+func (ss *SeriesEntries) Extract(i interface{}) (err error) {
 	// fmt.Println("this one")
 	err = nil
 	if i == nil {
-		err = errors.New("storage.SerieSample.Extract: error illegal data received")
+		err = errors.New("storage.SeriesSample.Extract: error illegal data received")
 		return
 	}
 	defer func() {
@@ -95,7 +95,7 @@ func (ss *SerieEntries) Extract(i interface{}) (err error) {
 	rv := reflect.ValueOf(i)
 	// fmt.Println(rv)
 	//fmt.Println("Extract series: ", rv)
-	z := SerieEntries{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int()}
+	z := SeriesEntries{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int()}
 	// fmt.Println(z)
 	var entries [][]int
 	var name string
@@ -140,13 +140,13 @@ func (ss *SerieEntries) Extract(i interface{}) (err error) {
 	return
 }
 
-// ExtractForRecoveru assumes that after Sts there is a extra int that gives the length of the 2s array
+// ExtractForRecovery assumes that after Sts there is a extra int that gives the length of the 2s array
 // This function is to extract the full series data structure (not the database version)
 // see spaces.passData in samplers.go
-func (ss *SerieEntries) ExtractForRecoveru(i interface{}) (err error) {
+func (ss *SeriesEntries) ExtractForRecovery(i interface{}) (err error) {
 	err = nil
 	if i == nil {
-		err = errors.New("storage.SerieSample.Extract: error illegal data received")
+		err = errors.New("storage.SeriesSample.Extract: error illegal data received")
 		return
 	}
 	defer func() {
@@ -155,7 +155,7 @@ func (ss *SerieEntries) ExtractForRecoveru(i interface{}) (err error) {
 		}
 	}()
 	rv := reflect.ValueOf(i)
-	z := SerieEntries{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int()}
+	z := SeriesEntries{Stag: rv.Field(0).String(), Sts: rv.Field(1).Int()}
 	ll := int(rv.Field(2).Int())
 	for j := 0; j < ll; j++ {
 		v := []int{int(rv.Field(3).Index(j).Index(0).Int()), int(rv.Field(3).Index(j).Index(1).Int()),
@@ -168,10 +168,10 @@ func (ss *SerieEntries) ExtractForRecoveru(i interface{}) (err error) {
 
 // FORMAT fiels:N_units:unit_in_bytes
 // FORMAT (LENGTH:2:1, TS:1:1, VAL:(LENGTH):8
-func (ss *SerieEntries) Unmarshal(c []byte) error {
+func (ss *SeriesEntries) Unmarshal(c []byte) error {
 	offsets := ss.MarshalSizeModifiers()
 	if len(c[2:]) != (int(binary.LittleEndian.Uint16(c[0:2]))*offsets[0] + offsets[1]) {
-		return errors.New("storage.SerieEntries.Unmarshal illegale code size ")
+		return errors.New("storage.SeriesEntries.Unmarshal illegale code size ")
 	}
 	defer func() {
 		if e := recover(); e != nil {
@@ -186,20 +186,20 @@ func (ss *SerieEntries) Unmarshal(c []byte) error {
 		var g, gv int32
 		buf := bytes.NewReader(v1)
 		if err := binary.Read(buf, binary.LittleEndian, &g); err != nil {
-			return errors.New("storage.SerieSample.Unmarshal: binary.Read failed: " + err.Error())
+			return errors.New("storage.SeriesSample.Unmarshal: binary.Read failed: " + err.Error())
 		}
 		buf = bytes.NewReader(v2)
 		if err := binary.Read(buf, binary.LittleEndian, &gv); err != nil {
-			return errors.New("storage.SerieSample.Unmarshal: binary.Read failed: " + err.Error())
+			return errors.New("storage.SeriesSample.Unmarshal: binary.Read failed: " + err.Error())
 		}
 		ss.Sval = append(ss.Sval, []int{int(g), int(gv)})
 	}
 	return nil
 }
 
-func (ss *SerieEntries) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SampleData) {
+func (ss *SeriesEntries) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SampleData) {
 	for i, mt := range vals {
-		a := new(SerieEntries)
+		a := new(SeriesEntries)
 		//fmt.Println(mt)
 		//fmt.Println(a.Unmarshal(mt))
 		if e := a.Unmarshal(mt); e == nil {
@@ -214,5 +214,5 @@ func (ss *SerieEntries) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) 
 
 func SeriesEntryDBS(id string, in chan interface{}, rst chan bool, tp string) {
 
-	handlerDBS(id, in, rst, new(SerieEntries), tp)
+	handlerDBS(id, in, rst, new(SeriesEntries), tp)
 }

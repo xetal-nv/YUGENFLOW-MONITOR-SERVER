@@ -17,7 +17,7 @@ const PRESENCEFILE = ".recoverypresence"
 // covert a string to its epoch value using as form FORM
 func string2epoch(val string) (rt int64, err error) {
 	// Parse the string according to the form.
-	r, e := time.Parse(FORM, val)
+	r, e := time.ParseInLocation(FORM, val, time.Now().Location())
 	if e == nil {
 		rt = r.Unix()
 	}
@@ -69,14 +69,14 @@ func RetrieveSampleFromFile() {
 						label := support.StringLimit("sample", support.LabelLength)
 						label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
 						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
-						s0 := &SerieSample{Stag: label, Sts: v * 1000}
-						s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
+						s0 := &SeriesSample{Stag: label, Sts: v * 1000}
+						s1 := &SeriesSample{Stag: label, Sts: (v + 86399) * 1000}
 						//if tag, ts, vals, e := ReadSeriesTS(s0, s1, true); e == nil {
 						//	fmt.Println(tag, ts, vals)
 						//}
 						//fmt.Println(DeleteSeriesTS(s0, s1, true))
 						if err := DeleteSeriesTS(s0, s1, true); err == nil {
-							var testData []SerieSample
+							var testData []SeriesSample
 							for i := 3; i < len(lineData); i++ {
 								sampleRaw := strings.Split(strings.Trim(lineData[i], " "), "/")
 								//fmt.Println(sampleRaw)
@@ -85,7 +85,7 @@ func RetrieveSampleFromFile() {
 									if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
 										tm *= 60
 										if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
-											newSample := new(SerieSample)
+											newSample := new(SeriesSample)
 											newSample.Stag = label
 											newSample.Sts = (th + tm + v) * 1000
 											newSample.Sval = val
@@ -176,8 +176,8 @@ func RetrievePresenceFromFile() {
 						label := support.StringLimit("presence", support.LabelLength)
 						label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
 						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
-						s0 := &SerieSample{Stag: label, Sts: v * 1000}
-						s1 := &SerieSample{Stag: label, Sts: (v + 86399) * 1000}
+						s0 := &SeriesSample{Stag: label, Sts: v * 1000}
+						s1 := &SeriesSample{Stag: label, Sts: (v + 86399) * 1000}
 						//fmt.Println(s0, s1)
 						//fmt.Println("New cycle")
 						//if tag, ts, vals, e := ReadSeriesSD(s0, s1, true); e == nil {
@@ -194,7 +194,7 @@ func RetrievePresenceFromFile() {
 								if tm, err := strconv.ParseInt(strings.Split(sampleRaw[0], ":")[1], 10, 64); err == nil {
 									tm *= 60
 									if val, err := strconv.Atoi(sampleRaw[1]); err == nil {
-										newSample := new(SerieSample)
+										newSample := new(SeriesSample)
 										newSample.Stag = label
 										newSample.Sts = (th + tm + v) * 1000
 										newSample.Sval = val

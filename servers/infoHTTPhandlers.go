@@ -277,7 +277,7 @@ func undefinedDeviceHTTPHandler(opt string) http.Handler {
 
 		var und []Jsonudef
 		mutexUnknownMac.RLock()
-		for mac, st := range unkownDevice {
+		for mac, st := range unknownDevice {
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
 			_, cn := unknownMacChan[mac]
 			switch opt {

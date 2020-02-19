@@ -81,8 +81,8 @@ func presenceHTTPhandler() http.Handler {
 			}
 			//fmt.Println(st,en)
 			var s0, s1 storage.SampleData
-			s0 = &storage.SerieSample{Stag: label, Sts: st}
-			s1 = &storage.SerieSample{Stag: label, Sts: en}
+			s0 = &storage.SeriesSample{Stag: label, Sts: st}
+			s1 = &storage.SeriesSample{Stag: label, Sts: en}
 
 			var rt []storage.SampleData
 			if tag, ts, vals, e := storage.ReadSeriesSD(s0, s1, true); e == nil {

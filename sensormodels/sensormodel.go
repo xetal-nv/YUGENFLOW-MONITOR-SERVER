@@ -49,7 +49,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 				cmd := make([]byte, 1)
 				ll := 1
 				if _, e = conn.Read(cmd); e == nil {
-					if l, ok := cmdargs[cmd[0]]; ok {
+					if l, ok := cmdArgs[cmd[0]]; ok {
 						ll += l
 					}
 					cmde := make([]byte, ll)
@@ -90,7 +90,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 					}
 					crc = codings.Crc8(msg)
 					msg = append(msg, crc)
-					msg = append(msg, []byte("/")...)
+					//msg = append(msg, []byte("/")...)
 					fmt.Printf("Sensor %v answering %v to received command\n", mach, msg)
 					_, e = conn.Write(msg)
 					if v[0] == 14 {

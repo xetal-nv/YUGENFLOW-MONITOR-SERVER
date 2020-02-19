@@ -300,7 +300,7 @@ func gate(in chan int, sensors []int) {
 				cmd := make([]byte, 1)
 				ll := 1
 				if _, e = conn.Read(cmd); e == nil {
-					if l, ok := cmdargs[cmd[0]]; ok {
+					if l, ok := cmdArgs[cmd[0]]; ok {
 						ll += l
 					}
 					cmde := make([]byte, ll)
@@ -443,7 +443,7 @@ func Office() {
 	if err != nil {
 		//fmt.Println(err)
 		fmt.Println("OFFICE TEST: Access API for new Holidays list")
-		holidays = extractHolidays("BE", "2019")
+		holidays = extractHolidays("BE", strconv.Itoa(time.Now().Year()))
 		file, _ := json.MarshalIndent(holidays, "", " ")
 		_ = ioutil.WriteFile(filename, file, 0644)
 	} else {

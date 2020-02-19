@@ -2,6 +2,8 @@ package gates
 
 import "sync"
 
+const maxDevicePerGate = 2 // maximum number of devices supported per gate
+
 // sensor data as identified id, timestamp ts and value val
 type sensorData struct {
 	id  int   // sensor number

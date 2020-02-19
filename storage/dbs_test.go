@@ -16,11 +16,11 @@ func Test_Setup(t *testing.T) {
 
 func Test_Test_SerieSampleMU(t *testing.T) {
 	support.LabelLength = 8
-	b := SerieSample{"entry___noname__current_", 123, -13}
+	b := SeriesSample{"entry___noname__current_", 123, -13}
 	fmt.Println(b)
 	c := b.Marshal()
 	fmt.Println(c, len(c))
-	d := new(SerieSample)
+	d := new(SeriesSample)
 	if e := d.Unmarshal(c); e == nil {
 		fmt.Println(*d)
 	} else {
@@ -35,11 +35,11 @@ func Test_Test_SerieEntriesMU(t *testing.T) {
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, -8})
 	a = append(a, []int{6, 3})
-	b := SerieEntries{"entry___noname__current_", 123, a}
+	b := SeriesEntries{"entry___noname__current_", 123, a}
 	fmt.Println(b)
 	c := b.Marshal()
 	fmt.Println(c, len(c))
-	d := new(SerieEntries)
+	d := new(SeriesEntries)
 	if e := d.Unmarshal(c); e == nil {
 		fmt.Println(*d)
 	} else {
@@ -60,9 +60,9 @@ func Test_SerieSample(t *testing.T) {
 		t.Fatal("Wring conversions 1:", e)
 	}
 
-	x := SerieSample{"test", int64(a.fromRst), 8}
+	x := SeriesSample{"test", int64(a.fromRst), 8}
 	y := x.Marshal()
-	z := new(SerieSample)
+	z := new(SeriesSample)
 
 	if e := z.Unmarshal(y); e != nil {
 		t.Fatal("Wring conversions 1:", e)
@@ -82,7 +82,7 @@ func Test_SerieEntries(t *testing.T) {
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, 8})
 	a = append(a, []int{6, 3})
-	b := SerieEntries{support.StringLimit("entry___notame__current_", support.LabelLength), 123, a}
+	b := SeriesEntries{support.StringLimit("entry___notame__current_", support.LabelLength), 123, a}
 	fmt.Println(b)
 	fmt.Println(b.Marshal())
 
@@ -95,13 +95,13 @@ func Test_SerieEntries(t *testing.T) {
 		ll  int
 		val [][]int
 	}{b.Stag, b.Sts, len(b.Sval), b.Sval}
-	c := new(SerieEntries)
+	c := new(SeriesEntries)
 	d := r(bb)
 	if err := c.Extract(d); err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println("extract:", *c)
-	e := new(SerieEntries)
+	e := new(SeriesEntries)
 	if err := e.Unmarshal(b.Marshal()); err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func Test_SerieEntries(t *testing.T) {
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			e := new(SerieEntries)
+			e := new(SeriesEntries)
 			_ = e.Unmarshal(val)
 			fmt.Println("From DBS:", *e)
 		}
@@ -173,12 +173,12 @@ func Test_DBS(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	ts := support.Timestamp()
 	ts = support.Timestamp()
-	a := SerieSample{"entry___notame__current_", ts, 11}
+	a := SeriesSample{"entry___notame__current_", ts, 11}
 	if err := StoreSampleTS(&a, false, true); err != nil {
 		t.Fatal(err)
 	}
-	s0 := SerieSample{"entry___notame__current_", ts - 500000, 8}
-	s1 := SerieSample{"entry___notame__current_", ts + 1000, 8}
+	s0 := SeriesSample{"entry___notame__current_", ts - 500000, 8}
+	s1 := SeriesSample{"entry___notame__current_", ts + 1000, 8}
 	if tag, ts, vals, e := ReadSeriesTS(&s0, &s1, false); e != nil {
 		t.Fatal(e)
 	} else {

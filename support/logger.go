@@ -33,7 +33,7 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 	}()
 
 	pwd, _ := os.Getwd()
-	if Dellogs {
+	if DelLogs {
 		_ = os.RemoveAll(filepath.Join(pwd, "log"))
 	}
 	_ = os.MkdirAll("log", os.ModePerm)

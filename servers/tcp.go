@@ -65,8 +65,8 @@ func StartTCP(sd chan context.Context) {
 		default:
 			support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",
 				support.Timestamp(), "", []int{1}, true}
-			r := rand.Intn(mindelayrefusedconnection)
-			time.Sleep(time.Duration(mindelayrefusedconnection+r) * time.Second)
+			r := rand.Intn(minDelayRefusedConnection)
+			time.Sleep(time.Duration(minDelayRefusedConnection+r) * time.Second)
 		}
 
 	}

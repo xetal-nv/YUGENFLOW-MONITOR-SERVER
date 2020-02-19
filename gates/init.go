@@ -16,37 +16,27 @@ func SetUp() {
 	SensorRst.Lock()
 	SensorRst.Channel = make(map[int]chan bool)
 	SensorRst.Unlock()
-	devgate := [2]int{2, 2}
-	// Commented since currently no other configuration is allowed
-	//if data := os.Getenv("DEVPERGATE"); data != "" {
-	//	v := strings.Split(strings.Trim(data, " "), " ")
-	//	if len(v) != 2 {
-	//		log.Fatal("gateList.SetUp: fatal error, illegal number of parameters in DEVPERGATE")
-	//	} else {
-	//		if ind, ok := strconv.Atoi(v[0]); ok != nil {
-	//			log.Fatal("gateList.SetUp: fatal error,  illegal parameter in DEVPERGATE", v[0])
-	//		} else {
-	//			devgate[0] = ind
-	//		}
-	//		if ind, ok := strconv.Atoi(v[1]); ok != nil {
-	//			log.Fatal("gateList.SetUp: fatal error,  illegal parameter in DEVPERGATE ", v[1])
-	//		} else {
-	//			devgate[1] = ind
-	//		}
-	//	}
-	//}
-	if da := os.Getenv("DEVICEASYM"); da == "" {
-		maximumAsymmetry = 10
-	} else {
-		if v, e := strconv.Atoi(da); e != nil {
-			log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
-		} else {
-			maximumAsymmetry = v
+	maximumAsymmetry = 0
+	if v, e := strconv.Atoi(strings.Trim(os.Getenv("RESETPERIOD"), " ")); e == nil {
+		if v != 0 {
+			if da := os.Getenv("DEVICEASYM"); da == "" {
+				maximumAsymmetry = 10
+			} else {
+				if v, e := strconv.Atoi(da); e != nil {
+					log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
+				} else {
+					maximumAsymmetry = v
+				}
+			}
 		}
 	}
-	log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %vs\n", maximumAsymmetry)
+	if maximumAsymmetry == 0 {
+		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS NOT ENABLED !!!\n")
+	} else {
+		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS ENABLED !!!\n")
+		log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %v\n", maximumAsymmetry)
+	}
 
-	log.Println("gateList.SetUp: defined gate composition range in devices as", devgate)
 	if data := os.Getenv("REVERSE"); data != "" {
 		for _, v := range strings.Split(data, " ") {
 			if vi, e := strconv.Atoi(v); e == nil {
@@ -66,7 +56,7 @@ func SetUp() {
 		DeclaredDevices = make(map[string]int)
 		for data != "" {
 			t := strings.Split(strings.Trim(data, " "), " ")
-			if len(t) < devgate[0] || len(t) > devgate[1] {
+			if len(t) < 1 || len(t) > maxDevicePerGate {
 				log.Fatal("gateList.SetUp: fatal error, illegal number of deviced for gate ", i)
 			}
 			for _, v := range t {
@@ -109,6 +99,19 @@ func SetUp() {
 			i += 1
 			data = os.Getenv("GATE_" + strconv.Itoa(i))
 		}
+	}
+
+	// removes possible replication of devices in a gate
+	for i, gate := range gateList {
+		var list []int
+		keys := make(map[int]bool)
+		for _, entry := range gate {
+			if _, value := keys[entry]; !value {
+				keys[entry] = true
+				list = append(list, entry)
+			}
+		}
+		gateList[i] = list
 	}
 
 	if data := os.Getenv("SPARES"); data != "" {

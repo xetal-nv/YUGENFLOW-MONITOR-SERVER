@@ -38,7 +38,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 	//}
 	//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
 	var copyAllIntervals []IntervalDetector
-	timeoutInterval := 5 * chantimeout * time.Millisecond
+	timeoutInterval := 5 * chanTimeout * time.Millisecond
 	active := true
 	// saved := false
 	// load the configuration, this is done only once even when recovering
@@ -76,7 +76,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						if _, e := storage.SetSeries(nm, 0, true); e != nil {
 							log.Fatalf("spaces.detectors: fatal error setting database %v\n", nm)
 						}
-						go dtypes["presence"].cf(nm, sendDBSchan[nm], nil)
+						go dataTypes["presence"].cf(nm, sendDBSchan[nm], nil)
 					}
 				}
 			}
@@ -100,10 +100,10 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 							if en, err := strconv.ParseInt(data[3], 10, 64); err == nil {
 								if ts, err := strconv.ParseInt(data[4], 10, 64); err == nil {
 									if val, err := strconv.Atoi(data[5]); err == nil {
-										if (support.Timestamp() - ts*1000) <= Crashmaxdelay {
+										if (support.Timestamp() - ts*1000) <= CrashMaxDelay {
 											inc, _ := support.InClosureTime(time.Unix(st, 0), time.Unix(en, 0))
 											recData[data[1]] = IntervalDetector{Id: data[1], Start: time.Unix(st, 0), End: time.Unix(en, 0),
-												incycle: inc, Activity: DataEntry{Ts: ts, id: data[1], NetFlow: val}}
+												inCycle: inc, Activity: DataEntry{Ts: ts, id: data[1], NetFlow: val}}
 										}
 									}
 								}
@@ -161,7 +161,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				copy(copyAllIntervals, allIntervals)
 				//fmt.Println("checking", allIntervals[i].Id)
 				if found, e := support.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
-					allIntervals[i].incycle = true
+					allIntervals[i].inCycle = true
 					if sp.netflow != 0 {
 						allIntervals[i].Activity.NetFlow += 1
 						// allIntervals[i].Activity.Ts = support.Timestamp()
@@ -194,13 +194,13 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						//}
 						//os.Exit(1)
 					}
-				} else if allIntervals[i].incycle {
+				} else if allIntervals[i].inCycle {
 					// sample is saved with a ts adjusted with the timeout
-					allIntervals[i].Activity.Ts = support.Timestamp() - 5*chantimeout*2
+					allIntervals[i].Activity.Ts = support.Timestamp() - 5*chanTimeout*2
 					if support.Debug != 0 {
 						fmt.Println("space Activity for interval", allIntervals[i].Id, " ended as", allIntervals[i].Activity)
 					}
-					allIntervals[i].incycle = false
+					allIntervals[i].inCycle = false
 					// saved = false
 					//fmt.Println("exit cycle")
 					//fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)

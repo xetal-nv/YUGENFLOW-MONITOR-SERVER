@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"gateserver/support"
 	"log"
 )
@@ -39,9 +38,9 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 						log.Println(e.Error(), d)
 					}
 				}
-				if support.Debug > 0 {
-					fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", support.Stringending(id, "current", "_"))
-				}
+				//if support.Debug > 0 {
+				//	fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", support.Stringending(id, "current", "_"))
+				//}
 			case aa := <-rst:
 				// Reset via API might be dangerous, this is just a  placeholder
 				log.Println("storage.TimedIntDBS: handler id:", id, "got reset request", aa, " - does nothing still")

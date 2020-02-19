@@ -267,8 +267,8 @@ func setupHTTP() error {
 
 	setJSenvironment()
 
-	dataMap = make(map[string]datafunc)
-	dataMap["sample"] = func() GenericData { return new(storage.SerieSample) }
+	dataMap = make(map[string]dataFunc)
+	dataMap["sample"] = func() GenericData { return new(storage.SeriesSample) }
 	dataMap["entry"] = func() GenericData { return new(storage.JsonSeriesEntries) }
 
 	dbgMutex.Lock()
@@ -315,7 +315,7 @@ func setupHTTP() error {
 	// unused registered device API
 	hMap["/active"] = usedDeviceHTTPHandler()
 	// if enabled it register the kill switch API
-	if Kswitch {
+	if KSwitch {
 		hMap["/ks"] = killswitchHTTPHandler()
 	}
 	// Api for dbs management
@@ -478,8 +478,6 @@ func readSensorParameters() {
 			}
 
 			if file, err := os.Open(sensorEEPROMfile); err == nil {
-				//noinspection GoUnhandledErrorResult
-				defer file.Close()
 
 				scanner := bufio.NewScanner(file)
 				for scanner.Scan() {
@@ -501,6 +499,7 @@ func readSensorParameters() {
 					log.Fatal("Error reading setting sensor settings from file " + sensorEEPROMfile)
 				}
 
+				commonSensorSpecs = commonSensorSpecsLocal
 				if refGen {
 					if err := expandSpecs(); err == nil {
 						//commonSensorSpecs = commonSensorSpecsLocal
@@ -509,7 +508,8 @@ func readSensorParameters() {
 						log.Fatal(err.Error())
 					}
 				}
-
+				//noinspection GoUnhandledErrorResult
+				file.Close()
 			} else {
 				log.Fatal("Error opening setting sensor settings from file " + sensorEEPROMfile)
 			}
@@ -611,30 +611,35 @@ func setUpTCP() {
 	}
 
 	if v, e := strconv.Atoi(os.Getenv("MALTO")); e != nil {
-		maltimeout = 600
+		malTimeout = 600
 	} else {
-		maltimeout = v
+		malTimeout = v
 	}
 
-	resetbg.start, resetbg.end, resetbg.interval, resetbg.valid = time.Time{}, time.Time{}, time.Duration(0), false
+	resetBG.start, resetBG.end, resetBG.valid = time.Time{}, time.Time{}, false
 	rng := strings.Split(strings.Trim(os.Getenv("RESETSLOT"), ";"), ";")
-	if len(rng) == 3 {
-		if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
-			resetbg.start = v
-			if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
-				resetbg.end = v
-				if v, e := strconv.Atoi(strings.Trim(rng[2], " ")); e == nil {
-					if v != 0 {
-						resetbg.interval = time.Duration(v)
-						resetbg.valid = true
+
+	if v, e := strconv.Atoi(strings.Trim(os.Getenv("RESETPERIOD"), " ")); e == nil {
+		if v != 0 {
+			resetBG.interval = time.Duration(v)
+			if len(rng) == 3 {
+				if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+					resetBG.start = v
+					if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+						resetBG.end = v
+						if strings.Trim(rng[2], " ") != "0" {
+							resetBG.valid = true
+						}
 					}
 				}
 			}
 		}
 	}
 
-	if !resetbg.valid {
-		log.Println("servers.StartTCP: Warning RESETSLOT has invalid data", os.Getenv("RESETSLOT"))
+	if !resetBG.valid {
+		log.Println("servers.StartTCP: WARNING RESETSLOT has invalid data or is disabled:", os.Getenv("RESETSLOT"))
+	} else {
+		log.Println("servers.StartTCP: WARNING RESETSLOT is set from ", strings.Trim(rng[0], " "), "to", strings.Trim(rng[1], " "))
 	}
 
 	log.Println("servers.StartTCP: CRC usage is set to", crcUsed)
@@ -651,13 +656,13 @@ func setUpTCP() {
 	sensorIdMAC = make(map[string]int)
 	unknownMacChan = make(map[string]chan net.Conn)
 	pendingDevice = make(map[string]bool)
-	unkownDevice = make(map[string]bool)
+	unknownDevice = make(map[string]bool)
 	unusedDevice = make(map[int]string)
 	mutexSensorMacs.Unlock()
 	mutexUnknownMac.Unlock()
 
-	tcpTokens = make(chan bool, maxsensors)
-	for i := 0; i < maxsensors; i++ {
+	tcpTokens = make(chan bool, maxSensors)
+	for i := 0; i < maxSensors; i++ {
 		tcpTokens <- true
 	}
 }

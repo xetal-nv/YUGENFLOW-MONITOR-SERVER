@@ -12,11 +12,11 @@ import (
 
 var Debug int
 var LabelLength int
-var Dellogs = false
+var DelLogs = false
 var MalOn = true
 var RstON = false
 
-const logfilename string = "gnl" // logfile name
+const logFileName string = "gnl" // logfile name
 const TimeLayout = "15:04"       // time layout used to read the configuration file
 
 var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination does not affect critical operations
@@ -59,7 +59,7 @@ func SetUp(envf string) {
 	// Set-up loggers
 	if Debug == 0 {
 		c := make(chan bool)
-		go setUpLog(logfilename, time.Now().Local(), c)
+		go setUpLog(logFileName, time.Now().Local(), c)
 		<-c
 	}
 	setUpDevLogger()

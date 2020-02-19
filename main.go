@@ -107,11 +107,11 @@ func main() {
 	support.Debug = *dbug
 	support.RotInt = *ri
 	support.RotSize = *rs
-	support.Dellogs = *dl
+	support.DelLogs = *dl
 	support.MalOn = !*noml
 	support.RstON = *forcerst
-	spaces.Crashmaxdelay = int64(*cdelay) * 1000
-	servers.Kswitch = *ks
+	spaces.CrashMaxDelay = int64(*cdelay) * 1000
+	servers.KSwitch = *ks
 	servers.RepCon = *repcon
 	gates.LogToFileAll = *de
 	servers.SensorEEPROMResetEnables = *eeprom
@@ -140,8 +140,8 @@ func main() {
 						data := sam + "," + sp + "," + ms + ","
 						switch strings.Trim(sam, "_") {
 						case "entry":
-							dt := new(storage.SerieEntries)
-							_ = dt.ExtractForRecoveru(<-ch)
+							dt := new(storage.SeriesEntries)
+							_ = dt.ExtractForRecovery(<-ch)
 							//ok = dt.Tag() != "" && dt.Ts() != 0
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
 								data += strconv.FormatInt(cTS, 10) + ","
@@ -157,7 +157,7 @@ func main() {
 								}
 							}
 						case "sample":
-							dt := new(storage.SerieSample)
+							dt := new(storage.SeriesSample)
 							_ = dt.Extract(<-ch)
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
 								data += strconv.FormatInt(cTS, 10) + ","
@@ -244,9 +244,9 @@ func main() {
 			}(i, mac)
 		}
 	case 1:
-		go sensormodels.SensorModel(0, 7000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
+		//go sensormodels.SensorModel(0, 7000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
 		go sensormodels.SensorModel(1, 7000, 30, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '2'})
-		go sensormodels.SensorModel(20, 5000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
+		//go sensormodels.SensorModel(20, 5000, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
 		go sensormodels.SensorModel(21, 5500, 30, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '4'})
 		go sensormodels.SensorModel(2340, 900, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '5'})
 		go sensormodels.SensorModel(65535, 500, 20, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '6'})

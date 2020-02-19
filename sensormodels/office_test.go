@@ -60,13 +60,13 @@ func Test_office(t *testing.T) {
 
 func Test_HAPI(t *testing.T) {
 
-	filename := "holidays_BE_2019.json"
+	filename := "holidays_BE_2020.json"
 
 	var holidays Response
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("Access API")
-		holidays = extractHolidays("BE", "2019")
+		holidays = extractHolidays("BE", "2020")
 		file, _ := json.MarshalIndent(holidays, "", " ")
 		_ = ioutil.WriteFile(filename, file, 0644)
 	} else {

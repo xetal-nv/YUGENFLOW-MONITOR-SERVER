@@ -14,7 +14,7 @@ import (
 )
 
 // execute a command towards a sensor as specified by the params map
-// see cmds definition for what parameters are allowed
+// see commandNames definition for what parameters are allowed
 func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 	rv = Jsoncmdrt{"", false}
 	//mutexSensorMacs.RLock()
@@ -59,10 +59,10 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 											if _, err := conn.Write(cmd); err != nil {
 												rv.Rt = "error: command failed"
 											} else {
-												rv.Rt = "Device restarting"
+												rv.Rt = "Device id changed"
 												rv.State = true
 												mutexUnknownMac.Lock()
-												unkownDevice[string(mac)] = true
+												unknownDevice[string(mac)] = true
 												mutexUnknownMac.Unlock()
 												// read and discard answer
 												c := make(chan bool)
@@ -75,11 +75,14 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 												case <-time.After(time.Duration(timeout) * time.Second):
 												}
 											}
-										}
-										select {
-										case ch <- nil:
-										case <-time.After(time.Duration(timeout) * time.Second):
-											rv.Rt = "warning: command probably failed"
+											//}
+											select {
+											case ch <- nil:
+											case <-time.After(time.Duration(timeout) * time.Second):
+												rv.Rt = "warning: command probably failed"
+											}
+										} else {
+											rv.Rt = "warning: sensor has not yet indicated any id, valid or not"
 										}
 									case <-time.After(time.Duration(timeout) * time.Second):
 										rv.Rt = "error: command failed"
@@ -206,7 +209,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 // execute command CMD with parameter val on sensor ID. all values are strings
 func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 	params := make(map[string]string)
-	for _, i := range cmds {
+	for _, i := range commandNames {
 		params[i] = ""
 	}
 	if v, e := json.Marshal(val); e != nil {

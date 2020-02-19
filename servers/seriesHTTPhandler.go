@@ -89,9 +89,9 @@ func seriesHTTPhandler() http.Handler {
 			if num, e := strconv.Atoi(params["last"]); e == nil {
 				switch params["type"] {
 				case "sample":
-					s = &storage.SerieSample{Stag: label, Sts: support.Timestamp()}
+					s = &storage.SeriesSample{Stag: label, Sts: support.Timestamp()}
 				case "entry":
-					s = &storage.SerieEntries{Stag: label, Sts: support.Timestamp()}
+					s = &storage.SeriesEntries{Stag: label, Sts: support.Timestamp()}
 				default:
 					_, _ = fmt.Fprintf(w, "")
 					return
@@ -142,8 +142,8 @@ func seriesHTTPhandler() http.Handler {
 				var s0, s1 storage.SampleData
 				switch params["type"] {
 				case "sample":
-					s0 = &storage.SerieSample{Stag: label, Sts: st}
-					s1 = &storage.SerieSample{Stag: label, Sts: en}
+					s0 = &storage.SeriesSample{Stag: label, Sts: st}
+					s1 = &storage.SeriesSample{Stag: label, Sts: en}
 					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
@@ -156,14 +156,14 @@ func seriesHTTPhandler() http.Handler {
 						return
 					}
 					var convertedRt []storage.JsonSeriesEntries
-					s0 = &storage.SerieEntries{Stag: label, Sts: st}
-					s1 = &storage.SerieEntries{Stag: label, Sts: en}
+					s0 = &storage.SeriesEntries{Stag: label, Sts: st}
+					s1 = &storage.SeriesEntries{Stag: label, Sts: en}
 					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
 					for _, v := range rt {
 						convertedTemp := storage.JsonSeriesEntries{}
-						seVal := storage.SerieEntries{}
+						seVal := storage.SeriesEntries{}
 						codedVal := v.Marshal()
 						_ = seVal.Unmarshal(codedVal)
 						seVal.Stag = v.Tag()
