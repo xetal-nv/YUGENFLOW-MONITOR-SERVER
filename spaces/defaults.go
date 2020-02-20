@@ -1,6 +1,7 @@
 package spaces
 
 import (
+	"os"
 	"sync"
 	"time"
 )
@@ -51,6 +52,9 @@ var entrySpaceSamplerChannels map[int][]chan spaceEntries          // channels f
 var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels from entry to associated space presence detector
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
+var shadowAnalysis string                                          // name of the shadow analysis (if defined)
+var shadowAnalysisDate map[string]string                           // map of shadow analysis current date to space name
+var shadowAnalysisFile map[string]*os.File                         // map of shadow analysis file per space
 var avgAnalysisSchedule TimeSchedule                               // specifies the Activity range of the analysis
 var latestChannelLock = &sync.RWMutex{}                            // this mutex is for a perceived race on the below slices
 var latestBankIn map[string]map[string]map[string]chan interface{} // contains all input channels to the data bank

@@ -3,16 +3,18 @@ All notable changes to this project will be documented in this file.
 
 ## [0.7.2]
 ### Add
- - Reset gate if one sensor sends sensibly more messages, configurable via configuration file  
- - added database recover API  
- - added self reset of device eeprom (if enabled), needs to be tested  
+ - Reset gate if one sensor sends sensibly less messages, configurable via configuration file  
+ - added database recover API including adjustment of samples and presence data, and removal of entries  
+ - added self reset of device eeprom (if enabled)  
+ - added self-disable of sensor the requires too many resets (configurable)  
+ - Added support for flow detection with single sensor instead of two  
+ - Added shadow reporting of one measurement into a file in the log file (if set in the configuration file)  
  
  ### Changed
   - Fixed issue with periodic reset  
   - Periodic reset is now self-reset  
-  - !!! Check JS bug on point data as it seems it take data only 30 minutes before the set time (TBD)  
   - Added support for single sensor per gate  
- 
+  - Styling and typo fixes  
 
 ## [0.7.1]
 ### Changed

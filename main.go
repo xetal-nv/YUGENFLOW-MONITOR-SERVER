@@ -40,6 +40,7 @@ func main() {
 	var st = flag.String("start", "", "cstart time expressed as HH:MM")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var nosample = flag.Bool("nosample", false, "disable automatic check for database recovery")
+	var dbsupdate = flag.Bool("dbsupdate", false, "enable DBS integrity check HTTP API")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -98,6 +99,9 @@ func main() {
 	if *eeprom {
 		log.Printf("!!! WARNING SENSOR EEPROM REFRESH ENABLED !!!\n")
 	}
+	if *dbsupdate {
+		log.Printf("!!! WARNING DBS INTEGRITY API ENABLED !!!\n")
+	}
 
 	servers.Dvl = *dvl
 	support.Debug = *dbug
@@ -111,6 +115,7 @@ func main() {
 	servers.RepCon = *repcon
 	gates.LogToFileAll = *de
 	servers.SensorEEPROMResetEnabled = *eeprom
+	servers.EnableDBSApi = *dbsupdate
 
 	folder = os.Getenv("GATESERVER")
 
@@ -214,6 +219,9 @@ func main() {
 	gates.SetUp()
 	spaces.SetUp()
 	storage.RetrieveSampleFromFile(!*nosample)
+	storage.RetrievePresenceFromFile(!*nosample)
+
+	//os.Exit(1)
 
 	switch *dmode {
 	case 2:

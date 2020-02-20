@@ -322,11 +322,13 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 				if avgID == 1 {
 					// first sampler need to consider sample permanence
 					for i := 0; i < len(buffer)-1; i++ {
+						//noinspection GoRedundantConversion
 						acc += float64(buffer[i].val) * float64(buffer[i+1].ts-buffer[i].ts) / float64(period)
 					}
 				} else {
 					// second and later sampler need to consider presence from past average
 					for i := 1; i < len(buffer); i++ {
+						//noinspection GoRedundantConversion
 						acc += float64(buffer[i].val) * float64(buffer[i].ts-buffer[i-1].ts) / float64(period)
 					}
 				}
@@ -554,6 +556,28 @@ func sampler(spacename string, prevStageChan, nextStageChan chan spaceEntries, s
 
 // used internally in the sampler to pass data among threads.
 func passData(spacename, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, stimeout, ltimeout int) {
+
+	if samplerName == shadowAnalysis {
+		today := time.Now().Format("01-02-2006")
+		if shadowAnalysisDate[spacename] != today {
+			if shadowAnalysisDate[spacename] != "" {
+				if _, e := shadowAnalysisFile[spacename].WriteString("\n"); e != nil {
+					log.Printf("ShadowReport error writing new line for %v, at date %v\n", spacename, today)
+				}
+			}
+			if _, e := shadowAnalysisFile[spacename].WriteString(time.Now().Format("2006.01.02") +
+				", (" + time.Now().Format("15:04") + ", " + strconv.Itoa(counter.val) + ")"); e != nil {
+				log.Printf("ShadowReport error writing first line for %v, at date %v\n", spacename, today)
+			}
+			shadowAnalysisDate[spacename] = time.Now().Format("01-02-2006")
+		} else {
+			if _, e := shadowAnalysisFile[spacename].WriteString(", (" + time.Now().Format("15:04") + ", " + strconv.Itoa(counter.val) + ")"); e != nil {
+				log.Printf("ShadowReport error writing new value for %v, at time %v\n", spacename, time.Now().Format("2006.01.02 15:04:05"))
+			}
+		}
+		//fmt.Println(spacename, samplerName, shadowAnalysisDate[spacename])
+	}
+
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, val: counter.val}
 	cc.entries = make(map[int]DataEntry)

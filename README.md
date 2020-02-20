@@ -29,8 +29,8 @@ HTTPSPORTS[1]/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type pre
 HTTPSPORTS[1]/cmd?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 HTTPSPORTS[1]/cmd?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/cmd?list -> lists all available commands  
-HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples  
-HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence  
+HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set  
+HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set  
   
 NOTE: values in val are specified as x,y,n,..   
 NOTE: all commands need to be fully tested via mac and id  
@@ -66,6 +66,7 @@ See .envtest file for configuration example
 -repcon : enables current reporting in JS
 -ri Int : set log ri  
 -rs Int64 : set log rs  
--st string : set start time, time specified as HH:MM
--eeprom : enables refresh of device eeprom at every connection
--nosample : disable automatic check for database recovery
+-st string : set start time, time specified as HH:MM  
+-eeprom : enables refresh of device eeprom at every connection  
+-nosample : disable automatic check for database recovery  
+-dbsupdate : enable DBS integrity check HTTP API  

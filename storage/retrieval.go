@@ -48,7 +48,7 @@ func RetrieveSampleFromFile(startup bool) {
 			return
 		}
 		if startup {
-			log.Println("!!! WARNING DATABASE INTEGRITY CHECK INITIATED !!!")
+			log.Println("!!! WARNING SAMPLE DATABASE INTEGRITY CHECK INITIATED !!!")
 		}
 	} else {
 		if !startup {
@@ -57,7 +57,7 @@ func RetrieveSampleFromFile(startup bool) {
 			}()
 			return
 		} else {
-			log.Println("!!! WARNING DATABASE INTEGRITY CHECK NOT REQUIRED !!!")
+			log.Println("!!! WARNING SAMPLE DATABASE INTEGRITY IS OK !!!")
 			return
 		}
 	}
@@ -67,7 +67,7 @@ func RetrieveSampleFromFile(startup bool) {
 			support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
 		}()
 		if startup {
-			log.Println("!!! WARNING DATABASE RECOVERY ERROR !!!")
+			log.Println("!!! WARNING SAMPLE DATABASE RECOVERY ERROR !!!")
 		}
 	} else {
 		//noinspection GoUnhandledErrorResult
@@ -189,26 +189,54 @@ func RetrieveSampleFromFile(startup bool) {
 func RetrievePresenceFromFile(startup bool) {
 	//fmt.Println("RetrievePresenceFromFile")
 
-	if fileStat, err := os.Stat(PRESENCEFILE); err == nil {
-		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 {
+	presenceCorruptions := 0
+
+	if fileStat, err := os.Stat(SAMPLEFILE); err == nil {
+		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 && !startup {
 			go func() {
 				support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
 			}()
 			return
 		}
+		if startup {
+			log.Println("!!! WARNING PRESENCE DATABASE INTEGRITY CHECK INITIATED !!!")
+		}
 	} else {
-		go func() {
-			support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error opening file .recoverypresence", []int{1}, true}
-		}()
-		return
+		if !startup {
+			go func() {
+				support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+			}()
+			return
+		} else {
+			log.Println("!!! WARNING PRESENCE DATABASE INTEGRITY IS OK !!!")
+			return
+		}
 	}
+
+	//if fileStat, err := os.Stat(PRESENCEFILE); err == nil {
+	//	if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 {
+	//		go func() {
+	//			support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+	//		}()
+	//		return
+	//	}
+	//} else {
+	//	go func() {
+	//		support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+	//	}()
+	//	return
+	//}
+
 	if file, err := os.Open(PRESENCEFILE); err != nil {
 		go func() {
 			support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "err", []int{1}, true}
 		}()
+		if startup {
+			log.Println("!!! WARNING PRESENCE DATABASE RECOVERY ERROR !!!")
+		}
 	} else {
 		//noinspection GoUnhandledErrorResult
-		defer file.Close()
+		//defer file.Close()
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			if strings.Trim(scanner.Text(), " ") != "" {
@@ -252,6 +280,9 @@ func RetrievePresenceFromFile(startup bool) {
 												support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "retrieved presence data",
 													[]int{1}, true}
 											}()
+											if startup {
+												presenceCorruptions += 1
+											}
 										}
 									}
 								}
@@ -273,12 +304,19 @@ func RetrievePresenceFromFile(startup bool) {
 					}
 				}
 			}
+			//}
+
+			if err := scanner.Err(); err != nil {
+				go func() {
+					support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error reading .recoverypresence", []int{1}, true}
+				}()
+			}
 		}
 
-		if err := scanner.Err(); err != nil {
-			go func() {
-				support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error reading .recoverypresence", []int{1}, true}
-			}()
+		_ = file.Close()
+		if startup {
+			log.Printf("!!! WARNING PRESENCE DATABASE INTEGRITY CHECK COMPLETED: %v DATA CORRUPTIONS REMOVED !!!", presenceCorruptions)
+			_ = os.Remove(SAMPLEFILE)
 		}
 	}
 }

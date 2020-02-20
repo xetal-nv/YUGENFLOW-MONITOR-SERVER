@@ -110,3 +110,4 @@ var sensorData map[string]sensorSpecs // specs valid for a given sensor mac
 var SensorEEPROMResetEnabled bool     // if true the sensor EEPROM is reset at every connection
 var sensorEEPROMResetDelay int        // number of seconds of delay before initiating the eeprom refresh
 var sensorEEPROMResetStep int         // number of seconds of delay between refresh commands
+var EnableDBSApi bool                 // enables the DBS update from file API
