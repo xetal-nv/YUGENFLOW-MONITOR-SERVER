@@ -3,6 +3,7 @@ package support
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -61,6 +62,12 @@ func SetUp(envf string) {
 		c := make(chan bool)
 		go setUpLog(logFileName, time.Now().Local(), c)
 		<-c
+	} else {
+		pwd, _ := os.Getwd()
+		if DelLogs {
+			_ = os.RemoveAll(filepath.Join(pwd, "log"))
+		}
+		_ = os.MkdirAll("log", os.ModePerm)
 	}
 	setUpDevLogger()
 	log.Println("Starting server ...")

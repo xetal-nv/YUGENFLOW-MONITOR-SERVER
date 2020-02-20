@@ -127,20 +127,20 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 				if err != nil {
 					_ = currentDB.Close()
 				} else {
-					bufsize := 50
+					bufSize := 50
 					if v, e := strconv.Atoi(os.Getenv("DBSBUFFSIZE")); e == nil {
-						bufsize = v
+						bufSize = v
 					}
-					statsChanIn = make(chan dbInChan, bufsize)
-					currentChanIn = make(chan dbInChan, bufsize)
+					statsChanIn = make(chan dbInChan, bufSize)
+					currentChanIn = make(chan dbInChan, bufSize)
 					go dbUpdateDriver(statsChanIn, *statsDB, false)
 					go dbUpdateDriver(currentChanIn, *currentDB, true)
-					statsChanOut = make(chan dbOutCommChan, bufsize)
-					currentChanOut = make(chan dbOutCommChan, bufsize)
+					statsChanOut = make(chan dbOutCommChan, bufSize)
+					currentChanOut = make(chan dbOutCommChan, bufSize)
 					go dbReadDriver(statsChanOut, *statsDB)
 					go dbReadDriver(currentChanOut, *currentDB)
-					statsChanDel = make(chan dbOutCommChan, bufsize)
-					currentChanDel = make(chan dbOutCommChan, bufsize)
+					statsChanDel = make(chan dbOutCommChan, bufSize)
+					currentChanDel = make(chan dbOutCommChan, bufSize)
 					go dbDeleteDriver(statsChanDel, *statsDB)
 					go dbDeleteDriver(currentChanDel, *currentDB)
 
@@ -176,10 +176,10 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 		if c, e := ReadHeader(tag, sDB); e != nil {
 			nt := []byte(tag + "header")
 			found = false
-			a := Headerdata{}
+			a := HeaderData{}
 			a.fromRst = uint64(support.Timestamp())
 			a.step = uint32(step)
-			a.lastUpdt = a.fromRst
+			a.lastUpdate = a.fromRst
 			a.created = a.fromRst
 			b := a.Marshal()
 			if sDB {
@@ -207,7 +207,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 }
 
 // reads the header of a series
-func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
+func ReadHeader(tag string, sDB bool) (hd HeaderData, err error) {
 
 	co := make(chan dbOutChan)
 	if sDB {
@@ -239,14 +239,14 @@ func ReadHeader(tag string, sDB bool) (hd Headerdata, err error) {
 // updates the header of a TS series
 func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
 	var ts int64
-	var hd Headerdata
+	var hd HeaderData
 	if len(gts) != 1 {
 		ts = support.Timestamp()
 	} else {
 		ts = gts[0]
 	}
 	if hd, err = ReadHeader(tag, sDB); err == nil {
-		hd.lastUpdt = uint64(ts)
+		hd.lastUpdate = uint64(ts)
 		b := hd.Marshal()
 		if sDB {
 			select {
@@ -266,7 +266,7 @@ func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
 }
 
 // stores a TS sample, optionally it updates the header
-func StoreSampleTS(d SampleData, sDB bool, updatehead ...bool) (err error) {
+func StoreSampleTS(d SampleData, sDB bool, updateHead ...bool) (err error) {
 	//fmt.Println("store TS", d)
 	ts := d.Ts()
 	tag := d.Tag()
@@ -299,10 +299,10 @@ func StoreSampleTS(d SampleData, sDB bool, updatehead ...bool) (err error) {
 		}
 	} else {
 		tagMutex.RUnlock()
-		err = errors.New("Serie " + tag + " not found")
+		err = errors.New("Series " + tag + " not found")
 	}
-	if len(updatehead) == 1 {
-		if updatehead[0] {
+	if len(updateHead) == 1 {
+		if updateHead[0] {
 			err = updateTSHeader(d.Tag(), sDB, ts)
 		}
 	}
@@ -310,7 +310,7 @@ func StoreSampleTS(d SampleData, sDB bool, updatehead ...bool) (err error) {
 }
 
 // stores a SD sample, optionally it updates the header
-func StoreSampleSD(d SampleData, sDB bool, updatehead ...bool) (err error) {
+func StoreSampleSD(d SampleData, sDB bool, updateHead ...bool) (err error) {
 	//fmt.Println("store SD", d)
 	ts := d.Ts()
 	tag := d.Tag()
@@ -336,10 +336,10 @@ func StoreSampleSD(d SampleData, sDB bool, updatehead ...bool) (err error) {
 		}
 	} else {
 		tagMutex.RUnlock()
-		err = errors.New("Serie " + tag + " not found")
+		err = errors.New("Series " + tag + " not found")
 	}
-	if len(updatehead) == 1 {
-		if updatehead[0] {
+	if len(updateHead) == 1 {
+		if updateHead[0] {
 			err = updateTSHeader(d.Tag(), sDB, ts)
 		}
 	}
@@ -398,7 +398,7 @@ func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
 		}
 	} else {
 		tagMutex.RUnlock()
-		return errors.New("Serie " + tag + " not found")
+		return errors.New("Series " + tag + " not found")
 	}
 	return nil
 }
@@ -462,7 +462,7 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 		}
 	} else {
 		tagMutex.RUnlock()
-		err = errors.New("Serie " + tag + " not found")
+		err = errors.New("Series " + tag + " not found")
 	}
 	return tag, rts, rt, err
 }
@@ -518,7 +518,7 @@ func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
 		}
 	} else {
 		tagMutex.RUnlock()
-		return errors.New("Serie " + tag + " not found")
+		return errors.New("Series " + tag + " not found")
 	}
 	return nil
 }
@@ -589,12 +589,12 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 		}
 	} else {
 		tagMutex.RUnlock()
-		err = errors.New("Serie " + tag + " not found")
+		err = errors.New("Series " + tag + " not found")
 	}
 	return tag, rts, rt, err
 }
 
-// It returns the values for the last N timestamps in a TS serie
+// It returns the values for the last N timestamps in a TS series
 // values are returns as a set of values
 // tag: identified of the series
 // rts: list of timestamps
@@ -647,7 +647,7 @@ func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt
 		}
 	} else {
 		tagMutex.RUnlock()
-		err = errors.New("storage.ReadLastNTS: serie " + tag + " not found")
+		err = errors.New("storage.ReadLastNTS: series " + tag + " not found")
 	}
 	return
 }
@@ -872,8 +872,8 @@ func handlerGarbage(dbs []*badger.DB) {
 	}()
 	for {
 		time.Sleep(garbage.intervalMin * time.Minute)
-		if doit, e := support.InClosureTime(garbage.start, garbage.end); e == nil {
-			if doit {
+		if doIt, e := support.InClosureTime(garbage.start, garbage.end); e == nil {
+			if doIt {
 				// We ignore errors since it is done periodically
 				for _, el := range dbs {
 					_ = el.RunValueLogGC(0.7)

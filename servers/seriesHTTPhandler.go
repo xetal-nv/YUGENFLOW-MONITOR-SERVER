@@ -22,7 +22,7 @@ import (
 // last : number of last samples to return
 // last and (start.end) are mutually exclusive with last having priority in case they are all specified
 func seriesHTTPhandler() http.Handler {
-	var cmds = []string{"last", "type", "space", "analysis", "start", "end"}
+	var commands = []string{"last", "type", "space", "analysis", "start", "end"}
 
 	cors := false
 	if os.Getenv("CORS") != "" {
@@ -63,7 +63,7 @@ func seriesHTTPhandler() http.Handler {
 		//fmt.Println(authorised, ip)
 
 		params := make(map[string]string)
-		for _, i := range cmds {
+		for _, i := range commands {
 			params[i] = ""
 		}
 

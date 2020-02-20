@@ -36,8 +36,8 @@ func handlerReset(id int) {
 	for {
 		time.Sleep(resetBG.interval * time.Minute)
 		//fmt.Println("resetting device", id)
-		if doit, e := support.InClosureTime(resetBG.start, resetBG.end); e == nil {
-			if doit && !done {
+		if doIt, e := support.InClosureTime(resetBG.start, resetBG.end); e == nil {
+			if doIt && !done {
 				//if !done {
 				rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
 				if rt.State {
@@ -68,7 +68,7 @@ func handlerReset(id int) {
 				}
 				//}
 			} else {
-				if !doit {
+				if !doIt {
 					done = false
 				}
 				// check if there is a reset request pending
@@ -101,7 +101,7 @@ func handlerReset(id int) {
 }
 
 //noinspection GoUnusedParameter
-func assingID(st chan bool, conn net.Conn, com chan net.Conn, _mac []byte) {
+func assignID(st chan bool, conn net.Conn, com chan net.Conn, _mac []byte) {
 	defer func() { st <- false }()
 	select {
 	case <-com:
@@ -120,6 +120,7 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 		//timeout := 1
 		//mainLoop:
 		for i := 0; i < eepromResetTries; i++ {
+			time.Sleep(time.Duration(sensorEEPROMResetStep) * time.Second)
 			if v, ok := cmdAPI[command]; ok {
 				cmd := []byte{v.cmd}
 				bs := make([]byte, 4)
@@ -129,12 +130,12 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 				cmd = append(cmd, codings.Crc8(cmd))
 				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
 					if _, e := conn.Write(cmd); e == nil {
-						log.Printf("Sent %x on device %v\n", cmd, mac)
-						// loop on read till we find a significant answer
+						//log.Printf("Sent %x on device %v\n", cmd, mac)
 					readLoop:
-						for {
+						// we give it a maximum of max (4, eepromResetTries) for the sensor to answer to the command
+						for j := 0; j < int(math.Max(float64(4), float64(eepromResetTries))); j++ {
 							ans := make([]byte, 1)
-							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
+							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(10*timeout) * time.Second)); e == nil {
 								if _, e := conn.Read(ans); e == nil {
 									switch ans[0] {
 									case 1:
@@ -147,37 +148,40 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 										}
 										_, _ = conn.Read(data)
 									case cmd[0]:
-										// answer to command, discard CRC if rpesent
+										// answer to command, discard CRC if present
 										if crcUsed {
 											_, _ = conn.Read(make([]byte, 1))
 										}
-										log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
+										//log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
 										//break mainLoop
 										return nil
 									default:
-										log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
+										//log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
 										// illegal answer
 										break readLoop
 									}
 								} else {
-									log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
+									//log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
 								}
 							}
 						}
 					} else {
-						log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
+						//log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
 					}
 				}
+				// reset the all deadlines
+				_ = conn.SetDeadline(time.Time{})
 			}
 		}
 		return
 	}
 
-	if !SensorEEPROMResetEnables {
-		//fmt.Println("SensorEEPROMResetEnables disabled")
+	if !SensorEEPROMResetEnabled {
+		//fmt.Println("SensorEEPROMResetEnabled disabled")
 		return
 	} else {
-		//fmt.Println("SensorEEPROMResetEnables enabled")
+		time.Sleep(time.Duration(sensorEEPROMResetDelay) * time.Second)
+		//fmt.Println("SensorEEPROMResetEnabled enabled")
 		if specs, ok := sensorData[mac]; ok || commonSensorSpecs.savg != 0 {
 			//fmt.Println(" found")
 			//os.Exit(1)
@@ -186,19 +190,19 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 			}
 			eLab := "("
 			if e := sendCommand("srate", uint32(specs.srate)); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "srate "
 			}
 			if e := sendCommand("savg", uint32(specs.savg)); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "savg "
 			}
 			if e := sendCommand("bgth", uint32(math.Round(specs.bgth*16))); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "bgth "
 			}
 			if e := sendCommand("occth", uint32(math.Round(specs.occth*16))); e != nil {
-				log.Println(e)
+				//log.Println(e)
 				eLab += "occth "
 			}
 			if eLab != "(" {
@@ -208,10 +212,10 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 			//fmt.Println("not found")
 			//os.Exit(1)
 			go func() {
-				support.DLog <- support.DevData{"servers.SensorEEPROMResetEnables: sensorData cache is corrupted",
+				support.DLog <- support.DevData{"servers.SensorEEPROMResetEnabled: sensorData cache is corrupted",
 					support.Timestamp(), "", []int{1}, true}
 			}()
-			err = errors.New("servers.SensorEEPROMResetEnables: sensorData cache is corrupted for device " + mac)
+			err = errors.New("servers.SensorEEPROMResetEnabled: sensorData cache is corrupted for device " + mac)
 		}
 		//fmt.Println(err)
 		//os.Exit(1)

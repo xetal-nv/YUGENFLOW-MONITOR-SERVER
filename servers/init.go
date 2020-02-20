@@ -20,7 +20,7 @@ import (
 
 var Dvl = false
 
-func setJSenvironment() {
+func setJSenv() {
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
 		f, err := os.Create("./html/js/dat.js")
 		if err != nil {
@@ -35,7 +35,7 @@ func setJSenvironment() {
 			log.Fatal("Fatal error closing dat.js: ", err)
 		}
 	} else {
-		log.Fatal("servers.setJSenvironment: fatal error cannot retrieve dbs/dat")
+		log.Fatal("servers.setJSenv: fatal error cannot retrieve dbs/dat")
 	}
 
 	//ports := strings.Split(os.Getenv("HTTPSPORTS"), ",")
@@ -204,12 +204,12 @@ func setJSenvironment() {
 					jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
 					jsST = "var opStartTime = \"" + val[0] + "\";\n"
 					jsEN = "var opEndTime = \"" + val[1] + "\";\n"
-					log.Printf("spaces.setJSenvironment: Analysis window is set from %v to %v\n", val[0], val[1])
+					log.Printf("spaces.setJSenv: Analysis window is set from %v to %v\n", val[0], val[1])
 				} else {
-					log.Fatal("spaces.setJSenvironment: illegal end ANALYSISWINDOW value", val)
+					log.Fatal("spaces.setJSenv: illegal end ANALYSISWINDOW value", val)
 				}
 			} else {
-				log.Fatal("spaces.setJSenvironment: illegal start ANALYSISWINDOW value", val)
+				log.Fatal("spaces.setJSenv: illegal start ANALYSISWINDOW value", val)
 			}
 		}
 	} else {
@@ -219,12 +219,12 @@ func setJSenvironment() {
 					jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
 					jsST = "var opStartTime = \"" + val[0] + "\";\n"
 					jsEN = "var opEndTime = \"" + val[1] + "\";\n"
-					log.Printf("spaces.setJSenvironment: Analysis window is set from %v to %v\n", val[0], val[1])
+					log.Printf("spaces.setJSenv: Analysis window is set from %v to %v\n", val[0], val[1])
 				} else {
-					log.Fatal("spaces.setJSenvironment: illegal end RTWINDOW value", val)
+					log.Fatal("spaces.setJSenv: illegal end RTWINDOW value", val)
 				}
 			} else {
-				log.Fatal("spaces.setJSenvironment: illegal start RTWINDOW value", val)
+				log.Fatal("spaces.setJSenv: illegal start RTWINDOW value", val)
 			}
 		}
 	}
@@ -265,7 +265,7 @@ func setJSenvironment() {
 // set-up of HTTP servers and handlers
 func setupHTTP() error {
 
-	setJSenvironment()
+	setJSenv()
 
 	dataMap = make(map[string]dataFunc)
 	dataMap["sample"] = func() GenericData { return new(storage.SeriesSample) }
@@ -392,8 +392,20 @@ func setupHTTP() error {
 */
 func readSensorParameters() {
 
-	if SensorEEPROMResetEnables {
+	if SensorEEPROMResetEnabled {
 		if support.FileExists(sensorEEPROMfile) {
+			if v, e := strconv.Atoi(os.Getenv("EEPROMDELAY")); e != nil {
+				sensorEEPROMResetDelay = 10
+			} else {
+				sensorEEPROMResetDelay = v
+			}
+			if v, e := strconv.Atoi(os.Getenv("EEPROMSTEP")); e != nil {
+				sensorEEPROMResetStep = 10
+			} else {
+				sensorEEPROMResetStep = v
+			}
+
+			log.Printf("EEPROM refresh rate is set at %v with delay %v", sensorEEPROMResetStep, sensorEEPROMResetDelay)
 			log.Println("Setting sensor settings from file " + sensorEEPROMfile)
 
 			refGen := false

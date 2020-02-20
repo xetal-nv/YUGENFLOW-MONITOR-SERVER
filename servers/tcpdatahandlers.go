@@ -25,9 +25,9 @@ func handlerTCPRequest(conn net.Conn) {
 	stop := make(chan bool) // channels used to reset the associated command thread
 	mac := make([]byte, 6)  // received amc address
 	var ci, ce chan []byte  // channel for the API command
-	var devid chan int      // channel for the API command
+	var devId chan int      // channel for the API command
 	cks := errorMngt[2]
-	malfcheck := 0 // count number fo suspicions of attacks
+	malCheck := 0 // count number fo suspicions of attacks
 
 	defer func() {
 		if idKnown {
@@ -77,25 +77,25 @@ func handlerTCPRequest(conn net.Conn) {
 
 		if e := setSensorParameters(conn, mach); e == nil {
 
-			if SensorEEPROMResetEnables {
+			if SensorEEPROMResetEnabled {
 				log.Printf("servers.handlerTCPRequest: eeprom refresh executed for device %v//%v\n", ipc, mach)
 			}
 
 			// Start reading data
 
 			// define a malicious report function that, depending if on strict mode, also kills the connection
-			//malf := func(strict bool) {
-			malf := func() {
+			//malFunc := func(strict bool) {
+			malFunc := func() {
 				if support.MalOn {
 					//if strict {
-					if malfcheck > 3 {
+					if malCheck > 3 {
 						log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
 						go func() {
 							support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
 								support.Timestamp(), "", []int{}, true}
 						}()
-						tsnow := support.Timestamp()
-						for (tsnow + int64(malTimeout*1000)) > support.Timestamp() {
+						tsNow := support.Timestamp()
+						for (tsNow + int64(malTimeout*1000)) > support.Timestamp() {
 							if _, e := conn.Read(make([]byte, 256)); e != nil {
 								break
 							}
@@ -115,26 +115,26 @@ func handlerTCPRequest(conn net.Conn) {
 			if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
 				// Device is not allowed, behaviour depends if in strict mode
 				if strictFlag {
-					malfcheck += 1
-					malf()
+					malCheck += 1
+					malFunc()
 				} else {
 					log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
 				}
-				//malf(strictFlag)
+				//malFunc(strictFlag)
 			}
 			gates.MutexDeclaredDevices.RUnlock()
 
 			// START redo with different check
 
 			mutexConnMAC.RLock()
-			if oldcn, ts := sensorConnMAC[string(mac)]; ts {
+			if oldCn, ts := sensorConnMAC[string(mac)]; ts {
 				mutexConnMAC.RUnlock()
 				// the current device is returning faster than its old channel is closed
 				// or we are in presence of a malicious attack
 				// checking if the old connection is alive will be used to decide the situation
 				ch := make(chan bool)
 				go func() {
-					if _, e := oldcn.Read(make([]byte, 1)); e != nil {
+					if _, e := oldCn.Read(make([]byte, 1)); e != nil {
 						ch <- true
 					} else {
 						ch <- false
@@ -148,16 +148,16 @@ func handlerTCPRequest(conn net.Conn) {
 						mutexConnMAC.Unlock()
 						log.Printf("servers.handlerTCPRequest: re-connected to old device %v//%v\n", ipc, mach)
 					} else {
-						//malf(true)
-						malfcheck += 1
-						malf()
+						//malFunc(true)
+						malCheck += 1
+						malFunc()
 					}
 				case <-time.After(time.Duration(timeout+1) * time.Second):
 					// We wait further before assuming this is a malicious attack
 					// this is a rare situation that should never happen
 					ch0 := make(chan bool)
 					go func() {
-						if _, e := oldcn.Read(make([]byte, 1)); e != nil {
+						if _, e := oldCn.Read(make([]byte, 1)); e != nil {
 							ch0 <- true
 						} else {
 							ch0 <- false
@@ -168,14 +168,14 @@ func handlerTCPRequest(conn net.Conn) {
 						if ans {
 							log.Printf("servers.handlerTCPRequest: re-connected (timeout) to old device %v//%v\n", ipc, mach)
 						} else {
-							malfcheck += 1
-							malf()
-							//malf(true)
+							malCheck += 1
+							malFunc()
+							//malFunc(true)
 						}
 					case <-time.After(time.Duration(malTimeout-timeout) * time.Second):
-						malfcheck += 1
-						malf()
-						//malf(true)
+						malCheck += 1
+						malFunc()
+						//malFunc(true)
 					}
 				}
 
@@ -266,15 +266,15 @@ func handlerTCPRequest(conn net.Conn) {
 						mutexSensorMacs.RUnlock()
 						ci = make(chan []byte)
 						ce = make(chan []byte)
-						devid = make(chan int)
+						devId = make(chan int)
 						mutexSensorMacs.Lock()
 						SensorCmdMac[mach] = []chan []byte{ci}
 						SensorCmdMac[mach] = append(SensorCmdMac[mach], ce)
-						SensorIDCMDMac[mach] = devid
+						SensorIDCMDMac[mach] = devId
 						mutexSensorMacs.Unlock()
-						go handlerCommandAnswer(string(mac), ci, ce, stop, devid)
+						go handlerCommandAnswer(string(mac), ci, ce, stop, devId)
 					} else {
-						if devid, found = SensorIDCMDMac[mach]; !found {
+						if devId, found = SensorIDCMDMac[mach]; !found {
 							mutexSensorMacs.RUnlock()
 							// system tables have been corrupted, a zombie is unavoidable
 							log.Printf("servers.handlerTCPRequest: corrupted handlerCommandAnswer data for device %v//%v\n", ipc, mach)
@@ -292,7 +292,7 @@ func handlerTCPRequest(conn net.Conn) {
 					mutexSensorMacs.RUnlock()
 				}
 			}
-			malfcheck = 0
+			malCheck = 0
 			// It reset all possible TCP deadline that might be pending form previous operations
 			// in case of failure it closes the channel
 			if e := conn.SetDeadline(time.Time{}); e != nil {
@@ -365,11 +365,11 @@ func handlerTCPRequest(conn net.Conn) {
 
 									if ind != deviceId && ind != 65535 {
 										// Device is a malicious attack, connection is terminated
-										malfcheck += 2
-										malf()
-										//malf(true)
+										malCheck += 2
+										malFunc()
+										//malFunc(true)
 									} else {
-										malfcheck = 0
+										malCheck = 0
 										mutexSensorMacs.Lock()
 										if !idKnown {
 											oldMac, ok1 := sensorMacID[deviceId]
@@ -385,7 +385,7 @@ func handlerTCPRequest(conn net.Conn) {
 												SensorCmdID[deviceId] = ce          // assign a command channel to the id
 												sensorChanUsedID[deviceId] = true   // enable flag for TCP/Channel pair
 												gates.SensorRst.Lock()
-												go func(id int) { devid <- id }(deviceId)
+												go func(id int) { devId <- id }(deviceId)
 												// enable periodic and self reset procedure
 												if resetBG.valid {
 													gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
@@ -395,11 +395,11 @@ func handlerTCPRequest(conn net.Conn) {
 											} else {
 												// this is either a known device or an attack using a known/used ID
 												if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
-													malfcheck += 2
-													malf()
-													//malf(true)
+													malCheck += 2
+													malFunc()
+													//malFunc(true)
 												} else {
-													malfcheck = 0
+													malCheck = 0
 													sensorChanUsedID[deviceId] = true
 												}
 											}
@@ -411,7 +411,7 @@ func handlerTCPRequest(conn net.Conn) {
 											mutexUnusedDevices.Lock()
 											if _, ok := unusedDevice[deviceId]; !ok {
 												unusedDevice[deviceId] = string(mac)
-												log.Println(e)
+												//log.Println(e)
 											}
 											mutexUnusedDevices.Unlock()
 										}
@@ -428,7 +428,7 @@ func handlerTCPRequest(conn net.Conn) {
 									}
 									s1 := make(chan bool, 1)
 									s2 := make(chan bool, 1)
-									go assingID(s1, conn, unknownMacChan[string(mac)], mac)
+									go assignID(s1, conn, unknownMacChan[string(mac)], mac)
 									mutexUnknownMac.Unlock()
 									go func(terminate, stop chan bool) {
 										loop := true

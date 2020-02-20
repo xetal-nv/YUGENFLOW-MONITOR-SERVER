@@ -68,6 +68,7 @@ See .envtest and .systemenv files for configuration example
 -repcon : enables current reporting in JS
 -ri Int : set log ri  
 -rs Int64 : set log rs  
--st string : set start time, time specified as HH:MM
--eeprom : enables refresh of device eeprom at every connection
+-st string : set start time, time specified as HH:MM  
+-eeprom : enables refresh of device eeprom at every connection  
+-nosample : disable automatic check for database recovery  
 

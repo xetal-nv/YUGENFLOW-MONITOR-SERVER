@@ -166,12 +166,12 @@ func (ss *SeriesEntries) ExtractForRecovery(i interface{}) (err error) {
 	return
 }
 
-// FORMAT fiels:N_units:unit_in_bytes
+// FORMAT fields:N_units:unit_in_bytes
 // FORMAT (LENGTH:2:1, TS:1:1, VAL:(LENGTH):8
 func (ss *SeriesEntries) Unmarshal(c []byte) error {
 	offsets := ss.MarshalSizeModifiers()
 	if len(c[2:]) != (int(binary.LittleEndian.Uint16(c[0:2]))*offsets[0] + offsets[1]) {
-		return errors.New("storage.SeriesEntries.Unmarshal illegale code size ")
+		return errors.New("storage.SeriesEntries.Unmarshal illegal code size ")
 	}
 	defer func() {
 		if e := recover(); e != nil {

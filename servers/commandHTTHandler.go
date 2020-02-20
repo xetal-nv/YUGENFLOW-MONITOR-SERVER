@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type Jsoncmdrt struct {
+type JsonCmdRt struct {
 	Rt    string `json:"answer"`
 	State bool   `json:"State"`
 }
@@ -65,15 +65,15 @@ func commandHTTHandler() http.Handler {
 				dbgMutex.Lock()
 				dbgRegistry[ip] = support.Timestamp()
 				dbgMutex.Unlock()
-				_ = json.NewEncoder(w).Encode(Jsoncmdrt{"", true})
+				_ = json.NewEncoder(w).Encode(JsonCmdRt{"", true})
 			} else {
-				_ = json.NewEncoder(w).Encode(Jsoncmdrt{"", false})
+				_ = json.NewEncoder(w).Encode(JsonCmdRt{"", false})
 			}
 			return
 		}
 
 		if params["id"] != "" && params["mac"] != "" {
-			_ = json.NewEncoder(w).Encode(Jsoncmdrt{"error: illegal command providing both mac and id", false})
+			_ = json.NewEncoder(w).Encode(JsonCmdRt{"error: illegal command providing both mac and id", false})
 			return
 		}
 
@@ -82,7 +82,7 @@ func commandHTTHandler() http.Handler {
 			_ = json.NewEncoder(w).Encode(rv)
 		} else {
 			go func() { exeParamCommand(params) }()
-			_ = json.NewEncoder(w).Encode(Jsoncmdrt{"async mode", true})
+			_ = json.NewEncoder(w).Encode(JsonCmdRt{"async mode", true})
 		}
 	})
 }

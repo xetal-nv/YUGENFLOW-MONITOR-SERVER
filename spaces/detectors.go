@@ -33,7 +33,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 
 	//latestDBSIn[dl][name][v.name] = make(chan interface{})
 	//label := dl + name + v.name
-	//if _, e := storage.SetSeries(label, v.interval, !support.Stringending(label, "current", "_")); e != nil {
+	//if _, e := storage.SetSeries(label, v.interval, !support.StringEnding(label, "current", "_")); e != nil {
 	//	log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
 	//}
 	//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
@@ -44,31 +44,31 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 	// load the configuration, this is done only once even when recovering
 	once.Do(func() {
 		// configuration is read, if name is truncated, the name needs to be recovered from the config file as well
-		var spacename string
+		var spaceName string
 		if name[len(name)-1] != '_' {
 			// we need to recovery the name since truncated
 			sps := strings.Split(strings.Trim(os.Getenv("SPACES_NAMES"), " "), " ")
 			for _, nm := range sps {
 				nmck := strings.Trim(strings.Split(nm, ":")[0], " ")
 				if name == nmck[0:len(name)] {
-					spacename = nmck
+					spaceName = nmck
 				}
 			}
 		} else {
-			spacename = strings.Trim(name, "_")
+			spaceName = strings.Trim(name, "_")
 		}
-		if sts := os.Getenv("PRESENCE_" + spacename); sts != "" {
+		if sts := os.Getenv("PRESENCE_" + spaceName); sts != "" {
 			// all intervals are read
 			for _, st := range strings.Split(strings.Trim(sts, " "), ";") {
 				stdata := strings.Split(strings.Trim(st, " "), " ")
 				if start, e := time.Parse(support.TimeLayout, strings.Trim(stdata[1], " ")); e == nil {
 					if end, e := time.Parse(support.TimeLayout, strings.Trim(stdata[2], " ")); e == nil {
-						spacename = support.StringLimit(spacename, support.LabelLength)
-						nm := support.StringLimit("presence", support.LabelLength) + spacename + support.StringLimit(strings.Trim(stdata[0], " "), support.LabelLength)
+						spaceName = support.StringLimit(spaceName, support.LabelLength)
+						nm := support.StringLimit("presence", support.LabelLength) + spaceName + support.StringLimit(strings.Trim(stdata[0], " "), support.LabelLength)
 						allIntervals = append(allIntervals, IntervalDetector{nm,
 							start, end, false, DataEntry{id: nm}})
 						sendDBSchan[nm] = make(chan interface{})
-						//label := spacename + nm
+						//label := spaceName + nm
 						//fmt.Println(nm, int(end.Unix() - start.Unix())/4, SamplingWindow)
 						//os.Exit(1)
 						// this approach is quite slow
@@ -92,10 +92,10 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				recData := make(map[string]IntervalDetector)
 				for scanner.Scan() {
 					data := strings.Split(scanner.Text(), ",")
-					if data[0] == spacename {
+					if data[0] == spaceName {
 						// select only the data for this space
 						// [livlab__ presencelivlab__morning_ -62167190400 -62167183200 0 0]
-						//fmt.Println(spacename, data)
+						//fmt.Println(spaceName, data)
 						if st, err := strconv.ParseInt(data[2], 10, 64); err == nil {
 							if en, err := strconv.ParseInt(data[3], 10, 64); err == nil {
 								if ts, err := strconv.ParseInt(data[4], 10, 64); err == nil {
@@ -120,14 +120,14 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				for i, val := range allIntervals {
 					if el, ok := recData[val.Id]; ok {
 						allIntervals[i] = el
-						log.Printf("spaces.detectors: recovered presence definition and value for %v:%v\n", spacename, val.Id)
+						log.Printf("spaces.detectors: recovered presence definition and value for %v:%v\n", spaceName, val.Id)
 						//we need to check is the sample ts is relevant
-						//found, err := support.InClosureTimeFull(netflow.Start, netflow.End, time.Unix(el.Activity.Ts, 0))
-						//fmt.Println(netflow.Id, found, err)
+						//found, err := support.InClosureTimeFull(netFlow.Start, netFlow.End, time.Unix(el.Activity.Ts, 0))
+						//fmt.Println(netFlow.Id, found, err)
 					}
 				}
 			}
-			log.Printf("spaces.detectors: detectors for %v activated\n", spacename)
+			log.Printf("spaces.detectors: detectors for %v activated\n", spaceName)
 		} else {
 			active = false
 			//fmt.Println("detector for", name, "not active")
@@ -151,7 +151,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 		var sp spaceEntries
 		select {
 		case sp = <-gateChan:
-			//fmt.Println("got", sp.netflow)
+			//fmt.Println("got", sp.netFlow)
 		case <-time.After(timeoutInterval):
 		}
 		if active {
@@ -162,7 +162,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 				//fmt.Println("checking", allIntervals[i].Id)
 				if found, e := support.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
 					allIntervals[i].inCycle = true
-					if sp.netflow != 0 {
+					if sp.netFlow != 0 {
 						allIntervals[i].Activity.NetFlow += 1
 						// allIntervals[i].Activity.Ts = support.Timestamp()
 						if support.Debug != 0 {

@@ -12,7 +12,7 @@ import (
 // set-up for all sensor/gate/entry variables, threads and channels based on the data from the configuration file .env
 
 func SetUp() {
-	var revdev []int
+	var revDev []int
 	SensorRst.Lock()
 	SensorRst.Channel = make(map[int]chan bool)
 	SensorRst.Unlock()
@@ -20,7 +20,7 @@ func SetUp() {
 	if v, e := strconv.Atoi(strings.Trim(os.Getenv("RESETPERIOD"), " ")); e == nil {
 		if v != 0 {
 			if da := os.Getenv("DEVICEASYM"); da == "" {
-				maximumAsymmetry = 10
+				maximumAsymmetry = 5
 			} else {
 				if v, e := strconv.Atoi(da); e != nil {
 					log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYM")
@@ -33,19 +33,28 @@ func SetUp() {
 	if maximumAsymmetry == 0 {
 		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS NOT ENABLED !!!\n")
 	} else {
+		if da := os.Getenv("DEVICEASYMCMAX"); da == "" {
+			maximumAsymmetryIter = 4
+		} else {
+			if v, e := strconv.Atoi(da); e != nil {
+				log.Fatal("spaces.SetUp: fatal error in definition of DEVICEASYMCMAX")
+			} else {
+				maximumAsymmetryIter = v
+			}
+		}
 		log.Printf("!!! WARNING GATE ASYMMETRY RESET IS ENABLED !!!\n")
-		log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %v\n", maximumAsymmetry)
+		log.Printf("spaces.SetUp: setting maximum asymmetry for gate sensors at %v with maximum iters at %v\n", maximumAsymmetry, maximumAsymmetryIter)
 	}
 
 	if data := os.Getenv("REVERSE"); data != "" {
 		for _, v := range strings.Split(data, " ") {
 			if vi, e := strconv.Atoi(v); e == nil {
-				revdev = append(revdev, vi)
+				revDev = append(revDev, vi)
 			} else {
 				log.Fatal("gateList.SetUp: fatal error converting Reversed gate name ", v)
 			}
 		}
-		log.Println("gateList.SetUp: defined Reversed Gates", revdev)
+		log.Println("gateList.SetUp: defined Reversed Gates", revDev)
 	}
 	i := 0
 	if data := os.Getenv("GATE_" + strconv.Itoa(i)); data == "" {
@@ -57,18 +66,18 @@ func SetUp() {
 		for data != "" {
 			t := strings.Split(strings.Trim(data, " "), " ")
 			if len(t) < 1 || len(t) > maxDevicePerGate {
-				log.Fatal("gateList.SetUp: fatal error, illegal number of deviced for gate ", i)
+				log.Fatal("gateList.SetUp: fatal error, illegal number of device id for gate ", i)
 			}
 			for _, v := range t {
-				devdat := strings.Split(v, "?")
-				if ind, ok := strconv.Atoi(devdat[len(devdat)-1]); ok != nil {
+				devDat := strings.Split(v, "?")
+				if ind, ok := strconv.Atoi(devDat[len(devDat)-1]); ok != nil {
 					log.Fatal("gateList.SetUp: fatal error in definition of GATE ", i)
 				} else {
-					if len(devdat) <= 2 {
+					if len(devDat) <= 2 {
 						// add device declaration
-						if len(devdat) == 2 {
+						if len(devDat) == 2 {
 							var mac []byte
-							if c, e := net.ParseMAC(devdat[0]); e == nil {
+							if c, e := net.ParseMAC(devDat[0]); e == nil {
 								for _, v := range c {
 									mac = append(mac, v)
 								}
@@ -77,7 +86,7 @@ func SetUp() {
 						}
 						// verify reverse status
 						rev := false
-						if support.Contains(revdev, ind) {
+						if support.Contains(revDev, ind) {
 							rev = true
 						}
 						// add sensor to sensor list
@@ -115,14 +124,14 @@ func SetUp() {
 	}
 
 	if data := os.Getenv("SPARES"); data != "" {
-		for _, macst := range strings.Split(strings.Trim(data, " "), " ") {
+		for _, macSt := range strings.Split(strings.Trim(data, " "), " ") {
 			var mac []byte
-			if c, e := net.ParseMAC(macst); e == nil {
+			if c, e := net.ParseMAC(macSt); e == nil {
 				for _, v := range c {
 					mac = append(mac, v)
 				}
 			}
-			DeclaredDevices[macst] = 65535
+			DeclaredDevices[macSt] = 65535
 		}
 	}
 	i = 0

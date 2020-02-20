@@ -24,11 +24,18 @@ AVERAGENEG = 0
 ## This value also represents the smallest interval for anything related to analysis
 SAMWINDOW = 5
 
-## TIMEOURS (TO) IN S
+## TIMEOUTS (TO) IN S
 ## Defives the device, database and malicious connection timeouts
 DEVICETO = 10
 DBSTO = 10
 MALTO = 120
+
+## INTERNAL DELAYS
+## Defines delay before the eeprom refresh in seconds (default is 10s)
+EEPROMDELAY = 10
+## Defines delay between eeprom refresh commands in seconds (default is 3s)
+EEPROMSTEP = 3
+
 
 ## SELFROOT
 ## Attempts to automatically determine the root folder of the server executable
@@ -62,8 +69,10 @@ TCPPROT = tcp4
 ##
 ## RESETSLOT = start as xx:xx; end as xx:xx; 0 for disable
 ## DEVICEASYM = asymmetry value
+## DEVICEASYMCMAX = maximum number of asymmetry reset before the sensor gets disabled
 ## RESETPERIOD = period in minutes
 
 RESETSLOT = 09:30; 10:30; 1
 DEVICEASYM = 3
+DEVICEASYMCMAX = 4
 RESETPERIOD = 1

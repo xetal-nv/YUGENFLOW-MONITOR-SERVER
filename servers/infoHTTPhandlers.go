@@ -43,41 +43,41 @@ func dvlHTTHandler() http.Handler {
 	})
 }
 
-type Jsondevs struct {
+type JsonDevs struct {
 	Id       int  `json:"deviceid"`
 	Reversed bool `json:"reversed"`
 }
 
-type Jsongate struct {
+type JsonGate struct {
 	Id      int        `json:"gateid"`
-	Devices []Jsondevs `json:"devices"`
+	Devices []JsonDevs `json:"devices"`
 }
 
-type Jsonentry struct {
+type JsonEntry struct {
 	Id    int        `json:"entryid"`
-	Gates []Jsongate `json:"gates"`
+	Gates []JsonGate `json:"gates"`
 }
 
-type Jsonspace struct {
+type JsonSpace struct {
 	Id      string      `json:"spacename"`
-	Entries []Jsonentry `json:"entries"`
+	Entries []JsonEntry `json:"entries"`
 }
 
-var inst []Jsonspace
+var inst []JsonSpace
 
 // returns the installation information
 func infoHTTHandler() http.Handler {
 	for spn, spd := range spaces.SpaceDef {
-		var space Jsonspace
+		var space JsonSpace
 		space.Id = strings.Replace(spn, "_", "", -1)
 		for _, enm := range spd {
-			var entry Jsonentry
+			var entry JsonEntry
 			entry.Id = enm
 			for gnm, gnd := range gates.EntryList[enm].Gates {
-				var gate Jsongate
+				var gate JsonGate
 				gate.Id = gnm
 				for _, dvn := range gnd {
-					var device Jsondevs
+					var device JsonDevs
 					device.Id = dvn
 					device.Reversed = gates.EntryList[enm].SenDef[dvn].Reversed
 					gate.Devices = append(gate.Devices, device)
@@ -114,7 +114,7 @@ func infoHTTHandler() http.Handler {
 	})
 }
 
-type Jsonrt struct {
+type JsonRt struct {
 	Name      string `json:"name"`
 	Qualifier string `json:"qualifier"`
 }
@@ -127,13 +127,13 @@ func asysHTTHandler() http.Handler {
 	}
 
 	//TODO consider replacing with a dynamically created JS at start
-	var asys []Jsonrt
+	var asys []JsonRt
 	if dt := os.Getenv("ANALYSISPERIOD"); dt != "" {
 		for _, v := range strings.Split(strings.Trim(dt, ";"), ";") {
 			vc := strings.Split(strings.Trim(v, " "), " ")
 			//if len(vc) == 2 || len(vc) == 4 {
 			if len(vc) == 2 {
-				el := Jsonrt{strings.Trim(vc[0], " "), strings.Trim(vc[1], " ")}
+				el := JsonRt{strings.Trim(vc[0], " "), strings.Trim(vc[1], " ")}
 				asys = append(asys, el)
 			}
 		}
@@ -172,7 +172,7 @@ func planHTTPHandler(name string) http.Handler {
 		log.Fatal("planHTTPHandler: Fatal error, resource empty.svg is missing")
 	}
 
-	rt := Jsonrt{Name: name}
+	rt := JsonRt{Name: name}
 	if name != "" {
 		data, err := ioutil.ReadFile("./installation/" + name + ".svg")
 		if err != nil {
@@ -204,7 +204,7 @@ func planHTTPHandler(name string) http.Handler {
 	})
 }
 
-type Jsonund struct {
+type JsonUnd struct {
 	Id  int    `json:"id"`
 	Mac string `json:"mac"`
 }
@@ -233,11 +233,11 @@ func unusedDeviceHTTPHandler() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		var und []Jsonund
+		var und []JsonUnd
 		mutexUnusedDevices.RLock()
 		for id, mac := range unusedDevice {
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
-			und = append(und, Jsonund{id, mach})
+			und = append(und, JsonUnd{id, mach})
 		}
 		mutexUnusedDevices.RUnlock()
 
@@ -246,7 +246,7 @@ func unusedDeviceHTTPHandler() http.Handler {
 	})
 }
 
-type Jsonudef struct {
+type JsonUdef struct {
 	Mac       string `json:"mac"`
 	State     bool   `json:"redefined"`
 	Connected bool   `json:"connected"`
@@ -275,7 +275,7 @@ func undefinedDeviceHTTPHandler(opt string) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		var und []Jsonudef
+		var und []JsonUdef
 		mutexUnknownMac.RLock()
 		for mac, st := range unknownDevice {
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", []byte(mac)), " ", ":", -1), ":")
@@ -283,22 +283,22 @@ func undefinedDeviceHTTPHandler(opt string) http.Handler {
 			switch opt {
 			case "undefined":
 				if !st {
-					und = append(und, Jsonudef{mach, st, cn})
+					und = append(und, JsonUdef{mach, st, cn})
 				}
 			case "defined":
 				if st {
-					und = append(und, Jsonudef{mach, st, cn})
+					und = append(und, JsonUdef{mach, st, cn})
 				}
 			case "active":
 				if cn {
-					und = append(und, Jsonudef{mach, st, cn})
+					und = append(und, JsonUdef{mach, st, cn})
 				}
 			case "notactive":
 				if !cn {
-					und = append(und, Jsonudef{mach, st, cn})
+					und = append(und, JsonUdef{mach, st, cn})
 				}
 			default:
-				und = append(und, Jsonudef{mach, st, cn})
+				und = append(und, JsonUdef{mach, st, cn})
 			}
 		}
 		mutexUnknownMac.RUnlock()
@@ -330,11 +330,11 @@ func usedDeviceHTTPHandler() http.Handler {
 		if cors {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-		var udev []Jsonund
+		var udev []JsonUnd
 		mutexSensorMacs.RLock()
 		for id, mac := range sensorMacID {
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":")
-			udev = append(udev, Jsonund{id, mach})
+			udev = append(udev, JsonUnd{id, mach})
 		}
 		mutexSensorMacs.RUnlock()
 

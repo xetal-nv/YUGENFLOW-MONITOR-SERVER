@@ -49,13 +49,13 @@ func Test_Test_SerieEntriesMU(t *testing.T) {
 
 func Test_SerieSample(t *testing.T) {
 
-	a := Headerdata{}
+	a := HeaderData{}
 	a.fromRst = uint64(support.Timestamp())
 	a.step = 500
-	a.lastUpdt = a.fromRst
+	a.lastUpdate = a.fromRst
 	a.created = a.fromRst
 	b := a.Marshal()
-	var c Headerdata
+	var c HeaderData
 	if e := c.Unmarshal(b); e != nil || c != a {
 		t.Fatal("Wring conversions 1:", e)
 	}

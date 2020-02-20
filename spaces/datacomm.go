@@ -14,7 +14,7 @@ func SendData(entry int, val int) error {
 		return errors.New("spaces.SendData: error entry not valid Id: " + strconv.Itoa(entry))
 	}
 	for _, v := range entrySpaceSamplerChannels[entry] {
-		go func() { v <- spaceEntries{id: entry, netflow: val} }()
+		go func() { v <- spaceEntries{id: entry, netFlow: val} }()
 	}
 
 	//  sends the gate data to the proper presence detectors
@@ -22,7 +22,7 @@ func SendData(entry int, val int) error {
 		return errors.New("spaces.SendData: error entry not valid Id: " + strconv.Itoa(entry))
 	}
 	for _, v := range entrySpacePresenceChannels[entry] {
-		go func() { v <- spaceEntries{id: entry, netflow: val} }()
+		go func() { v <- spaceEntries{id: entry, netFlow: val} }()
 	}
 
 	return nil

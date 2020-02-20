@@ -32,7 +32,7 @@ func Contains(s []int, e int) bool {
 }
 
 // true if string a ends with string b
-func Stringending(a, b string, trim string) bool {
+func StringEnding(a, b string, trim string) bool {
 	a = strings.Trim(a, trim)
 	b = strings.Trim(b, trim)
 	for i := 0; i < len(b); i++ {

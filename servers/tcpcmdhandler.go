@@ -15,8 +15,8 @@ import (
 
 // execute a command towards a sensor as specified by the params map
 // see commandNames definition for what parameters are allowed
-func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
-	rv = Jsoncmdrt{"", false}
+func exeParamCommand(params map[string]string) (rv JsonCmdRt) {
+	rv = JsonCmdRt{"", false}
 	//mutexSensorMacs.RLock()
 	if params["cmd"] != "" || params["id"] != "" {
 		if params["cmd"] == "list" {
@@ -104,7 +104,7 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 
 						}
 					} else {
-						rv.Rt = "error: invalic mac address given"
+						rv.Rt = "error: invalid mac address given"
 					}
 				} else {
 					var ch chan []byte
@@ -207,13 +207,13 @@ func exeParamCommand(params map[string]string) (rv Jsoncmdrt) {
 }
 
 // execute command CMD with parameter val on sensor ID. all values are strings
-func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
+func exeBinaryCommand(id, cmd string, val []int) JsonCmdRt {
 	params := make(map[string]string)
 	for _, i := range commandNames {
 		params[i] = ""
 	}
 	if v, e := json.Marshal(val); e != nil {
-		return Jsoncmdrt{"", false}
+		return JsonCmdRt{"", false}
 	} else if len(val) != 0 {
 		params["val"] = string(v)
 	}
@@ -228,7 +228,7 @@ func exeBinaryCommand(id, cmd string, val []int) Jsoncmdrt {
 // handles all command received internal from channel CE and interacts with the associated device and
 // handlerTCPRequest (via ci channel) for proper execution.
 //func handlerCommandAnswer(conn net.Conn, ci, ce chan []byte, stop chan bool, devid chan int, id ...int) {
-func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devid chan int, id ...int) {
+func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId chan int, id ...int) {
 	//loop := true
 	if len(id) == 0 {
 		id = []int{-1}
@@ -240,16 +240,16 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devid 
 					support.Timestamp(), "", []int{1}, true}
 			}()
 			if len(id) == 1 {
-				handlerCommandAnswer(mac, ci, ce, stop, devid, id[0])
+				handlerCommandAnswer(mac, ci, ce, stop, devId, id[0])
 			} else {
-				handlerCommandAnswer(mac, ci, ce, stop, devid)
+				handlerCommandAnswer(mac, ci, ce, stop, devId)
 			}
 		}
 	}()
 	for {
 		select {
-		case newid := <-devid:
-			id = []int{newid}
+		case newId := <-devId:
+			id = []int{newId}
 		case <-ci:
 			// unexpected command answer
 			go func() {

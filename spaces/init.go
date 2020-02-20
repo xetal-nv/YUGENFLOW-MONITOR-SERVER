@@ -28,7 +28,7 @@ func SetUp() {
 	// add sample type based on DataEntry
 	var sample = dtFunctions{}
 	sample.pf = func(nm string, se spaceEntries) interface{} {
-		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netflow}
+		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netFlow}
 	}
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "TS")
@@ -62,7 +62,7 @@ func SetUp() {
 	// add presence type, which is equal to sample
 	var presence = dtFunctions{}
 	presence.pf = func(nm string, se spaceEntries) interface{} {
-		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netflow}
+		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netFlow}
 	}
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "SD")
@@ -132,8 +132,8 @@ func SetUp() {
 
 	// set up the server for data analysis/transmission/storage
 	setpUpCounter()
-	spchans := setUpSpaces()
-	setUpDataDBSBank(spchans)
+	spChans := setUpSpaces()
+	setUpDataDBSBank(spChans)
 }
 
 // set-up space thread and data flow structure based on the provided configuration
@@ -169,24 +169,24 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 
 		// initialise the processing threads for each space
 		for _, name := range spaces {
-			var sprange TimeSchedule
+			var spRange TimeSchedule
 			nl, _ := time.Parse(support.TimeLayout, "00:00")
 			rng := strings.Split(strings.Trim(os.Getenv("CLOSURE_"+name), ";"), ";")
-			sprange.Start, sprange.End = nl, nl
+			spRange.Start, spRange.End = nl, nl
 			if len(rng) == 2 {
 				for i, v := range rng {
 					rng[i] = strings.Trim(v, " ")
 				}
 				if v, e := time.Parse(support.TimeLayout, rng[0]); e == nil {
-					sprange.Start = v
+					spRange.Start = v
 					if v, e := time.Parse(support.TimeLayout, rng[1]); e == nil {
-						sprange.End = v
+						spRange.End = v
 					} else {
-						sprange.Start = nl
+						spRange.Start = nl
 					}
 				}
 			}
-			SpaceTimes[support.StringLimit(name, support.LabelLength)] = sprange
+			SpaceTimes[support.StringLimit(name, support.LabelLength)] = spRange
 			LatestDetectorOut = make(map[string]chan []IntervalDetector)
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
 				name = support.StringLimit(name, support.LabelLength)
@@ -263,14 +263,14 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting sliding window at %vs\n", SamplingWindow)
 
-	avgw := strings.Trim(os.Getenv("ANALYSISPERIOD"), ";")
+	avgWin := strings.Trim(os.Getenv("ANALYSISPERIOD"), ";")
 	avgWindows := make(map[string]int)
 	tw := make(map[int]string)
 	curr := support.StringLimit("current", support.LabelLength)
 	avgWindows[curr] = SamplingWindow
 	tw[SamplingWindow] = curr
-	if avgw != "" {
-		for _, v := range strings.Split(avgw, ";") {
+	if avgWin != "" {
+		for _, v := range strings.Split(avgWin, ";") {
 			data := strings.Split(strings.Trim(v, " "), " ")
 
 			// switch is used instead of if statement for future extensions
@@ -472,7 +472,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 						//_ResetDBS[dl][name][v.name] = make(chan bool)
 						latestDBSIn[dl][name][v.name] = make(chan interface{})
 						label := dl + name + v.name
-						if _, e := storage.SetSeries(label, v.interval, !support.Stringending(label, "current", "_")); e != nil {
+						if _, e := storage.SetSeries(label, v.interval, !support.StringEnding(label, "current", "_")); e != nil {
 							log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
 						}
 						//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])

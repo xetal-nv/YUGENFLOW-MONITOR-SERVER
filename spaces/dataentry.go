@@ -17,7 +17,7 @@ type DataEntry struct {
 type spaceEntries struct {
 	id      int               // entry Id
 	ts      int64             // timestamp for the cumulative value
-	netflow int               // cumulative net flow
+	netFlow int               // cumulative net flow
 	entries map[int]DataEntry // data per entry
 }
 

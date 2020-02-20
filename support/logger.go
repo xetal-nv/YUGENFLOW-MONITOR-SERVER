@@ -76,10 +76,10 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 			if size := fi.Size(); size > RotSize {
 				ind += 1
 				file = rf + "_" + strconv.Itoa(ind) + ".log"
-				if nlogf, ne := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); ne == nil {
-					log.SetOutput(nlogf)
+				if newLogFile, ne := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); ne == nil {
+					log.SetOutput(newLogFile)
 					_ = logf.Close()
-					logf = nlogf
+					logf = newLogFile
 				} else {
 					log.Println("support.Logger: failed create new log file:", ind)
 				}

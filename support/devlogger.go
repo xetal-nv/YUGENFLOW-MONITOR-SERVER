@@ -23,11 +23,11 @@ type DevData struct {
 var DLog chan DevData
 var ODLog chan string
 
-const bufd = 50
+const bufDepth = 50
 
 func setUpDevLogger() {
-	DLog = make(chan DevData, bufd)
-	ODLog = make(chan string, bufd)
+	DLog = make(chan DevData, bufDepth)
+	ODLog = make(chan string, bufDepth)
 	go devLogger(DLog, ODLog)
 }
 
@@ -101,8 +101,8 @@ func devLogger(data chan DevData, out chan string) {
 				}
 			} else {
 				// read file and add or replace Tag
-				newc := ""
-				adfile := true
+				newC := ""
+				adFile := true
 				for _, v := range strings.Split(strings.Trim(string(input), " "), "\n") {
 					spv := strings.Split(v, ",")
 					if strings.Trim(spv[0], " ") == d.Tag {
@@ -115,19 +115,19 @@ func devLogger(data chan DevData, out chan string) {
 								nd = append(nd, 0)
 							}
 						}
-						newc += r(d, nd) + "\n"
-						adfile = false
+						newC += r(d, nd) + "\n"
+						adFile = false
 					} else {
 						if tmp := strings.Trim(v, " "); tmp != "" {
-							newc += tmp + "\n"
+							newC += tmp + "\n"
 						}
 
 					}
 				}
-				if adfile {
-					newc += r(d) + "\n"
+				if adFile {
+					newC += r(d) + "\n"
 				}
-				if err = ioutil.WriteFile(file, []byte(newc), 0644); err != nil {
+				if err = ioutil.WriteFile(file, []byte(newC), 0644); err != nil {
 					log.Println("support.devLogger: error writing log: ", err)
 				}
 			}
