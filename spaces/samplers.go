@@ -592,8 +592,31 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 
 // used internally in the sampler to pass data among threads.
 func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, sTimeout, lTimeout int) {
-	// need to make a new map to avoid pointer races
 
+	if shadowAnalysis != "" { // this check is redundant
+		if samplerName == shadowAnalysis {
+			today := time.Now().Format("01-02-2006")
+			if shadowAnalysisDate[spaceName] != today {
+				if shadowAnalysisDate[spaceName] != "" {
+					if _, e := shadowAnalysisFile[spaceName].WriteString("\n"); e != nil {
+						log.Printf("ShadowReport error writing new line for %v, at date %v\n", spaceName, today)
+					}
+				}
+				if _, e := shadowAnalysisFile[spaceName].WriteString(time.Now().Format("2006.01.02") +
+					", (" + time.Now().Format("15:04") + ", " + strconv.Itoa(counter.netFlow) + ")"); e != nil {
+					log.Printf("ShadowReport error writing first line for %v, at date %v\n", spaceName, today)
+				}
+				shadowAnalysisDate[spaceName] = time.Now().Format("01-02-2006")
+			} else {
+				if _, e := shadowAnalysisFile[spaceName].WriteString(", (" + time.Now().Format("15:04") + ", " + strconv.Itoa(counter.netFlow) + ")"); e != nil {
+					log.Printf("ShadowReport error writing new value for %v, at time %v\n", spaceName, time.Now().Format("2006.01.02 15:04:05"))
+				}
+			}
+			//fmt.Println(spacename, samplerName, shadowAnalysisDate[spacename])
+		}
+	}
+
+	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, netFlow: counter.netFlow}
 	cc.entries = make(map[int]DataEntry)
 	for i, v := range counter.entries {

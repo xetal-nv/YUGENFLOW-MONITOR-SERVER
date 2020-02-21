@@ -148,13 +148,13 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 									tryResetMux.Unlock()
 								}(gateListEntry[sensorToGate[data.id]])
 							} else {
-								message := fmt.Sprintf("Sensor %v of gate %v has been disabled due to exceeding limit on asymmetric reset\n",
+								message := fmt.Sprintf("Sensor %v of gate %v has been disabled due to exceeding limit on asymmetric reset",
 									gateListEntry[sensorToGate[data.id]][index], sensorToGate[data.id])
 								go func(text string) {
 									support.DLog <- support.DevData{text,
 										support.Timestamp(), "", []int{1}, false}
 								}(message)
-								log.Printf(message)
+								log.Println(message)
 								//fmt.Printf("Sensor %v of gate %v has been disabled due to exceeding limit on asymmetric reset\n",
 								//	gateListEntry[sensorToGate[data.id]][index], sensorToGate[data.id])
 								var tmp, tmpDiff, tmpTimes []int

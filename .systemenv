@@ -76,3 +76,9 @@ RESETSLOT = 09:30; 10:30; 1
 DEVICEASYM = 3
 DEVICEASYMCMAX = 4
 RESETPERIOD = 1
+
+## SHADOW REPORTING
+## Define which analysis needs to be reported also on a file for love checks
+## NOTE: It needs to use a measure defined in the configuration
+SHADOWREPORTING = 20secs
+

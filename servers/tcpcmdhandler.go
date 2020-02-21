@@ -174,27 +174,30 @@ func exeParamCommand(params map[string]string) (rv JsonCmdRt) {
 								if support.Debug != 0 {
 									fmt.Println("CMD: Executing command")
 								}
-								//noinspection GoNilness
-								select {
-								case ch <- cmd:
-									if support.Debug != 0 {
-										fmt.Println("CMD: sent command", cmd)
-									}
-									rv.State = true
-									//noinspection GoNilness
+								if ch != nil {
 									select {
-									case rt := <-ch:
+									case ch <- cmd:
 										if support.Debug != 0 {
-											fmt.Println("CMD: received", rt)
+											fmt.Println("CMD: sent command", cmd)
 										}
-										rv.Rt = string(rt)
+										rv.State = true
+										select {
+										case rt := <-ch:
+											if support.Debug != 0 {
+												fmt.Println("CMD: received", rt)
+											}
+											rv.Rt = string(rt)
+										case <-time.After(time.Duration(to) * time.Second):
+											rv.Rt = "to"
+											// timeout to be used on the sending side to remove a possible hanging goroutine
+										}
 									case <-time.After(time.Duration(to) * time.Second):
 										rv.Rt = "to"
-										// timeout to be used on the sending side to remove a possible hanging goroutine
 									}
-								case <-time.After(time.Duration(to) * time.Second):
-									rv.Rt = "to"
+								} else {
+									rv.Rt = "internal_error"
 								}
+
 							}
 						}
 					}

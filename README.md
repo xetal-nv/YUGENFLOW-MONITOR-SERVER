@@ -30,8 +30,8 @@ HTTPSPORTS[1]/command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or
 HTTPSPORTS[1]/command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 HTTPSPORTS[1]/command?list -> lists all available commands  
 HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
-HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples  
-HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence  
+HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
+HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
 
 
   
@@ -71,4 +71,6 @@ See .envtest and .systemenv files for configuration example
 -st string : set start time, time specified as HH:MM  
 -eeprom : enables refresh of device eeprom at every connection  
 -nosample : disable automatic check for database recovery  
+-dbsupdate : enable DBS integrity check HTTP API  
+
 

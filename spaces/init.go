@@ -134,6 +134,25 @@ func SetUp() {
 	setpUpCounter()
 	spChans := setUpSpaces()
 	setUpDataDBSBank(spChans)
+
+	// shadowAnalysis is set in setpUpCounter
+	if shadowAnalysis != "" {
+		for i := range SpaceDef {
+			var e error
+			_, err := os.Stat("log/shadowreport_" + strings.Trim(i, "_") + "_" + strings.Trim(shadowAnalysis, "_") + ".txt")
+			if shadowAnalysisFile[i], e = os.OpenFile("log/shadowreport_"+strings.Trim(i, "_")+"_"+strings.Trim(shadowAnalysis, "_")+".txt",
+				os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); e != nil {
+				log.Println("spaces.SetUp: fatal error unable to create or open shadow file for space ", i) // redundant will be removed later
+				log.Fatal("spaces.SetUp: fatal error unable to create or open shadow file for space ", i)
+			} else {
+				shadowAnalysisDate[i] = ""
+				log.Println("spaces.SetUp: created or opened shadow file for space ", i)
+				if !os.IsNotExist(err) {
+					_, _ = shadowAnalysisFile[i].WriteString("\n")
+				}
+			}
+		}
+	}
 }
 
 // set-up space thread and data flow structure based on the provided configuration
@@ -308,6 +327,25 @@ func setpUpCounter() {
 		avgAnalysis[i] = avgInterval{tw[v], v}
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
+
+	shadowAnalysis = strings.Trim(os.Getenv("SHADOWREPORTING"), " ")
+	found := false
+	for _, k := range avgAnalysis {
+		if shadowAnalysis == strings.Trim(k.name, "_") {
+			found = true
+			break
+		}
+	}
+
+	if shadowAnalysis != "" && found {
+		shadowAnalysis = support.StringLimit(shadowAnalysis, support.LabelLength)
+		shadowAnalysisFile = make(map[string]*os.File)
+		shadowAnalysisDate = make(map[string]string)
+		log.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
+		//fmt.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
+	} else {
+		shadowAnalysis = ""
+	}
 
 	//jsTxt := "var openingTime = \"\";\n"
 	//jsST := "var opStartTime = \"\";\n"
