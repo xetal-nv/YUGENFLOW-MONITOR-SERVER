@@ -122,6 +122,8 @@ func SetUp() {
 	setpUpCounter()
 	spchans := setUpSpaces()
 	setUpDataDBSBank(spchans)
+
+	// shadowAnalysis is set up in setUpCounter
 	if shadowAnalysis != "" {
 		for i := range SpaceDef {
 			var e error
@@ -313,13 +315,32 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 
+	//shadowAnalysis = strings.Trim(os.Getenv("SHADOWREPORTING"), " ")
+	//if shadowAnalysis != "" {
+	//	shadowAnalysis = support.StringLimit(shadowAnalysis, support.LabelLength)
+	//	shadowAnalysisFile = make(map[string]*os.File)
+	//	shadowAnalysisDate = make(map[string]string)
+	//	log.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
+	//	//fmt.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
+	//}
+
 	shadowAnalysis = strings.Trim(os.Getenv("SHADOWREPORTING"), " ")
-	if shadowAnalysis != "" {
+	found := false
+	for _, k := range avgAnalysis {
+		if shadowAnalysis == strings.Trim(k.name, "_") {
+			found = true
+			break
+		}
+	}
+
+	if shadowAnalysis != "" && found {
 		shadowAnalysis = support.StringLimit(shadowAnalysis, support.LabelLength)
 		shadowAnalysisFile = make(map[string]*os.File)
 		shadowAnalysisDate = make(map[string]string)
 		log.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
 		//fmt.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
+	} else {
+		shadowAnalysis = ""
 	}
 
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
