@@ -283,7 +283,7 @@ $(document).ready(function () {
             if (type === "Sample") {
                 generatePeriodicReportSample()
             } else {
-                generatePeriodicReportEntry()
+                generatePeriodicReportFlow()
             }
         }
 
@@ -294,7 +294,7 @@ $(document).ready(function () {
             if (type === "Sample") {
                 generateOverviewReportSample()
             } else {
-                generateOverviewReportEntry()
+                generateOverviewReportFlow()
             }
         }
 
@@ -1020,11 +1020,11 @@ $(document).ready(function () {
             }
         }
 
-        function generateOverviewReportEntry() {
+        function generateOverviewReportFlow() {
             console.log("to be done");
         }
 
-        function generatePeriodicReportEntry() {
+        function generatePeriodicReportFlow() {
 
             console.log("being done");
 
@@ -1103,8 +1103,8 @@ $(document).ready(function () {
                         } catch (e) {
                             console.log("received corrupted data")
                         }
-                        // console.log(sampledata)
-                        exportReport(header, sampledata);
+                        console.log(sampledata)
+                        // exportReport(header, sampledata);
                     },
                     error: function (error) {
                         if (tries === maxtries) {
@@ -1143,8 +1143,7 @@ $(document).ready(function () {
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
                     + "\"#dataset: " + asys + " \"\n"
-                    + "\"#datatype: entry \n";
-                // TODO for alias
+                    + "\"#datatype: flow \n";
                 foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
                     return aliasMeasurement[key] === asys;
                 });
@@ -1161,6 +1160,7 @@ $(document).ready(function () {
                 // start_report(header, path, 0);
                 // console.log(path);
                 loadsamples(header, path, 0);
+                // console.log(header)
             }
         }
 

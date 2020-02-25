@@ -130,7 +130,7 @@ RTSHOW = 20secs 20mins hour day
 ## REPORTED ANALYSIS ##
 ## Specifies which analysis will be shown in the real-time panel
 ##REPSHOW = name name ...
-#REPSHOW = 20secs hour day
+REPSHOW = 20secs hour day
 
 ## ENABLING AND DEFINITION IF THE OVERVIEW REPORT ## (being developed and defined)
 ## Day definition for the overview report, time format hh:mm

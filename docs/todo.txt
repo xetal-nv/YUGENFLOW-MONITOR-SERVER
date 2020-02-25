@@ -2,8 +2,6 @@ Target 1.0.0:
 Overall code cleaning including test files (1.0)
 configurable report (0.9)
 move html to git module (1.0)
-Add entry reporting to (0.9)
-Check integrity of all imports from 0.7.2
+Add flow reporting to (0.9) in progress
 Add recovery flow data (0.9)
 Add support for background reset and sensor reset commands (0.9 and 0.7.2)
-Add optional holidays skip in reporting ? (0.9)
