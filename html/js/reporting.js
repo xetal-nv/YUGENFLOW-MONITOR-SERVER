@@ -1101,6 +1101,8 @@ $(document).ready(function () {
                         try {
                             sampledata = JSON.parse(rawdata);
                         } catch (e) {
+                            // this also capture when no data is sent unfortunately, check with the API first what is happening
+                            console.log(e)
                             console.log("received corrupted data")
                         }
                         console.log(sampledata)

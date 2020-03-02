@@ -81,9 +81,15 @@ func seriesHTTPhandler() http.Handler {
 			}
 		}
 
+		//fmt.Println(params)
+
 		label := support.StringLimit(params["type"], support.LabelLength)
 		label += support.StringLimit(params["space"], support.LabelLength)
 		label += support.StringLimit(params["analysis"], support.LabelLength)
+
+		//fmt.Println(label)
+		//os.Exit(1)
+
 		if params["last"] != "" {
 			var s storage.SampleData
 			if num, e := strconv.Atoi(params["last"]); e == nil {
@@ -151,13 +157,17 @@ func seriesHTTPhandler() http.Handler {
 						_, _ = fmt.Fprintf(w, "")
 					}
 				case "entry":
+					// TODO how to we handle authorisation, best is to merge sample and entry reporting and report corrupted data in values do not coincides
 					if !authorised {
+						fmt.Println("not authorised")
 						_, _ = fmt.Fprintf(w, "")
 						return
 					}
 					var convertedRt []storage.JsonSeriesEntries
 					s0 = &storage.SeriesEntries{Stag: label, Sts: st}
 					s1 = &storage.SeriesEntries{Stag: label, Sts: en}
+					//fmt.Println(s0,s1)
+					//os.Exit(1)
 					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
@@ -170,6 +180,17 @@ func seriesHTTPhandler() http.Handler {
 						convertedTemp.ExpandEntries(seVal)
 						convertedRt = append(convertedRt, convertedTemp)
 					}
+					// TODO development
+					// add also the reading of samples and compare values ...
+					//s0a := &storage.SeriesSample{Stag: label, Sts: st}
+					//s1a := &storage.SeriesSample{Stag: label, Sts: en}
+					//if tag, ts, vals, e := storage.ReadSeriesTS(s0a, s1a, params["analysis"] != "current"); e == nil {
+					//	rta := s0.UnmarshalSliceSS(tag, ts, vals)
+					//	fmt.Println(rta)
+					//}
+					//fmt.Println(convertedRt)
+					//os.Exit(1)
+					// TODO development
 					if e := json.NewEncoder(w).Encode(convertedRt); e != nil {
 						_, _ = fmt.Fprintf(w, "")
 					}

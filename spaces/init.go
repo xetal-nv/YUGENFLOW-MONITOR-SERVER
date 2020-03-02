@@ -136,6 +136,7 @@ func SetUp() {
 	setUpDataDBSBank(spChans)
 
 	// shadowAnalysis is set in setpUpCounter
+	shadowSingleMux.Lock()
 	if shadowAnalysis != "" {
 		for i := range SpaceDef {
 			var e error
@@ -153,6 +154,7 @@ func SetUp() {
 			}
 		}
 	}
+	shadowSingleMux.Unlock()
 }
 
 // set-up space thread and data flow structure based on the provided configuration
@@ -328,6 +330,7 @@ func setpUpCounter() {
 	}
 	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
 
+	shadowSingleMux.Lock()
 	shadowAnalysis = strings.Trim(os.Getenv("SHADOWREPORTING"), " ")
 	found := false
 	for _, k := range avgAnalysis {
@@ -346,6 +349,7 @@ func setpUpCounter() {
 	} else {
 		shadowAnalysis = ""
 	}
+	shadowSingleMux.Unlock()
 
 	//jsTxt := "var openingTime = \"\";\n"
 	//jsST := "var opStartTime = \"\";\n"

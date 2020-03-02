@@ -593,6 +593,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 // used internally in the sampler to pass data among threads.
 func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan chan spaceEntries, sTimeout, lTimeout int) {
 
+	shadowSingleMux.RLock()
 	if shadowAnalysis != "" { // this check is redundant
 		if samplerName == shadowAnalysis {
 			today := time.Now().Format("01-02-2006")
@@ -615,7 +616,7 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 			//fmt.Println(spacename, samplerName, shadowAnalysisDate[spacename])
 		}
 	}
-
+	shadowSingleMux.RUnlock()
 	// need to make a new map to avoid pointer races
 	cc := spaceEntries{id: counter.id, ts: counter.ts, netFlow: counter.netFlow}
 	cc.entries = make(map[int]DataEntry)

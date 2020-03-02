@@ -53,6 +53,7 @@ var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels f
 var SamplingWindow int                                             // internal for the averaging of data
 var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
 var avgAnalysisSchedule TimeSchedule                               // specifies the Activity range of the analysis
+var shadowSingleMux sync.RWMutex                                   // mutex to be used for shadowAnalysis, shadowAnalysisDate and shadowAnalysisFile
 var shadowAnalysis string                                          // name of the shadow analysis (if defined)
 var shadowAnalysisDate map[string]string                           // map of shadow analysis current date to space name
 var shadowAnalysisFile map[string]*os.File                         // map of shadow analysis file per space
