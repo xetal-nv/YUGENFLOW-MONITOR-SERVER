@@ -91,7 +91,6 @@ func (ss *SeriesSample) Unmarshal(c []byte) error {
 	return nil
 }
 
-// modify for using real ts? mybe when given is null ?
 func (ss *SeriesSample) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) (rt []SampleData) {
 	for i, mt := range vals {
 		a := new(SeriesSample)
@@ -102,6 +101,21 @@ func (ss *SeriesSample) UnmarshalSliceSS(tag string, ts []int64, vals [][]byte) 
 				a.Sts = ts[i]
 			}
 			rt = append(rt, a)
+		}
+	}
+	return rt
+}
+
+func (ss *SeriesSample) UnmarshalSliceNative(tag string, ts []int64, vals [][]byte) (rt []SeriesSample) {
+	for i, mt := range vals {
+		a := new(SeriesSample)
+		if e := a.Unmarshal(mt); e == nil {
+			//fmt.Println(a.Sts, ts[i])
+			a.Stag = tag
+			if ts[i] != 0 {
+				a.Sts = ts[i]
+			}
+			rt = append(rt, *a)
 		}
 	}
 	return rt

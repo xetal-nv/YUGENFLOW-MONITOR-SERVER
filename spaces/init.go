@@ -320,21 +320,21 @@ func setpUpCounter() {
 	}
 
 	keys := make([]int, 0, len(tw))
-	avgAnalysis = make([]avgInterval, len(tw))
+	AvgAnalysis = make([]AvgInterval, len(tw))
 	for k := range tw {
 		keys = append(keys, k)
 	}
 	sort.Ints(keys)
 	for i, v := range keys {
-		avgAnalysis[i] = avgInterval{tw[v], v}
+		AvgAnalysis[i] = AvgInterval{tw[v], v}
 	}
-	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", avgAnalysis)
+	log.Printf("spaces.setpUpCounter: setting averaging windows at \n  %v\n", AvgAnalysis)
 
 	shadowSingleMux.Lock()
 	shadowAnalysis = strings.Trim(os.Getenv("SHADOWREPORTING"), " ")
 	found := false
-	for _, k := range avgAnalysis {
-		if shadowAnalysis == strings.Trim(k.name, "_") {
+	for _, k := range AvgAnalysis {
+		if shadowAnalysis == strings.Trim(k.Name, "_") {
 			found = true
 			break
 		}
@@ -434,33 +434,33 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			}
 			// set-ups the database for the sampler and average processing DBS thread
 			for name := range spaceChannels {
-				LatestBankOut[dl][name] = make(map[string]chan interface{}, len(avgAnalysis))
-				latestBankIn[dl][name] = make(map[string]chan interface{}, len(avgAnalysis))
+				LatestBankOut[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
+				latestBankIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
 				if support.Debug < 3 {
 					//_ResetDBS[dl][name] = make(map[string]chan bool, len(avgAnalysis)) // placeholder
-					latestDBSIn[dl][name] = make(map[string]chan interface{}, len(avgAnalysis))
+					latestDBSIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
 				}
-				for _, v := range avgAnalysis {
-					LatestBankOut[dl][name][v.name] = make(chan interface{})
-					latestBankIn[dl][name][v.name] = make(chan interface{})
+				for _, v := range AvgAnalysis {
+					LatestBankOut[dl][name][v.Name] = make(chan interface{})
+					latestBankIn[dl][name][v.Name] = make(chan interface{})
 					// formatting of initialisation data
-					if len(InitData[dl][name][v.name]) == 2 {
+					if len(InitData[dl][name][v.Name]) == 2 {
 						// possibly valid InitData data found
-						tag := dl + name + v.name
-						if ts, err := strconv.ParseInt(InitData[dl][name][v.name][0], 10, 64); err == nil {
+						tag := dl + name + v.Name
+						if ts, err := strconv.ParseInt(InitData[dl][name][v.Name][0], 10, 64); err == nil {
 							// found valid InitData data
 							if (now - ts) < CrashMaxDelay {
 								// data is fresh enough
 								switch dl {
 								case "sample__":
-									if va, e := strconv.Atoi(InitData[dl][name][v.name][1]); e == nil {
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], DataEntry{id: tag, Ts: ts, NetFlow: va})
+									if va, e := strconv.Atoi(InitData[dl][name][v.Name][1]); e == nil {
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name], DataEntry{id: tag, Ts: ts, NetFlow: va})
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 									}
 								case "entry___":
-									vas := strings.Split(InitData[dl][name][v.name][1][2:len(InitData[dl][name][v.name][1])-2], "][")
+									vas := strings.Split(InitData[dl][name][v.Name][1][2:len(InitData[dl][name][v.Name][1])-2], "][")
 									var va [][]int
 									for _, el := range vas {
 										sd := strings.Split(el, " ")
@@ -485,40 +485,40 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 											length  int
 											entries [][]int
 										}{id: tag, ts: 0, length: len(va), entries: va}
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name], data)
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name], data)
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 									}
 								default:
 									log.Printf("spaces.setUpDataDBSBank: invalid InitData data type for %v\n", tag)
-									go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+									go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 								}
 							} else {
 								// data is not fresh enough
 								log.Printf("spaces.setUpDataDBSBank: too old InitData Ts for %v\n", tag)
-								go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+								go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 							}
 						} else {
 							log.Printf("spaces.setUpDataDBSBank: invalid InitData Ts for %v\n", tag)
-							go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+							go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 						}
 					} else {
 						// register started with no InitData data (not available)
-						go storage.SafeRegGeneric(dl+name+v.name, latestBankIn[dl][name][v.name], LatestBankOut[dl][name][v.name])
+						go storage.SafeRegGeneric(dl+name+v.Name, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 					}
 
 					if support.Debug < 3 {
 						// Start of distributed data passing structure
 						// the reset channel is not used at the moment, this is a place holder
 						//_ResetDBS[dl][name][v.name] = make(chan bool)
-						latestDBSIn[dl][name][v.name] = make(chan interface{})
-						label := dl + name + v.name
-						if _, e := storage.SetSeries(label, v.interval, !support.StringEnding(label, "current", "_")); e != nil {
-							log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
+						latestDBSIn[dl][name][v.Name] = make(chan interface{})
+						label := dl + name + v.Name
+						if _, e := storage.SetSeries(label, v.Interval, !support.StringEnding(label, "current", "_")); e != nil {
+							log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.Name, v.Interval)
 						}
 						//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])
-						go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
+						go dt.cf(dl+name+v.Name, latestDBSIn[dl][name][v.Name], nil)
 					}
 				}
 				log.Printf("spaces.setUpDataDBSBank: DataBank for space %v and data %v initialised\n", name, dl)

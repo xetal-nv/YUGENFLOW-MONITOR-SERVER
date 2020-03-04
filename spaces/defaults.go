@@ -7,9 +7,9 @@ import (
 )
 
 // defines an averaging interval
-type avgInterval struct {
-	name     string
-	interval int
+type AvgInterval struct {
+	Name     string
+	Interval int
 }
 
 // define the interval when every counter needs to be forced to zero
@@ -50,8 +50,6 @@ var avgNegSkip bool                                                // skips inst
 var bufferSize int                                                 // size of channel buffer among samplers
 var entrySpaceSamplerChannels map[int][]chan spaceEntries          // channels from entry to associated space sampler
 var entrySpacePresenceChannels map[int][]chan spaceEntries         // channels from entry to associated space presence detector
-var SamplingWindow int                                             // internal for the averaging of data
-var avgAnalysis []avgInterval                                      // specification sampling data for visualisation
 var avgAnalysisSchedule TimeSchedule                               // specifies the Activity range of the analysis
 var shadowSingleMux sync.RWMutex                                   // mutex to be used for shadowAnalysis, shadowAnalysisDate and shadowAnalysisFile
 var shadowAnalysis string                                          // name of the shadow analysis (if defined)
@@ -63,6 +61,8 @@ var latestDBSIn map[string]map[string]map[string]chan interface{}  // contains a
 
 // external variables
 //var _ResetDBS map[string]map[string]map[string]chan bool            // reset channel for the DBS's
+var SamplingWindow int                                              // internal for the averaging of data
+var AvgAnalysis []AvgInterval                                       // specification sampling data for visualisation
 var LatestBankOut map[string]map[string]map[string]chan interface{} // contains all output channels to the data bank
 var LatestDetectorOut map[string]chan []IntervalDetector            // contains the latest presence values for recovery purposes
 var SpaceDef map[string][]int                                       // maps a space name to its entries

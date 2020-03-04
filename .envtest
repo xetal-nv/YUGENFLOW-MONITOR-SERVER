@@ -84,11 +84,11 @@ MULTICYCLEDAYSONLY = 1
 #ANALYSISWINDOW = 08:40 18:30
 
 ## CLOSURE DECLARATION
-## Define the time when the space is always empty, this data is used to reset
-## the space counter
+## Define the time when the space is assumed always empty, 
+## n this periods the space counter are always reset
 ##CLOSURE_x = start as xx:xx; end as xx:xx
 CLOSURE_livlab = 3:00; 05:00
-#CLOSURE_livlab = 19:56; 20:00
+#CLOSURE_livlab = 3:00; 05:00
 
 ## ANALYSIS DEFINITION
 ## Defines a given storage interval in seconds.

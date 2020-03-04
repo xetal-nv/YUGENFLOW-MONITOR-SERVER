@@ -51,7 +51,7 @@ func RetrieveSampleFromFile(startup bool) {
 			log.Println("!!! WARNING SAMPLE DATABASE INTEGRITY CHECK INITIATED !!!")
 		}
 	} else {
-		if !startup {
+		if startup {
 			go func() {
 				support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
 			}()
@@ -202,7 +202,7 @@ func RetrievePresenceFromFile(startup bool) {
 			log.Println("!!! WARNING PRESENCE DATABASE INTEGRITY CHECK INITIATED !!!")
 		}
 	} else {
-		if !startup {
+		if startup {
 			go func() {
 				support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
 			}()

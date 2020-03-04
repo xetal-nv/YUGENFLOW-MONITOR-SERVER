@@ -417,7 +417,7 @@ $(document).ready(function () {
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
                     + "\"#dataset: " + asys + " \"\n"
-                    + "\"#datatype: sample \n";
+                    + "\"#datatype: average sample \n";
                 // TODO for alias
                 foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
                     return aliasMeasurement[key] === asys;
@@ -992,7 +992,7 @@ $(document).ready(function () {
                     "#Xetal Flow Monitoring: " + version + " \n"
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
-                    + "\"#datatype: sample \n"
+                    + "\"#datatype: average sample \n"
                     + "\"#start: " + startDate.toDateString() + " \"\n"
                     + "\"#end: " + copyendDate.toDateString() + " \"\n"
                     + reportWarning + "\n\n"
@@ -1105,7 +1105,9 @@ $(document).ready(function () {
                             console.log(e)
                             console.log("received corrupted data")
                         }
+                        // TODO DEVELOPMENT HERE
                         console.log(sampledata)
+                        document.getElementById("loader").style.visibility = "hidden";
                         // exportReport(header, sampledata);
                     },
                     error: function (error) {
@@ -1144,8 +1146,7 @@ $(document).ready(function () {
                 let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
-                    + "\"#dataset: " + asys + " \"\n"
-                    + "\"#datatype: flow \n";
+                    + "\"#datatype: total flow at a given time \n";
                 foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
                     return aliasMeasurement[key] === asys;
                 });

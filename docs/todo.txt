@@ -6,4 +6,5 @@ Add flow reporting to (0.9) in progress, development dirty code around
 Add recovery flow data (0.9)
 Add support for background reset and sensor reset commands (0.9 and 0.7.2)
 Remove race on shadowAnalysisFile and similar including the file itself probably (0.7.2)
-Reporting seems broken on 0.9.0
+Adjust nosample true log message (0.7.2)
+Find potential bug on flow storage (0.9 and 0.7.2)

@@ -71,8 +71,8 @@ MULTICYCLEDAYSONLY = 1
 #ANALYSISWINDOW = 08:40 18:30
 
 ## CLOSURE DECLARATION
-## Define the time when the space is always empty, this data is used to reset
-## the space counter
+## Define the time when the space is assumed always empty, 
+## n this periods the space counter are always reset
 ##CLOSURE_x = start as xx:xx; end as xx:xx
 CLOSURE_livlab = 3:00; 05:00
 CLOSURE_office = 3:00; 05:00
@@ -114,9 +114,9 @@ RTWINDOW = 08:00 23:00
 RTSHOW = 20secs 20mins hour day
 
 ## REPORTED ANALYSIS ##
-## Specifies which analysis will be shown in the real-time panel
+## Specifies which analysis will be shown in the reporting panel
 ##REPSHOW = name name ...
-#REPSHOW = 20secs hour day
+REPSHOW = 20secs hour day
 
 ## ENABLING AND DEFINITION IF THE OVERVIEW REPORT ## (being developed and defined)
 ## Day definition for the overview report, time format hh:mm

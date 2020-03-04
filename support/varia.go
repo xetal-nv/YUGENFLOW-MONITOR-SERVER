@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"net"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 )
 
 // provide the time now as timestamp in ms
@@ -214,4 +216,48 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 		}
 	}
 	return -1
+}
+
+// Add two integer checking and cycling for overflow
+func CheckIntOverflow(a, b int) (sum int, overflow bool) {
+	if b == 0 {
+		return a, false
+	}
+	if a == 0 {
+		return b, false
+	}
+	bitSize := unsafe.Sizeof(a)
+	var maxSize, minSize int64
+	switch bitSize {
+	case 1:
+		maxSize = int64(math.MaxInt8)
+		minSize = int64(math.MaxInt8)
+	case 2:
+		maxSize = int64(math.MaxInt16)
+		minSize = int64(math.MaxInt16)
+	case 4:
+		maxSize = int64(math.MaxInt32)
+		minSize = int64(math.MaxInt32)
+	case 8:
+		maxSize = int64(math.MaxInt64)
+		minSize = int64(math.MaxInt64)
+	default:
+		return 0, true
+	}
+	if b > 0 && a > 0 {
+		ref := b - int(maxSize-int64(a))
+		if ref > 0 {
+			return ref - 1, true
+		}
+	}
+
+	if b < 0 && a < 0 {
+		ref := b - int(minSize-int64(a))
+		if ref <= 0 {
+			return ref, true
+		} else {
+			return a + b, false
+		}
+	}
+	return a + b, false
 }

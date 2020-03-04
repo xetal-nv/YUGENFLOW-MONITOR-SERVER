@@ -12,6 +12,9 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
  - API BREAKING CHANGE: cmd api has been removed
  - command line norst is made default (deprecated) and command forcerst added to force reset of a sensor at first connect  
  - delllogs now work also during debug modes
+ - Some typos in the code fixed  
+ - Fixed flow overflow management needed in the case no clusure period is provided  
+ - Removed bug on maxoccupancy setting flow to 0 irrespective of previous counter value  
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch

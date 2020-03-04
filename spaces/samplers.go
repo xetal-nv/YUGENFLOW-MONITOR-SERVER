@@ -17,11 +17,11 @@ import (
 // It means that x[i] is newer than x[i-1] and older than x[i+1]
 // prevStage channels are used for data flow
 // the sync channels are used to control the operation period and its synchronisation
-// NOTE: for samples we take the time weighted averages, for entries the total only on the analysis period
+// NOTE: for samples we take the time weighted averages, for entries the total (gets resetted only in closure time given by CLOSURE_ or on overflow)
 func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
 	// set-up the next analysis stage and the communication channel
 	once.Do(func() {
-		if avgID < (len(avgAnalysis) - 1) {
+		if avgID < (len(AvgAnalysis) - 1) {
 			nextStageChan = make(chan spaceEntries, bufferSize)
 			syncNext = make(chan bool)
 			go sampler(spaceName, nextStageChan, nil, syncNext, nil, avgID+1, sync.Once{}, 0, 0)
@@ -30,7 +30,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 
 	stats := []int{tn, ntn}
 	//statsb := []int{0}
-	samplerName := avgAnalysis[avgID].name
+	samplerName := AvgAnalysis[avgID].Name
 	start := avgAnalysisSchedule.Start
 	end := avgAnalysisSchedule.End
 	duration := avgAnalysisSchedule.Duration
@@ -42,11 +42,11 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 	initE := InitData["entry___"][spaceName][samplerName]
 	MutexInitData.RUnlock()
 
-	samplerInterval := avgAnalysis[avgID].interval
+	samplerInterval := AvgAnalysis[avgID].Interval
 	samplerIntervalMM := int64(samplerInterval) * 1000
 	timeoutInterval := 5 * chanTimeout * time.Millisecond
 	if avgID > 0 {
-		timeoutInterval += time.Duration(avgAnalysis[avgID-1].interval) * time.Second
+		timeoutInterval += time.Duration(AvgAnalysis[avgID-1].Interval) * time.Second
 	}
 	counter := spaceEntries{ts: support.Timestamp(), netFlow: 0}
 	oldCounter := spaceEntries{ts: 0, netFlow: 0}
@@ -120,9 +120,9 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 		if avgID == 0 {
 			// the first in the threads chain makes the counting
 			// implements the current value as in sum over the period of time samplerInterval
-			// it will always calculate the new sample, but only send it to the next stages in valid period (if defined)
+			// it will always calculate the new sample, but will only send it to the next stages in valid period (if defined)
 			// or always.
-			// It is also responsible to synchronising staged on Start and End period, if defined
+			// It is also responsible to synchronising all stages on Start and End period, if defined
 
 			var cycleIn bool
 			firstDataOfCycle := true
@@ -162,7 +162,16 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						}
 					}
 					stats[1] += 1
-					counter.netFlow += sp.netFlow
+					// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
+					// counter.netFlow += sp.netFlow
+					sum, of := support.CheckIntOverflow(counter.netFlow, sp.netFlow)
+					counter.netFlow = sum
+					// TODO HERE
+					fmt.Println(spaceName, counter.netFlow, sp.netFlow)
+					if of {
+						support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
+							support.Timestamp(), "overflow on counter", []int{}, true}
+					}
 					// Calculate the confidence measurement (number wrong data / number data for DVL only
 					if counter.netFlow < 0 {
 						stats[0] += 1
@@ -175,7 +184,8 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 					}
 					if maxOccupancy != 0 {
 						if counter.netFlow > maxOccupancy {
-							sp.netFlow = 0
+							// we calculate the flow that brought us to maxOccupancy
+							sp.netFlow = sp.netFlow - (counter.netFlow - maxOccupancy)
 							counter.netFlow = maxOccupancy
 						}
 					}
@@ -186,29 +196,47 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							counter.entries[sp.id] = DataEntry{NetFlow: 0, PositiveFlow: 0, NegativeFlow: 0}
 						} else {
 							if v, ok := counter.entries[sp.id]; ok {
-								v.NetFlow += sp.netFlow
-								// over and underflow needs to force reset of values with a correct difference
+								// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
+								// v.NetFlow += sp.netFlow
+								sum, of := support.CheckIntOverflow(v.NetFlow, sp.netFlow)
+								v.NetFlow = sum
+								if of {
+									support.DLog <- support.DevData{"spaces.samplers counter.entries  " + strconv.Itoa(sp.id),
+										support.Timestamp(), "overflow on netflow counter", []int{}, true}
+								}
+
+								// over and underflow needs to force reset of values with the correct difference
 								// this can happen when no closure time has been defined
 								if sp.netFlow > 0 {
-									tmp := v.PositiveFlow + sp.netFlow
-									if tmp < v.PositiveFlow {
-										// overflow
-										v.PositiveFlow += v.NegativeFlow + sp.netFlow
-										v.NegativeFlow = 0
-									} else {
-										v.PositiveFlow = tmp
-									}
+									// tmp := v.PositiveFlow + sp.netFlow
+									// if tmp < v.PositiveFlow {
+									// 	// overflow
+									// 	v.PositiveFlow += v.NegativeFlow + sp.netFlow
+									// 	v.NegativeFlow = 0
+									// } else {
+									// 	v.PositiveFlow = tmp
+									// }
 									//v.PositiveFlow += sp.netFlow
-								} else {
-									tmp := v.NegativeFlow + sp.netFlow
-									if tmp > v.PositiveFlow {
-										// underflow
-										v.NegativeFlow += v.PositiveFlow + sp.netFlow
-										v.PositiveFlow = 0
-									} else {
-										v.NegativeFlow = tmp
+									sum, of := support.CheckIntOverflow(v.PositiveFlow, sp.netFlow)
+									v.PositiveFlow = sum
+									if of {
+										v.NegativeFlow = 0
 									}
+								} else {
+									// tmp := v.NegativeFlow + sp.netFlow
+									// if tmp > v.PositiveFlow {
+									// 	// underflow
+									// 	v.NegativeFlow += v.PositiveFlow + sp.netFlow
+									// 	v.PositiveFlow = 0
+									// } else {
+									// 	v.NegativeFlow = tmp
+									// }
 									//v.NegativeFlow += sp.netFlow
+									sum, of := support.CheckIntOverflow(v.NegativeFlow, sp.netFlow)
+									v.NegativeFlow = sum
+									if of {
+										v.PositiveFlow = 0
+									}
 								}
 								counter.entries[sp.id] = v
 							} else {
@@ -466,7 +494,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 										// no data outside the cycle is used
 										counter = average(counter, buffer, support.Timestamp(), samplerIntervalMM-duration)
 										passData(spaceName, samplerName, counter, nextStageChan, chanTimeout,
-											avgAnalysis[avgID-1].interval/2*1000)
+											AvgAnalysis[avgID-1].Interval/2*1000)
 
 										buffer = []spaceEntries{} // redundant
 										if support.Debug == -1 {
@@ -507,7 +535,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 											counter.ts = cTS
 											counter.netFlow = int(math.Round(acc))
 											passData(spaceName, samplerName, counter, nextStageChan, chanTimeout,
-												avgAnalysis[avgID-1].interval/2*1000)
+												AvgAnalysis[avgID-1].Interval/2*1000)
 											leftInCycle = samplerIntervalMM
 											if support.Debug == -1 {
 
@@ -531,7 +559,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 										//average(buffer, cTS, samplerIntervalMM)
 										counter = average(counter, buffer, cTS, 0)
 										passData(spaceName, samplerName, counter, nextStageChan, chanTimeout,
-											avgAnalysis[avgID-1].interval/2*1000)
+											AvgAnalysis[avgID-1].Interval/2*1000)
 										buffer[len(buffer)-1].ts = cTS
 										buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
 									} else {
@@ -540,7 +568,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 										counter.ts = cTS
 										counter.netFlow = 0
 										buffer = append(buffer, counter)
-										passData(spaceName, samplerName, counter, nextStageChan, chanTimeout, avgAnalysis[avgID-1].interval/2*1000)
+										passData(spaceName, samplerName, counter, nextStageChan, chanTimeout, AvgAnalysis[avgID-1].Interval/2*1000)
 									}
 								} else {
 									// multi-cycle analysis
@@ -560,7 +588,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 									counter.ts = cTS
 									counter.netFlow = int(math.Round(acc))
 									passData(spaceName, samplerName, counter, nextStageChan, chanTimeout,
-										avgAnalysis[avgID-1].interval/2*1000)
+										AvgAnalysis[avgID-1].Interval/2*1000)
 									// we prepare for the next sample Ts
 									refTS = duration - cTS
 									buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
