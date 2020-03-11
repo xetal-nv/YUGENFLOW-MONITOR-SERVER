@@ -17,6 +17,7 @@ type DataEntry struct {
 type spaceEntries struct {
 	id      int               // entry Id
 	ts      int64             // timestamp for the cumulative value
+	invalid bool              // it indicates if the entry is invalid
 	netFlow int               // cumulative net flow
 	entries map[int]DataEntry // data per entry
 }

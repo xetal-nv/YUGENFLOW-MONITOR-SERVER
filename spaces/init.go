@@ -215,7 +215,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 				// the go routines below Start the relevant processing threads
 				// sampling and averaging threads
 				spaceChannels[name] = make(chan spaceEntries, bufferSize)
-				go sampler(name, spaceChannels[name], nil, nil, nil, 0, sync.Once{}, 0, 0)
+				go sampler(name, spaceChannels[name], nil, nil, nil, 0, 0, 0, spaceEntries{invalid: true})
 
 				// presence detection threads
 				spacePresenceChannels[name] = make(chan spaceEntries, bufferSize)

@@ -30,6 +30,12 @@ func handlerTCPRequest(conn net.Conn) {
 	malCheck := 0 // count number fo suspicions of attacks
 
 	defer func() {
+		if e := recover(); e != nil {
+			go func() {
+				support.DLog <- support.DevData{"servers.handlerTCPRequest: recover",
+					support.Timestamp(), "", []int{1}, true}
+			}()
+		}
 		if idKnown {
 			// set TCP channel/ID couple flag to false
 			mutexSensorMacs.Lock()
@@ -51,10 +57,6 @@ func handlerTCPRequest(conn net.Conn) {
 		mutexConnMAC.Lock()
 		delete(sensorConnMAC, string(mac))
 		mutexConnMAC.Unlock()
-		go func() {
-			support.DLog <- support.DevData{"servers.handlerTCPRequest recover",
-				support.Timestamp(), "", []int{1}, true}
-		}()
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
 		tcpTokens <- true

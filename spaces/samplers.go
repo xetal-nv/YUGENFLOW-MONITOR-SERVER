@@ -18,15 +18,17 @@ import (
 // prevStage channels are used for data flow
 // the sync channels are used to control the operation period and its synchronisation
 // NOTE: for samples we take the time weighted averages, for entries the total (gets resetted only in closure time given by CLOSURE_ or on overflow)
-func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
-	// set-up the next analysis stage and the communication channel
-	once.Do(func() {
-		if avgID < (len(AvgAnalysis) - 1) {
-			nextStageChan = make(chan spaceEntries, bufferSize)
-			syncNext = make(chan bool)
-			go sampler(spaceName, nextStageChan, nil, syncNext, nil, avgID+1, sync.Once{}, 0, 0)
-		}
-	})
+// func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
+func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID, tn, ntn int, ct spaceEntries) {
+
+	// // set-up the next analysis stage and the communication channel
+	// once.Do(func() {
+	// 	if avgID < (len(AvgAnalysis) - 1) {
+	// 		nextStageChan = make(chan spaceEntries, bufferSize)
+	// 		syncNext = make(chan bool)
+	// 		go sampler(spaceName, nextStageChan, nil, syncNext, nil, avgID+1, 0, 0, sync.Once{})
+	// 	}
+	// })
 
 	stats := []int{tn, ntn}
 	//statsb := []int{0}
@@ -48,62 +50,70 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 	if avgID > 0 {
 		timeoutInterval += time.Duration(AvgAnalysis[avgID-1].Interval) * time.Second
 	}
-	counter := spaceEntries{ts: support.Timestamp(), netFlow: 0}
+	var counter spaceEntries
 	oldCounter := spaceEntries{ts: 0, netFlow: 0}
-	counter.entries = make(map[int]DataEntry)
-
-	// update Start values if init values apply
-	if initC != nil {
-		if ts, err := strconv.ParseInt(initC[0], 10, 64); err == nil {
-			if (counter.ts - ts) < CrashMaxDelay {
-				if va, e := strconv.Atoi(initC[1]); e == nil {
-					counter.ts = ts
-					oldCounter.ts = ts
-					counter.netFlow = va
-					oldCounter.netFlow = va
-					log.Printf("spaces.sampler: space %v loading sample recovery data for analysis %v\n", spaceName, samplerName)
-				}
-			}
+	if ct.invalid {
+		counter = spaceEntries{ts: support.Timestamp(), netFlow: 0}
+		counter.entries = make(map[int]DataEntry)
+		// comment for debug: the code below in this block was before in a once statement
+		// what follows is the set-up that should be run only the very first time
+		if avgID < (len(AvgAnalysis) - 1) {
+			nextStageChan = make(chan spaceEntries, bufferSize)
+			syncNext = make(chan bool)
+			go sampler(spaceName, nextStageChan, nil, syncNext, nil, avgID+1, 0, 0, spaceEntries{invalid: true})
 		}
-	}
-
-	if initE != nil {
-		if ts, err := strconv.ParseInt(initE[0], 10, 64); err == nil {
-			if (counter.ts - ts) < CrashMaxDelay {
-				//if true {
-				vas := strings.Split(initE[1][2:len(initE[1])-2], "][")
-				var va [][]int
-				for _, el := range vas {
-					sd := strings.Split(el, " ")
-					//fmt.Println(sd)
-					if len(sd) == 4 {
-						sd0, e0 := strconv.Atoi(sd[0])
-						sd1, e1 := strconv.Atoi(sd[1])
-						sd2, e2 := strconv.Atoi(sd[2])
-						sd3, e3 := strconv.Atoi(sd[3])
-						if e0 == nil && e1 == nil && e2 == nil && e3 == nil {
-							va = append(va, []int{sd0, sd1, sd2, sd3})
-						}
+		// update Start values if init values apply
+		if initC != nil {
+			if ts, err := strconv.ParseInt(initC[0], 10, 64); err == nil {
+				if (counter.ts - ts) < CrashMaxDelay {
+					if va, e := strconv.Atoi(initC[1]); e == nil {
+						counter.ts = ts
+						oldCounter.ts = ts
+						counter.netFlow = va
+						oldCounter.netFlow = va
+						log.Printf("spaces.sampler: space %v loading sample recovery data for analysis %v\n", spaceName, samplerName)
 					}
-					//fmt.Println(sd,va)
 				}
-				for _, j := range va {
-					counter.entries[j[0]] = DataEntry{Ts: ts, NetFlow: j[1], PositiveFlow: j[2], NegativeFlow: j[3]}
-				}
-				log.Printf("spaces.sampler: space %v loading entry recovery data for analysis %v\n", spaceName, samplerName)
 			}
 		}
+		if initE != nil {
+			if ts, err := strconv.ParseInt(initE[0], 10, 64); err == nil {
+				if (counter.ts - ts) < CrashMaxDelay {
+					//if true {
+					vas := strings.Split(initE[1][2:len(initE[1])-2], "][")
+					var va [][]int
+					for _, el := range vas {
+						sd := strings.Split(el, " ")
+						//fmt.Println(sd)
+						if len(sd) == 4 {
+							sd0, e0 := strconv.Atoi(sd[0])
+							sd1, e1 := strconv.Atoi(sd[1])
+							sd2, e2 := strconv.Atoi(sd[2])
+							sd3, e3 := strconv.Atoi(sd[3])
+							if e0 == nil && e1 == nil && e2 == nil && e3 == nil {
+								va = append(va, []int{sd0, sd1, sd2, sd3})
+							}
+						}
+						//fmt.Println(sd,va)
+					}
+					for _, j := range va {
+						counter.entries[j[0]] = DataEntry{Ts: ts, NetFlow: j[1], PositiveFlow: j[2], NegativeFlow: j[3]}
+					}
+					log.Printf("spaces.sampler: space %v loading entry recovery data for analysis %v\n", spaceName, samplerName)
+				}
+			}
+		}
+	} else {
+		counter = ct
 	}
-
-	//fmt.Println(counter)
-	//os.Exit(1)
 
 	support.DLog <- support.DevData{"counter starting " + spaceName + samplerName,
 		support.Timestamp(), "", []int{stats[0], stats[1]}, false}
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spaceName)
 	} else {
-		// this is the core
+		// this is the core part of the sampler
+		// recovery on can only be enabled at this point when all set-up has passsed safely
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
@@ -111,11 +121,14 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						support.Timestamp(), "", []int{1}, true}
 				}()
 				log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
-				go sampler(spaceName, prevStageChan, nextStageChan, syncPrevious, syncNext, avgID, once, tn, ntn)
+				go sampler(spaceName, prevStageChan, nextStageChan, syncPrevious, syncNext, avgID, stats[0], stats[1], counter)
 			}
 		}()
 
-		log.Printf("spaces.sampler: setting sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spaceName)
+		// log is updated only at first start, not after a recovery
+		if ct.invalid {
+			log.Printf("spaces.sampler: starting sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spaceName)
+		}
 
 		if avgID == 0 {
 			// the first in the threads chain makes the counting
@@ -132,7 +145,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 			} else {
 				maxOccupancy = 0
 			}
-			// when there is no valid ANALYSISWINDOW, se let the samplers always run
+			// when there is no valid ANALYSISWINDOW, we let the samplers always run
 			if duration == 0 {
 				syncNext <- true
 				cycleIn = true
@@ -145,56 +158,62 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 				// while in the period do as always
 				select {
 				case sp := <-prevStageChan:
-					var skip bool
-					var e error
+					// var skip bool
+					// var e error
 					// in closure time the value is forced to zero
-					if skip, e = support.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
-						// reset counter in case we are in a CLOSURE period
+					//TODO HERE seems to add entries to spaces when in closure
+					if skip, e := support.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
 						if skip {
+							// fmt.Println(spaceName, samplerName, "counter at skip", counter)
+							// reset counter, we are in a CLOSURE period
 							counter.netFlow = 0
+							// counter.entries[sp.id] = DataEntry{NetFlow: 0, PositiveFlow: 0, NegativeFlow: 0}
+							// for i := 0; i < len(counter.entries); i++ {
+							// 	counter.entries[i] = DataEntry{counter.entries[i].id, counter.entries[i].Ts, 0, 0, 0}
+							// }
+							for i, el := range counter.entries {
+								el.NegativeFlow = 0
+								el.NetFlow = 0
+								el.PositiveFlow = 0
+								counter.entries[i] = el
+							}
 							// Calculate the confidence measurement (number wrong data / number data
 							if sp.netFlow != 0 {
-								stats[0] += 1
 								support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
-									support.Timestamp(), "negative counter wrong/tots", []int{stats[0], stats[1]}, true}
+									support.Timestamp(), "not zero flow received during closure time", []int{}, true}
 							}
-							sp.netFlow = 0
-						}
-					}
-					stats[1] += 1
-					// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
-					// counter.netFlow += sp.netFlow
-					sum, of := support.CheckIntOverflow(counter.netFlow, sp.netFlow)
-					counter.netFlow = sum
-					// TODO HERE
-					fmt.Println(spaceName, counter.netFlow, sp.netFlow)
-					if of {
-						support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
-							support.Timestamp(), "overflow on counter", []int{}, true}
-					}
-					// Calculate the confidence measurement (number wrong data / number data for DVL only
-					if counter.netFlow < 0 {
-						stats[0] += 1
-						support.DLog <- support.DevData{Tag: "spaces.samplers counter " + spaceName + " current",
-							Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), []int{stats[0], stats[1]}...), Aggr: true}
-					}
-					if counter.netFlow < 0 && instNegSkip {
-						counter.netFlow = 0
-						sp.netFlow = 0
-					}
-					if maxOccupancy != 0 {
-						if counter.netFlow > maxOccupancy {
-							// we calculate the flow that brought us to maxOccupancy
-							sp.netFlow = sp.netFlow - (counter.netFlow - maxOccupancy)
-							counter.netFlow = maxOccupancy
-						}
-					}
-					// in closure time the value is forced to zero
-					if e == nil {
-						if skip {
-							// reset all entries values in case we are in a CLOSURE period
-							counter.entries[sp.id] = DataEntry{NetFlow: 0, PositiveFlow: 0, NegativeFlow: 0}
+							// sp.netFlow = 0
 						} else {
+							// fmt.Println(spaceName, samplerName, "counter outside skip", counter)
+							// calculate new flows in case of not closure time
+							stats[1] += 1
+							// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
+							// counter.netFlow += sp.netFlow
+							sum, of := support.CheckIntOverflow(counter.netFlow, sp.netFlow)
+							counter.netFlow = sum
+							// fmt.Println(spaceName, counter.netFlow, sp.netFlow)
+							if of {
+								support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
+									support.Timestamp(), "overflow on counter", []int{}, true}
+							}
+							// Calculate the confidence measurement (number wrong data / number data for DVL only
+							if counter.netFlow < 0 {
+								stats[0] += 1
+								support.DLog <- support.DevData{Tag: "spaces.samplers counter " + spaceName + " current",
+									Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), []int{stats[0], stats[1]}...), Aggr: true}
+							}
+							// adjust flow based on conditions set for negative and maximum flows from the configuration file
+							if counter.netFlow < 0 && instNegSkip {
+								counter.netFlow = 0
+								sp.netFlow = 0
+							}
+							if maxOccupancy != 0 {
+								if counter.netFlow > maxOccupancy {
+									// we calculate the flow that brought us to maxOccupancy
+									sp.netFlow = sp.netFlow - (counter.netFlow - maxOccupancy)
+									counter.netFlow = maxOccupancy
+								}
+							}
 							if v, ok := counter.entries[sp.id]; ok {
 								// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
 								// v.NetFlow += sp.netFlow
@@ -208,30 +227,12 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 								// over and underflow needs to force reset of values with the correct difference
 								// this can happen when no closure time has been defined
 								if sp.netFlow > 0 {
-									// tmp := v.PositiveFlow + sp.netFlow
-									// if tmp < v.PositiveFlow {
-									// 	// overflow
-									// 	v.PositiveFlow += v.NegativeFlow + sp.netFlow
-									// 	v.NegativeFlow = 0
-									// } else {
-									// 	v.PositiveFlow = tmp
-									// }
-									//v.PositiveFlow += sp.netFlow
 									sum, of := support.CheckIntOverflow(v.PositiveFlow, sp.netFlow)
 									v.PositiveFlow = sum
 									if of {
 										v.NegativeFlow = 0
 									}
 								} else {
-									// tmp := v.NegativeFlow + sp.netFlow
-									// if tmp > v.PositiveFlow {
-									// 	// underflow
-									// 	v.NegativeFlow += v.PositiveFlow + sp.netFlow
-									// 	v.PositiveFlow = 0
-									// } else {
-									// 	v.NegativeFlow = tmp
-									// }
-									//v.NegativeFlow += sp.netFlow
 									sum, of := support.CheckIntOverflow(v.NegativeFlow, sp.netFlow)
 									v.NegativeFlow = sum
 									if of {
@@ -240,7 +241,11 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 								}
 								counter.entries[sp.id] = v
 							} else {
-								counter.entries[sp.id] = DataEntry{NetFlow: sp.netFlow}
+								if sp.netFlow > 0 {
+									counter.entries[sp.id] = DataEntry{NetFlow: sp.netFlow, PositiveFlow: sp.netFlow}
+								} else {
+									counter.entries[sp.id] = DataEntry{NetFlow: sp.netFlow, NegativeFlow: sp.netFlow}
+								}
 							}
 						}
 					}
@@ -248,17 +253,26 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 					if skip, e := support.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
 						// reset all values in case we are in a CLOSURE period
 						if skip {
+							// fmt.Println(spaceName, samplerName, "counter at skip and to", counter)
 							counter.netFlow = 0
-							for i := 0; i < len(counter.entries); i++ {
-								counter.entries[i] = DataEntry{NetFlow: 0}
+							for i, el := range counter.entries {
+								el.NegativeFlow = 0
+								el.NetFlow = 0
+								el.PositiveFlow = 0
+								counter.entries[i] = el
 							}
+							// for i := 0; i < len(counter.entries); i++ {
+							// 	counter.entries[i] = DataEntry{counter.entries[i].id, counter.entries[i].Ts, 0, 0, 0}
+							// }
+							// fmt.Println(spaceName, samplerName, "counter after skip and to", counter)
 						}
 					}
 				}
 
+				// handles period sync with all related analysis (if needed)
 				if duration != 0 {
 					if inCycle, e := support.InClosureTime(start, end); e != nil {
-						log.Printf("spaces.sampler: error on InClosureTime for sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spaceName)
+						log.Printf("spaces.sampler: error on sync InClosureTime for sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spaceName)
 					} else {
 						if !inCycle && !cycleIn {
 							// was and stays out of cycle
@@ -281,11 +295,13 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						}
 					}
 				}
+
+				// handles the finalisation of a sample for a complete sampler interval
 				cTS := support.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
 					if support.Debug == -1 {
-						fmt.Println(spaceName, "current processing in ", compressionMode, " data ", counter)
+						fmt.Println(spaceName, "current processing in ", compressionMode, " for data ", counter)
 					}
 					if counter.netFlow != oldCounter.netFlow || oldCounter.ts == 0 || compressionMode == "0" || firstDataOfCycle {
 						// new counter
@@ -434,13 +450,14 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 			}
 
 			for {
-				// wait till sync arrives, no samples will be received until then
-				// store time of sync arrival
-				// receive samples
-				// when it is time for average, consider only de active hours
-				// when sync for period arrives consider if sample will happen between periods (calculate and send now) or later
-				// (adjust sample periodicity length). if periodicity sample smaller than period, simple reset and restart
-				// it is needed to use a 2D structure with a line of data for every period to be considered for the average
+				// This loop:
+				//  - wait till sync arrives, no samples will be received until then
+				//  - store time of sync arrival
+				//  - receive samples
+				//  - when it is time for average, consider only the active hours
+				//  - when sync for period arrives consider if sample will happen between periods (calculate and send now) or later
+				//  - adjust sample periodicity length. if periodicity sample smaller than period, simple reset and restart
+				//  - it is needed to use a 2D structure with a line of data for every period to be considered for the average
 
 				// get new data or timeout
 				if startCycle := <-syncPrevious; startCycle {
@@ -667,9 +684,14 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 		case "presence":
 			// skip
 		default:
-			wg.Add(1)
+			wg.Add(2)
 			data := dt.pf(dl+spaceName+samplerName, cc)
-			//fmt.Println(spaceName,samplerName, data)
+			//TODO HERE being debugged
+			if samplerName == "hour____" {
+				// fmt.Println(spaceName, samplerName, data)
+				fmt.Println(spaceName, samplerName, "cc", cc)
+				// fmt.Println(spaceName, samplerName, "counter", counter)
+			}
 			// new sample sent to the output register
 			go func(data interface{}, ch chan interface{}) {
 				defer wg.Done()
@@ -681,13 +703,14 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 			}(data, latestBankIn[dl][spaceName][samplerName])
 			// new sample sent to the database
 			go func(data interface{}, ch chan interface{}) {
-				// We do not need to wait for this goroutine
+				defer wg.Done()
 				select {
 				case ch <- data:
 				case <-time.After(time.Duration(lTimeout) * time.Millisecond):
 					if support.Debug != 3 && support.Debug != 4 {
 						log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
 					}
+					fmt.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
 				}
 			}(data, latestDBSIn[dl][spaceName][samplerName])
 		}

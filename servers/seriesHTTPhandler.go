@@ -115,7 +115,8 @@ func seriesHTTPhandler() http.Handler {
 			if params["start"] != "" && params["end"] != "" {
 
 				// if not in authorised via pin, the request will not provide data for the current day
-				if !authorised {
+				// TODO enable if back after dev
+				if !authorised && false {
 					if eni, err := strconv.Atoi(params["end"]); err == nil {
 						en := time.Unix(int64(eni/1000), 0)
 						ts := time.Now()
