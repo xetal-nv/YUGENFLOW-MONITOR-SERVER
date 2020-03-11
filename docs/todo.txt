@@ -2,9 +2,9 @@ Target 1.0.0:
 Overall code cleaning including test files (1.0)
 configurable report (0.9)
 move html to git module (1.0)
-Add flow reporting to (0.9) in progress, development dirty code around
 Add recovery flow data (0.9)
 Add support for background reset and sensor reset commands (0.9 and 0.7.2)
 Remove race on shadowAnalysisFile and similar including the file itself probably (0.7.2)
 Adjust nosample true log message (0.7.2)
 Removed minor reporting bug for repetitive crashes on samples.go for DVL (0.7.2)
+Clean code (0.9.0)

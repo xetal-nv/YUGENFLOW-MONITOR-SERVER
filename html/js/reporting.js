@@ -276,168 +276,8 @@ $(document).ready(function () {
             }
         }
 
-        function generatePeriodicReport() {
-            let select = document.getElementById("repdatatype"),
-                myindex = select.selectedIndex,
-                type = select.options[myindex].value;
-            if (type === "Sample") {
-                generatePeriodicReportSample()
-            } else {
-                generatePeriodicReportFlow()
-            }
-        }
 
         function generateOverviewReport() {
-            let select = document.getElementById("repdatatype"),
-                myindex = select.selectedIndex,
-                type = select.options[myindex].value;
-            if (type === "Sample") {
-                generateOverviewReportSample()
-            } else {
-                generateOverviewReportFlow()
-            }
-        }
-
-        function generatePeriodicReportSample() {
-
-            function exportReport(header, sampledata) {
-                let data = header,
-                    rawdataSample = [],
-                    finalData = {};
-                data += "\n";
-                if ((sampledata !== null) && (sampledata !== undefined)) {
-                    for (let i = 0; i < sampledata.length; i++) {
-                        if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
-                            rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
-                        }
-                    }
-
-                    // Find the minimum interval in changes, normally this is the measurement step
-                    let tslist = [];
-                    let tsstep = -1;
-                    while (rawdataSample.length > 0) {
-                        let sam = rawdataSample.shift();
-                        tslist.push(sam[0]);
-                        if (tsstep < 0) {
-                            tsstep += 1
-                        } else {
-                            let cds = tslist[tslist.length - 1] - tslist[tslist.length - 2];
-                            if (tsstep === 0) {
-                                tsstep = cds
-                            } else {
-                                tsstep = Math.min(tsstep, cds)
-                            }
-                        }
-
-                        finalData[sam[0]] = sam[1];
-                    }
-
-                    for (let i = 0; i < tslist.length; i++) {
-                        let d = new Date(tslist[i]),
-                            dHS = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2),
-                            incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(dHS.replace(regex, ''), 10))
-                                && (parseInt(dHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
-                        if (incycle) {
-                            var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
-                                d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-                            data += datestring + ", " + Math.trunc(tslist[i] / 1000)
-                                + ", " + finalData[tslist[i]];
-                            data += "\n"
-                        }
-                    }
-
-                    var blob = new Blob([data], {type: 'text/plain'}),
-                        anchor = document.createElement('a');
-                    var currentTime = new Date();
-                    anchor.download = currentTime.getFullYear().toString() + "_" + (currentTime.getMonth() + 1).toString() + "_" +
-                        currentTime.getDate().toString() + "_" + spacenameUncoded.replace(/ /g, "_") + "_" + asys + ".csv";
-                    // anchor.download = space + "_" + asys + ".csv";
-                    anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
-                    anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
-                    anchor.click();
-                } else {
-                    alert("No data available for the selected time.");
-                }
-
-                document.getElementById("loader").style.visibility = "hidden";
-            }
-
-
-            // function loadsamples(header, api, entrieslist, tries) {
-            function loadsamples(header, api, tries) {
-                $.ajax({
-                    type: 'GET',
-                    timeout: 100000,
-                    url: ip + "/series?type=sample?space=" + api,
-                    success: function (rawdata) {
-                        // console.log(ip + "/series?type=sample?space=" + api);
-                        let sampledata;
-                        try {
-                            sampledata = JSON.parse(rawdata);
-                        } catch (e) {
-                            console.log("received corrupted data")
-                        }
-                        // console.log(sampledata)
-                        exportReport(header, sampledata);
-                    },
-                    error: function (error) {
-                        if (tries === maxtries) {
-                            alert("Range of data requested too large or network error.\n Please try a shorter period or try again later.");
-                            console.log("Error samples:" + error);
-                            document.getElementById("loader").style.visibility = "hidden";
-                        } else {
-                            // loadsamples(header, api, entrieslist, tries + 1)
-                            loadsamples(header, api, tries + 1)
-                        }
-                    }
-
-                });
-            }
-
-            // let select = document.getElementById("spacename");
-            // var myindex = select.selectedIndex,
-            // space = select.options[myindex].value;
-            let select = document.getElementById("reptype"),
-                myindex = select.selectedIndex,
-                asys = select.options[myindex].value,
-                copyendDate = new Date(endDate),
-                start, end;
-            if ((startDate !== undefined) && (endDate !== undefined)
-                && (spacename !== "Choose a space") && (asys !== "Choose a dataset")) {
-                document.getElementById("loader").style.visibility = "visible";
-                start = startDate.getUnixTime();
-                copyendDate.setHours(endDate.getHours() + 23);
-                copyendDate.setMinutes(endDate.getMinutes() + 59);
-                if (copyendDate.getUnixTime() > Date.now()) {
-                    end = Date.now();
-                } else {
-                    end = copyendDate.getUnixTime();
-                }
-                let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
-                    + "\"#edition: " + edition + " \"\n"
-                    + "\"#space: " + spacenameUncoded + " \"\n"
-                    + "\"#dataset: " + asys + " \"\n"
-                    + "\"#datatype: average sample \n";
-                // TODO for alias
-                foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
-                    return aliasMeasurement[key] === asys;
-                });
-                if (foundMeas.length !== 0) {
-                    asys = foundMeas[0]
-                }
-                // console.log(asys);
-                header += "\"#start: " + startDate + " \"\n"
-                    + "\"#end: " + copyendDate + " \"\n\n";
-                header += "Date/Time, Epoch Time (s), average presence";
-                let path = spacename + "?analysis=" + asys + "?start=" + start + "?end=" + end;
-
-                // start_report(header, path, 0);
-                // console.log(path);
-                loadsamples(header, path, 0);
-            }
-        }
-
-        function generateOverviewReportSample() {
 
             let days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             let months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
@@ -1020,57 +860,36 @@ $(document).ready(function () {
             }
         }
 
-        function generateOverviewReportFlow() {
-            console.log("to be done");
-        }
-
-        function generatePeriodicReportFlow() {
-
-            console.log("being done");
+        function generatePeriodicReport() {
 
             function exportReport(header, sampledata) {
                 let data = header,
                     rawdataSample = [],
                     finalData = {};
                 data += "\n";
-                if ((sampledata !== null) && (sampledata !== undefined)) {
+                if ((sampledata["data"] !== null) && (sampledata["data"] !== undefined)) {
+                    sampledata = sampledata["data"]
+
                     for (let i = 0; i < sampledata.length; i++) {
-                        if ((sampledata[i]["ts"] !== "") && (sampledata[i]["val"] !== "")) {
-                            rawdataSample.push([sampledata[i]["ts"], sampledata[i]["val"]])
-                        }
-                    }
-
-                    // Find the minimum interval in changes, normally this is the measurement step
-                    let tslist = [];
-                    let tsstep = -1;
-                    while (rawdataSample.length > 0) {
-                        let sam = rawdataSample.shift();
-                        tslist.push(sam[0]);
-                        if (tsstep < 0) {
-                            tsstep += 1
-                        } else {
-                            let cds = tslist[tslist.length - 1] - tslist[tslist.length - 2];
-                            if (tsstep === 0) {
-                                tsstep = cds
-                            } else {
-                                tsstep = Math.min(tsstep, cds)
-                            }
-                        }
-
-                        finalData[sam[0]] = sam[1];
-                    }
-
-                    for (let i = 0; i < tslist.length; i++) {
-                        let d = new Date(tslist[i]),
-                            dHS = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2),
-                            incycle = ((parseInt(opStartTime.replace(regex, ''), 10) < parseInt(dHS.replace(regex, ''), 10))
-                                && (parseInt(dHS.replace(regex, ''), 10) < parseInt(opEndTime.replace(regex, ''), 10)));
-                        if (incycle) {
-                            var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
+                        let d = new Date(sampledata[i]["ts"]);
+                        var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
                                 d.getFullYear() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
-                            data += datestring + ", " + Math.trunc(tslist[i] / 1000)
-                                + ", " + finalData[tslist[i]];
+                        data += datestring + ", " + Math.trunc(sampledata[i]["ts"] / 1000)
+                        if (sampledata[i]["corruptedData"]) {
+                            // data is corrupted and skipped
                             data += "\n"
+
+                        } else {
+                            data += ", " + sampledata[i]["avgPresence"];
+                            for (let k = 0; k < spaceDefinitions[spacename].length; k++) {
+                                for (let j = 0; j < sampledata[i]["totalEntries"].length; j++) {
+                                    if (sampledata[i]["totalEntries"][j]["id"] === spaceDefinitions[spacename][k]) {
+                                        data += "," + sampledata[i]["totalEntries"][j]["netflow"] + "," + sampledata[i]["totalEntries"][j]["in"] +
+                                        "," + sampledata[i]["totalEntries"][j]["out"];
+                                    }
+                                }
+                            }
+                            data += "\n";
                         }
                     }
 
@@ -1096,7 +915,7 @@ $(document).ready(function () {
                     timeout: 100000,
                     url: ip + "/series?type=entry?space=" + api,
                     success: function (rawdata) {
-                        console.log(ip + "/series?type=entry?space=" + api);
+                        // console.log(ip + "/series?type=entry?space=" + api);
                         let sampledata;
                         try {
                             sampledata = JSON.parse(rawdata);
@@ -1106,9 +925,9 @@ $(document).ready(function () {
                             console.log("received corrupted data")
                         }
                         // TODO DEVELOPMENT HERE
-                        console.log(sampledata)
-                        document.getElementById("loader").style.visibility = "hidden";
-                        // exportReport(header, sampledata);
+                        // console.log(sampledata)
+                        // document.getElementById("loader").style.visibility = "hidden";
+                        exportReport(header, sampledata);
                     },
                     error: function (error) {
                         if (tries === maxtries) {
@@ -1132,7 +951,6 @@ $(document).ready(function () {
                 start, end;
             if ((startDate !== undefined) && (endDate !== undefined)
                 && (spacename !== "Choose a space") && (asys !== "Choose a dataset") && (entryList.length !== 0)) {
-                // console.log(entryList);
                 document.getElementById("loader").style.visibility = "visible";
                 start = startDate.getUnixTime();
                 copyendDate.setHours(endDate.getHours() + 23);
@@ -1142,28 +960,33 @@ $(document).ready(function () {
                 } else {
                     end = copyendDate.getUnixTime();
                 }
-                // console.log(start, end);
                 let header = "\"#Xetal Flow Monitoring: " + version + " \"\n"
                     + "\"#edition: " + edition + " \"\n"
                     + "\"#space: " + spacenameUncoded + " \"\n"
-                    + "\"#datatype: total flow at a given time \n";
+                    + "\"#datatype: average presence at a given interval \"\n"
+                    + "\"#datatype: net, inbound and outbound flow at the given time instant \"\n"
                 foundMeas = Object.keys(aliasMeasurement).filter(function (key) {
                     return aliasMeasurement[key] === asys;
                 });
                 if (foundMeas.length !== 0) {
                     asys = foundMeas[0]
                 }
-                // console.log(asys);
                 header += "\"#start: " + startDate + " \"\n"
                     + "\"#end: " + copyendDate + " \"\n\n";
-                header += "Date/Time, Epoch Time (s), average presence";
-                let path = spacename + "?analysis=" + asys + "?start=" + start + "?end=" + end;
-                // console.log(header, path);
+                header += "Date/Time, Epoch Time (s), interval average presence";
+                if (spaceDefinitions[spacename] === undefined) {
+                    document.getElementById("loader").style.visibility = "hidden";
+                    alert("Error in spaced definition for " + spacename + "\nContact support or restart server.");
+                    console.log(spacename);
+                } else {
+                    for (i = 0; i < spaceDefinitions[spacename].length; i++) {
+                        header += ", netflow E" + spaceDefinitions[spacename][i] + ", inflow E" + spaceDefinitions[spacename][i] +
+                        ", outflow E" + spaceDefinitions[spacename][i];
 
-                // start_report(header, path, 0);
-                // console.log(path);
-                loadsamples(header, path, 0);
-                // console.log(header)
+                    }
+                    let path = spacename + "?analysis=" + asys + "?start=" + start + "?end=" + end;
+                    loadsamples(header, path, 0);
+                }
             }
         }
 

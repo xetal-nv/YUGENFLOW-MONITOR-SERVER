@@ -687,11 +687,11 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 			wg.Add(2)
 			data := dt.pf(dl+spaceName+samplerName, cc)
 			//TODO HERE being debugged
-			if samplerName == "hour____" {
-				// fmt.Println(spaceName, samplerName, data)
-				fmt.Println(spaceName, samplerName, "cc", cc)
-				// fmt.Println(spaceName, samplerName, "counter", counter)
-			}
+			// if samplerName == "hour____" {
+			// 	// fmt.Println(spaceName, samplerName, data)
+			// 	fmt.Println(spaceName, samplerName, "cc", cc)
+			// 	// fmt.Println(spaceName, samplerName, "counter", counter)
+			// }
 			// new sample sent to the output register
 			go func(data interface{}, ch chan interface{}) {
 				defer wg.Done()
@@ -710,7 +710,7 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 					if support.Debug != 3 && support.Debug != 4 {
 						log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
 					}
-					fmt.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
+					// fmt.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
 				}
 			}(data, latestDBSIn[dl][spaceName][samplerName])
 		}

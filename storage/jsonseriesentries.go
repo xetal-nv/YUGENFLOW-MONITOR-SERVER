@@ -21,6 +21,19 @@ type JsonSeriesEntries struct {
 	Sval []JsonSingleEntry `json:"entries"`
 }
 
+type JsonCompleteData struct {
+	Sts         int64             `json:"ts"`
+	AvgPresence int               `json:"avgPresence"`
+	Corrupted   bool              `json:"corruptedData"`
+	Sval        []JsonSingleEntry `json:"totalEntries"`
+}
+
+type JsonCompleteReport struct {
+	Stag string             `json:"tag"`
+	Meas string             `json:"measurement"`
+	Data []JsonCompleteData `json:"data"`
+}
+
 // Convert SeriesEntries into the json friendlier JsonSeriesEntries
 func (ret *JsonSeriesEntries) ExpandEntries(ss SeriesEntries) {
 	// fmt.Println(ss)

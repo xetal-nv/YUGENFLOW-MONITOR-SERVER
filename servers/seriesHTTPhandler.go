@@ -7,6 +7,7 @@ import (
 	"gateserver/storage"
 	"gateserver/support"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -116,7 +117,7 @@ func seriesHTTPhandler() http.Handler {
 
 				// if not in authorised via pin, the request will not provide data for the current day
 				// TODO enable if back after dev
-				if !authorised && false {
+				if !authorised {
 					if eni, err := strconv.Atoi(params["end"]); err == nil {
 						en := time.Unix(int64(eni/1000), 0)
 						ts := time.Now()
@@ -154,7 +155,7 @@ func seriesHTTPhandler() http.Handler {
 				case "sample":
 					s0 = &storage.SeriesSample{Stag: label, Sts: st}
 					s1 = &storage.SeriesSample{Stag: label, Sts: en}
-					fmt.Println(s0, s1)
+					// fmt.Println(s0, s1)
 					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
@@ -164,7 +165,6 @@ func seriesHTTPhandler() http.Handler {
 					}
 				case "entry":
 					// TODO how to we handle authorisation, best is to merge sample and entry reporting and report corrupted data in values do not coincides
-					var convertedRt []storage.JsonSeriesEntries
 
 					// if !authorised {
 					// 	fmt.Println("not authorised")
@@ -192,13 +192,18 @@ func seriesHTTPhandler() http.Handler {
 					// }
 
 					// TODO starts development
+					var convertedRt []storage.JsonSeriesEntries
 					var dataPeriod int
+					var fullReport storage.JsonCompleteReport
+					fullReport.Stag = label
 					for _, el := range spaces.AvgAnalysis {
 						if el.Name == support.StringLimit(params["analysis"], support.LabelLength) {
 							dataPeriod = el.Interval
+							fullReport.Meas = params["analysis"]
 						}
 					}
-					fmt.Println(dataPeriod)
+					// fmt.Println(dataPeriod)
+					// fmt.Println(fullReport)
 					// os.Exit(1)
 
 					// add also the reading of samples and compare values ... this added part crashes
@@ -216,10 +221,12 @@ func seriesHTTPhandler() http.Handler {
 					// 	convertedRts = append(convertedRts, storage.SeriesSample{el.Tag(), el.Sts(), el.val})
 					// 	// fmt.Println(el)
 					// }
-					fmt.Println(len(referenceSamples))
-					for _, el := range referenceSamples {
-						fmt.Println(el.Sts, el.Sval)
-					}
+					// fmt.Println(len(referenceSamples))
+					// for _, el := range referenceSamples {
+					// 	// fmt.Println(el.Sts/1000, el.Sval)
+					// 	fullReport.Data = append(fullReport.Data, storage.JsonCompleteData{Sts: el.Sts / 1000, AvgPresence: el.Sval})
+					// }
+					// fmt.Println(fullReport)
 					// os.Exit(1)
 
 					s0 = &storage.SeriesEntries{Stag: label, Sts: st}
@@ -239,13 +246,63 @@ func seriesHTTPhandler() http.Handler {
 						convertedRt = append(convertedRt, convertedTemp)
 					}
 
-					fmt.Println(len(convertedRt))
-					for _, el := range convertedRt {
-						fmt.Println(el.Sts, el.Sval)
+					// merge data marking data without dual entry as corrupted
+					// data received from the DBS is ordered in time with timestamps in ms
+					iFlow := 0
+					for _, el := range referenceSamples {
+						ns := storage.JsonCompleteData{Sts: (el.Sts / 1000) * 1000, AvgPresence: el.Sval}
+						if iFlow < len(convertedRt) {
+							if int(math.Abs(float64(el.Sts-convertedRt[iFlow].Sts)/1000)) <= dataPeriod/2 {
+								ns.Sval = convertedRt[iFlow].Sval
+								iFlow += 1
+							} else {
+								// we have corrupted data
+								for convertedRt[iFlow].Sts < el.Sts-int64(dataPeriod*1000/2) {
+									tmp := storage.JsonCompleteData{Sts: (convertedRt[iFlow].Sts / 1000) * 1000,
+										Corrupted: true, Sval: convertedRt[iFlow].Sval}
+									fullReport.Data = append(fullReport.Data, tmp)
+									iFlow = +1
+									if iFlow >= len(convertedRt) {
+										break
+									}
+								}
+								if iFlow < len(convertedRt) {
+									if int(math.Abs(float64(el.Sts-convertedRt[iFlow].Sts)/1000)) <= dataPeriod/2 {
+										ns.Sval = convertedRt[iFlow].Sval
+									} else {
+										ns.Corrupted = true
+									}
+									iFlow = +1
+								} else {
+									// we have corrupted data
+									ns.Corrupted = true
+								}
+							}
+						} else {
+							// we have corrupted data
+							ns.Corrupted = true
+						}
+						fullReport.Data = append(fullReport.Data, ns)
 					}
-					os.Exit(1)
+					// If we have corrupted flow data, we add it at the end
+					for iFlow < len(convertedRt) {
+						tmp := storage.JsonCompleteData{Sts: (convertedRt[iFlow].Sts / 1000 * 1000), Corrupted: true, Sval: convertedRt[iFlow].Sval}
+						fullReport.Data = append(fullReport.Data, tmp)
+						iFlow = +1
+					}
+
+					// fmt.Println("\n", fullReport.Stag)
+					// fmt.Println(fullReport.Meas)
+					// for _, el := range fullReport.Data {
+					// 	fmt.Println("\t", el)
+					// }
+					// fmt.Println(len(convertedRt))
+					// for _, el := range convertedRt {
+					// 	fmt.Println(el.Sts/1000, el.Sval)
+					// }
+					// os.Exit(1)
 					// TODO end development
-					if e := json.NewEncoder(w).Encode(convertedRt); e != nil {
+					if e := json.NewEncoder(w).Encode(fullReport); e != nil {
 						_, _ = fmt.Fprintf(w, "")
 					}
 				default:

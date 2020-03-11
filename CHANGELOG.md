@@ -7,6 +7,7 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
 ### adapted from [v.0.7.2] version, see its changelog for more information  
 ### Added
  - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup  
+ - Added flow reportinh which incluides the sample one  
 
 ### Changed
  - API BREAKING CHANGE: cmd api has been removed
@@ -23,6 +24,7 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
  - Added wait for flow storage in spaces.passDara  
  - Fixed bugs in initialising entry data (spaces.samplers)  
  - Fixed bug handling flow values while in closuretime (spaces.samplers)  
+ - Removed option on reporting sample and flow, everything has been consolidated into overview and periodic  
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch
