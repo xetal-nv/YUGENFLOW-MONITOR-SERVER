@@ -36,7 +36,6 @@ type JsonCompleteReport struct {
 
 // Convert SeriesEntries into the json friendlier JsonSeriesEntries
 func (ret *JsonSeriesEntries) ExpandEntries(ss SeriesEntries) {
-	// fmt.Println(ss)
 	if ss.Stag != "" {
 		r, _ := regexp.Compile("_+")
 		tmp := r.ReplaceAllString(ss.Stag, "_")
@@ -71,14 +70,10 @@ func (ss *JsonSeriesEntries) SetTs(ts int64) {
 }
 
 func (ss *JsonSeriesEntries) Extract(i interface{}) (err error) {
-	// TODO there is sometime an issue here as it failes to extract
-	// fmt.Println(i)
 	tmp := SeriesEntries{}
 	err = tmp.Extract(i)
-	// fmt.Println(tmp)
 	if err == nil {
 		ss.ExpandEntries(tmp)
 	}
-	// fmt.Println(err, *ss)
 	return
 }

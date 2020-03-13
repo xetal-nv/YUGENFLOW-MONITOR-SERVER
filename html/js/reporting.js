@@ -924,9 +924,7 @@ $(document).ready(function () {
                             console.log(e)
                             console.log("received corrupted data")
                         }
-                        // TODO DEVELOPMENT HERE
-                        // console.log(sampledata)
-                        // document.getElementById("loader").style.visibility = "hidden";
+
                         exportReport(header, sampledata);
                     },
                     error: function (error) {

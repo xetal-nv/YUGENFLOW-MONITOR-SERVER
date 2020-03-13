@@ -116,7 +116,6 @@ func seriesHTTPhandler() http.Handler {
 			if params["start"] != "" && params["end"] != "" {
 
 				// if not in authorised via pin, the request will not provide data for the current day
-				// TODO enable if back after dev
 				if !authorised {
 					if eni, err := strconv.Atoi(params["end"]); err == nil {
 						en := time.Unix(int64(eni/1000), 0)
@@ -164,34 +163,7 @@ func seriesHTTPhandler() http.Handler {
 						_, _ = fmt.Fprintf(w, "")
 					}
 				case "entry":
-					// TODO how to we handle authorisation, best is to merge sample and entry reporting and report corrupted data in values do not coincides
-
-					// if !authorised {
-					// 	fmt.Println("not authorised")
-					// 	// _, _ = fmt.Fprintf(w, "")
-					// 	if e := json.NewEncoder(w).Encode(convertedRt); e != nil {
-					// 		_, _ = fmt.Fprintf(w, "")
-					// 	}
-					// 	return
-					// }
-					// s0 = &storage.SeriesEntries{Stag: label, Sts: st}
-					// s1 = &storage.SeriesEntries{Stag: label, Sts: en}
-					// // fmt.Println(s0, s1)
-					// //os.Exit(1)
-					// if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
-					// 	rt = s0.UnmarshalSliceSS(tag, ts, vals)
-					// }
-					// for _, v := range rt {
-					// 	convertedTemp := storage.JsonSeriesEntries{}
-					// 	seVal := storage.SeriesEntries{}
-					// 	codedVal := v.Marshal()
-					// 	_ = seVal.Unmarshal(codedVal)
-					// 	seVal.Stag = v.Tag()
-					// 	convertedTemp.ExpandEntries(seVal)
-					// 	convertedRt = append(convertedRt, convertedTemp)
-					// }
-
-					// TODO starts development
+					// with entry we provide both samples and flows data, and check for inconsistencies
 					var convertedRt []storage.JsonSeriesEntries
 					var dataPeriod int
 					var fullReport storage.JsonCompleteReport
@@ -202,37 +174,16 @@ func seriesHTTPhandler() http.Handler {
 							fullReport.Meas = params["analysis"]
 						}
 					}
-					// fmt.Println(dataPeriod)
-					// fmt.Println(fullReport)
-					// os.Exit(1)
 
-					// add also the reading of samples and compare values ... this added part crashes
 					s0s := &storage.SeriesSample{Stag: strings.Replace(label, "entry___", "sample__", -1), Sts: st}
 					s1s := &storage.SeriesSample{Stag: strings.Replace(label, "entry___", "sample__", -1), Sts: en}
-					// fmt.Println(s0s, s1s)
-					// fmt.Println("1")
 					var referenceSamples []storage.SeriesSample
 					if tag, ts, vals, e := storage.ReadSeriesTS(s0s, s1s, params["analysis"] != "current"); e == nil {
-						// fmt.Println(tag, ts, vals)
 						referenceSamples = s0s.UnmarshalSliceNative(tag, ts, vals)
 					}
-					// fmt.Println("3")
-					// for _, el := range rts {
-					// 	convertedRts = append(convertedRts, storage.SeriesSample{el.Tag(), el.Sts(), el.val})
-					// 	// fmt.Println(el)
-					// }
-					// fmt.Println(len(referenceSamples))
-					// for _, el := range referenceSamples {
-					// 	// fmt.Println(el.Sts/1000, el.Sval)
-					// 	fullReport.Data = append(fullReport.Data, storage.JsonCompleteData{Sts: el.Sts / 1000, AvgPresence: el.Sval})
-					// }
-					// fmt.Println(fullReport)
-					// os.Exit(1)
 
 					s0 = &storage.SeriesEntries{Stag: label, Sts: st}
 					s1 = &storage.SeriesEntries{Stag: label, Sts: en}
-					// fmt.Println(s0, s1)
-					//os.Exit(1)
 					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
@@ -291,17 +242,6 @@ func seriesHTTPhandler() http.Handler {
 						iFlow = +1
 					}
 
-					// fmt.Println("\n", fullReport.Stag)
-					// fmt.Println(fullReport.Meas)
-					// for _, el := range fullReport.Data {
-					// 	fmt.Println("\t", el)
-					// }
-					// fmt.Println(len(convertedRt))
-					// for _, el := range convertedRt {
-					// 	fmt.Println(el.Sts/1000, el.Sval)
-					// }
-					// os.Exit(1)
-					// TODO end development
 					if e := json.NewEncoder(w).Encode(fullReport); e != nil {
 						_, _ = fmt.Fprintf(w, "")
 					}
@@ -309,13 +249,9 @@ func seriesHTTPhandler() http.Handler {
 					_, _ = fmt.Fprintf(w, "")
 					return
 				}
-				//if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
-				//	rt = s0.UnmarshalSliceSS(tag, ts, vals)
-				//}
+			} else {
+				_, _ = fmt.Fprintf(w, "")
 			}
-			//if e := json.NewEncoder(w).Encode(rt); e != nil {
-			//	_, _ = fmt.Fprintf(w, "")
-			//}
 		}
 	})
 }

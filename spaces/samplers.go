@@ -686,12 +686,6 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 		default:
 			wg.Add(2)
 			data := dt.pf(dl+spaceName+samplerName, cc)
-			//TODO HERE being debugged
-			// if samplerName == "hour____" {
-			// 	// fmt.Println(spaceName, samplerName, data)
-			// 	fmt.Println(spaceName, samplerName, "cc", cc)
-			// 	// fmt.Println(spaceName, samplerName, "counter", counter)
-			// }
 			// new sample sent to the output register
 			go func(data interface{}, ch chan interface{}) {
 				defer wg.Done()
