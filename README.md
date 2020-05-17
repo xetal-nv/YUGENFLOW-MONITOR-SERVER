@@ -33,7 +33,6 @@ HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, n
 HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
 HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
 
-
   
 NOTE: values in val are specified as x,y,n,..   
 NOTE: series API supports types: sample, entry (debug mode only). Data for the current day are only available in debug mode  
@@ -55,7 +54,7 @@ See .envtest and .systemenv files for configuration example
 **COMMAND LINE OPTIONS:**  
 -dbs Path : specifies path where to store the database, './DBS' used if not specified  
 -cdelay int : specifies the maximum delay for recovery data usage  
--debug Int : specifies a debug mode (0: off, -1: short flow noalgo, 1: verbose, 2: verbose no algo, 3: verbose no dbs, 4: verbose no algo no dbs)  
+-debug Int : specifies a debug mode (0: off, -1: short flow noalgo, 1: verbose, 2: verbose no algo)    
 -dellogs : delete all existing logs  
 -dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
 -dumpentry : forces all entry values/activity to be written in a log file for debug (experimental)  
@@ -73,4 +72,7 @@ See .envtest and .systemenv files for configuration example
 -nosample : disable automatic check for database recovery  
 -dbsupdate : enable DBS integrity check HTTP API  
 
+**HARDCODED OPTIONS:**  
+- support.SkipDBS : true to skip usage of database (disables also web app)  
+- support.DisableWebApp : true to disable web app  
 

@@ -390,7 +390,6 @@ function drawSpace(rawspaces) {
                                 let tag = sampledata.counters[i].counter.tag;
                                 tag = tag.replace(/\_+/g, " ");
                                 tag = tag.split(" ")[2];
-                                // TODO for aliases
                                 if (tag in aliasMeasurement) {
                                     tag = aliasMeasurement[tag]
                                 }
@@ -650,7 +649,6 @@ $(document).ready(function () {
                     if (rtshow.length !== 0) {
                         for (let i = 0; i < jsObj.length; i++) {
                             let el = {"name": jsObj[i]["name"], "value": jsObj[i]["qualifier"]};
-                            // TODO  here for aliases
                             if (el.name in aliasMeasurement) {
                                 el.name = aliasMeasurement[el.name]
                             }

@@ -7,7 +7,9 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
 ### adapted from [v.0.7.2] version, see its changelog for more information  
 ### Added
  - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup  
- - Added flow reportinh which incluides the sample one  
+ - Added flow reporting which includes the sample one  
+ - Added hardcoded flag to disable usage of database and webapp  
+ - Removed debug mode 3 and 4  
 
 ### Changed
  - API BREAKING CHANGE: cmd api has been removed

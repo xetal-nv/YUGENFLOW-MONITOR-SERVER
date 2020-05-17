@@ -21,6 +21,9 @@ import (
 var Dvl = false
 
 func setJSenv() {
+	if support.DisableWebApp {
+		return
+	}
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
 		f, err := os.Create("./html/js/dat.js")
 		if err != nil {
@@ -294,10 +297,12 @@ func setupHTTP() error {
 	}
 	// installation information API
 	hMap["/info"] = infoHTTHandler()
-	// Series data retrieval API
-	hMap["/series"] = seriesHTTPhandler()
-	// Presence data retrieval API
-	hMap["/presence"] = presenceHTTPhandler()
+	if !support.SkipDBS {
+		// Series data retrieval API
+		hMap["/series"] = seriesHTTPhandler()
+		// Presence data retrieval API
+		hMap["/presence"] = presenceHTTPhandler()
+	}
 	// Sensor command API
 	hMap["/command"] = commandHTTHandler()
 	// analysis information API
@@ -324,12 +329,14 @@ func setupHTTP() error {
 		hMap["/dbs/retrieve/presence"] = retrieveDBSpresence()
 	}
 
-	// add SVG API for installation graphs
-	for spn := range spaces.SpaceDef {
-		name := strings.Replace(spn, "_", "", -1)
-		hMap["/plan/"+name] = planHTTPHandler(name)
+	if !support.DisableWebApp {
+		// add SVG API for installation graphs
+		for spn := range spaces.SpaceDef {
+			name := strings.Replace(spn, "_", "", -1)
+			hMap["/plan/"+name] = planHTTPHandler(name)
+		}
+		hMap["/plan/logo"] = planHTTPHandler("logo")
 	}
-	hMap["/plan/logo"] = planHTTPHandler("logo")
 
 	// Real time data retrieval API
 	for dtn, dt := range spaces.LatestBankOut {

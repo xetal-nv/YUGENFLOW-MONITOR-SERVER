@@ -20,6 +20,9 @@ var RstON = false
 const logFileName string = "gnl" // logfile name
 const TimeLayout = "15:04"       // time layout used to read the configuration file
 
+const SkipDBS = false                  // if true operations towards the DBS will be skipped
+const DisableWebApp = false || SkipDBS // if true web app will be disabled
+
 var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination does not affect critical operations
 
 // set-ups all support variables according to the configuration file .env

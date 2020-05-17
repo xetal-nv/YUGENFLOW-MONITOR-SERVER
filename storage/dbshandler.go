@@ -15,29 +15,29 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 			select {
 			case d := <-in:
 				//fmt.Println(id, "received", d)
-				if support.Debug != 3 && support.Debug != 4 {
-					if e := a.Extract(d); e == nil {
-						if a.Valid() {
-							//fmt.Println(id, "storing", a, tp)
-							switch tp {
-							case "SD":
-								if err := StoreSampleSD(a, !support.StringEnding(id, "current", "_")); err != nil {
-									log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
-								}
-							case "TS":
-								if err := StoreSampleTS(a, !support.StringEnding(id, "current", "_")); err != nil {
-									log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
-								}
-							default:
-								log.Printf("storage.TimedIntDBS: DBS handler %v wrong data type %v\n", id, tp)
+				//if support.Debug != 3 && support.Debug != 4 {
+				if e := a.Extract(d); e == nil {
+					if a.Valid() {
+						//fmt.Println(id, "storing", a, tp)
+						switch tp {
+						case "SD":
+							if err := StoreSampleSD(a, !support.StringEnding(id, "current", "_")); err != nil {
+								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
 							}
-						} else {
-							//log.Printf("storage.TimedIntDBS: DBS handler discarded empty data %v for %v\n", a, id)
+						case "TS":
+							if err := StoreSampleTS(a, !support.StringEnding(id, "current", "_")); err != nil {
+								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
+							}
+						default:
+							log.Printf("storage.TimedIntDBS: DBS handler %v wrong data type %v\n", id, tp)
 						}
 					} else {
-						log.Printf("storage.TimedIntDBS: DBS handler extraction error %v for data %v\n", e.Error(), d)
+						//log.Printf("storage.TimedIntDBS: DBS handler discarded empty data %v for %v\n", a, id)
 					}
+				} else {
+					log.Printf("storage.TimedIntDBS: DBS handler extraction error %v for data %v\n", e.Error(), d)
 				}
+				//}
 				//if support.Debug > 0 {
 				//	fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", support.StringEnding(id, "current", "_"))
 				//}

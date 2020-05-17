@@ -102,71 +102,74 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 	}
 
 	log.Printf("storage.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
-	if support.Debug < 3 {
-		once.Do(func() {
-			optsCurr := badger.DefaultOptions
-			optsCurr.Truncate = true
-			optsCurr.Dir = folder + "/current"
-			optsCurr.ValueDir = folder + "/current"
-			optsStats := badger.DefaultOptions
-			optsStats.Truncate = true
-			optsStats.Dir = folder + "/statsDB"
-			optsStats.ValueDir = folder + "/statsDB"
-			//s := reflect.ValueOf(&optsCurr).Elem()
-			//typeOfT := s.Type()
-			//
-			//for i := 0; i < s.NumField(); i++ {
-			//	f := s.Field(i)
-			//	fmt.Printf("%d: %s %s = %v\n", i,
-			//		typeOfT.Field(i).Name, f.Type(), f.Interface())
-			//}
-			//os.Exit(1)
-			currentDB, err = badger.Open(optsCurr)
-			if err == nil {
-				statsDB, err = badger.Open(optsStats)
-				if err != nil {
-					_ = currentDB.Close()
-				} else {
-					bufSize := 50
-					if v, e := strconv.Atoi(os.Getenv("DBSBUFFSIZE")); e == nil {
-						bufSize = v
-					}
-					statsChanIn = make(chan dbInChan, bufSize)
-					currentChanIn = make(chan dbInChan, bufSize)
-					go dbUpdateDriver(statsChanIn, *statsDB, false)
-					go dbUpdateDriver(currentChanIn, *currentDB, true)
-					statsChanOut = make(chan dbOutCommChan, bufSize)
-					currentChanOut = make(chan dbOutCommChan, bufSize)
-					go dbReadDriver(statsChanOut, *statsDB)
-					go dbReadDriver(currentChanOut, *currentDB)
-					statsChanDel = make(chan dbOutCommChan, bufSize)
-					currentChanDel = make(chan dbOutCommChan, bufSize)
-					go dbDeleteDriver(statsChanDel, *statsDB)
-					go dbDeleteDriver(currentChanDel, *currentDB)
-
+	//if support.Debug < 3 {
+	once.Do(func() {
+		optsCurr := badger.DefaultOptions
+		optsCurr.Truncate = true
+		optsCurr.Dir = folder + "/current"
+		optsCurr.ValueDir = folder + "/current"
+		optsStats := badger.DefaultOptions
+		optsStats.Truncate = true
+		optsStats.Dir = folder + "/statsDB"
+		optsStats.ValueDir = folder + "/statsDB"
+		//s := reflect.ValueOf(&optsCurr).Elem()
+		//typeOfT := s.Type()
+		//
+		//for i := 0; i < s.NumField(); i++ {
+		//	f := s.Field(i)
+		//	fmt.Printf("%d: %s %s = %v\n", i,
+		//		typeOfT.Field(i).Name, f.Type(), f.Interface())
+		//}
+		//os.Exit(1)
+		currentDB, err = badger.Open(optsCurr)
+		if err == nil {
+			statsDB, err = badger.Open(optsStats)
+			if err != nil {
+				_ = currentDB.Close()
+			} else if !support.SkipDBS {
+				bufSize := 50
+				if v, e := strconv.Atoi(os.Getenv("DBSBUFFSIZE")); e == nil {
+					bufSize = v
 				}
+				statsChanIn = make(chan dbInChan, bufSize)
+				currentChanIn = make(chan dbInChan, bufSize)
+				go dbUpdateDriver(statsChanIn, *statsDB, false)
+				go dbUpdateDriver(currentChanIn, *currentDB, true)
+				statsChanOut = make(chan dbOutCommChan, bufSize)
+				currentChanOut = make(chan dbOutCommChan, bufSize)
+				go dbReadDriver(statsChanOut, *statsDB)
+				go dbReadDriver(currentChanOut, *currentDB)
+				statsChanDel = make(chan dbOutCommChan, bufSize)
+				currentChanDel = make(chan dbOutCommChan, bufSize)
+				go dbDeleteDriver(statsChanDel, *statsDB)
+				go dbDeleteDriver(currentChanDel, *currentDB)
+
 			}
-			go handlerGarbage([]*badger.DB{currentDB, statsDB})
-		})
-	} else {
-		log.Printf("storage.TimedIntDBSClose: Databases not enables for current Debug mode\n")
-	}
+		}
+		go handlerGarbage([]*badger.DB{currentDB, statsDB})
+	})
+	//} else {
+	//	log.Printf("storage.TimedIntDBSClose: Databases not enables for current Debug mode\n")
+	//}
 	return err
 }
 
 // closes database, it is used to support defer closure
 func TimedIntDBSClose() {
-	if support.Debug < 3 {
-		//noinspection GoUnhandledErrorResult
-		currentDB.Close()
-		//noinspection GoUnhandledErrorResult
-		statsDB.Close()
-	}
+	//if support.Debug < 3 {
+	//noinspection GoUnhandledErrorResult
+	currentDB.Close()
+	//noinspection GoUnhandledErrorResult
+	statsDB.Close()
+	//}
 }
 
 // External functions/API
 // set-ups a series and/or retrieve its definition from the database
 func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
+	if support.SkipDBS {
+		return true, nil
+	}
 	found = true
 	tagMutex.Lock()
 	if _, ok := tagStart[tag]; !ok {
@@ -208,6 +211,9 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 
 // reads the header of a series
 func ReadHeader(tag string, sDB bool) (hd HeaderData, err error) {
+	if support.SkipDBS {
+		return
+	}
 
 	co := make(chan dbOutChan)
 	if sDB {
@@ -238,6 +244,9 @@ func ReadHeader(tag string, sDB bool) (hd HeaderData, err error) {
 
 // updates the header of a TS series
 func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
+	if support.SkipDBS {
+		return
+	}
 	var ts int64
 	var hd HeaderData
 	if len(gts) != 1 {
@@ -267,6 +276,9 @@ func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
 
 // stores a TS sample, optionally it updates the header
 func StoreSampleTS(d SampleData, sDB bool, updateHead ...bool) (err error) {
+	if support.SkipDBS {
+		return
+	}
 	//fmt.Println("store TS", d)
 	ts := d.Ts()
 	tag := d.Tag()
@@ -311,6 +323,9 @@ func StoreSampleTS(d SampleData, sDB bool, updateHead ...bool) (err error) {
 
 // stores a SD sample, optionally it updates the header
 func StoreSampleSD(d SampleData, sDB bool, updateHead ...bool) (err error) {
+	if support.SkipDBS {
+		return
+	}
 	//fmt.Println("store SD", d)
 	ts := d.Ts()
 	tag := d.Tag()
@@ -349,6 +364,9 @@ func StoreSampleSD(d SampleData, sDB bool, updateHead ...bool) (err error) {
 // delete a TS series, all values between the timestamps included in s0 and s1 are deleted
 // err: reports the error is any
 func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
+	if support.SkipDBS {
+		return nil
+	}
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
 		return errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
@@ -410,6 +428,9 @@ func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
 func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+	if support.SkipDBS {
+		return
+	}
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
@@ -470,6 +491,9 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 // delete a SD series, all values between the timestamps included in s0 and s1 are deleted
 // err: reports the error is any
 func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
+	if support.SkipDBS {
+		return nil
+	}
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
 		return errors.New("storage.DeleteSeriesSD: type not supported: " + reflect.TypeOf(s0).String())
@@ -530,6 +554,9 @@ func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
 func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+	if support.SkipDBS {
+		return
+	}
 	// returns all values between s1 and s2, extremes included
 	if s0.MarshalSize() == 0 && len(s0.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(s0).String())
@@ -601,6 +628,9 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
 func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
+	if support.SkipDBS {
+		return
+	}
 	if head.MarshalSize() == 0 && len(head.MarshalSizeModifiers()) != 2 {
 		err = errors.New("storage.ReadSeriesTS: type not supporter: " + reflect.TypeOf(head).String())
 		return
@@ -654,6 +684,9 @@ func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt
 
 // returns the stored definition of a series with identified tag
 func GetDefinition(tag string) []int64 {
+	if support.SkipDBS {
+		return []int64{}
+	}
 	tagMutex.RLock()
 	a := tagStart[tag]
 	tagMutex.RUnlock()
@@ -663,7 +696,6 @@ func GetDefinition(tag string) []int64 {
 // Read read an entry, when l==0, it assumes it is a variable length element (entry data like)
 // and it retrieves the length from the element first (maximum number of fields in 16 bit)
 func read(id []byte, l int, offset []int, db badger.DB) (v []byte, err error) {
-
 	read := func(id []byte, lb int, db badger.DB) (r []byte, err error) {
 		if lb > 0 {
 			r = make([]byte, lb)

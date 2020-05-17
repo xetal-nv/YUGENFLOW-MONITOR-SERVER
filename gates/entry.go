@@ -184,7 +184,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 			}
 		}
 		// calculates the next sample
-		if support.Debug != 2 && support.Debug != 4 && support.Debug != -1 {
+		if support.Debug != 2 && support.Debug != -1 {
 			sensorListEntry[data.id] = data
 			sensorListEntry, gateListEntry, scratchPad, nv = trackPeople(id, sensorListEntry, gateListEntry, scratchPad)
 		}

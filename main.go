@@ -74,9 +74,11 @@ func main() {
 		log.Printf("!!! WARNING DEVELOPMENT MODE %v !!!\n", *dmode)
 
 	}
-	if *dbug != 0 {
+	if *dbug != 0 && *dbug < 3 {
 		log.Printf("!!! WARNING DEBUG MODE %v !!!\n", *dbug)
 
+	} else {
+		*dbug = 0
 	}
 	if *de {
 		log.Printf("!!! WARNING DUMP ENTRY IS ENABLED !!!\n")
@@ -105,8 +107,12 @@ func main() {
 	if *eeprom {
 		log.Printf("!!! WARNING SENSOR EEPROM REFRESH ENABLED !!!\n")
 	}
-	if *dbsupdate {
-		log.Printf("!!! WARNING DBS INTEGRITY API ENABLED !!!\n")
+	if !support.SkipDBS {
+		if *dbsupdate {
+			log.Printf("!!! WARNING DBS INTEGRITY API ENABLED !!!\n")
+		}
+	} else {
+		*dbsupdate = false
 	}
 
 	servers.Dvl = *dvl
@@ -227,8 +233,10 @@ func main() {
 	gates.SetUp()
 	spaces.SetUp()
 
-	storage.RetrieveSampleFromFile(!*nosample)
-	storage.RetrievePresenceFromFile(!*nosample)
+	if !support.SkipDBS {
+		storage.RetrieveSampleFromFile(!*nosample)
+		storage.RetrievePresenceFromFile(!*nosample)
+	}
 
 	switch *dmode {
 	case 3:

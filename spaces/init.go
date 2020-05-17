@@ -428,18 +428,18 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			LatestBankOut[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
 			latestBankIn[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
 
-			if support.Debug < 3 {
-				latestDBSIn[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
-				//_ResetDBS[dl] = make(map[string]map[string]chan bool, len(spaceChannels)) // placeholder
-			}
+			//if support.Debug < 3 {
+			latestDBSIn[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
+			//_ResetDBS[dl] = make(map[string]map[string]chan bool, len(spaceChannels)) // placeholder
+			//}
 			// set-ups the database for the sampler and average processing DBS thread
 			for name := range spaceChannels {
 				LatestBankOut[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
 				latestBankIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
-				if support.Debug < 3 {
-					//_ResetDBS[dl][name] = make(map[string]chan bool, len(avgAnalysis)) // placeholder
-					latestDBSIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
-				}
+				//if support.Debug < 3 {
+				//_ResetDBS[dl][name] = make(map[string]chan bool, len(avgAnalysis)) // placeholder
+				latestDBSIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
+				//}
 				for _, v := range AvgAnalysis {
 					LatestBankOut[dl][name][v.Name] = make(chan interface{})
 					latestBankIn[dl][name][v.Name] = make(chan interface{})
@@ -508,18 +508,18 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 						go storage.SafeRegGeneric(dl+name+v.Name, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 					}
 
-					if support.Debug < 3 {
-						// Start of distributed data passing structure
-						// the reset channel is not used at the moment, this is a place holder
-						//_ResetDBS[dl][name][v.name] = make(chan bool)
-						latestDBSIn[dl][name][v.Name] = make(chan interface{})
-						label := dl + name + v.Name
-						if _, e := storage.SetSeries(label, v.Interval, !support.StringEnding(label, "current", "_")); e != nil {
-							log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.Name, v.Interval)
-						}
-						//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])
-						go dt.cf(dl+name+v.Name, latestDBSIn[dl][name][v.Name], nil)
+					//if support.Debug < 3 {
+					// Start of distributed data passing structure
+					// the reset channel is not used at the moment, this is a place holder
+					//_ResetDBS[dl][name][v.name] = make(chan bool)
+					latestDBSIn[dl][name][v.Name] = make(chan interface{})
+					label := dl + name + v.Name
+					if _, e := storage.SetSeries(label, v.Interval, !support.StringEnding(label, "current", "_")); e != nil {
+						log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.Name, v.Interval)
 					}
+					//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])
+					go dt.cf(dl+name+v.Name, latestDBSIn[dl][name][v.Name], nil)
+					//}
 				}
 				log.Printf("spaces.setUpDataDBSBank: DataBank for space %v and data %v initialised\n", name, dl)
 			}

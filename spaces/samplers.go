@@ -161,7 +161,6 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 					// var skip bool
 					// var e error
 					// in closure time the value is forced to zero
-					//TODO HERE seems to add entries to spaces when in closure
 					if skip, e := support.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
 						if skip {
 							// fmt.Println(spaceName, samplerName, "counter at skip", counter)
@@ -701,9 +700,9 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 				select {
 				case ch <- data:
 				case <-time.After(time.Duration(lTimeout) * time.Millisecond):
-					if support.Debug != 3 && support.Debug != 4 {
-						log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
-					}
+					//if support.Debug != 3 && support.Debug != 4 {
+					log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
+					//}
 					// fmt.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
 				}
 			}(data, latestDBSIn[dl][spaceName][samplerName])
