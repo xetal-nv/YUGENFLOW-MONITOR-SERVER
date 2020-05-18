@@ -1,0 +1,139 @@
+##### SERVER SETUP #####
+## ADDRESSES
+## HTTPSPORTS = app port, api port ## If the ports are the same, one server only will be activates
+HTTPSPORTS = 8080
+TCPPORT = 3333
+
+##### Defines edition type #####
+EDITION = contagt
+
+##### GATE AND GROUPS #####
+
+## GATE ORIENTATION
+##REVERSE = id_gate ...
+
+## STRICT MODE ##
+## If set, it does allow to connect only devices whose mac
+## has been declared in the configuration file
+MACSTRICT = 0
+
+## SPARE DEVICES ##
+## Declares unused devices that are allowed to connect but currently not used
+## It is required in strict mode
+#SPARES = mac1 mac2 ...
+#SPARES = 0a:1c:74:66:66:67 0a:1c:74:66:66:68
+
+## GATE COMPOSITION
+## Gates are defined by at least one devices, number has to be crescent without gaps
+## Device order follows from the first device to the last while entering
+## IMPORTANT: Devices CANNOT be shared among gates and server DOES NOT SET the device ID
+#GATE_number = device_id device_id ...
+#GATE_number = device_mac?device_id device_id ...
+#GATE_0 = 66:66:66:66:66:67?1 0
+GATE_0 = 2 1
+#GATE_1 = 4 3
+#GATE_2 = 6 5
+#GATE_3 = 8 7
+
+## ENTRY COMPOSITION
+## An Entry is a groups of gates defining the entry into a space, number has to increase from 0
+## IMPORTANT: Gates CANNOT be shared among entries
+##ENTRY_id = gate_id gate_id ...
+ENTRY_0 = 0
+#ENTRY_1 = 1
+#ENTRY_2 = 2
+#ENTRY_3 = 3
+
+## SPACES DECLARATIONS
+## Define the region where gates are to be combined in terms of name and maximum occuopancy (optional)
+## IMPORTANT: Entries CANNOT be shared among spaces
+## NOTE: names longer than LENLABEL characters will be truncated in the database
+## NOTE: names shorter than LENLABEL characters will be extended with '_'
+##SPACES_NAMES = name_space:max_occupancy ...
+SPACES_NAMES = door1
+
+## SPACE COMPOSITION
+## Lists the entry points per space
+##SPACE_x = id_entry  id_entry ...
+SPACE_door1 = 0
+
+##### AVERAGE ANALYSIS #####
+## DESCRIPTION: provides average number of people and flow, also in real time
+
+## MULTICYCLE DAYS ONLY
+## If not null, forces analysis longer than one day to be rounded to an integer number of days
+MULTICYCLEDAYSONLY = 1
+
+## ANALYSIS WINDOW
+## Defines the period in which analysis will be executed (24h format hh:mm)
+##ANALYSISWINDOW = start end
+#ANALYSISWINDOW = 08:40 18:30
+
+## CLOSURE DECLARATION
+## Define the time when the space is assumed always empty, 
+## n this periods the space counter are always reset
+##CLOSURE_x = start as xx:xx; end as xx:xx
+CLOSURE_door1 = 3:00; 05:00
+
+## ANALYSIS DEFINITION
+## Defines a given storage interval in seconds.
+## Intervals shorter than a day will be used fully for calculating the averages with data received in ANALYSISWINDOW
+## For intervals longer than a day, the duration of ANALYSISWINDOW will be considered per day average only
+## NOTE: analysis 'current' is reserved
+## NOTE: do not use values below SAMWINDOW for the shortest interval, values greater then 20s are advised
+## NOTE: names longer than LENLABEL characters will be truncated in the database
+##ANALYSISPERIOD = name seconds; name seconds; ...-
+ANALYSISPERIOD = 20secs 20; 20mins 1200;hour 3600; day 86000
+
+##### PRESENCE DETECTION #####
+## DESCRIPTION: This detection provides the number of possible detection in a given interval
+## It does not provide real-time data.
+
+## PRESENCE INTERVAL DEFINITION
+## Defines internals of time where only presence detection is relevant, no counting
+## Time is provided in the HH:MM format
+##PRESENCE_spacename = detector name start end; ...
+PRESENCE_door1 = morning 08:00 12:30; afternoon 13:00 18:00; night 18:00 06:00
+
+
+##### REPORTING #####
+
+## RT VALIDITY WINDOW
+## Defines the period in which real-time reporting will be provided (24h format hh:mm)
+## Note this setting overrides ANALYSISWINDOW for the JS.
+## It is best practice that RTWINDOW is included in ANALYSISWINDOWs
+##RTWINDOW = start end
+RTWINDOW = 08:00 23:00
+
+## RT ANALYSIS ##
+## Specifies which analysis will be shown in the real-time panel
+##RTSHOW = name name ...
+#RTSHOW = 20secs 20mins hour day
+
+## REPORTED ANALYSIS ##
+## Specifies which analysis will be shown in the reporting panel
+##REPSHOW = name name ...
+#REPSHOW = 20secs 20mins hour day
+
+## ENABLING AND DEFINITION IF THE OVERVIEW REPORT ## (being developed and defined)
+## Day definition for the overview report, time format hh:mm
+## OVERVIEWREPORT =  start end
+#OVERVIEWREPORT = 08:00 19:00
+
+## Defines the report structure. Three type of data are available
+## 'presence' provides of there was activity in the given interval based on a given presence definition from PRESENCE_
+## 'point' provides the average count at the moment in time with a given precision in minutes
+## 'period' provides the average count int he given period
+## The declaration order will be reflected in the reported order as well
+##OVERVIEWDATA = ({presence start end name_measurement} | {point time precision} | {period start end}); ...
+#OVERVIEWDATA = presence 18:00 06:00 night; period 08:00 12:00; point 10:00 30; presence 08:00 12:30 morning; period 13:00 17:00; point 14:00 30; presence 13:00 18:00 afternoon;
+
+## Provide the average measurement, defined with ANALYSISPERIOD, to be used for calculations
+## REFERENCESAMPLES = name_measurement
+#REFERENCESAMPLES = 20secs
+
+## SKIPDAYS = list week days to be skipped (0 is sunday, 6 is Saturday)
+#SKIPDAYS = 0 6
+#SKIPDAYS =
+
+

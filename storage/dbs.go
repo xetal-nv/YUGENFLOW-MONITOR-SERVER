@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/options"
 )
 
 // set-ups database
@@ -21,6 +22,10 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		timeout = 20
 	} else {
 		timeout = v
+	}
+	lowRam := false
+	if os.Getenv("LOWRAM") == "1" {
+		lowRam = true
 	}
 	force := false
 	if folder == "" {
@@ -112,6 +117,12 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		optsStats.Truncate = true
 		optsStats.Dir = folder + "/statsDB"
 		optsStats.ValueDir = folder + "/statsDB"
+		if support.SkipDBS || lowRam {
+			if lowRam {
+				log.Printf("storage.TimedIntDBSClose: Low RAM mode enabled for the database\n")
+			}
+			optsStats.ValueLogLoadingMode = options.FileIO
+		}
 		//s := reflect.ValueOf(&optsCurr).Elem()
 		//typeOfT := s.Type()
 		//
