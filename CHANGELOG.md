@@ -12,21 +12,22 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
  - Removed debug mode 3 and 4  
 
 ### Changed
- - API BREAKING CHANGE: cmd api has been removed
+ - API BREAKING CHANGE: cmd api has been removed  
  - command line norst is made default (deprecated) and command forcerst added to force reset of a sensor at first connect  
- - dellogs now work also during debug modes
+ - dellogs now work also during debug modes  
  - Some typos in the code fixed  
  - Fixed flow overflow management needed in the case no clusure period is provided  
- - Removed bug on maxoccupancy setting flow to 0 irrespective of previous counter value
+ - Removed bug on maxoccupancy setting flow to 0 irrespective of previous counter value  
  - Removed minor reporting bug for repetitive crashes on samples.go for DVL    
  - Improved and extended signature and core code for spaces.sampler (the core sampling thread code)  
- - Improved handling of counter initialisation for the sampler thread in case of thread crash
+ - Improved handling of counter initialisation for the sampler thread in case of thread crash  
  - Changed space.spaceEntries type signature to accomodate new sampler crash handing  (spaces.samplers)   
  - Fixed wrongly reporting recover error in server.handlerTCPRequest  
  - Added wait for flow storage in spaces.passDara  
  - Fixed bugs in initialising entry data (spaces.samplers)  
  - Fixed bug handling flow values while in closuretime (spaces.samplers)  
  - Removed option on reporting sample and flow, everything has been consolidated into overview and periodic  
+ - Removed rare bug caulsing some locks to stay locked in case of fata crash  
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch

@@ -114,17 +114,36 @@ func handlerTCPRequest(conn net.Conn) {
 			}
 
 			gates.MutexDeclaredDevices.RLock()
-			if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
-				// Device is not allowed, behaviour depends if in strict mode
-				if strictFlag {
-					malCheck += 1
-					malFunc()
-				} else {
-					log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
-				}
-				//malFunc(strictFlag)
+			if support.RunWithPanicCheck(
+				func() {
+					if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
+						// Device is not allowed, behaviour depends if in strict mode
+						if strictFlag {
+							malCheck += 1
+							malFunc()
+						} else {
+							log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+						}
+						//malFunc(strictFlag)
+					}
+				},
+				func() { gates.MutexDeclaredDevices.RUnlock() },
+			) {
+				gates.MutexDeclaredDevices.RUnlock()
+			} else {
+				return
 			}
-			gates.MutexDeclaredDevices.RUnlock()
+			//if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
+			//	// Device is not allowed, behaviour depends if in strict mode
+			//	if strictFlag {
+			//		malCheck += 1
+			//		malFunc()
+			//	} else {
+			//		log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+			//	}
+			//	//malFunc(strictFlag)
+			//}
+			//gates.MutexDeclaredDevices.RUnlock()
 
 			// START redo with different check
 
@@ -137,9 +156,17 @@ func handlerTCPRequest(conn net.Conn) {
 				ch := make(chan bool)
 				go func() {
 					if _, e := oldCn.Read(make([]byte, 1)); e != nil {
-						ch <- true
+						//ch <- true
+						select {
+						case ch <- true:
+						case <-time.After(time.Duration(5*timeout) * time.Second):
+						}
 					} else {
-						ch <- false
+						//ch <- false
+						select {
+						case ch <- false:
+						case <-time.After(time.Duration(5*timeout) * time.Second):
+						}
 					}
 				}()
 				select {
@@ -372,42 +399,53 @@ func handlerTCPRequest(conn net.Conn) {
 										//malFunc(true)
 									} else {
 										malCheck = 0
-										mutexSensorMacs.Lock()
 										if !idKnown {
-											oldMac, ok1 := sensorMacID[deviceId]
-											oldId, ok2 := sensorIdMAC[string(mac)]
-											_, ok3 := sensorChanID[deviceId]
-											_, ok4 := SensorCmdID[deviceId]
-											//  We check all entries as redundant check vs possible crashes or injection attacks
-											if !(ok1 && ok2 && ok3 && ok4) {
-												// this is a new device not previously connected
-												sensorMacID[deviceId] = mac         // assign a mac to the id
-												sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
-												sensorChanID[deviceId] = ci         // assign a channel to the id
-												SensorCmdID[deviceId] = ce          // assign a command channel to the id
-												sensorChanUsedID[deviceId] = true   // enable flag for TCP/Channel pair
-												gates.SensorRst.Lock()
-												go func(id int) { devId <- id }(deviceId)
-												// enable periodic and self reset procedure
-												if resetBG.valid {
-													gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
-													go handlerReset(deviceId)
-												}
-												gates.SensorRst.Unlock()
+											mutexSensorMacs.Lock()
+											if support.RunWithPanicCheck(
+												func() {
+													//if !idKnown {
+													oldMac, ok1 := sensorMacID[deviceId]
+													oldId, ok2 := sensorIdMAC[string(mac)]
+													_, ok3 := sensorChanID[deviceId]
+													_, ok4 := SensorCmdID[deviceId]
+													//  We check all entries as redundant check vs possible crashes or injection attacks
+													if !(ok1 && ok2 && ok3 && ok4) {
+														// this is a new device not previously connected
+														sensorMacID[deviceId] = mac         // assign a mac to the id
+														sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
+														sensorChanID[deviceId] = ci         // assign a channel to the id
+														SensorCmdID[deviceId] = ce          // assign a command channel to the id
+														sensorChanUsedID[deviceId] = true   // enable flag for TCP/Channel pair
+														gates.SensorRst.Lock()
+														go func(id int) { devId <- id }(deviceId)
+														// enable periodic and self reset procedure
+														if resetBG.valid {
+															gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
+															go handlerReset(deviceId)
+														}
+														gates.SensorRst.Unlock()
+													} else {
+														// this is either a known device or an attack using a known/used ID
+														if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
+															malCheck += 2
+															malFunc()
+															//malFunc(true)
+														} else {
+															malCheck = 0
+															sensorChanUsedID[deviceId] = true
+														}
+													}
+													idKnown = true
+													//}
+												},
+												func() { mutexSensorMacs.Unlock() },
+											) {
+												mutexSensorMacs.Unlock()
 											} else {
-												// this is either a known device or an attack using a known/used ID
-												if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
-													malCheck += 2
-													malFunc()
-													//malFunc(true)
-												} else {
-													malCheck = 0
-													sensorChanUsedID[deviceId] = true
-												}
+												return
 											}
-											idKnown = true
+											//mutexSensorMacs.Unlock()
 										}
-										mutexSensorMacs.Unlock()
 										if e := gates.SendData(deviceId, int(data[2])); e != nil {
 											// when a not used (in the .env) device is found, it is placed in a list
 											mutexUnusedDevices.Lock()
