@@ -17,15 +17,17 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 
+// TODO test new mutex structure (only for places where a possible crash could happen somehow)
+
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
+	var ci, ce chan []byte  // channel for the API command
+	var devid chan int      // channel for the API command
 	loop := true            // control variable
 	pending := true         // control variable
 	idKnown := false        // flags to know if the device has been recognised and initialised
-	stop := make(chan bool) // channels used to reset the assocoated command thread
+	stop := make(chan bool) // channels used to reset the associated command thread
 	mac := make([]byte, 6)  // received amc address
-	var ci, ce chan []byte  // channel for the API command
-	var devid chan int      // channel for the API command
 	cks := errormngt[2]
 	malfcheck := 0 // count number fo suspicions of attacks
 
@@ -38,7 +40,8 @@ func handlerTCPRequest(conn net.Conn) {
 			// reset the command thread
 			stop <- true
 		}
-		// clean up foe eventual unknown device
+
+		// clean up for eventual unknown device
 		mutexUnknownMac.Lock()
 		delete(unknownMacChan, string(mac))
 		mutexUnknownMac.Unlock()
@@ -113,17 +116,36 @@ func handlerTCPRequest(conn net.Conn) {
 			}
 
 			gates.MutexDeclaredDevices.RLock()
-			if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
-				// Device is not allowed, behaviour depends if in strict mode
-				if strictFlag {
-					malfcheck += 1
-					malf()
-				} else {
-					log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
-				}
-				//malf(strictFlag)
+			if support.RunWithPanicCheck(
+				func() {
+					if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
+						// Device is not allowed, behaviour depends if in strict mode
+						if strictFlag {
+							malfcheck += 1
+							malf()
+						} else {
+							log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+						}
+						//malf(strictFlag)
+					}
+				},
+				func() { gates.MutexDeclaredDevices.RUnlock() },
+			) {
+				gates.MutexDeclaredDevices.RUnlock()
+			} else {
+				return
 			}
-			gates.MutexDeclaredDevices.RUnlock()
+			//if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
+			//	// Device is not allowed, behaviour depends if in strict mode
+			//	if strictFlag {
+			//		malfcheck += 1
+			//		malf()
+			//	} else {
+			//		log.Printf("servers.handlerTCPRequest: connected to an undeclared device %v//%v\n", ipc, mach)
+			//	}
+			//	//malf(strictFlag)
+			//}
+			//gates.MutexDeclaredDevices.RUnlock()
 
 			// START redo with different check
 
@@ -136,9 +158,15 @@ func handlerTCPRequest(conn net.Conn) {
 				ch := make(chan bool)
 				go func() {
 					if _, e := oldcn.Read(make([]byte, 1)); e != nil {
-						ch <- true
+						select {
+						case ch <- true:
+						case <-time.After(time.Duration(5*timeout) * time.Second):
+						}
 					} else {
-						ch <- false
+						select {
+						case ch <- false:
+						case <-time.After(time.Duration(5*timeout) * time.Second):
+						}
 					}
 				}()
 				select {
@@ -294,6 +322,7 @@ func handlerTCPRequest(conn net.Conn) {
 					mutexSensorMacs.RUnlock()
 				}
 			}
+
 			malfcheck = 0
 			// It reset all possible TCP deadline that might be pending form previous operations
 			// in case of failure it closes the channel
@@ -372,46 +401,97 @@ func handlerTCPRequest(conn net.Conn) {
 										//malf(true)
 									} else {
 										malfcheck = 0
-										mutexSensorMacs.Lock()
 										if !idKnown {
-											oldMac, ok1 := sensorMacID[deviceId]
-											oldId, ok2 := sensorIdMAC[string(mac)]
-											mutexChanID.RLock()
-											_, ok3 := sensorChanID[deviceId]
-											mutexChanID.RUnlock()
-											_, ok4 := SensorCmdID[deviceId]
-											//  We check all entries as redundant check vs possible crashes or injection attacks
-											if !(ok1 && ok2 && ok3 && ok4) {
-												// this is a new device not previously connected
-												sensorMacID[deviceId] = mac         // assign a mac to the id
-												sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
-												mutexChanID.Lock()
-												sensorChanID[deviceId] = ci // assign a channel to the id
-												mutexChanID.Unlock()
-												SensorCmdID[deviceId] = ce        // assign a command channel to the id
-												sensorChanUsedID[deviceId] = true // enable flag for TCP/Channel pair
-												gates.SensorRst.Lock()
-												go func(id int) { devid <- id }(deviceId)
-												// enable periodic and self reset procedure
-												if resetbg.valid {
-													// without reset enables the channel will not be created causing the self rest to simply do nothing
-													gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
-													go handlerReset(deviceId)
-												}
-												gates.SensorRst.Unlock()
+											mutexSensorMacs.Lock()
+											if support.RunWithPanicCheck(
+												func() {
+													//if !idKnown {
+													oldMac, ok1 := sensorMacID[deviceId]
+													oldId, ok2 := sensorIdMAC[string(mac)]
+													mutexChanID.RLock()
+													_, ok3 := sensorChanID[deviceId]
+													mutexChanID.RUnlock()
+													_, ok4 := SensorCmdID[deviceId]
+													//  We check all entries as redundant check vs possible crashes or injection attacks
+													if !(ok1 && ok2 && ok3 && ok4) {
+														// this is a new device not previously connected
+														sensorMacID[deviceId] = mac         // assign a mac to the id
+														sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
+														mutexChanID.Lock()
+														sensorChanID[deviceId] = ci // assign a channel to the id
+														mutexChanID.Unlock()
+														SensorCmdID[deviceId] = ce        // assign a command channel to the id
+														sensorChanUsedID[deviceId] = true // enable flag for TCP/Channel pair
+														gates.SensorRst.Lock()
+														go func(id int) { devid <- id }(deviceId)
+														// enable periodic and self reset procedure
+														if resetbg.valid {
+															// without reset enables the channel will not be created causing the self rest to simply do nothing
+															gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
+															go handlerReset(deviceId)
+														}
+														gates.SensorRst.Unlock()
+													} else {
+														// this is either a known device or an attack using a known/used ID
+														if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
+															malfcheck += 2
+															malf()
+															//malf(true)
+														} else {
+															malfcheck = 0
+															sensorChanUsedID[deviceId] = true
+														}
+													}
+													idKnown = true
+													//}
+												},
+												func() { mutexSensorMacs.Unlock() },
+											) {
+												mutexSensorMacs.Unlock()
 											} else {
-												// this is either a known device or an attack using a known/used ID
-												if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
-													malfcheck += 2
-													malf()
-													//malf(true)
-												} else {
-													malfcheck = 0
-													sensorChanUsedID[deviceId] = true
-												}
+												return
 											}
-											idKnown = true
 										}
+
+										//if !idKnown {
+										//	oldMac, ok1 := sensorMacID[deviceId]
+										//	oldId, ok2 := sensorIdMAC[string(mac)]
+										//	mutexChanID.RLock()
+										//	_, ok3 := sensorChanID[deviceId]
+										//	mutexChanID.RUnlock()
+										//	_, ok4 := SensorCmdID[deviceId]
+										//	//  We check all entries as redundant check vs possible crashes or injection attacks
+										//	if !(ok1 && ok2 && ok3 && ok4) {
+										//		// this is a new device not previously connected
+										//		sensorMacID[deviceId] = mac         // assign a mac to the id
+										//		sensorIdMAC[string(mac)] = deviceId // assign an id to the mac
+										//		mutexChanID.Lock()
+										//		sensorChanID[deviceId] = ci // assign a channel to the id
+										//		mutexChanID.Unlock()
+										//		SensorCmdID[deviceId] = ce        // assign a command channel to the id
+										//		sensorChanUsedID[deviceId] = true // enable flag for TCP/Channel pair
+										//		gates.SensorRst.Lock()
+										//		go func(id int) { devid <- id }(deviceId)
+										//		// enable periodic and self reset procedure
+										//		if resetbg.valid {
+										//			// without reset enables the channel will not be created causing the self rest to simply do nothing
+										//			gates.SensorRst.Channel[deviceId] = make(chan bool, 0)
+										//			go handlerReset(deviceId)
+										//		}
+										//		gates.SensorRst.Unlock()
+										//	} else {
+										//		// this is either a known device or an attack using a known/used ID
+										//		if !reflect.DeepEqual(oldMac, mac) || (oldId != deviceId) {
+										//			malfcheck += 2
+										//			malf()
+										//			//malf(true)
+										//		} else {
+										//			malfcheck = 0
+										//			sensorChanUsedID[deviceId] = true
+										//		}
+										//	}
+										//	idKnown = true
+										//}
 										mutexSensorMacs.Unlock()
 										if e := gates.SendData(deviceId, int(data[2])); e != nil {
 											// when a not used (in the .env) device is found, it is placed in a list
@@ -470,17 +550,35 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 								if v == 0 {
 									mutexChanID.RLock()
-									// this will never happen when CRC8 is used
-									sensorChanID[deviceId] <- cmd
-									// if the answer is incorrect the channel will be closed
-									if ans := <-sensorChanID[deviceId]; ans != nil {
-										if cks = cks - 1; cks <= 0 {
-											loop = false
-											log.Printf("servers.handlerTCPRequest: too many illegal commands %v sent by %v//%v\n", cmd[0], ipc, mach)
-										}
+									if support.RunWithPanicCheck(
+										func() {
+											sensorChanID[deviceId] <- cmd
+											// if the answer is incorrect the channel will be closed
+											if ans := <-sensorChanID[deviceId]; ans != nil {
+												if cks = cks - 1; cks <= 0 {
+													loop = false
+													log.Printf("servers.handlerTCPRequest: too many illegal commands %v sent by %v//%v\n", cmd[0], ipc, mach)
+												}
 
+											}
+										},
+										func() { mutexChanID.RUnlock() },
+									) {
+										mutexChanID.RUnlock()
+									} else {
+										return
 									}
-									mutexChanID.RUnlock()
+									// this will never happen when CRC8 is used
+									//sensorChanID[deviceId] <- cmd
+									//// if the answer is incorrect the channel will be closed
+									//if ans := <-sensorChanID[deviceId]; ans != nil {
+									//	if cks = cks - 1; cks <= 0 {
+									//		loop = false
+									//		log.Printf("servers.handlerTCPRequest: too many illegal commands %v sent by %v//%v\n", cmd[0], ipc, mach)
+									//	}
+									//
+									//}
+									//mutexChanID.RUnlock()
 								} else {
 									cmdd := make([]byte, v)
 									if _, e := conn.Read(cmdd); e != nil {
@@ -501,19 +599,40 @@ func handlerTCPRequest(conn net.Conn) {
 										}
 										if valid {
 											mutexChanID.RLock()
-											select {
-											case sensorChanID[deviceId] <- cmd[:len(cmd)-1]:
-												// in case we receive a valid answer to setid, we close the channel
-												if cmd[0] == 14 {
-													loop = false
-												}
-											case <-time.After(time.Duration(timeout) * time.Second):
-												// internal issue, all goroutines will close on time out including the channel
-												go func() { mutexChanID.RLock(); sensorChanID[deviceId] <- cmd; mutexChanID.RUnlock() }()
-												log.Printf("servers.handlerTCPRequest: hanging operation in sending "+
-													"command answer %v to user\n", cmd)
+											if support.RunWithPanicCheck(
+												func() {
+													select {
+													case sensorChanID[deviceId] <- cmd[:len(cmd)-1]:
+														// in case we receive a valid answer to setid, we close the channel
+														if cmd[0] == 14 {
+															loop = false
+														}
+													case <-time.After(time.Duration(timeout) * time.Second):
+														// internal issue, all goroutines will close on time out including the channel
+														go func() { mutexChanID.RLock(); sensorChanID[deviceId] <- cmd; mutexChanID.RUnlock() }()
+														log.Printf("servers.handlerTCPRequest: hanging operation in sending "+
+															"command answer %v to user\n", cmd)
+													}
+												},
+												func() { mutexChanID.RUnlock() },
+											) {
+												mutexChanID.RUnlock()
+											} else {
+												return
 											}
-											mutexChanID.RUnlock()
+											//select {
+											//case sensorChanID[deviceId] <- cmd[:len(cmd)-1]:
+											//	// in case we receive a valid answer to setid, we close the channel
+											//	if cmd[0] == 14 {
+											//		loop = false
+											//	}
+											//case <-time.After(time.Duration(timeout) * time.Second):
+											//	// internal issue, all goroutines will close on time out including the channel
+											//	go func() { mutexChanID.RLock(); sensorChanID[deviceId] <- cmd; mutexChanID.RUnlock() }()
+											//	log.Printf("servers.handlerTCPRequest: hanging operation in sending "+
+											//		"command answer %v to user\n", cmd)
+											//}
+											//mutexChanID.RUnlock()
 										}
 									}
 								}

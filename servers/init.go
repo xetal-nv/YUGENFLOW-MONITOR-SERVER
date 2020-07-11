@@ -662,6 +662,7 @@ func setUpTCP() {
 	mutexUnknownMac.Unlock()
 
 	tcpTokens = make(chan bool, maxsensors)
+	// TODO NEW make option to disable maxsensors?
 	for i := 0; i < maxsensors; i++ {
 		tcpTokens <- true
 	}

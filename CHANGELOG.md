@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.7.3]
+### Changed
+ - Removed rare bug causing some locks to stay locked in case of fatal crash  
+
 ## [0.7.2]
 ### Add
  - Reset gate if one sensor sends sensibly less messages, configurable via configuration file  
