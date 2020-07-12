@@ -17,8 +17,7 @@ import (
 // it detects data, commands and command answers and act accordingly
 // starts the associated handlerCommandAnswer
 
-// TODO test new mutex structure (only for places where a possible crash could happen somehow)
-// TODO add a deadline on read as well
+// TODO test new mutex and deadline
 
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
@@ -166,6 +165,10 @@ func handlerTCPRequest(conn net.Conn) {
 				// checking if the old connection is alive will be used to decide the situation
 				ch := make(chan bool)
 				go func() {
+					if e := oldcn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+						log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+						return
+					}
 					if _, e := oldcn.Read(make([]byte, 1)); e != nil {
 						select {
 						case ch <- true:
@@ -195,6 +198,10 @@ func handlerTCPRequest(conn net.Conn) {
 					// this is a rare situation that should never happen
 					ch0 := make(chan bool)
 					go func() {
+						if e := oldcn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+							log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+							return
+						}
 						if _, e := oldcn.Read(make([]byte, 1)); e != nil {
 							ch0 <- true
 						} else {
