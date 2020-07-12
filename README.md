@@ -70,3 +70,4 @@ See .envtest file for configuration example
 -eeprom : enables refresh of device eeprom at every connection  
 -nosample : disable automatic check for database recovery  
 -dbsupdate : enable DBS integrity check HTTP API  
+-tdl int : TCP read deadline in hours (default 24)  

@@ -41,6 +41,7 @@ func main() {
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var nosample = flag.Bool("nosample", false, "disable automatic check for database recovery")
 	var dbsupdate = flag.Bool("dbsupdate", false, "enable DBS integrity check HTTP API")
+	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	flag.Parse()
 
 	log.Printf("Xetal Gate Server version: %v\n", version)
@@ -116,6 +117,7 @@ func main() {
 	gates.LogToFileAll = *de
 	servers.SensorEEPROMResetEnabled = *eeprom
 	servers.EnableDBSApi = *dbsupdate
+	servers.TCPdeadline = *tcpdeadline
 
 	folder = os.Getenv("GATESERVER")
 

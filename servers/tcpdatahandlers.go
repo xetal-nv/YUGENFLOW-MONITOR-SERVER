@@ -18,6 +18,7 @@ import (
 // starts the associated handlerCommandAnswer
 
 // TODO test new mutex structure (only for places where a possible crash could happen somehow)
+// TODO add a deadline on read as well
 
 func handlerTCPRequest(conn net.Conn) {
 	var deviceId int
@@ -38,7 +39,7 @@ func handlerTCPRequest(conn net.Conn) {
 			sensorChanUsedID[deviceId] = false
 			mutexSensorMacs.Unlock()
 			// reset the command thread
-			stop <- true
+			go func() { stop <- true }()
 		}
 
 		// clean up for eventual unknown device
@@ -69,6 +70,10 @@ func handlerTCPRequest(conn net.Conn) {
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 
 	// Initially receive the MAC ip
+	if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+		log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+		return
+	}
 	if _, e := conn.Read(mac); e != nil {
 		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), ":")
 		log.Printf("servers.handlerTCPRequest: error on welcome message from %v//%v : %v\n", ipc, mach, e)
@@ -100,6 +105,10 @@ func handlerTCPRequest(conn net.Conn) {
 						}()
 						tsnow := support.Timestamp()
 						for (tsnow + int64(maltimeout*1000)) > support.Timestamp() {
+							if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+								log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+								return
+							}
 							if _, e := conn.Read(make([]byte, 256)); e != nil {
 								break
 							}
@@ -243,6 +252,10 @@ func handlerTCPRequest(conn net.Conn) {
 							if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(timeout) * time.Second)); e == nil {
 								if _, e = conn.Write(msg); e == nil {
 									ans := make([]byte, 2)
+									if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+										log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+										return
+									}
 									if _, e := conn.Read(ans); e != nil {
 										// close connection in case of error
 										if support.Debug != 0 {
@@ -332,6 +345,10 @@ func handlerTCPRequest(conn net.Conn) {
 			}
 			for loop {
 				cmd := make([]byte, 1)
+				if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+					log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+					return
+				}
 				if _, e := conn.Read(cmd); e != nil {
 
 					if e == io.EOF {
@@ -351,6 +368,10 @@ func handlerTCPRequest(conn net.Conn) {
 							data = make([]byte, 4)
 						} else {
 							data = make([]byte, 3)
+						}
+						if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+							log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+							return
 						}
 						if _, e := conn.Read(data); e != nil {
 							// A delay is inserted in case this is a malicious attempt
@@ -526,6 +547,10 @@ func handlerTCPRequest(conn net.Conn) {
 												stop <- fl
 												loop = false
 											case <-time.After(time.Duration(timeout) * time.Second):
+												if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+													log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+													return
+												}
 												if _, e := conn.Read(make([]byte, 256)); e != nil {
 													go func() { <-terminate }()
 													stop <- false
@@ -581,6 +606,10 @@ func handlerTCPRequest(conn net.Conn) {
 									//mutexChanID.RUnlock()
 								} else {
 									cmdd := make([]byte, v)
+									if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
+										log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
+										return
+									}
 									if _, e := conn.Read(cmdd); e != nil {
 										loop = false
 										log.Printf("servers.handlerTCPRequest: error reading answer from %v//%v "+

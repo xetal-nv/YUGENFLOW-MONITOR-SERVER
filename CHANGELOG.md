@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.7.3]
+### Add
+ - Added TCP read deadline  
+
 ### Changed
  - Removed rare bug causing some locks to stay locked in case of fatal crash  
 

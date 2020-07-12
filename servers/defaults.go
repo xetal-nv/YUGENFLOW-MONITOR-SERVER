@@ -111,3 +111,4 @@ var SensorEEPROMResetEnabled bool     // if true the sensor EEPROM is reset at e
 var sensorEEPROMResetDelay int        // number of seconds of delay before initiating the eeprom refresh
 var sensorEEPROMResetStep int         // number of seconds of delay between refresh commands
 var EnableDBSApi bool                 // enables the DBS update from file API
+var TCPdeadline int                   // TCP read deadline in hours
