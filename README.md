@@ -71,6 +71,7 @@ See .envtest and .systemenv files for configuration example
 -eeprom : enables refresh of device eeprom at every connection  
 -nosample : disable automatic check for database recovery  
 -dbsupdate : enable DBS integrity check HTTP API  
+-tdl int : TCP read deadline in hours (default 24)  
 
 **HARDCODED OPTIONS:**  
 - support.SkipDBS : true to skip usage of database (disables also web app)  

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 NOTE: we need to add changes carried over from 0.7.2 when finished
 
 ## [0.9.0]
-### adapted from [v.0.7.2] version, see its changelog for more information  
+### adapted from [v.0.7.3] version, see its changelog for more information  
 ### Added
  - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup  
  - Added flow reporting which includes the sample one  
