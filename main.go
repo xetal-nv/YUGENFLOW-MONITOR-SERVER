@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const version = "v. 0.9.0" // version
+const version = "v. 0.9.1" // version
 
 func main() {
 	folder, _ := support.GetCurrentExecDir()

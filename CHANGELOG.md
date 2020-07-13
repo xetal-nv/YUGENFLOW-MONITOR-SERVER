@@ -1,10 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-NOTE: we need to add changes carried over from 0.7.2 when finished
+## [0.9.1]
+### adapted from [v.0.7.3] version, see its changelog for more information  
 
 ## [0.9.0]
-### adapted from [v.0.7.3] version, see its changelog for more information  
+### adapted from [v.0.7.2] version, see its changelog for more information  
 ### Added
  - Added redundant check in spaces.setUpDataDBSBank on init map validity check at startup  
  - Added flow reporting which includes the sample one  
@@ -27,7 +28,6 @@ NOTE: we need to add changes carried over from 0.7.2 when finished
  - Fixed bugs in initialising entry data (spaces.samplers)  
  - Fixed bug handling flow values while in closuretime (spaces.samplers)  
  - Removed option on reporting sample and flow, everything has been consolidated into overview and periodic  
- - Removed rare bug caulsing some locks to stay locked in case of fata crash  
 
 ## [0.8.x]
 ### Refer to CHANGELOG in the [v.0.8.x] branch
