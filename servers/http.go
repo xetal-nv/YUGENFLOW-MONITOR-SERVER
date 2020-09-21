@@ -2,7 +2,7 @@ package servers
 
 import (
 	"context"
-	"gateserver/support"
+	"gateserver/supp"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -29,14 +29,14 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 		server.Shutdown(ctx)
 	}
 
-	go support.RunWithRecovery(r, nil)
+	go supp.RunWithRecovery(r, nil)
 
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers.startHTTP: recovering server",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.startHTTP: recovering server",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("servers.startHTTP: recovering server", add, " from:\n ", e)
 				sd <- context.Background() // close running shutdown goroutine
@@ -56,7 +56,7 @@ func startHTTP(add string, sd chan context.Context, mh map[string]http.Handler) 
 		//if stc != "" {
 		//	mx.PathPrefix("/").Handler(http.FileServer(http.Dir(stc)))
 		//} else if mergeHTMLservers {
-		if !support.DisableWebApp {
+		if !supp.DisableWebApp {
 			mx.PathPrefix("/").Handler(http.FileServer(http.Dir("./html/")))
 		}
 		//}

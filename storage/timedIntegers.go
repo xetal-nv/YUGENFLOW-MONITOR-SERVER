@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gateserver/support"
+	"gateserver/supp"
 )
 
 type DataCt struct {
@@ -29,5 +29,5 @@ func _TimedIntCell(_ string, in, out chan DataCt, d ...DataCt) { // is
 			}
 		}
 	}
-	go support.RunWithRecovery(r, nil)
+	go supp.RunWithRecovery(r, nil)
 }

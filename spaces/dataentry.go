@@ -7,7 +7,7 @@ import (
 )
 
 type DataEntry struct {
-	id           string // entry Id as string to support entry data in the entire communication pipe
+	id           string // entry Id as string to supp entry data in the entire communication pipe
 	Ts           int64  // timestamp
 	NetFlow      int    // net flow
 	PositiveFlow int    // counter positive (entries) transactions

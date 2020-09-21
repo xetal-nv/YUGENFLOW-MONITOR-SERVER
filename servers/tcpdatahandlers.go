@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gateserver/codings"
 	"gateserver/gates"
-	"gateserver/support"
+	"gateserver/supp"
 	"io"
 	"log"
 	"net"
@@ -32,8 +32,8 @@ func handlerTCPRequest(conn net.Conn) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"servers.handlerTCPRequest: recover",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.handlerTCPRequest: recover",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 		}
 		if idKnown {
@@ -60,7 +60,7 @@ func handlerTCPRequest(conn net.Conn) {
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
 		tcpTokens <- true
-		if support.Debug != 0 {
+		if supp.Debug != 0 {
 			log.Println("Releasing TCP token, remaining:", len(tcpTokens))
 		}
 	}()
@@ -92,16 +92,16 @@ func handlerTCPRequest(conn net.Conn) {
 			// define a malicious report function that, depending if on strict mode, also kills the connection
 			//malFunc := func(strict bool) {
 			malFunc := func() {
-				if support.MalOn {
+				if supp.MalOn {
 					//if strict {
 					if malCheck > 3 {
 						log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
 						go func() {
-							support.DLog <- support.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
-								support.Timestamp(), "", []int{}, true}
+							supp.DLog <- supp.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
+								supp.Timestamp(), "", []int{}, true}
 						}()
-						tsNow := support.Timestamp()
-						for (tsNow + int64(malTimeout*1000)) > support.Timestamp() {
+						tsNow := supp.Timestamp()
+						for (tsNow + int64(malTimeout*1000)) > supp.Timestamp() {
 							if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
 								log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
 								return
@@ -122,7 +122,7 @@ func handlerTCPRequest(conn net.Conn) {
 			}
 
 			gates.MutexDeclaredDevices.RLock()
-			if support.RunWithPanicCheck(
+			if supp.RunWithPanicCheck(
 				func() {
 					if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
 						// Device is not allowed, behaviour depends if in strict mode
@@ -244,7 +244,7 @@ func handlerTCPRequest(conn net.Conn) {
 
 				// reset the sensor if it its first connection
 				// malicious devices will also be receiving this command
-				if support.RstON {
+				if supp.RstON {
 					mutexSensorMacs.RLock()
 					mutexUnknownMac.RLock()
 					_, ok1 := sensorIdMAC[string(mac)]
@@ -266,19 +266,19 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 								if _, e := conn.Read(ans); e != nil {
 									// close connection in case of error
-									if support.Debug != 0 {
+									if supp.Debug != 0 {
 										log.Printf("servers.handlerTCPRequest: failed start reset communication of device %v//%v\n", ipc, mach)
 									}
 									c <- false
 								} else {
 									//if ans[0] != cmdAPI["rstbg"].cmd || ans[1] != codings.Crc8([]byte{cmdAPI["rstbg"].cmd}) {
 									if ans[0] != cmdAPI["rstbg"].cmd {
-										if support.Debug != 0 {
+										if supp.Debug != 0 {
 											log.Printf("servers.handlerTCPRequest: failed start reset of device %v//%v with answer %v\n", ipc, mach, ans)
 										}
 										c <- false
 									} else {
-										if support.Debug != 0 {
+										if supp.Debug != 0 {
 											log.Printf("servers.handlerTCPRequest: executed start reset of device %v//%v\n", ipc, mach)
 										}
 										c <- true
@@ -286,7 +286,7 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 							} else {
 								// close connection in case of error
-								if support.Debug != 0 {
+								if supp.Debug != 0 {
 									log.Printf("servers.handlerTCPRequest: connection error during start reset of device %v//%v\n", ipc, mach)
 								}
 								c <- false
@@ -295,7 +295,7 @@ func handlerTCPRequest(conn net.Conn) {
 						select {
 						case loop = <-c:
 						case <-time.After(time.Duration(malTimeout) * time.Second):
-							if support.Debug != 0 {
+							if supp.Debug != 0 {
 								log.Printf("servers.handlerTCPRequest: timeout on reset of device %v//%v\n", ipc, mach)
 							}
 							loop = false
@@ -304,7 +304,7 @@ func handlerTCPRequest(conn net.Conn) {
 
 				}
 
-				if support.Debug != 0 {
+				if supp.Debug != 0 {
 					log.Printf("servers.handlerTCPRequest: status of device %v//%v is %v\n", ipc, mach, loop)
 				}
 
@@ -390,7 +390,7 @@ func handlerTCPRequest(conn net.Conn) {
 								msg := append(cmd, data[:3]...)
 								crc := codings.Crc8(msg)
 								if crc != data[3] {
-									if support.Debug > 0 {
+									if supp.Debug > 0 {
 										log.Print("servers.handlerTCPRequest: wrong CRC on received message\n")
 									}
 									valid = false
@@ -429,7 +429,7 @@ func handlerTCPRequest(conn net.Conn) {
 										malCheck = 0
 										if !idKnown {
 											mutexSensorMacs.Lock()
-											if support.RunWithPanicCheck(
+											if supp.RunWithPanicCheck(
 												func() {
 													//if !idKnown {
 													oldMac, ok1 := sensorMacID[deviceId]
@@ -555,7 +555,7 @@ func handlerTCPRequest(conn net.Conn) {
 										if crcUsed {
 											crc := codings.Crc8(cmd[:len(cmd)-1])
 											if crc != cmd[len(cmd)-1] {
-												if support.Debug > 0 {
+												if supp.Debug > 0 {
 													log.Print("servers.handlerTCPRequest: wrong CRC on received message\n")
 												}
 												valid = false

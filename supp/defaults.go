@@ -1,4 +1,4 @@
-package support
+package supp
 
 import (
 	"log"
@@ -25,7 +25,7 @@ const DisableWebApp = false || SkipDBS // if true web app will be disabled
 
 var CleanupLock = &sync.RWMutex{} // used to make sure clean-up on termination does not affect critical operations
 
-// set-ups all support variables according to the configuration file .env
+// set-ups all supp variables according to the configuration file .env
 
 func SetUp(envf string) {
 	if envf == "" {

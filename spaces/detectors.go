@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"gateserver/storage"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"os"
 	"strconv"
@@ -24,7 +24,7 @@ func SafeRegDetectors(in, out chan []IntervalDetector) {
 			}
 		}
 	}
-	go support.RunWithRecovery(r, nil)
+	go supp.RunWithRecovery(r, nil)
 }
 
 //func detectors(spacename string, prevStageChan, nextStageChan chan spaceEntries, syncPrevious, syncNext chan bool, avgID int, once sync.Once, tn, ntn int) {
@@ -33,7 +33,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 
 	//latestDBSIn[dl][name][v.name] = make(chan interface{})
 	//label := dl + name + v.name
-	//if _, e := storage.SetSeries(label, v.interval, !support.StringEnding(label, "current", "_")); e != nil {
+	//if _, e := storage.SetSeries(label, v.interval, !supp.StringEnding(label, "current", "_")); e != nil {
 	//	log.Fatal("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.name, v.interval)
 	//}
 	//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], nil)
@@ -61,10 +61,10 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 			// all intervals are read
 			for _, st := range strings.Split(strings.Trim(sts, " "), ";") {
 				stdata := strings.Split(strings.Trim(st, " "), " ")
-				if start, e := time.Parse(support.TimeLayout, strings.Trim(stdata[1], " ")); e == nil {
-					if end, e := time.Parse(support.TimeLayout, strings.Trim(stdata[2], " ")); e == nil {
-						spaceName = support.StringLimit(spaceName, support.LabelLength)
-						nm := support.StringLimit("presence", support.LabelLength) + spaceName + support.StringLimit(strings.Trim(stdata[0], " "), support.LabelLength)
+				if start, e := time.Parse(supp.TimeLayout, strings.Trim(stdata[1], " ")); e == nil {
+					if end, e := time.Parse(supp.TimeLayout, strings.Trim(stdata[2], " ")); e == nil {
+						spaceName = supp.StringLimit(spaceName, supp.LabelLength)
+						nm := supp.StringLimit("presence", supp.LabelLength) + spaceName + supp.StringLimit(strings.Trim(stdata[0], " "), supp.LabelLength)
 						allIntervals = append(allIntervals, IntervalDetector{nm,
 							start, end, false, DataEntry{id: nm}})
 						sendDBSchan[nm] = make(chan interface{})
@@ -100,8 +100,8 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 							if en, err := strconv.ParseInt(data[3], 10, 64); err == nil {
 								if ts, err := strconv.ParseInt(data[4], 10, 64); err == nil {
 									if val, err := strconv.Atoi(data[5]); err == nil {
-										if (support.Timestamp() - ts*1000) <= CrashMaxDelay {
-											inc, _ := support.InClosureTime(time.Unix(st, 0), time.Unix(en, 0))
+										if (supp.Timestamp() - ts*1000) <= CrashMaxDelay {
+											inc, _ := supp.InClosureTime(time.Unix(st, 0), time.Unix(en, 0))
 											recData[data[1]] = IntervalDetector{Id: data[1], Start: time.Unix(st, 0), End: time.Unix(en, 0),
 												inCycle: inc, Activity: DataEntry{Ts: ts, id: data[1], NetFlow: val}}
 										}
@@ -122,7 +122,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						allIntervals[i] = el
 						log.Printf("spaces.detectors: recovered presence definition and value for %v:%v\n", spaceName, val.Id)
 						//we need to check is the sample ts is relevant
-						//found, err := support.InClosureTimeFull(netFlow.Start, netFlow.End, time.Unix(el.Activity.Ts, 0))
+						//found, err := supp.InClosureTimeFull(netFlow.Start, netFlow.End, time.Unix(el.Activity.Ts, 0))
 						//fmt.Println(netFlow.Id, found, err)
 					}
 				}
@@ -137,8 +137,8 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"spaces.detector: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"spaces.detector: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			log.Printf("spaces.detectors: space %v detector recovering from : %v\n ", name, e)
 			go detectors(name, gateChan, allIntervals, recovery, sendDBSchan, once, tn, ntn)
@@ -160,12 +160,12 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 			for i := range allIntervals {
 				copy(copyAllIntervals, allIntervals)
 				//fmt.Println("checking", allIntervals[i].Id)
-				if found, e := support.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
+				if found, e := supp.InClosureTime(allIntervals[i].Start, allIntervals[i].End); e == nil && found {
 					allIntervals[i].inCycle = true
 					if sp.netFlow != 0 {
 						allIntervals[i].Activity.NetFlow += 1
-						// allIntervals[i].Activity.Ts = support.Timestamp()
-						if support.Debug != 0 {
+						// allIntervals[i].Activity.Ts = supp.Timestamp()
+						if supp.Debug != 0 {
 							fmt.Println("space Activity for interval", allIntervals[i].Id, "was", allIntervals[i].Activity)
 						}
 						// 2 activities is the minimum for guaranteed presence and we store it as soon as it happens
@@ -180,9 +180,9 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						//recSH = recSH[len(recSH)-2:]
 						//recSM = recSM[len(recSM)-2:]
 						//fmt.Println(recSH, recSM, recSH+":"+recSM)
-						//if recStart, e := time.Parse(support.TimeLayout, recSH+":"+recSM); e == nil {
+						//if recStart, e := time.Parse(supp.TimeLayout, recSH+":"+recSM); e == nil {
 						//fmt.Print(recStart)
-						//if found, e := support.InClosureTime(recStart, allIntervals[i].End); e == nil && found {
+						//if found, e := supp.InClosureTime(recStart, allIntervals[i].End); e == nil && found {
 						// if allIntervals[i].Activity.NetFlow >= minTransactionsForDetection && !saved {
 						// 	sendDBSchan[allIntervals[i].Id] <- allIntervals[i].Activity
 						// 	saved = true
@@ -196,8 +196,8 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 					}
 				} else if allIntervals[i].inCycle {
 					// sample is saved with a ts adjusted with the timeout
-					allIntervals[i].Activity.Ts = support.Timestamp() - 5*chanTimeout*2
-					if support.Debug != 0 {
+					allIntervals[i].Activity.Ts = supp.Timestamp() - 5*chanTimeout*2
+					if supp.Debug != 0 {
 						fmt.Println("space Activity for interval", allIntervals[i].Id, " ended as", allIntervals[i].Activity)
 					}
 					allIntervals[i].inCycle = false

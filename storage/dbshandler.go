@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 )
 
@@ -15,17 +15,17 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 			select {
 			case d := <-in:
 				//fmt.Println(id, "received", d)
-				//if support.Debug != 3 && support.Debug != 4 {
+				//if supp.Debug != 3 && supp.Debug != 4 {
 				if e := a.Extract(d); e == nil {
 					if a.Valid() {
 						//fmt.Println(id, "storing", a, tp)
 						switch tp {
 						case "SD":
-							if err := StoreSampleSD(a, !support.StringEnding(id, "current", "_")); err != nil {
+							if err := StoreSampleSD(a, !supp.StringEnding(id, "current", "_")); err != nil {
 								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
 							}
 						case "TS":
-							if err := StoreSampleTS(a, !support.StringEnding(id, "current", "_")); err != nil {
+							if err := StoreSampleTS(a, !supp.StringEnding(id, "current", "_")); err != nil {
 								log.Printf("storage.TimedIntDBS: DBS handler %v error %v for data %v, type %v\n", id, err, a, tp)
 							}
 						default:
@@ -38,8 +38,8 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 					log.Printf("storage.TimedIntDBS: DBS handler extraction error %v for data %v\n", e.Error(), d)
 				}
 				//}
-				//if support.Debug > 0 {
-				//	fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", support.StringEnding(id, "current", "_"))
+				//if supp.Debug > 0 {
+				//	fmt.Println("DEBUG DBS id:", id, "got data", d, "is current", supp.StringEnding(id, "current", "_"))
 				//}
 			case aa := <-rst:
 				// Reset via API might be dangerous, this is just a  placeholder
@@ -50,5 +50,5 @@ func handlerDBS(id string, in chan interface{}, rst chan bool, a SampleData, tp 
 	er := func() {
 		log.Printf("storage.TimedIntDBS: recovering from crash\n ")
 	}
-	go support.RunWithRecovery(r, er)
+	go supp.RunWithRecovery(r, er)
 }

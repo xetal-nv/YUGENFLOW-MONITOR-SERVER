@@ -2,7 +2,7 @@ package storage
 
 import (
 	"fmt"
-	"gateserver/support"
+	"gateserver/supp"
 	"testing"
 	"time"
 )
@@ -15,7 +15,7 @@ func Test_Setup(t *testing.T) {
 }
 
 func Test_Test_SerieSampleMU(t *testing.T) {
-	support.LabelLength = 8
+	supp.LabelLength = 8
 	b := SeriesSample{"entry___noname__current_", 123, -13}
 	fmt.Println(b)
 	c := b.Marshal()
@@ -30,7 +30,7 @@ func Test_Test_SerieSampleMU(t *testing.T) {
 
 func Test_Test_SerieEntriesMU(t *testing.T) {
 	var a [][]int
-	support.LabelLength = 8
+	supp.LabelLength = 8
 	a = append(a, []int{0, -1})
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, -8})
@@ -50,7 +50,7 @@ func Test_Test_SerieEntriesMU(t *testing.T) {
 func Test_SerieSample(t *testing.T) {
 
 	a := HeaderData{}
-	a.fromRst = uint64(support.Timestamp())
+	a.fromRst = uint64(supp.Timestamp())
 	a.step = 500
 	a.lastUpdate = a.fromRst
 	a.created = a.fromRst
@@ -72,7 +72,7 @@ func Test_SerieSample(t *testing.T) {
 }
 
 func Test_SerieEntries(t *testing.T) {
-	support.LabelLength = 8
+	supp.LabelLength = 8
 	if err := TimedIntDBSSetUp("", true); err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func Test_SerieEntries(t *testing.T) {
 	a = append(a, []int{4, 5})
 	a = append(a, []int{7, 8})
 	a = append(a, []int{6, 3})
-	b := SeriesEntries{support.StringLimit("entry___notame__current_", support.LabelLength), 123, a}
+	b := SeriesEntries{supp.StringLimit("entry___notame__current_", supp.LabelLength), 123, a}
 	fmt.Println(b)
 	fmt.Println(b.Marshal())
 
@@ -121,11 +121,11 @@ func Test_SerieEntries(t *testing.T) {
 		fmt.Println(e)
 	}
 
-	if f, err := SetSeries(support.StringLimit("entry___notame__current_", support.LabelLength), 2, true); err != nil {
+	if f, err := SetSeries(supp.StringLimit("entry___notame__current_", supp.LabelLength), 2, true); err != nil {
 		t.Fatal(err)
 	} else {
 		if f {
-			fmt.Println("Serie definition:", GetDefinition(support.StringLimit("entry___notame__current_", support.LabelLength)))
+			fmt.Println("Serie definition:", GetDefinition(supp.StringLimit("entry___notame__current_", supp.LabelLength)))
 		}
 	}
 
@@ -171,8 +171,8 @@ func Test_DBS(t *testing.T) {
 	}
 
 	time.Sleep(2 * time.Second)
-	ts := support.Timestamp()
-	ts = support.Timestamp()
+	ts := supp.Timestamp()
+	ts = supp.Timestamp()
 	a := SeriesSample{"entry___notame__current_", ts, 11}
 	if err := StoreSampleTS(&a, false, true); err != nil {
 		t.Fatal(err)

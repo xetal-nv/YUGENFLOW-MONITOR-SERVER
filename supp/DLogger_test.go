@@ -1,4 +1,4 @@
-package support
+package supp
 
 import (
 	"fmt"

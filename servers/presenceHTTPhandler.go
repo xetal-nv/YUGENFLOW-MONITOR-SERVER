@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gateserver/storage"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"net/http"
 	"os"
@@ -24,8 +24,8 @@ func presenceHTTPhandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers,seriesHTTPhandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers,seriesHTTPhandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("servers.seriesHTTPhandler: recovering from: ", e)
 			}
@@ -47,17 +47,17 @@ func presenceHTTPhandler() http.Handler {
 				params[strings.Trim(val[0], " ")] = strings.Trim(val[1], " ")
 			} else {
 				go func() {
-					support.DLog <- support.DevData{"servers.seriesHTTPhandler: " + strings.Trim(val[0], " "),
-						support.Timestamp(), "illegal request", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.seriesHTTPhandler: " + strings.Trim(val[0], " "),
+						supp.Timestamp(), "illegal request", []int{1}, true}
 				}()
 				_, _ = fmt.Fprintf(w, "")
 				return
 			}
 		}
 
-		label := support.StringLimit("presence", support.LabelLength)
-		label += support.StringLimit(params["space"], support.LabelLength)
-		label += support.StringLimit(params["analysis"], support.LabelLength)
+		label := supp.StringLimit("presence", supp.LabelLength)
+		label += supp.StringLimit(params["space"], supp.LabelLength)
+		label += supp.StringLimit(params["analysis"], supp.LabelLength)
 
 		//fmt.Println(label)
 

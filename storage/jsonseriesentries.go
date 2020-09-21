@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gateserver/support"
+	"gateserver/supp"
 	"regexp"
 	"strings"
 )
@@ -39,7 +39,7 @@ func (ret *JsonSeriesEntries) ExpandEntries(ss SeriesEntries) {
 	if ss.Stag != "" {
 		r, _ := regexp.Compile("_+")
 		tmp := r.ReplaceAllString(ss.Stag, "_")
-		name := support.StringLimit(strings.Split(tmp, "_")[1], support.LabelLength)
+		name := supp.StringLimit(strings.Split(tmp, "_")[1], supp.LabelLength)
 		//fmt.Println(SpaceInfo[name])
 		ret.Stag = ss.Stag
 		ret.Sts = ss.Sts

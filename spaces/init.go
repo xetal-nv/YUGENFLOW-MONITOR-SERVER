@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"gateserver/storage"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"os"
 	"sort"
@@ -33,7 +33,7 @@ func SetUp() {
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "TS")
 	}
-	dataTypes[support.StringLimit("sample", support.LabelLength)] = sample
+	dataTypes[supp.StringLimit("sample", supp.LabelLength)] = sample
 	// add entry type
 	var entry = dtFunctions{}
 	entry.pf = func(nm string, se spaceEntries) interface{} {
@@ -58,7 +58,7 @@ func SetUp() {
 	entry.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SeriesEntryDBS(id, in, rst, "TS")
 	}
-	dataTypes[support.StringLimit("entry", support.LabelLength)] = entry
+	dataTypes[supp.StringLimit("entry", supp.LabelLength)] = entry
 	// add presence type, which is equal to sample
 	var presence = dtFunctions{}
 	presence.pf = func(nm string, se spaceEntries) interface{} {
@@ -67,7 +67,7 @@ func SetUp() {
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
 		storage.SerieSampleDBS(id, in, rst, "SD")
 	}
-	dataTypes[support.StringLimit("presence", support.LabelLength)] = presence
+	dataTypes[supp.StringLimit("presence", supp.LabelLength)] = presence
 
 	// set multiCycleOnlyDays
 	if data := os.Getenv("MULTICYCLEDAYSONLY"); data != "" {
@@ -92,7 +92,7 @@ func SetUp() {
 				InitData[i] = make(map[string]map[string][]string)
 				for _, j := range spaces {
 					name := strings.Trim(strings.Split(j, ":")[0], " ")
-					InitData[i][support.StringLimit(name, support.LabelLength)] = make(map[string][]string)
+					InitData[i][supp.StringLimit(name, supp.LabelLength)] = make(map[string][]string)
 				}
 			}
 		}
@@ -181,7 +181,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 			spaces[i] = strings.Trim(name, " ")
 			if len(singleSpaceData) == 2 {
 				if v, e := strconv.Atoi(singleSpaceData[1]); e == nil {
-					SpaceMaxOccupancy[support.StringLimit(spaces[i], support.LabelLength)] = v
+					SpaceMaxOccupancy[supp.StringLimit(spaces[i], supp.LabelLength)] = v
 				} else {
 					log.Fatal("spaces.setUpSpaces: fatal error entry maximum occupancy", singleSpaceData)
 				}
@@ -191,26 +191,26 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 		// initialise the processing threads for each space
 		for _, name := range spaces {
 			var spRange TimeSchedule
-			nl, _ := time.Parse(support.TimeLayout, "00:00")
+			nl, _ := time.Parse(supp.TimeLayout, "00:00")
 			rng := strings.Split(strings.Trim(os.Getenv("CLOSURE_"+name), ";"), ";")
 			spRange.Start, spRange.End = nl, nl
 			if len(rng) == 2 {
 				for i, v := range rng {
 					rng[i] = strings.Trim(v, " ")
 				}
-				if v, e := time.Parse(support.TimeLayout, rng[0]); e == nil {
+				if v, e := time.Parse(supp.TimeLayout, rng[0]); e == nil {
 					spRange.Start = v
-					if v, e := time.Parse(support.TimeLayout, rng[1]); e == nil {
+					if v, e := time.Parse(supp.TimeLayout, rng[1]); e == nil {
 						spRange.End = v
 					} else {
 						spRange.Start = nl
 					}
 				}
 			}
-			SpaceTimes[support.StringLimit(name, support.LabelLength)] = spRange
+			SpaceTimes[supp.StringLimit(name, supp.LabelLength)] = spRange
 			LatestDetectorOut = make(map[string]chan []IntervalDetector)
 			if sts := os.Getenv("SPACE_" + name); sts != "" {
-				name = support.StringLimit(name, support.LabelLength)
+				name = supp.StringLimit(name, supp.LabelLength)
 
 				// the go routines below Start the relevant processing threads
 				// sampling and averaging threads
@@ -287,7 +287,7 @@ func setpUpCounter() {
 	avgWin := strings.Trim(os.Getenv("ANALYSISPERIOD"), ";")
 	avgWindows := make(map[string]int)
 	tw := make(map[int]string)
-	curr := support.StringLimit("current", support.LabelLength)
+	curr := supp.StringLimit("current", supp.LabelLength)
 	avgWindows[curr] = SamplingWindow
 	tw[SamplingWindow] = curr
 	if avgWin != "" {
@@ -307,7 +307,7 @@ func setpUpCounter() {
 				log.Fatal("spaces.setpUpCounter: fatal error for illegal ANALYSISPERIOD values", data)
 			} else {
 				if v > SamplingWindow {
-					name := support.StringLimit(data[0], support.LabelLength)
+					name := supp.StringLimit(data[0], supp.LabelLength)
 					avgWindows[name] = v
 					tw[v] = name
 				} else {
@@ -341,7 +341,7 @@ func setpUpCounter() {
 	}
 
 	if shadowAnalysis != "" && found {
-		shadowAnalysis = support.StringLimit(shadowAnalysis, support.LabelLength)
+		shadowAnalysis = supp.StringLimit(shadowAnalysis, supp.LabelLength)
 		shadowAnalysisFile = make(map[string]*os.File)
 		shadowAnalysisDate = make(map[string]string)
 		log.Printf("spaces.setpUpCounter: Shadow Analysis defined as (%v)\n", shadowAnalysis)
@@ -356,13 +356,13 @@ func setpUpCounter() {
 	//jsEN := "var opEndTime = \"\";\n"
 
 	if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
-		if st, e := time.Parse(support.TimeLayout, val[0]); e == nil {
-			if en, e := time.Parse(support.TimeLayout, val[1]); e == nil {
+		if st, e := time.Parse(supp.TimeLayout, val[0]); e == nil {
+			if en, e := time.Parse(supp.TimeLayout, val[1]); e == nil {
 				//jsTxt = "var openingTime = \"from " + NetFlow[0] + " to " + NetFlow[1] + "\";\n"
 				//jsST = "var opStartTime = \"" + NetFlow[0] + "\";\n"
 				//jsEN = "var opEndTime = \"" + NetFlow[1] + "\";\n"
 				avgAnalysisSchedule = TimeSchedule{st, en, 0}
-				avgAnalysisSchedule.Duration, _ = support.TimeDifferenceInSecs(val[0], val[1])
+				avgAnalysisSchedule.Duration, _ = supp.TimeDifferenceInSecs(val[0], val[1])
 				avgAnalysisSchedule.Duration += 60000
 				log.Printf("spaces.setpUpCounter: Analysis window is set from %v to %v\n", val[0], val[1])
 			} else {
@@ -406,10 +406,10 @@ func setpUpCounter() {
 }
 
 // set-up DBS thread and data flow structure based on the provided configuration
-// it needs to be modified in order to support all foreseen data
+// it needs to be modified in order to supp all foreseen data
 func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 
-	now := support.Timestamp()
+	now := supp.Timestamp()
 
 	latestChannelLock.Lock()
 	LatestBankOut = make(map[string]map[string]map[string]chan interface{}, len(spaceChannels))
@@ -428,7 +428,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			LatestBankOut[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
 			latestBankIn[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
 
-			//if support.Debug < 3 {
+			//if supp.Debug < 3 {
 			latestDBSIn[dl] = make(map[string]map[string]chan interface{}, len(spaceChannels))
 			//_ResetDBS[dl] = make(map[string]map[string]chan bool, len(spaceChannels)) // placeholder
 			//}
@@ -436,7 +436,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 			for name := range spaceChannels {
 				LatestBankOut[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
 				latestBankIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
-				//if support.Debug < 3 {
+				//if supp.Debug < 3 {
 				//_ResetDBS[dl][name] = make(map[string]chan bool, len(avgAnalysis)) // placeholder
 				latestDBSIn[dl][name] = make(map[string]chan interface{}, len(AvgAnalysis))
 				//}
@@ -508,13 +508,13 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 						go storage.SafeRegGeneric(dl+name+v.Name, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 					}
 
-					//if support.Debug < 3 {
+					//if supp.Debug < 3 {
 					// Start of distributed data passing structure
 					// the reset channel is not used at the moment, this is a place holder
 					//_ResetDBS[dl][name][v.name] = make(chan bool)
 					latestDBSIn[dl][name][v.Name] = make(chan interface{})
 					label := dl + name + v.Name
-					if _, e := storage.SetSeries(label, v.Interval, !support.StringEnding(label, "current", "_")); e != nil {
+					if _, e := storage.SetSeries(label, v.Interval, !supp.StringEnding(label, "current", "_")); e != nil {
 						log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.Name, v.Interval)
 					}
 					//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])

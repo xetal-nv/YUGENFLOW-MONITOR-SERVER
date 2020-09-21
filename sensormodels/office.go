@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gateserver/codings"
-	"gateserver/support"
+	"gateserver/supp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -102,10 +102,10 @@ func newPerson(entries [][]int, timings []string, longmod []int, pauses int, des
 
 	p.entries = entries
 	p.deskHolder = deskHolder
-	p.off = []int{0, 0, support.RandInt(0, 8)}
-	p.pauses = []int{0, 1 + pauses + support.RandInt(0, 3)}
+	p.off = []int{0, 0, supp.RandInt(0, 8)}
+	p.pauses = []int{0, 1 + pauses + supp.RandInt(0, 3)}
 	for i, v := range timings {
-		p.timing = append(p.timing, f(v, support.RandInt(1, longmod[i])))
+		p.timing = append(p.timing, f(v, supp.RandInt(1, longmod[i])))
 	}
 	if friday == "" {
 		p.fridayExit = p.timing[len(p.timing)-1]
@@ -123,10 +123,10 @@ func (p person) activate() (valid bool, ev []pass) {
 	if p.off[0] == 0 {
 		//  determine if the person is sick
 		if p.off[1] < p.off[2] {
-			if support.RandInt(0, 10) == 5 {
+			if supp.RandInt(0, 10) == 5 {
 				// person is sick
 				p.off[1] += 1
-				p.off[0] = support.RandInt(1, 30)
+				p.off[0] = supp.RandInt(1, 30)
 				return
 			}
 		}
@@ -135,10 +135,10 @@ func (p person) activate() (valid bool, ev []pass) {
 		t := time.Now()
 		fl := -1
 		midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local).Unix()
-		npMorning := support.RandInt(1, p.pauses[1])
+		npMorning := supp.RandInt(1, p.pauses[1])
 		npAfternoon := 0
 		if npMorning+1 < p.pauses[1] {
-			npAfternoon = support.RandInt(0, p.pauses[1]-npMorning-1)
+			npAfternoon = supp.RandInt(0, p.pauses[1]-npMorning-1)
 		}
 		p.pauses[0] = npMorning + npAfternoon + 1
 		for i, tm := range p.timing {
@@ -146,9 +146,9 @@ func (p person) activate() (valid bool, ev []pass) {
 				if val, err := strconv.Atoi(tm[1]); err == nil {
 					var del int
 					if oride.ts == 0 {
-						del = support.RandInt(0, val)
+						del = supp.RandInt(0, val)
 					} else {
-						del = support.RandInt(oride.min, oride.max)
+						del = supp.RandInt(oride.min, oride.max)
 					}
 					if hour, err := strconv.Atoi(v[0]); err == nil {
 						if mins, err := strconv.Atoi(v[1]); err == nil {
@@ -168,10 +168,10 @@ func (p person) activate() (valid bool, ev []pass) {
 							ts += int64((del/60)*3600) + int64((del%60)*60)
 							var ent int
 							if fl == -1 {
-								fl = support.RandInt(0, len(p.entries)-1)
-								ent = p.entries[fl][support.RandInt(0, len(p.entries[fl])-1)]
+								fl = supp.RandInt(0, len(p.entries)-1)
+								ent = p.entries[fl][supp.RandInt(0, len(p.entries[fl])-1)]
 							} else {
-								ent = p.entries[fl][support.RandInt(0, len(p.entries[fl])-1)]
+								ent = p.entries[fl][supp.RandInt(0, len(p.entries[fl])-1)]
 								fl = -1
 							}
 							return true, pass{ts, ent, event}
@@ -364,7 +364,7 @@ func gate(in chan int, sensors []int) {
 				time.Sleep(300 * time.Millisecond)
 				//noinspection GoUnhandledErrorResult
 				connS2.Write(msg2)
-				if support.Debug != 0 {
+				if supp.Debug != 0 {
 					if data == 1 {
 						fmt.Printf("OFFICE TEST: Sending to %v:%v and %v:%v -> 1\n", sensors[0], macSensors[sensors[0]-1], sensors[1], macSensors[sensors[1]-1])
 					} else {
@@ -382,7 +382,7 @@ func gate(in chan int, sensors []int) {
 
 // This module can be used to faithfully emulate real offices
 func Office() {
-	support.RandomInit()
+	supp.RandomInit()
 
 	//define gates
 	var out []chan int
@@ -411,7 +411,7 @@ func Office() {
 	}
 
 	// Visitors
-	for i := 0; i < support.RandInt(0, 10); i++ {
+	for i := 0; i < supp.RandInt(0, 10); i++ {
 		allPeople = append(allPeople, newPerson(allEntries, []string{"9:00", "", "", "", "16:00"}, []int{30, 30, 15, 15, 45},
 			0, false, ""))
 	}
@@ -554,7 +554,7 @@ func Office() {
 		fmt.Println("Wait for next day")
 
 		// wait for the next day
-		if ns, err := time.Parse(support.TimeLayout, startDayTime); err != nil {
+		if ns, err := time.Parse(supp.TimeLayout, startDayTime); err != nil {
 			fmt.Println("OFFICE TEST: Syntax error in specified start time", startDayTime)
 			os.Exit(1)
 		} else {
@@ -562,7 +562,7 @@ func Office() {
 			nows := strconv.Itoa(now.Hour()) + ":"
 			mins := "00" + strconv.Itoa(now.Minute())
 			nows += mins[len(mins)-2:]
-			if ne, err := time.Parse(support.TimeLayout, nows); err != nil {
+			if ne, err := time.Parse(supp.TimeLayout, nows); err != nil {
 				log.Println("Syntax error retrieving system current time")
 				os.Exit(1)
 			} else {

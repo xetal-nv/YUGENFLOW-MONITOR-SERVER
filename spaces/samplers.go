@@ -2,7 +2,7 @@ package spaces
 
 import (
 	"fmt"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"math"
 	"strconv"
@@ -53,7 +53,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 	var counter spaceEntries
 	oldCounter := spaceEntries{ts: 0, netFlow: 0}
 	if ct.invalid {
-		counter = spaceEntries{ts: support.Timestamp(), netFlow: 0}
+		counter = spaceEntries{ts: supp.Timestamp(), netFlow: 0}
 		counter.entries = make(map[int]DataEntry)
 		// comment for debug: the code below in this block was before in a once statement
 		// what follows is the set-up that should be run only the very first time
@@ -107,8 +107,8 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 		counter = ct
 	}
 
-	support.DLog <- support.DevData{"counter starting " + spaceName + samplerName,
-		support.Timestamp(), "", []int{stats[0], stats[1]}, false}
+	supp.DLog <- supp.DevData{"counter starting " + spaceName + samplerName,
+		supp.Timestamp(), "", []int{stats[0], stats[1]}, false}
 	if prevStageChan == nil {
 		log.Printf("spaces.sampler: error space %v not valid\n", spaceName)
 	} else {
@@ -117,8 +117,8 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"spaces.sampler: recovering server",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"spaces.sampler: recovering server",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Printf("spaces.sampler: recovering for gate %+v from: %v\n ", prevStageChan, e)
 				go sampler(spaceName, prevStageChan, nextStageChan, syncPrevious, syncNext, avgID, stats[0], stats[1], counter)
@@ -161,7 +161,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 					// var skip bool
 					// var e error
 					// in closure time the value is forced to zero
-					if skip, e := support.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
+					if skip, e := supp.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
 						if skip {
 							// fmt.Println(spaceName, samplerName, "counter at skip", counter)
 							// reset counter, we are in a CLOSURE period
@@ -178,8 +178,8 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							}
 							// Calculate the confidence measurement (number wrong data / number data
 							if sp.netFlow != 0 {
-								support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
-									support.Timestamp(), "not zero flow received during closure time", []int{}, true}
+								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
+									supp.Timestamp(), "not zero flow received during closure time", []int{}, true}
 							}
 							// sp.netFlow = 0
 						} else {
@@ -188,18 +188,18 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							stats[1] += 1
 							// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
 							// counter.netFlow += sp.netFlow
-							sum, of := support.CheckIntOverflow(counter.netFlow, sp.netFlow)
+							sum, of := supp.CheckIntOverflow(counter.netFlow, sp.netFlow)
 							counter.netFlow = sum
 							// fmt.Println(spaceName, counter.netFlow, sp.netFlow)
 							if of {
-								support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
-									support.Timestamp(), "overflow on counter", []int{}, true}
+								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
+									supp.Timestamp(), "overflow on counter", []int{}, true}
 							}
 							// Calculate the confidence measurement (number wrong data / number data for DVL only
 							if counter.netFlow < 0 {
 								stats[0] += 1
-								support.DLog <- support.DevData{Tag: "spaces.samplers counter " + spaceName + " current",
-									Ts: support.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), []int{stats[0], stats[1]}...), Aggr: true}
+								supp.DLog <- supp.DevData{Tag: "spaces.samplers counter " + spaceName + " current",
+									Ts: supp.Timestamp(), Note: "negative counter wrong/tots", Data: append([]int(nil), []int{stats[0], stats[1]}...), Aggr: true}
 							}
 							// adjust flow based on conditions set for negative and maximum flows from the configuration file
 							if counter.netFlow < 0 && instNegSkip {
@@ -216,23 +216,23 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							if v, ok := counter.entries[sp.id]; ok {
 								// overflow should never happen at this point, however we add a check since it can be the signal of a system instability
 								// v.NetFlow += sp.netFlow
-								sum, of := support.CheckIntOverflow(v.NetFlow, sp.netFlow)
+								sum, of := supp.CheckIntOverflow(v.NetFlow, sp.netFlow)
 								v.NetFlow = sum
 								if of {
-									support.DLog <- support.DevData{"spaces.samplers counter.entries  " + strconv.Itoa(sp.id),
-										support.Timestamp(), "overflow on netflow counter", []int{}, true}
+									supp.DLog <- supp.DevData{"spaces.samplers counter.entries  " + strconv.Itoa(sp.id),
+										supp.Timestamp(), "overflow on netflow counter", []int{}, true}
 								}
 
 								// over and underflow needs to force reset of values with the correct difference
 								// this can happen when no closure time has been defined
 								if sp.netFlow > 0 {
-									sum, of := support.CheckIntOverflow(v.PositiveFlow, sp.netFlow)
+									sum, of := supp.CheckIntOverflow(v.PositiveFlow, sp.netFlow)
 									v.PositiveFlow = sum
 									if of {
 										v.NegativeFlow = 0
 									}
 								} else {
-									sum, of := support.CheckIntOverflow(v.NegativeFlow, sp.netFlow)
+									sum, of := supp.CheckIntOverflow(v.NegativeFlow, sp.netFlow)
 									v.NegativeFlow = sum
 									if of {
 										v.PositiveFlow = 0
@@ -249,7 +249,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						}
 					}
 				case <-time.After(timeoutInterval):
-					if skip, e := support.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
+					if skip, e := supp.InClosureTime(SpaceTimes[spaceName].Start, SpaceTimes[spaceName].End); e == nil {
 						// reset all values in case we are in a CLOSURE period
 						if skip {
 							// fmt.Println(spaceName, samplerName, "counter at skip and to", counter)
@@ -270,7 +270,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 
 				// handles period sync with all related analysis (if needed)
 				if duration != 0 {
-					if inCycle, e := support.InClosureTime(start, end); e != nil {
+					if inCycle, e := supp.InClosureTime(start, end); e != nil {
 						log.Printf("spaces.sampler: error on sync InClosureTime for sampler (%v,%v) for space %v\n", samplerName, samplerInterval, spaceName)
 					} else {
 						if !inCycle && !cycleIn {
@@ -296,10 +296,10 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 				}
 
 				// handles the finalisation of a sample for a complete sampler interval
-				cTS := support.Timestamp()
+				cTS := supp.Timestamp()
 				if (cTS - counter.ts) >= (int64(samplerInterval) * 1000) {
 					counter.ts = cTS
-					if support.Debug == -1 {
+					if supp.Debug == -1 {
 						fmt.Println(spaceName, "current processing in ", compressionMode, " for data ", counter)
 					}
 					if counter.netFlow != oldCounter.netFlow || oldCounter.ts == 0 || compressionMode == "0" || firstDataOfCycle {
@@ -338,8 +338,8 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							}
 						} else {
 							if cd == 1 {
-								support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
-									support.Timestamp(), "inconsistent counter vs entries",
+								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
+									supp.Timestamp(), "inconsistent counter vs entries",
 									[]int{}, true}
 							}
 						}
@@ -374,8 +374,8 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						} else {
 							e := count != 0 || cd == 1
 							if e {
-								support.DLog <- support.DevData{"spaces.samplers counter " + spaceName + " current",
-									support.Timestamp(), "inconsistent counter vs entries",
+								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
+									supp.Timestamp(), "inconsistent counter vs entries",
 									[]int{counter.netFlow, count}, true}
 							}
 						}
@@ -468,17 +468,17 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 					if samplerInterval < 86400 {
 						// the counter needs to be reset as we are not doing a multi cycle
 						// thus we need sync reset at Start
-						counter = spaceEntries{ts: support.Timestamp(), netFlow: 0}
+						counter = spaceEntries{ts: supp.Timestamp(), netFlow: 0}
 						buffer = []spaceEntries{counter}
 					} else {
-						buffer = []spaceEntries{{ts: support.Timestamp(), netFlow: 0}}
+						buffer = []spaceEntries{{ts: supp.Timestamp(), netFlow: 0}}
 					}
 
 					// refTS is used yo track multicycles situations that can End during a cycle.
 					// it is bad practice, but it needs to be supported
 					refTS := int64(0)
-					if support.Debug == -1 {
-						fmt.Println(spaceName, samplerName, "Start cycle", counter, buffer, "at", support.Timestamp())
+					if supp.Debug == -1 {
+						fmt.Println(spaceName, samplerName, "Start cycle", counter, buffer, "at", supp.Timestamp())
 					}
 
 					for startCycle {
@@ -486,7 +486,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						avgSP := spaceEntries{ts: 0}
 						select {
 						case avgSP = <-prevStageChan:
-							if support.Debug == -1 {
+							if supp.Debug == -1 {
 								fmt.Println(spaceName, samplerName, "received", avgSP)
 							}
 						case <-time.After(timeoutInterval):
@@ -499,7 +499,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 									// we need to just wait for next cycle
 									// do nothing
 									buffer = []spaceEntries{} // redundant
-									if support.Debug == -1 {
+									if supp.Debug == -1 {
 										fmt.Println(spaceName, samplerName, "End cycle do nothing")
 									}
 								} else {
@@ -508,19 +508,19 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 									if samplerInterval < 86400 {
 										// it is less than a day, so we calculate and send average
 										// no data outside the cycle is used
-										counter = average(counter, buffer, support.Timestamp(), samplerIntervalMM-duration)
+										counter = average(counter, buffer, supp.Timestamp(), samplerIntervalMM-duration)
 										passData(spaceName, samplerName, counter, nextStageChan, chanTimeout,
 											AvgAnalysis[avgID-1].Interval/2*1000)
 
 										buffer = []spaceEntries{} // redundant
-										if support.Debug == -1 {
+										if supp.Debug == -1 {
 											fmt.Println(spaceName, samplerName, "End cycle do avg and send", counter)
 										}
 
 									} else {
 										// it is a multi-cycle calculation
 										// it can synchronise between cycles or be completely out of sync
-										cTS := support.Timestamp()
+										cTS := supp.Timestamp()
 										ct := average(counter, buffer, cTS, 0)
 										ct.ts = refTS
 										multiCycle = append(multiCycle, DataEntry{NetFlow: ct.netFlow})
@@ -528,7 +528,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 											// we have more cycles
 											// do nothing
 											leftInCycle -= 86400000 - (duration - refTS)
-											if support.Debug == -1 {
+											if supp.Debug == -1 {
 												fmt.Println(spaceName, samplerName, "End cycle, multi non finished", leftInCycle, counter)
 											}
 										} else {
@@ -553,7 +553,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 											passData(spaceName, samplerName, counter, nextStageChan, chanTimeout,
 												AvgAnalysis[avgID-1].Interval/2*1000)
 											leftInCycle = samplerIntervalMM
-											if support.Debug == -1 {
+											if supp.Debug == -1 {
 
 												fmt.Println(spaceName, samplerName, "End multi cycle finished", mcod, counter)
 											}
@@ -568,7 +568,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 						}
 						// if the time interval has passed a new sample is calculated and passed over
 						if startCycle {
-							cTS := support.Timestamp()
+							cTS := supp.Timestamp()
 							if (cTS - counter.ts) >= samplerIntervalMM {
 								if samplerInterval < 86400 {
 									if buffer != nil {
@@ -609,7 +609,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 									refTS = duration - cTS
 									buffer = append([]spaceEntries{}, buffer[len(buffer)-1])
 									leftInCycle = samplerIntervalMM
-									if support.Debug == -1 {
+									if supp.Debug == -1 {
 
 										fmt.Println(spaceName, samplerName, "avg calculation multi, restarts from", buffer)
 									}
@@ -670,7 +670,7 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 	// sending new data to the proper registers/DBS
 	var wg sync.WaitGroup
 
-	if support.Debug == -1 {
+	if supp.Debug == -1 {
 		fmt.Println(spaceName, samplerName, "pass data:", cc)
 	}
 
@@ -700,7 +700,7 @@ func passData(spaceName, samplerName string, counter spaceEntries, nextStageChan
 				select {
 				case ch <- data:
 				case <-time.After(time.Duration(lTimeout) * time.Millisecond):
-					//if support.Debug != 3 && support.Debug != 4 {
+					//if supp.Debug != 3 && supp.Debug != 4 {
 					log.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)
 					//}
 					// fmt.Printf("spaces.samplers:: Timeout writing to sample database for %v:%v\n", spaceName, samplerName)

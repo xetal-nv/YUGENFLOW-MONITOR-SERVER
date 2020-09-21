@@ -1,7 +1,7 @@
 package gates
 
 import (
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"net"
 	"os"
@@ -86,7 +86,7 @@ func SetUp() {
 						}
 						// verify reverse status
 						rev := false
-						if support.Contains(revDev, ind) {
+						if supp.Contains(revDev, ind) {
 							rev = true
 						}
 						// add sensor to sensor list

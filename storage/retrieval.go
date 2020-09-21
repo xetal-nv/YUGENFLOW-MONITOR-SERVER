@@ -2,7 +2,7 @@ package storage
 
 import (
 	"bufio"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"os"
 	"strconv"
@@ -43,7 +43,7 @@ func RetrieveSampleFromFile(startup bool) {
 	if fileStat, err := os.Stat(SAMPLEFILE); err == nil {
 		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 && !startup {
 			go func() {
-				support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "attempted to use an old .recoverysamples", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "attempted to use an old .recoverysamples", []int{1}, true}
 			}()
 			return
 		}
@@ -53,7 +53,7 @@ func RetrieveSampleFromFile(startup bool) {
 	} else {
 		if startup {
 			go func() {
-				support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
 			}()
 			return
 		} else {
@@ -64,7 +64,7 @@ func RetrieveSampleFromFile(startup bool) {
 
 	if file, err := os.Open(SAMPLEFILE); err != nil {
 		go func() {
-			support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
+			supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error opening file .recoverysamples", []int{1}, true}
 		}()
 		if startup {
 			log.Println("!!! WARNING SAMPLE DATABASE RECOVERY ERROR !!!")
@@ -81,9 +81,9 @@ func RetrieveSampleFromFile(startup bool) {
 					if v, e := string2epoch(lineData[0]); e == nil {
 						//lineData[0] = strconv.Itoa(int(v))
 						//newData = append(newData, lineData)
-						label := support.StringLimit("sample", support.LabelLength)
-						label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
-						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+						label := supp.StringLimit("sample", supp.LabelLength)
+						label += supp.StringLimit(strings.Trim(lineData[1], " "), supp.LabelLength)
+						label += supp.StringLimit(strings.Trim(lineData[2], " "), supp.LabelLength)
 						s0 := &SeriesSample{Stag: label, Sts: v * 1000}
 						s1 := &SeriesSample{Stag: label, Sts: (v + 86399) * 1000}
 
@@ -110,7 +110,7 @@ func RetrieveSampleFromFile(startup bool) {
 											//fmt.Println(newSample)
 											if err := StoreSampleTS(newSample, true); err != nil {
 												go func() {
-													support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing data",
+													supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error writing data",
 														[]int{1}, true}
 												}()
 											}
@@ -123,25 +123,25 @@ func RetrieveSampleFromFile(startup bool) {
 								readData := s0.UnmarshalSliceSS(tag, ts, vals)
 								if len(readData) != len(testData) {
 									go func() {
-										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error writing all data",
+										supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error writing all data",
 											[]int{1}, true}
 									}()
 									//fmt.Println(readData)
 									//fmt.Println(testData)
 								} else {
 									go func() {
-										support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "retrieved sample data",
+										supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "retrieved sample data",
 											[]int{1}, true}
 									}()
 									// entry/flow data is also removed
-									labelEntry := support.StringLimit("entry", support.LabelLength)
-									labelEntry += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
-									labelEntry += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+									labelEntry := supp.StringLimit("entry", supp.LabelLength)
+									labelEntry += supp.StringLimit(strings.Trim(lineData[1], " "), supp.LabelLength)
+									labelEntry += supp.StringLimit(strings.Trim(lineData[2], " "), supp.LabelLength)
 									s0e := &SeriesEntries{Stag: labelEntry, Sts: v * 1000}
 									s1e := &SeriesEntries{Stag: labelEntry, Sts: (v + 86399) * 1000}
 									if err := DeleteSeriesTS(s0e, s1e, true); err != nil {
 										go func() {
-											support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting entry/flow data", []int{1}, true}
+											supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error deleting entry/flow data", []int{1}, true}
 										}()
 									} else {
 										flowCorruptions += 1
@@ -153,7 +153,7 @@ func RetrieveSampleFromFile(startup bool) {
 							}
 						} else {
 							go func() {
-								support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error deleting sample data", []int{1}, true}
+								supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error deleting sample data", []int{1}, true}
 							}()
 						}
 					}
@@ -164,7 +164,7 @@ func RetrieveSampleFromFile(startup bool) {
 
 			if err := scanner.Err(); err != nil {
 				go func() {
-					support.DLog <- support.DevData{"storage.RetrieveSampleFromFile", support.Timestamp(), "error reading .recoverysamples", []int{1}, true}
+					supp.DLog <- supp.DevData{"storage.RetrieveSampleFromFile", supp.Timestamp(), "error reading .recoverysamples", []int{1}, true}
 				}()
 			}
 		}
@@ -194,7 +194,7 @@ func RetrievePresenceFromFile(startup bool) {
 	if fileStat, err := os.Stat(SAMPLEFILE); err == nil {
 		if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 && !startup {
 			go func() {
-				support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
 			}()
 			return
 		}
@@ -204,7 +204,7 @@ func RetrievePresenceFromFile(startup bool) {
 	} else {
 		if startup {
 			go func() {
-				support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
 			}()
 			return
 		} else {
@@ -216,20 +216,20 @@ func RetrievePresenceFromFile(startup bool) {
 	//if fileStat, err := os.Stat(PRESENCEFILE); err == nil {
 	//	if time.Now().Unix()-fileStat.ModTime().Unix() > MAXAGE*3600 {
 	//		go func() {
-	//			support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+	//			supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
 	//		}()
 	//		return
 	//	}
 	//} else {
 	//	go func() {
-	//		support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
+	//		supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "attempted to use an old .recoverypresence", []int{1}, true}
 	//	}()
 	//	return
 	//}
 
 	if file, err := os.Open(PRESENCEFILE); err != nil {
 		go func() {
-			support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "err", []int{1}, true}
+			supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "err", []int{1}, true}
 		}()
 		if startup {
 			log.Println("!!! WARNING PRESENCE DATABASE RECOVERY ERROR !!!")
@@ -243,9 +243,9 @@ func RetrievePresenceFromFile(startup bool) {
 				if string(strings.Trim(scanner.Text(), " ")[0]) != "#" {
 					lineData := strings.Split(scanner.Text(), ",")
 					if v, e := string2epoch(lineData[0]); e == nil {
-						label := support.StringLimit("presence", support.LabelLength)
-						label += support.StringLimit(strings.Trim(lineData[1], " "), support.LabelLength)
-						label += support.StringLimit(strings.Trim(lineData[2], " "), support.LabelLength)
+						label := supp.StringLimit("presence", supp.LabelLength)
+						label += supp.StringLimit(strings.Trim(lineData[1], " "), supp.LabelLength)
+						label += supp.StringLimit(strings.Trim(lineData[2], " "), supp.LabelLength)
 						s0 := &SeriesSample{Stag: label, Sts: v * 1000}
 						s1 := &SeriesSample{Stag: label, Sts: (v + 86399) * 1000}
 						//fmt.Println(s0, s1)
@@ -272,12 +272,12 @@ func RetrievePresenceFromFile(startup bool) {
 										//fmt.Println(StoreSampleTS(newSample, true))
 										if err := StoreSampleSD(newSample, true); err != nil {
 											go func() {
-												support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error writing data",
+												supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "error writing data",
 													[]int{1}, true}
 											}()
 										} else {
 											go func() {
-												support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "retrieved presence data",
+												supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "retrieved presence data",
 													[]int{1}, true}
 											}()
 											if startup {
@@ -298,7 +298,7 @@ func RetrievePresenceFromFile(startup bool) {
 							//}
 						} else {
 							go func() {
-								support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error deleting data", []int{1}, true}
+								supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "error deleting data", []int{1}, true}
 							}()
 						}
 					}
@@ -308,7 +308,7 @@ func RetrievePresenceFromFile(startup bool) {
 
 			if err := scanner.Err(); err != nil {
 				go func() {
-					support.DLog <- support.DevData{"storage.RetrievePresenceFromFile", support.Timestamp(), "error reading .recoverypresence", []int{1}, true}
+					supp.DLog <- supp.DevData{"storage.RetrievePresenceFromFile", supp.Timestamp(), "error reading .recoverypresence", []int{1}, true}
 				}()
 			}
 		}

@@ -2,7 +2,7 @@ package servers
 
 import (
 	"context"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"math/rand"
 	"net"
@@ -28,13 +28,13 @@ func StartTCP(sd chan context.Context) {
 		l.Close()
 	}
 
-	go support.RunWithRecovery(r, nil)
+	go supp.RunWithRecovery(r, nil)
 
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"servers.StartTCP: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.StartTCP: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			log.Println("servers.StartTCP: recovering server", port, "from:\n", e)
 			sd <- context.Background() // close running shutdown goroutine
@@ -48,7 +48,7 @@ func StartTCP(sd chan context.Context) {
 	for {
 		select {
 		case <-tcpTokens:
-			if support.Debug != 0 {
+			if supp.Debug != 0 {
 				log.Println("Reserved TCP token, remaining:", len(tcpTokens))
 			}
 			// Listen for an incoming connection.
@@ -63,8 +63,8 @@ func StartTCP(sd chan context.Context) {
 			log.Printf("servers.StartTCP: A device has connected.\n")
 			go handlerTCPRequest(conn)
 		default:
-			support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",
-				support.Timestamp(), "", []int{1}, true}
+			supp.DLog <- supp.DevData{"servers.StartTCP: exceeding number of allowed connections",
+				supp.Timestamp(), "", []int{1}, true}
 			r := rand.Intn(minDelayRefusedConnection)
 			time.Sleep(time.Duration(minDelayRefusedConnection+r) * time.Second)
 		}

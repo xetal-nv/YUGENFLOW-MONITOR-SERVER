@@ -24,28 +24,28 @@ External services:
   - tbd  
 
 **API:(TBD)**  
-HTTPSPORTS[1]/ks -> if enabled, kills the server  
-HTTPSPORTS[1]/dvl -> if enabled, shows latest developer log 
-HTTPSPORTS[1]/asys -> information on all current analyses  
-HTTPSPORTS[1]/info -> installation information  
-HTTPSPORTS[1]/pending -> list all devices pending for connection approval (only current connections)    
-HTTPSPORTS[1]/active -> list all valid connected devices  
-HTTPSPORTS[1]/und -> list all connected devices that are not used in the installation  
-HTTPSPORTS[1]/udef -> list all devices with undefined id 0xff that have been connected  
-HTTPSPORTS[1]/udef/active -> list all connected devices with initial id 0xff  
-HTTPSPORTS[1]/udef/notactive -> list all not connected devices with initial id 0xff  
-HTTPSPORTS[1]/udef/defined -> list all defined devices with initial id 0xff  
-HTTPSPORTS[1]/udef/undefined -> list all not yet defined devices with initial id 0xff  
-HTTPSPORTS[1]/x/y/z -> actual value for data x in space y on averaging z  
-HTTPSPORTS[1]/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
-HTTPSPORTS[1]/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
-HTTPSPORTS[1]/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type presence from space z and analysis y from timestamp x0 to timestamp x1, the value is set to 2 when activity is detected in the period and the value is equal to the number of detection at the end of the period  
-HTTPSPORTS[1]/command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
-HTTPSPORTS[1]/command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
-HTTPSPORTS[1]/command?cmd=list -> lists all available commands  
-HTTPSPORTS[1]/command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
-HTTPSPORTS[1]/dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
-HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
+/ks -> if enabled, kills the server  
+/dvl -> if enabled, shows latest developer log 
+/asys -> information on all current analyses  
+/info -> installation information  
+/pending -> list all devices pending for connection approval (only current connections)    
+/active -> list all valid connected devices  
+/und -> list all connected devices that are not used in the installation  
+/udef -> list all devices with undefined id 0xff that have been connected  
+/udef/active -> list all connected devices with initial id 0xff  
+/udef/notactive -> list all not connected devices with initial id 0xff  
+/udef/defined -> list all defined devices with initial id 0xff  
+/udef/undefined -> list all not yet defined devices with initial id 0xff  
+/x/y/z -> actual value for data x in space y on averaging z  
+/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
+/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
+/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type presence from space z and analysis y from timestamp x0 to timestamp x1, the value is set to 2 when activity is detected in the period and the value is equal to the number of detection at the end of the period  
+/command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
+/command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
+/command?cmd=list -> lists all available commands  
+/command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
+/dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
+/dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
 
   
 NOTE: values in val are specified as x,y,n,..   

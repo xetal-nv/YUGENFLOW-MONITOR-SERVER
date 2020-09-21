@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gateserver/spaces"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"net/http"
 	"os"
@@ -31,7 +31,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 	sp := strings.Split(strings.Trim(path, "/"), "/")
 	tag := ""
 	for i := range sp {
-		sp[i] = support.StringLimit(sp[i], support.LabelLength)
+		sp[i] = supp.StringLimit(sp[i], supp.LabelLength)
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
@@ -44,8 +44,8 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers.singleRegisterHTTPhandler: recovering server",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.singleRegisterHTTPhandler: recovering server",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("servers.singleRegisterHTTPhandler: died from: ", e)
 				fmt.Println("servers.singleRegisterHTTPhandler: died from: ", e)
@@ -64,7 +64,7 @@ func singleRegisterHTTPhandler(path string, ref string) http.Handler {
 		//authorised := false
 		//dbgMutex.RLock()
 		//if tts, ok := dbgRegistry[ip]; ok {
-		//	if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+		//	if (supp.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
 		//		authorised = true
 		//	} else {
 		//		delete(dbgRegistry, ip)
@@ -126,7 +126,7 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 	sp := strings.Split(strings.Trim(path, "/"), "/")
 	tag := ""
 	for i := range sp {
-		sp[i] = support.StringLimit(sp[i], support.LabelLength)
+		sp[i] = supp.StringLimit(sp[i], supp.LabelLength)
 		tag += strings.Replace(sp[i], "_", "", -1) + "_"
 	}
 	tag = tag[:len(tag)-1]
@@ -140,8 +140,8 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers.spaceRegisterHTTPhandler: recovering server",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.spaceRegisterHTTPhandler: recovering server",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("servers.spaceRegisterHTTPhandler: recovering from: ", e)
 			}
@@ -157,7 +157,7 @@ func spaceRegisterHTTPhandler(path string, als []string, ref string) http.Handle
 		//authorised := false
 		//dbgMutex.RLock()
 		//if tts, ok := dbgRegistry[ip]; ok {
-		//	if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+		//	if (supp.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
 		//		authorised = true
 		//	} else {
 		//		delete(dbgRegistry, ip)
@@ -191,8 +191,8 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers.datatypeRegisterHTTPhandler: recovering server",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.datatypeRegisterHTTPhandler: recovering server",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("servers.datatypeRegisterHTTPhandler: died from: ", e)
 			}
@@ -208,7 +208,7 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 		//authorised := false
 		//dbgMutex.RLock()
 		//if tts, ok := dbgRegistry[ip]; ok {
-		//	if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+		//	if (supp.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
 		//		authorised = true
 		//	} else {
 		//		delete(dbgRegistry, ip)
@@ -223,7 +223,7 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 		//if authorised || (!authorised && path != "/entry") {
 
 		for sp, als := range rg {
-			sp0 := support.StringLimit(path[1:], support.LabelLength)
+			sp0 := supp.StringLimit(path[1:], supp.LabelLength)
 			rt = append(rt, retrieveSpace(tag, []string{sp0, sp}, als, tag))
 		}
 		//}
@@ -232,7 +232,7 @@ func datatypeRegisterHTTPhandler(path string, rg map[string][]string) http.Handl
 	})
 }
 
-// support function for topology extraction
+// supp function for topology extraction
 func retrieveSpace(tag string, sp []string, als []string, ref string) (rt RegisterBank) {
 	rt.Name = tag
 

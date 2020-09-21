@@ -2,7 +2,7 @@ package servers
 
 import (
 	"encoding/json"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"net/http"
 	"os"
@@ -28,8 +28,8 @@ func commandHTTHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers.commandHTTHandler",
-						support.Timestamp(), "recovering", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.commandHTTHandler",
+						supp.Timestamp(), "recovering", []int{1}, true}
 				}()
 				log.Println("servers.commandHTTHandler: recovering from: ", e)
 			}
@@ -52,8 +52,8 @@ func commandHTTHandler() http.Handler {
 				params[strings.Trim(val[0], " ")] = strings.Trim(val[1], " ")
 			} else {
 				go func() {
-					support.DLog <- support.DevData{"servers.commandHTTHandler: " + strings.Trim(val[0], " "),
-						support.Timestamp(), "illegal request", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.commandHTTHandler: " + strings.Trim(val[0], " "),
+						supp.Timestamp(), "illegal request", []int{1}, true}
 				}()
 				return
 			}
@@ -63,7 +63,7 @@ func commandHTTHandler() http.Handler {
 			if params["pin"] == pinDbg {
 				ip := strings.Split(strings.Replace(r.RemoteAddr, "[::1]", "localhost", 1), ":")[0]
 				dbgMutex.Lock()
-				dbgRegistry[ip] = support.Timestamp()
+				dbgRegistry[ip] = supp.Timestamp()
 				dbgMutex.Unlock()
 				_ = json.NewEncoder(w).Encode(JsonCmdRt{"", true})
 			} else {

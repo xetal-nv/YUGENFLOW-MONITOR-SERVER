@@ -1,4 +1,4 @@
-package support
+package supp
 
 import (
 	"io/ioutil"
@@ -55,10 +55,10 @@ func devLogger(data chan DevData, out chan string) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				DLog <- DevData{"support.devLogger: recovering server",
+				DLog <- DevData{"supp.devLogger: recovering server",
 					Timestamp(), "", []int{1}, true}
 			}()
-			log.Printf("support.devLogger: recovering for crash\n ")
+			log.Printf("supp.devLogger: recovering for crash\n ")
 			go devLogger(data, out)
 		}
 	}()
@@ -90,10 +90,10 @@ func devLogger(data chan DevData, out chan string) {
 		default:
 			if input, err := ioutil.ReadFile(file); err != nil {
 				if fn, err := os.Create(file); err != nil {
-					log.Println("support.devLogger: error creating log: ", err)
+					log.Println("supp.devLogger: error creating log: ", err)
 				} else {
 					if _, err := fn.WriteString(r(d) + "\n"); err != nil {
-						log.Println("support.devLogger: error creating log: ", err)
+						log.Println("supp.devLogger: error creating log: ", err)
 					}
 					//noinspection GoUnhandledErrorResult
 					fn.Close()
@@ -111,7 +111,7 @@ func devLogger(data chan DevData, out chan string) {
 							if val, e := strconv.Atoi(strings.Trim(dt, " ")); e == nil {
 								nd = append(nd, val)
 							} else {
-								log.Println("support.devLogger: error converting accruing data from log: ", e)
+								log.Println("supp.devLogger: error converting accruing data from log: ", e)
 								nd = append(nd, 0)
 							}
 						}
@@ -128,7 +128,7 @@ func devLogger(data chan DevData, out chan string) {
 					newC += r(d) + "\n"
 				}
 				if err = ioutil.WriteFile(file, []byte(newC), 0644); err != nil {
-					log.Println("support.devLogger: error writing log: ", err)
+					log.Println("supp.devLogger: error writing log: ", err)
 				}
 			}
 

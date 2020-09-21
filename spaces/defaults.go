@@ -21,7 +21,7 @@ type TimeSchedule struct {
 
 // define intervals and stores values for presence detectors
 type IntervalDetector struct {
-	Id         string    // entry Id as string to support entry data in the entire communication pipe
+	Id         string    // entry Id as string to supp entry data in the entire communication pipe
 	Start, End time.Time // Start and End of the interval
 	inCycle    bool      // track if it si in cycle
 	Activity   DataEntry // Activity count

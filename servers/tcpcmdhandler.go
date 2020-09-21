@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gateserver/codings"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"net"
 	"strconv"
@@ -123,17 +123,17 @@ func exeParamCommand(params map[string]string) (rv JsonCmdRt) {
 							ch = tmp[1]
 						} else {
 							go func() {
-								support.DLog <- support.DevData{"servers.exeParamCommand: missing connection to mac " + mace,
-									support.Timestamp(), "illegal request", []int{1}, true}
+								supp.DLog <- supp.DevData{"servers.exeParamCommand: missing connection to mac " + mace,
+									supp.Timestamp(), "illegal request", []int{1}, true}
 							}()
 						}
 					}
 					if ok {
-						if support.Debug != 0 {
+						if supp.Debug != 0 {
 							fmt.Println("CMD: found CMD channel")
 						}
 						if v, ok := cmdAPI[params["cmd"]]; ok {
-							if support.Debug != 0 {
+							if supp.Debug != 0 {
 								fmt.Println("CMD: accepted CMD", cmdAPI[params["cmd"]])
 							}
 							var to int
@@ -144,7 +144,7 @@ func exeParamCommand(params map[string]string) (rv JsonCmdRt) {
 							cmd := []byte{v.cmd}
 							// need to execute the command on sensor with the given ID
 							if v.lgt != 0 && params["val"] != "" {
-								if support.Debug != 0 {
+								if supp.Debug != 0 {
 									fmt.Println("CMD: found PARAMS", params["val"])
 								}
 								if data, err := strconv.Atoi(strings.Trim(params["val"], " ")); err != nil {
@@ -171,19 +171,19 @@ func exeParamCommand(params map[string]string) (rv JsonCmdRt) {
 								rv.Rt = "wrong parameters"
 							}
 							if cmd != nil {
-								if support.Debug != 0 {
+								if supp.Debug != 0 {
 									fmt.Println("CMD: Executing command")
 								}
 								if ch != nil {
 									select {
 									case ch <- cmd:
-										if support.Debug != 0 {
+										if supp.Debug != 0 {
 											fmt.Println("CMD: sent command", cmd)
 										}
 										rv.State = true
 										select {
 										case rt := <-ch:
-											if support.Debug != 0 {
+											if supp.Debug != 0 {
 												fmt.Println("CMD: received", rt)
 											}
 											rv.Rt = string(rt)
@@ -222,7 +222,7 @@ func exeBinaryCommand(id, cmd string, val []int) JsonCmdRt {
 	}
 	params["cmd"] = cmd
 	params["id"] = id
-	if support.Debug != 0 {
+	if supp.Debug != 0 {
 		log.Printf("servers.exeBinaryCommand received and executing %v\n", params)
 	}
 	return exeParamCommand(params)
@@ -239,8 +239,8 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"servers.handlerCommandAnswer: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.handlerCommandAnswer: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			if len(id) == 1 {
 				handlerCommandAnswer(mac, ci, ce, stop, devId, id[0])
@@ -256,8 +256,8 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 		case <-ci:
 			// unexpected command answer
 			go func() {
-				support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
-					support.Timestamp(), "unsolicited command answer", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
+					supp.Timestamp(), "unsolicited command answer", []int{1}, true}
 			}()
 			select {
 			case ci <- []byte("error"):
@@ -269,11 +269,11 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 			// we return nil in case of error
 			// verify if the command exists and send it to the device
 			if _, ok := cmdAnswerLen[cmd[0]]; ok {
-				if support.Debug > 0 {
+				if supp.Debug > 0 {
 					fmt.Printf("Received %v by user for device %v\n", cmd, strconv.Itoa(id[0]))
 				}
 				if cmd[0] == cmdAPI["setid"].cmd {
-					if support.Debug > 0 {
+					if supp.Debug > 0 {
 						fmt.Printf("Changed id to %v from %v by user\n", int(cmd[2]), strconv.Itoa(id[0]))
 					}
 					id = []int{int(cmd[2])}
@@ -294,8 +294,8 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 						}
 					} else {
 						go func() {
-							support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
-								support.Timestamp(), "command to closed TCP channel", []int{1}, true}
+							supp.DLog <- supp.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
+								supp.Timestamp(), "command to closed TCP channel", []int{1}, true}
 						}()
 					}
 				}(cmd)

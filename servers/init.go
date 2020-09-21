@@ -6,7 +6,7 @@ import (
 	"errors"
 	"gateserver/spaces"
 	"gateserver/storage"
-	"gateserver/support"
+	"gateserver/supp"
 	"io/ioutil"
 	"log"
 	"net"
@@ -21,7 +21,7 @@ import (
 var Dvl = false
 
 func setJSenv() {
-	if support.DisableWebApp {
+	if supp.DisableWebApp {
 		return
 	}
 	if dat, e := ioutil.ReadFile("dbs/dat"); e == nil {
@@ -67,7 +67,7 @@ func setJSenv() {
 
 	//ip := ""
 	//if ip = os.Getenv("IP"); ip == "" {
-	//	ip = support.GetOutboundIP().String()
+	//	ip = supp.GetOutboundIP().String()
 	//}
 
 	//js := "var ip = \"http://" + ip + ":" + strings.Trim(ports[len(ports)-1], " ") + "\";\n"
@@ -109,7 +109,7 @@ func setJSenv() {
 		js += "\"" + name + "\": " + "[\"" + hourS + ":" + minS + "\", \"" + hourE + ":" + minE + "\"],\n"
 	}
 	js += "};\n"
-	js += "var labellength = " + strconv.Itoa(support.LabelLength) + ";\n"
+	js += "var labellength = " + strconv.Itoa(supp.LabelLength) + ";\n"
 	if _, err := f.WriteString(js); err != nil {
 		_ = f.Close()
 		log.Fatal("Fatal error writing to def.js: ", err)
@@ -202,8 +202,8 @@ func setJSenv() {
 
 	if strings.Trim(os.Getenv("RTWINDOW"), " ") == "" {
 		if val := strings.Split(strings.Trim(os.Getenv("ANALYSISWINDOW"), " "), " "); len(val) == 2 {
-			if _, e := time.Parse(support.TimeLayout, val[0]); e == nil {
-				if _, e := time.Parse(support.TimeLayout, val[1]); e == nil {
+			if _, e := time.Parse(supp.TimeLayout, val[0]); e == nil {
+				if _, e := time.Parse(supp.TimeLayout, val[1]); e == nil {
 					jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
 					jsST = "var opStartTime = \"" + val[0] + "\";\n"
 					jsEN = "var opEndTime = \"" + val[1] + "\";\n"
@@ -217,8 +217,8 @@ func setJSenv() {
 		}
 	} else {
 		if val := strings.Split(strings.Trim(os.Getenv("RTWINDOW"), " "), " "); len(val) == 2 {
-			if _, e := time.Parse(support.TimeLayout, val[0]); e == nil {
-				if _, e := time.Parse(support.TimeLayout, val[1]); e == nil {
+			if _, e := time.Parse(supp.TimeLayout, val[0]); e == nil {
+				if _, e := time.Parse(supp.TimeLayout, val[1]); e == nil {
 					jsTxt = "var openingTime = \"from " + val[0] + " to " + val[1] + "\";\n"
 					jsST = "var opStartTime = \"" + val[0] + "\";\n"
 					jsEN = "var opEndTime = \"" + val[1] + "\";\n"
@@ -297,7 +297,7 @@ func setupHTTP() error {
 	}
 	// installation information API
 	hMap["/info"] = infoHTTHandler()
-	if !support.SkipDBS {
+	if !supp.SkipDBS {
 		// Series data retrieval API
 		hMap["/series"] = seriesHTTPhandler()
 		// Presence data retrieval API
@@ -329,7 +329,7 @@ func setupHTTP() error {
 		hMap["/dbs/retrieve/presence"] = retrieveDBSpresence()
 	}
 
-	if !support.DisableWebApp {
+	if !supp.DisableWebApp {
 		// add SVG API for installation graphs
 		for spn := range spaces.SpaceDef {
 			name := strings.Replace(spn, "_", "", -1)
@@ -402,7 +402,7 @@ func setupHTTP() error {
 func readSensorParameters() {
 
 	if SensorEEPROMResetEnabled {
-		if support.FileExists(sensorEEPROMfile) {
+		if supp.FileExists(sensorEEPROMfile) {
 			if v, e := strconv.Atoi(os.Getenv("EEPROMDELAY")); e != nil {
 				sensorEEPROMResetDelay = 10
 			} else {
@@ -550,8 +550,8 @@ func StartServers() {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"servers.StartServers: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.StartServers: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			log.Println("servers.StartServers: recovering from", e)
 			// terminating all running servers
@@ -644,9 +644,9 @@ func setUpTCP() {
 		if v != 0 {
 			resetBG.interval = time.Duration(v)
 			if len(rng) == 3 {
-				if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+				if v, e := time.Parse(supp.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
 					resetBG.start = v
-					if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+					if v, e = time.Parse(supp.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
 						resetBG.end = v
 						if strings.Trim(rng[2], " ") != "0" {
 							resetBG.valid = true

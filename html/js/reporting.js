@@ -974,7 +974,7 @@ $(document).ready(function () {
                 header += "Date/Time, Epoch Time (s), interval average presence";
                 if (spaceDefinitions[spacename] === undefined) {
                     document.getElementById("loader").style.visibility = "hidden";
-                    alert("Error in spaced definition for " + spacename + "\nContact support or restart server.");
+                    alert("Error in spaced definition for " + spacename + "\nContact supp or restart server.");
                     console.log(spacename);
                 } else {
                     for (i = 0; i < spaceDefinitions[spacename].length; i++) {

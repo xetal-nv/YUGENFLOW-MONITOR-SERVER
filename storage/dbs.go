@@ -3,7 +3,7 @@ package storage
 import (
 	"encoding/binary"
 	"errors"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"os"
 	"reflect"
@@ -38,7 +38,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		if err != nil {
 			log.Fatal("Fatal error creating dbs/dat: ", err)
 		}
-		js := strconv.Itoa(int(support.Timestamp()))
+		js := strconv.Itoa(int(supp.Timestamp()))
 		if _, err := f.WriteString(js); err != nil {
 			_ = f.Close()
 			log.Fatal("Fatal error writing to ip.js: ", err)
@@ -83,9 +83,9 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 	garbage.start, garbage.end, garbage.intervalMin = time.Time{}, time.Time{}, time.Duration(0)
 	rng := strings.Split(strings.Trim(os.Getenv("GARBINT"), ";"), ";")
 	if len(rng) == 3 {
-		if v, e := time.Parse(support.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
+		if v, e := time.Parse(supp.TimeLayout, strings.Trim(rng[0], " ")); e == nil {
 			garbage.start = v
-			if v, e = time.Parse(support.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
+			if v, e = time.Parse(supp.TimeLayout, strings.Trim(rng[1], " ")); e == nil {
 				garbage.end = v
 				if v, e := strconv.Atoi(strings.Trim(rng[2], " ")); e == nil {
 					if v != 0 {
@@ -107,7 +107,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 	}
 
 	log.Printf("storage.TimedIntDBSSetUp: current TTL set to %v\n", currentTTL)
-	//if support.Debug < 3 {
+	//if supp.Debug < 3 {
 	once.Do(func() {
 		optsCurr := badger.DefaultOptions
 		optsCurr.Truncate = true
@@ -117,7 +117,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		optsStats.Truncate = true
 		optsStats.Dir = folder + "/statsDB"
 		optsStats.ValueDir = folder + "/statsDB"
-		if support.SkipDBS || lowRam {
+		if supp.SkipDBS || lowRam {
 			if lowRam {
 				log.Printf("storage.TimedIntDBSClose: Low RAM mode enabled for the database\n")
 			}
@@ -137,7 +137,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 			statsDB, err = badger.Open(optsStats)
 			if err != nil {
 				_ = currentDB.Close()
-			} else if !support.SkipDBS {
+			} else if !supp.SkipDBS {
 				bufSize := 50
 				if v, e := strconv.Atoi(os.Getenv("DBSBUFFSIZE")); e == nil {
 					bufSize = v
@@ -165,9 +165,9 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 	return err
 }
 
-// closes database, it is used to support defer closure
+// closes database, it is used to supp defer closure
 func TimedIntDBSClose() {
-	//if support.Debug < 3 {
+	//if supp.Debug < 3 {
 	//noinspection GoUnhandledErrorResult
 	currentDB.Close()
 	//noinspection GoUnhandledErrorResult
@@ -178,7 +178,7 @@ func TimedIntDBSClose() {
 // External functions/API
 // set-ups a series and/or retrieve its definition from the database
 func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return true, nil
 	}
 	found = true
@@ -191,7 +191,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 			nt := []byte(tag + "header")
 			found = false
 			a := HeaderData{}
-			a.fromRst = uint64(support.Timestamp())
+			a.fromRst = uint64(supp.Timestamp())
 			a.step = uint32(step)
 			a.lastUpdate = a.fromRst
 			a.created = a.fromRst
@@ -222,7 +222,7 @@ func SetSeries(tag string, step int, sDB bool) (found bool, err error) {
 
 // reads the header of a series
 func ReadHeader(tag string, sDB bool) (hd HeaderData, err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 
@@ -255,13 +255,13 @@ func ReadHeader(tag string, sDB bool) (hd HeaderData, err error) {
 
 // updates the header of a TS series
 func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 	var ts int64
 	var hd HeaderData
 	if len(gts) != 1 {
-		ts = support.Timestamp()
+		ts = supp.Timestamp()
 	} else {
 		ts = gts[0]
 	}
@@ -287,7 +287,7 @@ func updateTSHeader(tag string, sDB bool, gts ...int64) (err error) {
 
 // stores a TS sample, optionally it updates the header
 func StoreSampleTS(d SampleData, sDB bool, updateHead ...bool) (err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 	//fmt.Println("store TS", d)
@@ -334,7 +334,7 @@ func StoreSampleTS(d SampleData, sDB bool, updateHead ...bool) (err error) {
 
 // stores a SD sample, optionally it updates the header
 func StoreSampleSD(d SampleData, sDB bool, updateHead ...bool) (err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 	//fmt.Println("store SD", d)
@@ -375,7 +375,7 @@ func StoreSampleSD(d SampleData, sDB bool, updateHead ...bool) (err error) {
 // delete a TS series, all values between the timestamps included in s0 and s1 are deleted
 // err: reports the error is any
 func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return nil
 	}
 	// returns all values between s1 and s2, extremes included
@@ -439,7 +439,7 @@ func DeleteSeriesTS(s0, s1 SampleData, sDB bool) error {
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
 func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 	// returns all values between s1 and s2, extremes included
@@ -502,7 +502,7 @@ func ReadSeriesTS(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 // delete a SD series, all values between the timestamps included in s0 and s1 are deleted
 // err: reports the error is any
 func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return nil
 	}
 	// returns all values between s1 and s2, extremes included
@@ -565,7 +565,7 @@ func DeleteSeriesSD(s0, s1 SampleData, sDB bool) error {
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
 func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 	// returns all values between s1 and s2, extremes included
@@ -639,7 +639,7 @@ func ReadSeriesSD(s0, s1 SampleData, sDB bool) (tag string, rts []int64, rt [][]
 // rt: list of the series values ordered according to rts
 // err: reports the error is any
 func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt [][]byte, err error) {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return
 	}
 	if head.MarshalSize() == 0 && len(head.MarshalSizeModifiers()) != 2 {
@@ -695,7 +695,7 @@ func ReadLastNTS(head SampleData, ns int, sDB bool) (tag string, rts []int64, rt
 
 // returns the stored definition of a series with identified tag
 func GetDefinition(tag string) []int64 {
-	if support.SkipDBS {
+	if supp.SkipDBS {
 		return []int64{}
 	}
 	tagMutex.RLock()
@@ -754,8 +754,8 @@ func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"storage.dbUpdateDriver: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.dbUpdateDriver: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			//fmt.Println("recovering")
 			go dbReadDriver(ch, db)
@@ -766,7 +766,7 @@ func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 		if lb > 0 {
 			r = make([]byte, lb)
 			// locks clean-up to avoid database corruption
-			support.CleanupLock.RLock()
+			supp.CleanupLock.RLock()
 			err = db.View(func(txn *badger.Txn) error {
 				item, err := txn.Get(id)
 				if err != nil {
@@ -779,7 +779,7 @@ func dbReadDriver(ch chan dbOutCommChan, db badger.DB) {
 				copy(r, val)
 				return nil
 			})
-			support.CleanupLock.RUnlock()
+			supp.CleanupLock.RUnlock()
 		} else {
 			err = errors.New("storage.DBS: error storing data with length <= 0")
 		}
@@ -831,8 +831,8 @@ func dbDeleteDriver(ch chan dbOutCommChan, db badger.DB) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"storage.dbDeleteDriver: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.dbDeleteDriver: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			//fmt.Println("recovering")
 			go dbDeleteDriver(ch, db)
@@ -871,8 +871,8 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"storage.dbUpdateDriver: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.dbUpdateDriver: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			go dbUpdateDriver(c, db, ttl)
 		}
@@ -882,7 +882,7 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 		//fmt.Println(data)
 		go func(data dbInChan, db badger.DB, ttl bool) {
 			// locks clean-up to avoid database corruption
-			support.CleanupLock.RLock()
+			supp.CleanupLock.RLock()
 			err := db.Update(func(txn *badger.Txn) error {
 				var err error
 				if ttl && (!data.oride) {
@@ -893,7 +893,7 @@ func dbUpdateDriver(c chan dbInChan, db badger.DB, ttl bool) {
 				//fmt.Println(err)
 				return err
 			})
-			support.CleanupLock.RUnlock()
+			supp.CleanupLock.RUnlock()
 			if err != nil {
 				log.Printf("Error writing at address %v: %v\n", data.id, err)
 			}
@@ -907,15 +907,15 @@ func handlerGarbage(dbs []*badger.DB) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"storage.handlerGarbage: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"storage.handlerGarbage: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			handlerGarbage(dbs)
 		}
 	}()
 	for {
 		time.Sleep(garbage.intervalMin * time.Minute)
-		if doIt, e := support.InClosureTime(garbage.start, garbage.end); e == nil {
+		if doIt, e := supp.InClosureTime(garbage.start, garbage.end); e == nil {
 			if doIt {
 				// We ignore errors since it is done periodically
 				for _, el := range dbs {

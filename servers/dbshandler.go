@@ -3,7 +3,7 @@ package servers
 import (
 	"fmt"
 	"gateserver/storage"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"net/http"
 	"os"
@@ -21,8 +21,8 @@ func retrieveDBSsamples() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"loadsamples",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"loadsamples",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("loadsamples: recovering from: ", e)
 			}
@@ -51,8 +51,8 @@ func retrieveDBSpresence() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"loadsamples",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"loadsamples",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("loadsamples: recovering from: ", e)
 			}

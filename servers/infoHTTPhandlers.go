@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gateserver/gates"
 	"gateserver/spaces"
-	"gateserver/support"
+	"gateserver/supp"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,8 +25,8 @@ func dvlHTTHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"dvlHTTHandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"dvlHTTHandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("dvlHTTHandler: recovering from: ", e)
 			}
@@ -38,8 +38,8 @@ func dvlHTTHandler() http.Handler {
 		}
 
 		//noinspection GoUnhandledErrorResult
-		support.DLog <- support.DevData{Tag: "read"}
-		_, _ = fmt.Fprintf(w, <-support.ODLog)
+		supp.DLog <- supp.DevData{Tag: "read"}
+		_, _ = fmt.Fprintf(w, <-supp.ODLog)
 	})
 }
 
@@ -98,8 +98,8 @@ func infoHTTHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"infoHTTHandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"infoHTTHandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("infoHTTHandler: recovering from: ", e)
 			}
@@ -143,8 +143,8 @@ func asysHTTHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"dvlHTTHandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"dvlHTTHandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("dvlHTTHandler: recovering from: ", e)
 			}
@@ -187,8 +187,8 @@ func planHTTPHandler(name string) http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"planHTTPHandler " + name,
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"planHTTPHandler " + name,
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("planHTTPHandler "+name+": recovering from: ", e)
 			}
@@ -221,8 +221,8 @@ func unusedDeviceHTTPHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"HandlerFunc",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"HandlerFunc",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("HandlerFunc: recovering from: ", e)
 			}
@@ -263,8 +263,8 @@ func undefinedDeviceHTTPHandler(opt string) http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"undefinedDeviceHTTPHandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"undefinedDeviceHTTPHandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("undefinedDeviceHTTPHandler: recovering from: ", e)
 			}
@@ -319,8 +319,8 @@ func usedDeviceHTTPHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"HandlerFunc",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"HandlerFunc",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("HandlerFunc: recovering from: ", e)
 			}
@@ -355,8 +355,8 @@ func pendingDeviceHTTPHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"pendingDeviceHTTPHandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"pendingDeviceHTTPHandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("pendingDeviceHTTPHandler: recovering from: ", e)
 			}
@@ -391,8 +391,8 @@ func killswitchHTTPHandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"pendingDeviceHTTPHandler",
-						support.Timestamp(), "", []int{1}, true}
+					supp.DLog <- supp.DevData{"pendingDeviceHTTPHandler",
+						supp.Timestamp(), "", []int{1}, true}
 				}()
 				log.Println("pendingDeviceHTTPHandler: recovering from: ", e)
 			}

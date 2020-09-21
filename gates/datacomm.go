@@ -3,7 +3,7 @@ package gates
 import (
 	"errors"
 	"fmt"
-	"gateserver/support"
+	"gateserver/supp"
 	"strconv"
 )
 
@@ -25,15 +25,15 @@ func SendData(dev int, val int) error {
 			// convert to int from int8 with 127 as special value
 			if val == 127 {
 				val = 0
-				support.DLog <- support.DevData{"device " + strconv.Itoa(dev), support.Timestamp(),
+				supp.DLog <- supp.DevData{"device " + strconv.Itoa(dev), supp.Timestamp(),
 					"127 reported", []int{1}, true}
 			} else {
 				val = int(int8(val & 255))
 			}
-			if support.Debug != 0 {
-				fmt.Printf("\nDevice %v sent data %v at %v\n", dev, val, support.Timestamp())
+			if supp.Debug != 0 {
+				fmt.Printf("\nDevice %v sent data %v at %v\n", dev, val, supp.Timestamp())
 			}
-			go func() { c <- sensorData{id: dev, ts: support.Timestamp(), val: val} }()
+			go func() { c <- sensorData{id: dev, ts: supp.Timestamp(), val: val} }()
 		}
 		return nil
 	} else {

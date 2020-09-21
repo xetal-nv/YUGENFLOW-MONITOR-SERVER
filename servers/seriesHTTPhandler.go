@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gateserver/spaces"
 	"gateserver/storage"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"math"
 	"net/http"
@@ -35,8 +35,8 @@ func seriesHTTPhandler() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				go func() {
-					support.DLog <- support.DevData{"servers.seriesHTTPhandler",
-						support.Timestamp(), "handle crashed", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.seriesHTTPhandler",
+						supp.Timestamp(), "handle crashed", []int{1}, true}
 				}()
 				log.Println("servers.seriesHTTPhandler: recovering from: ", e)
 			}
@@ -52,7 +52,7 @@ func seriesHTTPhandler() http.Handler {
 		authorised := false
 		dbgMutex.RLock()
 		if tts, ok := dbgRegistry[ip]; ok {
-			if (support.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
+			if (supp.Timestamp()-tts)/1000 <= (authDbgInterval * 60) {
 				authorised = true
 			} else {
 				delete(dbgRegistry, ip)
@@ -75,8 +75,8 @@ func seriesHTTPhandler() http.Handler {
 				params[strings.Trim(val[0], " ")] = strings.Trim(val[1], " ")
 			} else {
 				go func() {
-					support.DLog <- support.DevData{"servers.seriesHTTPhandler: " + strings.Trim(val[0], " "),
-						support.Timestamp(), "illegal request", []int{1}, true}
+					supp.DLog <- supp.DevData{"servers.seriesHTTPhandler: " + strings.Trim(val[0], " "),
+						supp.Timestamp(), "illegal request", []int{1}, true}
 				}()
 				_, _ = fmt.Fprintf(w, "")
 				return
@@ -85,9 +85,9 @@ func seriesHTTPhandler() http.Handler {
 
 		// fmt.Println(params)
 
-		label := support.StringLimit(params["type"], support.LabelLength)
-		label += support.StringLimit(params["space"], support.LabelLength)
-		label += support.StringLimit(params["analysis"], support.LabelLength)
+		label := supp.StringLimit(params["type"], supp.LabelLength)
+		label += supp.StringLimit(params["space"], supp.LabelLength)
+		label += supp.StringLimit(params["analysis"], supp.LabelLength)
 
 		//fmt.Println(label)
 		//os.Exit(1)
@@ -97,9 +97,9 @@ func seriesHTTPhandler() http.Handler {
 			if num, e := strconv.Atoi(params["last"]); e == nil {
 				switch params["type"] {
 				case "sample":
-					s = &storage.SeriesSample{Stag: label, Sts: support.Timestamp()}
+					s = &storage.SeriesSample{Stag: label, Sts: supp.Timestamp()}
 				case "entry":
-					s = &storage.SeriesEntries{Stag: label, Sts: support.Timestamp()}
+					s = &storage.SeriesEntries{Stag: label, Sts: supp.Timestamp()}
 				default:
 					_, _ = fmt.Fprintf(w, "")
 					return
@@ -169,7 +169,7 @@ func seriesHTTPhandler() http.Handler {
 					var fullReport storage.JsonCompleteReport
 					fullReport.Stag = label
 					for _, el := range spaces.AvgAnalysis {
-						if el.Name == support.StringLimit(params["analysis"], support.LabelLength) {
+						if el.Name == supp.StringLimit(params["analysis"], supp.LabelLength) {
 							dataPeriod = el.Interval
 							fullReport.Meas = params["analysis"]
 						}

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"gateserver/codings"
 	"gateserver/gates"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"math"
 	"net"
@@ -17,8 +17,8 @@ import (
 func handlerReset(id int) {
 	if id < 0 {
 		go func() {
-			support.DLog <- support.DevData{"servers.handlerReset device " + strconv.Itoa(id),
-				support.Timestamp(), "illegal id", []int{1}, false}
+			supp.DLog <- supp.DevData{"servers.handlerReset device " + strconv.Itoa(id),
+				supp.Timestamp(), "illegal id", []int{1}, false}
 		}()
 		return
 	}
@@ -26,8 +26,8 @@ func handlerReset(id int) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"servers.handlerReset: recovering server",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.handlerReset: recovering server",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			handlerReset(id)
 		}
@@ -36,7 +36,7 @@ func handlerReset(id int) {
 	for {
 		time.Sleep(resetBG.interval * time.Minute)
 		//fmt.Println("resetting device", id)
-		if doIt, e := support.InClosureTime(resetBG.start, resetBG.end); e == nil {
+		if doIt, e := supp.InClosureTime(resetBG.start, resetBG.end); e == nil {
 			if doIt && !done {
 				//if !done {
 				rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
@@ -44,8 +44,8 @@ func handlerReset(id int) {
 					//fmt.Println(rt.State)
 					done = true
 					go func() {
-						support.DLog <- support.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
-							support.Timestamp(), "", []int{1}, true}
+						supp.DLog <- supp.DevData{"servers.handlerReset: reset device " + strconv.Itoa(id),
+							supp.Timestamp(), "", []int{1}, true}
 					}()
 					// releases possible request on rstReq
 					// missing a reset request is impossible since the reset just happened
@@ -62,8 +62,8 @@ func handlerReset(id int) {
 					gates.SensorRst.RUnlock()
 				} else {
 					go func() {
-						support.DLog <- support.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
-							support.Timestamp(), "", []int{1}, true}
+						supp.DLog <- supp.DevData{"servers.handlerReset: failed to reset device " + strconv.Itoa(id),
+							supp.Timestamp(), "", []int{1}, true}
 					}()
 				}
 				//}
@@ -80,8 +80,8 @@ func handlerReset(id int) {
 					select {
 					case <-resetChannel:
 						go func() {
-							support.DLog <- support.DevData{"servers.handlerReset: reset due to sensor asymmetry " + strconv.Itoa(id),
-								support.Timestamp(), "", []int{1}, true}
+							supp.DLog <- supp.DevData{"servers.handlerReset: reset due to sensor asymmetry " + strconv.Itoa(id),
+								supp.Timestamp(), "", []int{1}, true}
 						}()
 						//fmt.Println("resetting device", id)
 						log.Printf("servers.handlerReset: resetting device to asymmetric behaviour %v\n", id)
@@ -212,8 +212,8 @@ func setSensorParameters(conn net.Conn, mac string) (err error) {
 			//fmt.Println("not found")
 			//os.Exit(1)
 			go func() {
-				support.DLog <- support.DevData{"servers.SensorEEPROMResetEnabled: sensorData cache is corrupted",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"servers.SensorEEPROMResetEnabled: sensorData cache is corrupted",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			err = errors.New("servers.SensorEEPROMResetEnabled: sensorData cache is corrupted for device " + mac)
 		}

@@ -3,7 +3,7 @@ package storage
 import (
 	"bytes"
 	"encoding/binary"
-	"gateserver/support"
+	"gateserver/supp"
 	"reflect"
 	"regexp"
 	"strings"
@@ -103,7 +103,7 @@ func (ss *SeriesEntries) Extract(i interface{}) (err error) {
 		// fmt.Println("here")
 		r, _ := regexp.Compile("_+")
 		tmp := r.ReplaceAllString(rv.Field(0).String(), "_")
-		name = support.StringLimit(strings.Split(tmp, "_")[1], support.LabelLength)
+		name = supp.StringLimit(strings.Split(tmp, "_")[1], supp.LabelLength)
 		// fmt.Println(name)
 		// fmt.Println(SpaceInfo)
 		for range SpaceInfo[name] {
@@ -122,8 +122,8 @@ func (ss *SeriesEntries) Extract(i interface{}) (err error) {
 		//z.Sval = append(z.Sval, v)
 		// fmt.Println(entries, int(id))
 		if entries != nil {
-			index := support.SliceIndex(len(SpaceInfo[name]), func(i int) bool { return SpaceInfo[name][i] == int(id) })
-			// fmt.Println(id, support.SliceIndex(len(SpaceInfo[name]), func(i int) bool { return SpaceInfo[name][i] == int(id) }))
+			index := supp.SliceIndex(len(SpaceInfo[name]), func(i int) bool { return SpaceInfo[name][i] == int(id) })
+			// fmt.Println(id, supp.SliceIndex(len(SpaceInfo[name]), func(i int) bool { return SpaceInfo[name][i] == int(id) }))
 			// if int(id) < len(entries) { // the if is redundant
 			entries[index] = []int{pos, neg}
 			// }

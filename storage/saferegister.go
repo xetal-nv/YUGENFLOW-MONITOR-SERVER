@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 )
 
@@ -34,5 +34,5 @@ func SafeRegGeneric(tag string, in, out chan interface{}, init ...interface{}) {
 			}
 		}
 	}
-	go support.RunWithRecovery(r, nil)
+	go supp.RunWithRecovery(r, nil)
 }

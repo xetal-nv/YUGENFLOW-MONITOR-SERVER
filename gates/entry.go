@@ -3,14 +3,14 @@ package gates
 import (
 	"fmt"
 	"gateserver/spaces"
-	"gateserver/support"
+	"gateserver/supp"
 	"log"
 	"os"
 	"strconv"
 	"sync"
 )
 
-// NOTE this is build for one or two sensors gates. Part of the code can support more, but the algorithm not
+// NOTE this is build for one or two sensors gates. Part of the code can supp more, but the algorithm not
 
 // set-up for the processing of sensor/gate data into flow values for the associated entry id
 // new sensor data is passed by means of the in Channel snd send to the proper space via a spaces.SendData call
@@ -77,8 +77,8 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				support.DLog <- support.DevData{"Gates.entryProcessingCore",
-					support.Timestamp(), "", []int{1}, true}
+				supp.DLog <- supp.DevData{"Gates.entryProcessingCore",
+					supp.Timestamp(), "", []int{1}, true}
 			}()
 			if err == nil && LogToFileAll {
 				_ = f.Close()
@@ -151,8 +151,8 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 								message := fmt.Sprintf("Sensor %v of gate %v has been disabled due to exceeding limit on asymmetric reset",
 									gateListEntry[sensorToGate[data.id]][index], sensorToGate[data.id])
 								go func(text string) {
-									support.DLog <- support.DevData{text,
-										support.Timestamp(), "", []int{1}, false}
+									supp.DLog <- supp.DevData{text,
+										supp.Timestamp(), "", []int{1}, false}
 								}(message)
 								log.Println(message)
 								//fmt.Printf("Sensor %v of gate %v has been disabled due to exceeding limit on asymmetric reset\n",
@@ -184,7 +184,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 			}
 		}
 		// calculates the next sample
-		if support.Debug != 2 && support.Debug != -1 {
+		if supp.Debug != 2 && supp.Debug != -1 {
 			sensorListEntry[data.id] = data
 			sensorListEntry, gateListEntry, scratchPad, nv = trackPeople(id, sensorListEntry, gateListEntry, scratchPad)
 		}
@@ -209,7 +209,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 				}
 				_, _ = f.WriteString("\n")
 				_, _ = f.WriteString("calculated data point: ")
-				_, _ = f.WriteString("( " + strconv.Itoa(int(support.Timestamp())) + "," + strconv.Itoa(nv) + " ) ")
+				_, _ = f.WriteString("( " + strconv.Itoa(int(supp.Timestamp())) + "," + strconv.Itoa(nv) + " ) ")
 
 				_, _ = f.WriteString("\n\n")
 			}
@@ -217,8 +217,8 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		if e := spaces.SendData(id, nv); e != nil {
 			log.Println(e)
 		}
-		if support.Debug > 0 {
-			fmt.Printf("\nEntry %v has calculated datapoint at %v as %v\n", id, support.Timestamp(), nv)
+		if supp.Debug > 0 {
+			fmt.Printf("\nEntry %v has calculated datapoint at %v as %v\n", id, supp.Timestamp(), nv)
 		}
 	}
 
@@ -261,8 +261,8 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 			scratchPad.unusedSampleSumOut[gate[0]] = 0
 		} else {
 			if scratchPad.unusedSampleSumIn[gate[0]] > 0 && scratchPad.unusedSampleSumIn[gate[1]] > 0 { //in
-				tmp := support.Min(support.Abs(scratchPad.unusedSampleSumIn[gate[0]]),
-					support.Abs(scratchPad.unusedSampleSumIn[gate[1]]))
+				tmp := supp.Min(supp.Abs(scratchPad.unusedSampleSumIn[gate[0]]),
+					supp.Abs(scratchPad.unusedSampleSumIn[gate[1]]))
 				rt += tmp
 				scratchPad.unusedSampleSumIn[gate[0]] -= tmp
 				scratchPad.unusedSampleSumIn[gate[1]] -= tmp
@@ -274,8 +274,8 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 				}
 			}
 			if scratchPad.unusedSampleSumOut[gate[0]] < 0 && scratchPad.unusedSampleSumOut[gate[1]] < 0 { //out
-				tmp := support.Min(support.Abs(scratchPad.unusedSampleSumOut[gate[0]]),
-					support.Abs(scratchPad.unusedSampleSumOut[gate[1]]))
+				tmp := supp.Min(supp.Abs(scratchPad.unusedSampleSumOut[gate[0]]),
+					supp.Abs(scratchPad.unusedSampleSumOut[gate[1]]))
 				rt -= tmp
 				scratchPad.unusedSampleSumOut[gate[0]] += tmp
 				scratchPad.unusedSampleSumOut[gate[1]] += tmp
@@ -324,7 +324,7 @@ func trackPeople(id int, sensorListEntry map[int]sensorData, gateListEntry map[i
 		}
 	}
 
-	if support.Debug > 0 {
+	if supp.Debug > 0 {
 		//fmt.Printf("\nEntry %v has sensorListEntry:\n\t%v\n", Id, sensorListEntry)
 		//fmt.Printf("Entry %v has gateListEntry:\n\t%v\n", Id, gateListEntry)
 		fmt.Printf("Entry %v has scratchPad:\n\t%v\n", id, scratchPad)

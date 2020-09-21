@@ -1,4 +1,4 @@
-package support
+package supp
 
 import (
 	"log"
@@ -26,7 +26,7 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			go func() {
-				DLog <- DevData{"support.setUpRotatingLog: recovering server", Timestamp(), "", []int{1}, true}
+				DLog <- DevData{"supp.setUpRotatingLog: recovering server", Timestamp(), "", []int{1}, true}
 			}()
 			setUpLog(n, ct, nil)
 		}
@@ -81,7 +81,7 @@ func setUpLog(n string, ct time.Time, c chan bool) {
 					_ = logf.Close()
 					logf = newLogFile
 				} else {
-					log.Println("support.Logger: failed create new log file:", ind)
+					log.Println("supp.Logger: failed create new log file:", ind)
 				}
 			}
 		}
