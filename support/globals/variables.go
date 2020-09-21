@@ -16,5 +16,6 @@ var SensorManagerLog, DeviceManagerLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
-var DebugActive bool
-var ChannellingLength, ShutdownTime int
+var DebugActive, CRCused bool
+var ChannellingLength, ShutdownTime, SensorTimeout int
+var APIport, TCPport string

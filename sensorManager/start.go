@@ -9,12 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"xetal.ddns.net/utils/recovery"
 )
-
-/*
-	initiate the TCP channels with all checks
-	send data using gateManager channels to the proper gates
-*/
 
 func Start(sd chan bool) {
 	var err error
@@ -34,7 +30,7 @@ func Start(sd chan bool) {
 			[]int{1}, true})
 
 	var rstC []chan bool
-	for i := 0; i < 0; i++ {
+	for i := 0; i < 1; i++ {
 		rstC = append(rstC, make(chan bool))
 	}
 
@@ -102,21 +98,17 @@ func Start(sd chan bool) {
 		os.Exit(0)
 
 	}
-	fmt.Print(DeclaredSensors)
 
-	// Start TCP server
-	// TODO HERE
+	recovery.RunWith(
+		func() { tcpServer(rstC[0]) },
+		func() {
+			mlogger.Recovered(globals.SensorManagerLog,
+				mlogger.LoggerData{"sensorManager.tcpServer",
+					"service terminated and recovered unexpectedly",
+					[]int{1}, true})
+		})
 
-	//recovery.RunWith(
-	//	func() { ApiManager(rstC[0]) },
-	//	func() {
-	//		mlogger.Recovered(globals.DeviceManagerLog,
-	//			mlogger.LoggerData{"clientManager.ApiManager",
-	//				"ApiManager service terminated and recovered unexpectedly",
-	//				[]int{1}, true})
-	//	})
-
-	for {
-		time.Sleep(36 * time.Hour)
-	}
+	//for {
+	//	time.Sleep(36 * time.Hour)
+	//}
 }

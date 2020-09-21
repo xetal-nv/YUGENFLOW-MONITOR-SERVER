@@ -19,11 +19,12 @@ func main() {
 	flag.Parse()
 	globals.DebugActive = *debug
 
-	globals.Start()
 	fmt.Println("\nStarting server YugenFlow Server", globals.VERSION)
 	if globals.DebugActive {
 		fmt.Println("*** WARNING: Debug mode enabled ***")
 	}
+
+	globals.Start()
 
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
@@ -35,7 +36,7 @@ func main() {
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func(c chan os.Signal, sd []chan bool) {
 		<-c
-		fmt.Println("Closing YugenFlow Server")
+		fmt.Println("\nClosing YugenFlow Server")
 		var wg sync.WaitGroup
 		for _, ch := range sd {
 			wg.Add(1)
