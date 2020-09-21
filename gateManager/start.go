@@ -10,7 +10,9 @@ import (
 )
 
 /*
-	need to load the gate declaration and define the processes for the reference flows and count
+	set up the sensor2gates channels and relative gate services
+	send data to the relevant entries
+	save gate data in the database
 */
 
 func Start(sd chan bool) {
@@ -56,7 +58,7 @@ func Start(sd chan bool) {
 			mlogger.LoggerData{"gateManager.Start",
 				"service stopped",
 				[]int{1}, true})
-		time.Sleep(3 * time.Second)
+		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 		sd <- true
 	}(sd, rstC)
 

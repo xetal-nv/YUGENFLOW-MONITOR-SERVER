@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"gateserver/gateManager"
+	"gateserver/sensorManager"
 	"gateserver/support/globals"
 	"os"
 	"os/signal"
@@ -27,7 +28,7 @@ func main() {
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 2; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -42,7 +43,7 @@ func main() {
 				ch <- true
 				select {
 				case <-ch:
-				case <-time.After(2 * time.Second):
+				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
 				}
 				wg.Done()
 			}(ch)
@@ -53,5 +54,6 @@ func main() {
 		os.Exit(0)
 	}(c, sd)
 
-	gateManager.Start(sd[0])
+	go sensorManager.Start(sd[0])
+	gateManager.Start(sd[1])
 }
