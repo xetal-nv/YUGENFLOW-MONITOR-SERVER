@@ -18,9 +18,9 @@ import (
 	"time"
 )
 
-const version = "v. 0.9.1" // version
+const version = "v. 2.0.0" // version
 
-func main() {
+func main1() {
 	folder, _ := support.GetCurrentExecDir()
 	var cdelay = flag.Int("cdelay", 90, "recovery delay in secs")
 	var dbs = flag.String("dbs", "", "databases root folder")
@@ -289,4 +289,10 @@ func main() {
 	// Set-up and start servers
 	servers.StartServers()
 
+}
+
+func main() {
+	log.Printf("Xetal YugenFlow Server version: %v\n", version)
+
+	println("to be done fully")
 }

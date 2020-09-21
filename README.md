@@ -3,13 +3,27 @@
 Copyright Xetal @ 2019  
 Author: F. Pessolano  
 
-**Requirements:**  
-GO 1.12 or compatible  
-64-bit architecture  
-Badger version 1.5.3  
-Need to be cloned to go/src for compilation  
+**TO BE FULLY REDONE, VERSION BREAKS BACK COMPATIBILITY**
 
-**List API:**  
+**REQUIREMENTS**  
+GO 1.14 or newer  
+64-bit architecture  
+Golang Packages (to be revised):
+ - go.etcd.io/bbolt/  
+ - xetal.ddns.net/supportservices  
+ - github.com/mongodb/mongo  
+ - github.com/allegro/bigcache  
+ - github.com/fpessolano/mlogger  (>=0.2.1)  
+ - github.com/gorilla/mux  
+ - gopkg.in/ini.v1  
+ 
+External data:  
+  - tbd
+  
+External services:
+  - tbd  
+
+**API:(TBD)**  
 HTTPSPORTS[1]/ks -> if enabled, kills the server  
 HTTPSPORTS[1]/dvl -> if enabled, shows latest developer log 
 HTTPSPORTS[1]/asys -> information on all current analyses  
@@ -37,43 +51,34 @@ HTTPSPORTS[1]/dbs/retrieve/presence -> retrieve sample data from .recoverypresen
 NOTE: values in val are specified as x,y,n,..   
 NOTE: series API supports types: sample, entry (debug mode only). Data for the current day are only available in debug mode  
 
-**List HTTP pages:**  
-If HTTPSPORTS[0] is the same of HTTPSPORTS[1], only one server will be started for all services
-HTTPSPORTS[0]/ -> webapp
-HTTPSPORTS[0]/dbg.html -> debug webapp  
-
-**SVG convention:**   
-NOTE: If the server does no have a svg for a given space, the space will be assigned an empty.svg  
-
 **SYSTEM VARIABLES:**  
-GATESERVER is set to the application folder  
+n/a  
 
 **CONFIGURATION:**  
-See .envtest and .systemenv files for configuration example
+See gateserver.ini and configuration.ini  file for configuration example  
 
 **COMMAND LINE OPTIONS:**  
--dbs Path : specifies path where to store the database, './DBS' used if not specified  
--cdelay int : specifies the maximum delay for recovery data usage  
--debug Int : specifies a debug mode (0: off, -1: short flow noalgo, 1: verbose, 2: verbose no algo)    
--dellogs : delete all existing logs  
--dmode Int : specifies an execution mode (0: default, 1: full test, 2: short test)  
--dumpentry : forces all entry values/activity to be written in a log file for debug (experimental)  
--dvl : activate dvl  
--env String : specifies the configuration file, uses .env if not specified  
--ks : enable killswitch API  
--nomal : disable malicious attack control  
--norst : disable start-up device reset (deprecated and set as default)  
--forcerst : enable start-up device reset  
--repcon : enables current reporting in JS
--ri Int : set log ri  
--rs Int64 : set log rs  
--st string : set start time, time specified as HH:MM  
--eeprom : enables refresh of device eeprom at every connection  
--nosample : disable automatic check for database recovery  
--dbsupdate : enable DBS integrity check HTTP API  
--tdl int : TCP read deadline in hours (default 24)  
+-debug                  : enables debug mode (to be done)  
+-db path                : set database path (to be done)  
+-dc path                : set disk cache path (to be done)  
+-user username          : set username (to be done)  
+-pwd password           : set password (to be done)      
+-echo                   : enter the echo mode (to be done)  
+-cdelay int             : specifies the maximum delay for recovery data usage(to be done)  
+-dmode Int              : specifies an execution mode (0: default, 1: full test, 2: short test) (to be done)  
+-dumpentry              : forces all entry values/activity to be written in a log file for debug (to be done)  
+-st string              : set start time, time specified as HH:MM (to be done)  
+-eeprom                 : enables refresh of device eeprom at every connection (to be done)  
+-nosample               : disable automatic check for database recovery (to be done)  
+-dbsupdate              : enable DBS integrity check HTTP API (to be done)  
+-tdl int                : TCP read deadline in hours (default 24) (to be done)  
 
-**HARDCODED OPTIONS:**  
-- support.SkipDBS : true to skip usage of database (disables also web app)  
-- support.DisableWebApp : true to disable web app  
+**INSTALLATION**  
+Executable file: gateserver(.exe)  
+Configuration files: gateserver.ini, configuration.ini  
+Resource folders: 
+
+**TO BE DONE (in priority order)**  
+ - everything
+
 
