@@ -8,3 +8,5 @@ type FlowData struct {
 	Ts      int64  `json:"timestamp"`
 	Netflow int    `json:"netflow"`
 }
+
+type SensorCommand interface{} // TODO define this channel

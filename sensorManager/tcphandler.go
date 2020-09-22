@@ -2,11 +2,14 @@ package sensorManager
 
 import (
 	"fmt"
+	"gateserver/dataformats"
+	"gateserver/dbs/sensorDB"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"log"
 	"math/rand"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -16,40 +19,44 @@ import (
 	send data using gateManager channels to the proper gates
 */
 
+// TODO change using bolt for most data
+
 func handler(conn net.Conn) {
 
 	mac := make([]byte, 6) // received amc address
-	var sensorDef SensorDefinition
+	var sensorDef sensorDefinition
 
 	// cleaning up at closure
 	defer func() {
 
 		// We close the channel and update the sensor definition entry, when applicable
 		_ = conn.Close()
-		if sensorDef.Mac != "" {
-			DeclaredSensors.Lock()
-			sensorDef.CurrentChannel = nil
-			DeclaredSensors.Mac[sensorDef.Mac] = sensorDef
-			DeclaredSensors.Unlock()
+		if sensorDef.mac != "" {
+			ActiveSensors.Lock()
+			delete(ActiveSensors.Id, sensorDef.id)
+			delete(ActiveSensors.Mac, sensorDef.mac)
+			ActiveSensors.Unlock()
 		}
 
 	}()
 
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 	// the IP is checked in the disabled list
-	MaliciousIPS.RLock()
-	if MaliciousIPS.Disabled[ipc] {
-		MaliciousIPS.RUnlock()
-		// We wait assuming it is an attack to slow it down
-		wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
-		time.Sleep(time.Duration(wait) * time.Second)
-		mlogger.Warning(globals.SensorManagerLog,
-			mlogger.LoggerData{"device " + ipc,
-				"malicious, connection refused",
-				[]int{1}, true})
-		return
-	}
-	MaliciousIPS.RUnlock()
+	// TODO move to bolt
+
+	//MaliciousIPS.RLock()
+	//if MaliciousIPS.Disabled[ipc] {
+	//	MaliciousIPS.RUnlock()
+	//	// We wait assuming it is an attack to slow it down
+	//	wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
+	//	time.Sleep(time.Duration(wait) * time.Second)
+	//	mlogger.Warning(globals.SensorManagerLog,
+	//		mlogger.LoggerData{"device " + ipc,
+	//			"malicious, connection refused",
+	//			[]int{1}, true})
+	//	return
+	//}
+	//MaliciousIPS.RUnlock()
 
 	// Initially receive the MAC value to identify the sensor
 	if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
@@ -75,30 +82,48 @@ func handler(conn net.Conn) {
 	} else {
 		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", "", -1), " ")
 
-		// sensor configuration data is retrieved and it is verified that no channel is already open
-		DeclaredSensors.Lock()
-		sensorDef = DeclaredSensors.Mac[mach]
-		if sensorDef.Mac == "" {
-			// the default definition will be used
-			sensorDef = DeclaredSensors.Mac["default"]
-			sensorDef.Mac = mach
+		// read sensor definition form the sensor DB and srore it locally
+		def, erDB := sensorDB.ReadDefinition([]byte(mach))
+		if erDB != nil {
+			def, erDB = sensorDB.ReadDefinition([]byte("default"))
+			if erDB != nil {
+				// this should never happen
+				if globals.DebugActive {
+					fmt.Println("sensor ", ipc, "read sensorDB error:", erDB.Error())
+				}
+				mlogger.Error(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensor " + ipc,
+						"error reading sensorDB :" + e.Error(),
+						[]int{1}, true})
+				return
+			}
+		}
+		sensorDef = sensorDefinition{
+			mac:     mach,
+			id:      def.Id,
+			bypass:  def.Bypass,
+			report:  def.Report,
+			enforce: def.Enforce,
+			strict:  def.Strict,
 		}
 
-		// TODO add limit on sensorDef.SuspectedConnection to disable the sensor and add it to a blocked list
-		//  use also a suspected IP list
+		// sensor configuration data is retrieved and it is verified that no channel is already open
+		ActiveSensors.Lock()
+		var alreadyInUse bool
+		sensorDef.channels, alreadyInUse = ActiveSensors.Mac[mach]
 
-		if sensorDef.CurrentChannel != nil {
-			DeclaredSensors.Unlock()
+		// TODO make suspected ip and mac (store number of suspected activities)
+
+		if alreadyInUse {
+			ActiveSensors.Unlock()
 			// The sensor has already an assigned TCP channel
 			// We wait to see if it closes, if not the new connection channel is closed and marked as a possible attack
 			time.Sleep(time.Duration(globals.SensorTimeout) * time.Second)
-			DeclaredSensors.Lock()
-			sensorDef = DeclaredSensors.Mac[mach]
-			if sensorDef.CurrentChannel != nil {
-				sensorDef.SuspectedConnection += 1
-				DeclaredSensors.Mac[sensorDef.Mac] = sensorDef
-				DeclaredSensors.Unlock()
-				sensorDef.Mac = ""
+			ActiveSensors.Lock()
+			sensorDef.channels, alreadyInUse = ActiveSensors.Mac[mach]
+			if alreadyInUse {
+				ActiveSensors.Unlock()
+				sensorDef.mac = ""
 				mlogger.Warning(globals.SensorManagerLog,
 					mlogger.LoggerData{"sensor " + mach,
 						"suspected malicious connection",
@@ -106,14 +131,17 @@ func handler(conn net.Conn) {
 				// We wait assuming it is an attack to slow it down
 				wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
 				time.Sleep(time.Duration(wait) * time.Second)
-				// TODO store in a list of suspected devices and ip
 				return
 			}
 		}
 		// the sensor is returned and this is not suspected to be a malicious attack
-		sensorDef.CurrentChannel = conn
-		DeclaredSensors.Mac[sensorDef.Mac] = sensorDef
-		DeclaredSensors.Unlock()
+		sensorDef.channels = SensorChannel{
+			Tcp:     conn,
+			Process: make(chan dataformats.SensorCommand),
+		}
+
+		ActiveSensors.Mac[sensorDef.mac] = sensorDef.channels
+		ActiveSensors.Unlock()
 
 		// if enabled, the EEPROM is refreshed
 		if globals.SensorEEPROMResetEnabled {
@@ -138,6 +166,7 @@ func handler(conn net.Conn) {
 		// TODO HERE store the device to a device pending list
 
 		fmt.Printf("%+v\n", sensorDef)
+		fmt.Println(sensorDB.LookUpMac([]byte(strconv.Itoa(sensorDef.id))))
 	}
 
 	for {

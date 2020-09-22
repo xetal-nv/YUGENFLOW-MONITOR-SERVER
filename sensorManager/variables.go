@@ -1,38 +1,37 @@
 package sensorManager
 
 import (
+	"gateserver/dataformats"
 	"net"
 	"sync"
 )
 
-// TODO cmove most to sensorDB
+// TODO move most to sensorDB
+
+type SensorChannel struct {
+	Tcp     net.Conn
+	Process chan dataformats.SensorCommand
+}
 
 //ActiveSensors is used as lock and contains the assigned channels
 var ActiveSensors struct {
 	sync.RWMutex
-	Mac map[string]SensorDefinition
+	Mac map[string]SensorChannel
 	Id  map[int]string
 }
 
-// basic flow data model used for data from sensors and gates
-type SensorDefinition struct {
-	Mac                 string   `json:"mac"`
-	Id                  int      `json:"id"`
-	Bypass              bool     `json:"bypass"`
-	Report              bool     `json:"report"`
-	Enforce             bool     `json:"enforce"`
-	Strict              bool     `json:"strict"`
-	CurrentChannel      net.Conn `json:-`
-	SuspectedConnection int      `json:-`
+// type for current sensor configuration
+type sensorDefinition struct {
+	mac      string
+	id       int
+	bypass   bool
+	report   bool
+	enforce  bool
+	strict   bool
+	channels SensorChannel
 }
 
-// Sensors is lockable
-var DeclaredSensors struct {
-	sync.RWMutex
-	Mac map[string]SensorDefinition
-	Id  map[int]string
-}
-
+// TODO var below to be moved to the database
 // MaliciousDevices stored all suspected devices (map[mac]ip) classified in suspected and disabled
 var MaliciousDevices struct {
 	sync.RWMutex `json:"-"`

@@ -2,6 +2,8 @@ package sensorManager
 
 import (
 	"fmt"
+	"gateserver/dataformats"
+	"gateserver/dbs/sensorDB"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"os"
@@ -60,10 +62,8 @@ func Start(sd chan bool) {
 	}(sd, rstC)
 
 	// First we load any eventual sensor declaration
-	DeclaredSensors.Lock()
-	DeclaredSensors.Mac = make(map[string]SensorDefinition)
-	DeclaredSensors.Id = make(map[int]string)
-	DeclaredSensors.Unlock()
+	ActiveSensors.Mac = make(map[string]SensorChannel)
+	ActiveSensors.Id = make(map[int]string)
 	foundDefault := false
 
 	for _, mac := range globals.Config.Section("sensors").KeyStrings() {
@@ -81,22 +81,30 @@ func Start(sd chan bool) {
 					}
 					return false
 				}
-				newSensor := SensorDefinition{
-					Mac:                 mac,
-					Id:                  id,
-					Bypass:              fn("bypass", sensorDeclaration[1:]),
-					Report:              fn("report", sensorDeclaration[1:]),
-					Enforce:             fn("enforce", sensorDeclaration[1:]),
-					Strict:              fn("strict", sensorDeclaration[1:]),
-					SuspectedConnection: 0,
+
+				if err := sensorDB.AddLookUp([]byte(strconv.Itoa(id)), mac); err == nil {
+					if err = sensorDB.WriteDefinition([]byte(mac), dataformats.SensorDefinition{
+						Id:      id,
+						Bypass:  fn("bypass", sensorDeclaration[1:]),
+						Report:  fn("report", sensorDeclaration[1:]),
+						Enforce: fn("enforce", sensorDeclaration[1:]),
+						Strict:  fn("strict", sensorDeclaration[1:]),
+					}); err != nil {
+						_ = sensorDB.DeleteLookUp([]byte(sensorDeclaration[0]))
+						mlogger.Panic(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.Start",
+								"failed to load declaration for " + mac, []int{}, false}, true)
+						time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+						os.Exit(0)
+					}
+					foundDefault = (mac == "default")
+				} else {
+					mlogger.Panic(globals.SensorManagerLog,
+						mlogger.LoggerData{"sensorManager.Start",
+							"failed to load declaration for " + mac, []int{}, false}, true)
+					time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+					os.Exit(0)
 				}
-				DeclaredSensors.Lock()
-				DeclaredSensors.Mac[mac] = newSensor
-				if id >= 0 {
-					DeclaredSensors.Id[id] = mac
-				}
-				DeclaredSensors.Unlock()
-				foundDefault = (mac == "default")
 			}
 		}
 	}
@@ -106,7 +114,6 @@ func Start(sd chan bool) {
 				"default sensor declaration missing", []int{1}, true}, true)
 		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 		os.Exit(0)
-
 	}
 
 	recovery.RunWith(

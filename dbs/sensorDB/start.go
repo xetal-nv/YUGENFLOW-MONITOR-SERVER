@@ -13,10 +13,11 @@ import (
 var main *bolt.DB
 
 const (
-	definitions   = "definitions"
-	activeDevices = "activeDevices"
-	maliciousMac  = "maliciousMac"
-	maliciousIp   = "maliciousIp"
+	definitions   = "definitions"   // sensor definitions
+	lookup        = "lookup"        // id to mac table
+	activeDevices = "activeDevices" // active devices
+	maliciousMac  = "maliciousMac"  // mac of malicious devices
+	maliciousIp   = "maliciousIp"   // ip of malicious devices
 )
 
 func Start() {
@@ -45,6 +46,10 @@ func Start() {
 		_, err = tx.CreateBucketIfNotExists([]byte(definitions))
 		if err != nil {
 			return errors.New("could not create " + definitions + " bucket: " + err.Error())
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(lookup))
+		if err != nil {
+			return errors.New("could not create " + lookup + " bucket: " + err.Error())
 		}
 		_, err = tx.CreateBucketIfNotExists([]byte(activeDevices))
 		if err != nil {

@@ -74,7 +74,7 @@ func main() {
 
 	if globals.DebugActive {
 		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
-		//go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
+		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
 	}
 
 	go sensorManager.Start(sd[0])
