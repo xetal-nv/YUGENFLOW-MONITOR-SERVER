@@ -10,6 +10,7 @@ import (
 	"xetal.ddns.net/utils/recovery"
 )
 
+// TODO add sensor number limit with tokens
 func tcpServer(rst chan bool) {
 	srv, e := net.Listen("tcp4", "0.0.0.0:"+globals.TCPport)
 	if e != nil {

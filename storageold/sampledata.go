@@ -1,4 +1,4 @@
-package storage
+package storageold
 
 // Interface for all type of data manageable as sample
 type SampleData interface {

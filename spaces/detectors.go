@@ -3,7 +3,7 @@ package spaces
 import (
 	"bufio"
 	"fmt"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"log"
 	"os"
@@ -73,7 +73,7 @@ func detectors(name string, gateChan chan spaceEntries, allIntervals []IntervalD
 						//os.Exit(1)
 						// this approach is quite slow
 						//if _, e := storage.SetSeries(nm, SamplingWindow*10, true); e != nil {
-						if _, e := storage.SetSeries(nm, 0, true); e != nil {
+						if _, e := storageold.SetSeries(nm, 0, true); e != nil {
 							log.Fatalf("spaces.detectors: fatal error setting database %v\n", nm)
 						}
 						go dataTypes["presence"].cf(nm, sendDBSchan[nm], nil)

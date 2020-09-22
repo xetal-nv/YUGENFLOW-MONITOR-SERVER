@@ -6,7 +6,7 @@ import (
 	"gateserver/sensormodels"
 	"gateserver/servers"
 	"gateserver/spaces"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"log"
 	"math/rand"
@@ -155,7 +155,7 @@ func main1() {
 						data := sam + "," + sp + "," + ms + ","
 						switch strings.Trim(sam, "_") {
 						case "entry":
-							dt := new(storage.SeriesEntries)
+							dt := new(storageold.SeriesEntries)
 							_ = dt.ExtractForRecovery(<-ch)
 							//ok = dt.Tag() != "" && dt.Ts() != 0
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
@@ -172,7 +172,7 @@ func main1() {
 								}
 							}
 						case "sample":
-							dt := new(storage.SeriesSample)
+							dt := new(storageold.SeriesSample)
 							_ = dt.Extract(<-ch)
 							if ok = dt.Tag() != "" && dt.Ts() != 0; ok {
 								data += strconv.FormatInt(cTS, 10) + ","
@@ -214,7 +214,7 @@ func main1() {
 		}
 		log.Println("System shutting down")
 		supp.Terminate()
-		storage.TimedIntDBSClose()
+		storageold.TimedIntDBSClose()
 	}
 	supp.SetUp(*env)
 
@@ -227,7 +227,7 @@ func main1() {
 	}
 
 	// Set-up databases
-	if err := storage.TimedIntDBSSetUp(*dbs, false); err != nil {
+	if err := storageold.TimedIntDBSSetUp(*dbs, false); err != nil {
 		log.Fatal(err)
 	}
 	defer cleanup()
@@ -236,8 +236,8 @@ func main1() {
 	spaces.SetUp()
 
 	if !supp.SkipDBS {
-		storage.RetrieveSampleFromFile(!*nosample)
-		storage.RetrievePresenceFromFile(!*nosample)
+		storageold.RetrieveSampleFromFile(!*nosample)
+		storageold.RetrievePresenceFromFile(!*nosample)
 	}
 
 	switch *dmode {

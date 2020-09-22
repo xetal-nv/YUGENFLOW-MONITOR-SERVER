@@ -7,5 +7,5 @@ All notable changes to this project will be documented in this file.
 ### Changed
  - Server achitecture has been changed  
  - Database is not based on MongoDB and not badger  
- - All attack checks have been removed  
+ - Malicious attack check has been simplified, more complex checks will be added later    
 

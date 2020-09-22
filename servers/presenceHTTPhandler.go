@@ -3,7 +3,7 @@ package servers
 import (
 	"encoding/json"
 	"fmt"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"log"
 	"net/http"
@@ -80,12 +80,12 @@ func presenceHTTPhandler() http.Handler {
 				return
 			}
 			//fmt.Println(st,en)
-			var s0, s1 storage.SampleData
-			s0 = &storage.SeriesSample{Stag: label, Sts: st}
-			s1 = &storage.SeriesSample{Stag: label, Sts: en}
+			var s0, s1 storageold.SampleData
+			s0 = &storageold.SeriesSample{Stag: label, Sts: st}
+			s1 = &storageold.SeriesSample{Stag: label, Sts: en}
 
-			var rt []storage.SampleData
-			if tag, ts, vals, e := storage.ReadSeriesSD(s0, s1, true); e == nil {
+			var rt []storageold.SampleData
+			if tag, ts, vals, e := storageold.ReadSeriesSD(s0, s1, true); e == nil {
 				//fmt.Println(tag, ts, vals)
 				//for _, val := range ts {
 				//	fmt.Println(time.Unix(val/1000, 0))

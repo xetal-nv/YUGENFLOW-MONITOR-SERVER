@@ -5,6 +5,7 @@ import (
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"log"
+	"math/rand"
 	"net"
 	"strings"
 	"time"
@@ -15,12 +16,28 @@ import (
 	send data using gateManager channels to the proper gates
 */
 
+// TODO check if we keep stuff as is in memory or not
+
 func handler(conn net.Conn) {
-	println("being done!")
 
-	defer conn.Close()
 	mac := make([]byte, 6) // received amc address
+	var sensorDef SensorDefinition
 
+	// cleaning up at closure
+	defer func() {
+
+		// We close the channel and update the sensor definition entry, when applicable
+		conn.Close()
+		if sensorDef.Mac != "" {
+			DeclaredSensors.Lock()
+			sensorDef.CurrentChannel = nil
+			DeclaredSensors.Mac[sensorDef.Mac] = sensorDef
+			DeclaredSensors.Unlock()
+		}
+
+	}()
+
+	// TODO we better store it
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 
 	// Initially receive the MAC value to identify the sensor
@@ -47,7 +64,41 @@ func handler(conn net.Conn) {
 	} else {
 		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", "", -1), " ")
 
-		// once a valid MAC is received, the EEPROM is refreshed (if applicable)
+		// sensor configuration data is retrieved and it is verified that no channel is already open
+		DeclaredSensors.Lock()
+		sensorDef = DeclaredSensors.Mac[mach]
+
+		// TODO add limit on sensorDef.SuspectedConnection to disable the sensor and add it to a blocked list
+
+		if sensorDef.CurrentChannel != nil {
+			DeclaredSensors.Unlock()
+			// The sensor has already an assigned TCP channel
+			// We wait to see if it closes, if not the new connection channel is closed and marked as a possible attack
+			time.Sleep(time.Duration(globals.SensorTimeout) * time.Second)
+			DeclaredSensors.Lock()
+			sensorDef = DeclaredSensors.Mac[mach]
+			if sensorDef.CurrentChannel != nil {
+				sensorDef.SuspectedConnection += 1
+				DeclaredSensors.Mac[sensorDef.Mac] = sensorDef
+				DeclaredSensors.Unlock()
+				sensorDef.Mac = ""
+				mlogger.Warning(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensor " + mach,
+						"suspected malicious connection",
+						[]int{1}, true})
+				// We wait assuming it is an attack to slow it down
+				wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
+				time.Sleep(time.Duration(wait) * time.Second)
+				// TODO store in a list of suspected devices/ip
+				return
+			}
+		}
+		// the sensor is returned and this is not suspected to be a malicious attack
+		sensorDef.CurrentChannel = conn
+		DeclaredSensors.Mac[sensorDef.Mac] = sensorDef
+		DeclaredSensors.Unlock()
+
+		// if enabled, the EEPROM is refreshed
 		if globals.SensorEEPROMResetEnabled {
 			if e := setSensorParameters(conn, mach); e != nil {
 				if globals.DebugActive {
@@ -67,10 +118,8 @@ func handler(conn net.Conn) {
 				"refreshing EEPROM successful",
 				[]int{1}, true})
 
-		// TODO once the mac has been received we need to verify the sensor declaration
-		DeclaredSensors.RLock()
-		sensorDef := DeclaredSensors.Mac[mach]
-		DeclaredSensors.RUnlock()
+		// TODO HERE store the device to a device pending list
+
 		fmt.Printf("%+v\n", sensorDef)
 	}
 

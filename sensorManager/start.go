@@ -82,14 +82,15 @@ func Start(sd chan bool) {
 					return false
 				}
 				newSensor := SensorDefinition{
-					Mac:      mac,
-					Id:       id,
-					Bypass:   fn("bypass", sensorDeclaration[1:]),
-					Report:   fn("report", sensorDeclaration[1:]),
-					Enforce:  fn("enforce", sensorDeclaration[1:]),
-					Strict:   fn("strict", sensorDeclaration[1:]),
-					Active:   false,
-					Disabled: false,
+					Mac:                 mac,
+					Id:                  id,
+					Bypass:              fn("bypass", sensorDeclaration[1:]),
+					Report:              fn("report", sensorDeclaration[1:]),
+					Enforce:             fn("enforce", sensorDeclaration[1:]),
+					Strict:              fn("strict", sensorDeclaration[1:]),
+					Active:              false,
+					Disabled:            false,
+					SuspectedConnection: 0,
 				}
 				DeclaredSensors.Lock()
 				DeclaredSensors.Mac[mac] = newSensor

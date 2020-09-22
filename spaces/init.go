@@ -3,7 +3,7 @@ package spaces
 import (
 	"bufio"
 	"fmt"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"log"
 	"os"
@@ -31,7 +31,7 @@ func SetUp() {
 		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netFlow}
 	}
 	sample.cf = func(id string, in chan interface{}, rst chan bool) {
-		storage.SerieSampleDBS(id, in, rst, "TS")
+		storageold.SerieSampleDBS(id, in, rst, "TS")
 	}
 	dataTypes[supp.StringLimit("sample", supp.LabelLength)] = sample
 	// add entry type
@@ -56,7 +56,7 @@ func SetUp() {
 		return data
 	}
 	entry.cf = func(id string, in chan interface{}, rst chan bool) {
-		storage.SeriesEntryDBS(id, in, rst, "TS")
+		storageold.SeriesEntryDBS(id, in, rst, "TS")
 	}
 	dataTypes[supp.StringLimit("entry", supp.LabelLength)] = entry
 	// add presence type, which is equal to sample
@@ -65,7 +65,7 @@ func SetUp() {
 		return DataEntry{id: nm, Ts: se.ts, NetFlow: se.netFlow}
 	}
 	presence.cf = func(id string, in chan interface{}, rst chan bool) {
-		storage.SerieSampleDBS(id, in, rst, "SD")
+		storageold.SerieSampleDBS(id, in, rst, "SD")
 	}
 	dataTypes[supp.StringLimit("presence", supp.LabelLength)] = presence
 
@@ -248,7 +248,7 @@ func setUpSpaces() (spaceChannels map[string]chan spaceEntries) {
 	} else {
 		log.Fatal("spaces.setUpSpaces: fatal error no space has been defined")
 	}
-	storage.SpaceInfo = SpaceDef
+	storageold.SpaceInfo = SpaceDef
 	return spaceChannels
 }
 
@@ -454,10 +454,10 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 								switch dl {
 								case "sample__":
 									if va, e := strconv.Atoi(InitData[dl][name][v.Name][1]); e == nil {
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name], DataEntry{id: tag, Ts: ts, NetFlow: va})
+										go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name], DataEntry{id: tag, Ts: ts, NetFlow: va})
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
+										go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 									}
 								case "entry___":
 									vas := strings.Split(InitData[dl][name][v.Name][1][2:len(InitData[dl][name][v.Name][1])-2], "][")
@@ -485,27 +485,27 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 											length  int
 											entries [][]int
 										}{id: tag, ts: 0, length: len(va), entries: va}
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name], data)
+										go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name], data)
 									} else {
 										log.Printf("spaces.setUpDataDBSBank: invalid InitData data for %v\n", tag)
-										go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
+										go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 									}
 								default:
 									log.Printf("spaces.setUpDataDBSBank: invalid InitData data type for %v\n", tag)
-									go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
+									go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 								}
 							} else {
 								// data is not fresh enough
 								log.Printf("spaces.setUpDataDBSBank: too old InitData Ts for %v\n", tag)
-								go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
+								go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 							}
 						} else {
 							log.Printf("spaces.setUpDataDBSBank: invalid InitData Ts for %v\n", tag)
-							go storage.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
+							go storageold.SafeRegGeneric(tag, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 						}
 					} else {
 						// register started with no InitData data (not available)
-						go storage.SafeRegGeneric(dl+name+v.Name, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
+						go storageold.SafeRegGeneric(dl+name+v.Name, latestBankIn[dl][name][v.Name], LatestBankOut[dl][name][v.Name])
 					}
 
 					//if supp.Debug < 3 {
@@ -514,7 +514,7 @@ func setUpDataDBSBank(spaceChannels map[string]chan spaceEntries) {
 					//_ResetDBS[dl][name][v.name] = make(chan bool)
 					latestDBSIn[dl][name][v.Name] = make(chan interface{})
 					label := dl + name + v.Name
-					if _, e := storage.SetSeries(label, v.Interval, !supp.StringEnding(label, "current", "_")); e != nil {
+					if _, e := storageold.SetSeries(label, v.Interval, !supp.StringEnding(label, "current", "_")); e != nil {
 						log.Fatalf("spaces.setUpDataDBSBank: fatal error setting database %v:%v\n", name+v.Name, v.Interval)
 					}
 					//go dt.cf(dl+name+v.name, latestDBSIn[dl][name][v.name], _ResetDBS[dl][name][v.name])

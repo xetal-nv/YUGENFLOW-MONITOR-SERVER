@@ -2,7 +2,7 @@ package servers
 
 import (
 	"fmt"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"log"
 	"net/http"
@@ -33,7 +33,7 @@ func retrieveDBSsamples() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		go storage.RetrieveSampleFromFile(false)
+		go storageold.RetrieveSampleFromFile(false)
 
 		_, _ = fmt.Fprintf(w, "Sample DBS retrieval initiated")
 	})
@@ -63,7 +63,7 @@ func retrieveDBSpresence() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		go storage.RetrievePresenceFromFile(false)
+		go storageold.RetrievePresenceFromFile(false)
 
 		_, _ = fmt.Fprintf(w, "Presence DBS retrieval initiated")
 	})

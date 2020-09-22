@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"gateserver/spaces"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"io/ioutil"
 	"log"
@@ -271,8 +271,8 @@ func setupHTTP() error {
 	setJSenv()
 
 	dataMap = make(map[string]dataFunc)
-	dataMap["sample"] = func() GenericData { return new(storage.SeriesSample) }
-	dataMap["entry"] = func() GenericData { return new(storage.JsonSeriesEntries) }
+	dataMap["sample"] = func() GenericData { return new(storageold.SeriesSample) }
+	dataMap["entry"] = func() GenericData { return new(storageold.JsonSeriesEntries) }
 
 	dbgMutex.Lock()
 	dbgRegistry = make(map[string]int64)

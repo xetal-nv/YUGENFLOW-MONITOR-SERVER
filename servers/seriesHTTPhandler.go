@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gateserver/spaces"
-	"gateserver/storage"
+	"gateserver/storageold"
 	"gateserver/supp"
 	"log"
 	"math"
@@ -93,18 +93,18 @@ func seriesHTTPhandler() http.Handler {
 		//os.Exit(1)
 
 		if params["last"] != "" {
-			var s storage.SampleData
+			var s storageold.SampleData
 			if num, e := strconv.Atoi(params["last"]); e == nil {
 				switch params["type"] {
 				case "sample":
-					s = &storage.SeriesSample{Stag: label, Sts: supp.Timestamp()}
+					s = &storageold.SeriesSample{Stag: label, Sts: supp.Timestamp()}
 				case "entry":
-					s = &storage.SeriesEntries{Stag: label, Sts: supp.Timestamp()}
+					s = &storageold.SeriesEntries{Stag: label, Sts: supp.Timestamp()}
 				default:
 					_, _ = fmt.Fprintf(w, "")
 					return
 				}
-				if tag, ts, vals, e := storage.ReadLastNTS(s, num, params["analysis"] != "current"); e == nil {
+				if tag, ts, vals, e := storageold.ReadLastNTS(s, num, params["analysis"] != "current"); e == nil {
 					rt := s.UnmarshalSliceSS(tag, ts, vals)
 					if e := json.NewEncoder(w).Encode(rt); e != nil {
 						_, _ = fmt.Fprintf(w, "")
@@ -112,7 +112,7 @@ func seriesHTTPhandler() http.Handler {
 				}
 			}
 		} else {
-			var rt []storage.SampleData
+			var rt []storageold.SampleData
 			if params["start"] != "" && params["end"] != "" {
 
 				// if not in authorised via pin, the request will not provide data for the current day
@@ -149,13 +149,13 @@ func seriesHTTPhandler() http.Handler {
 					_, _ = fmt.Fprintf(w, "")
 					return
 				}
-				var s0, s1 storage.SampleData
+				var s0, s1 storageold.SampleData
 				switch params["type"] {
 				case "sample":
-					s0 = &storage.SeriesSample{Stag: label, Sts: st}
-					s1 = &storage.SeriesSample{Stag: label, Sts: en}
+					s0 = &storageold.SeriesSample{Stag: label, Sts: st}
+					s1 = &storageold.SeriesSample{Stag: label, Sts: en}
 					// fmt.Println(s0, s1)
-					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
+					if tag, ts, vals, e := storageold.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
 					// fmt.Println(rt)
@@ -164,9 +164,9 @@ func seriesHTTPhandler() http.Handler {
 					}
 				case "entry":
 					// with entry we provide both samples and flows data, and check for inconsistencies
-					var convertedRt []storage.JsonSeriesEntries
+					var convertedRt []storageold.JsonSeriesEntries
 					var dataPeriod int
-					var fullReport storage.JsonCompleteReport
+					var fullReport storageold.JsonCompleteReport
 					fullReport.Stag = label
 					for _, el := range spaces.AvgAnalysis {
 						if el.Name == supp.StringLimit(params["analysis"], supp.LabelLength) {
@@ -175,21 +175,21 @@ func seriesHTTPhandler() http.Handler {
 						}
 					}
 
-					s0s := &storage.SeriesSample{Stag: strings.Replace(label, "entry___", "sample__", -1), Sts: st}
-					s1s := &storage.SeriesSample{Stag: strings.Replace(label, "entry___", "sample__", -1), Sts: en}
-					var referenceSamples []storage.SeriesSample
-					if tag, ts, vals, e := storage.ReadSeriesTS(s0s, s1s, params["analysis"] != "current"); e == nil {
+					s0s := &storageold.SeriesSample{Stag: strings.Replace(label, "entry___", "sample__", -1), Sts: st}
+					s1s := &storageold.SeriesSample{Stag: strings.Replace(label, "entry___", "sample__", -1), Sts: en}
+					var referenceSamples []storageold.SeriesSample
+					if tag, ts, vals, e := storageold.ReadSeriesTS(s0s, s1s, params["analysis"] != "current"); e == nil {
 						referenceSamples = s0s.UnmarshalSliceNative(tag, ts, vals)
 					}
 
-					s0 = &storage.SeriesEntries{Stag: label, Sts: st}
-					s1 = &storage.SeriesEntries{Stag: label, Sts: en}
-					if tag, ts, vals, e := storage.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
+					s0 = &storageold.SeriesEntries{Stag: label, Sts: st}
+					s1 = &storageold.SeriesEntries{Stag: label, Sts: en}
+					if tag, ts, vals, e := storageold.ReadSeriesTS(s0, s1, params["analysis"] != "current"); e == nil {
 						rt = s0.UnmarshalSliceSS(tag, ts, vals)
 					}
 					for _, v := range rt {
-						convertedTemp := storage.JsonSeriesEntries{}
-						seVal := storage.SeriesEntries{}
+						convertedTemp := storageold.JsonSeriesEntries{}
+						seVal := storageold.SeriesEntries{}
 						codedVal := v.Marshal()
 						_ = seVal.Unmarshal(codedVal)
 						seVal.Stag = v.Tag()
@@ -201,7 +201,7 @@ func seriesHTTPhandler() http.Handler {
 					// data received from the DBS is ordered in time with timestamps in ms
 					iFlow := 0
 					for _, el := range referenceSamples {
-						ns := storage.JsonCompleteData{Sts: (el.Sts / 1000) * 1000, AvgPresence: el.Sval}
+						ns := storageold.JsonCompleteData{Sts: (el.Sts / 1000) * 1000, AvgPresence: el.Sval}
 						if iFlow < len(convertedRt) {
 							if int(math.Abs(float64(el.Sts-convertedRt[iFlow].Sts)/1000)) <= dataPeriod/2 {
 								ns.Sval = convertedRt[iFlow].Sval
@@ -209,7 +209,7 @@ func seriesHTTPhandler() http.Handler {
 							} else {
 								// we have corrupted data
 								for convertedRt[iFlow].Sts < el.Sts-int64(dataPeriod*1000/2) {
-									tmp := storage.JsonCompleteData{Sts: (convertedRt[iFlow].Sts / 1000) * 1000,
+									tmp := storageold.JsonCompleteData{Sts: (convertedRt[iFlow].Sts / 1000) * 1000,
 										Corrupted: true, Sval: convertedRt[iFlow].Sval}
 									fullReport.Data = append(fullReport.Data, tmp)
 									iFlow = +1
@@ -237,7 +237,7 @@ func seriesHTTPhandler() http.Handler {
 					}
 					// If we have corrupted flow data, we add it at the end
 					for iFlow < len(convertedRt) {
-						tmp := storage.JsonCompleteData{Sts: (convertedRt[iFlow].Sts / 1000 * 1000), Corrupted: true, Sval: convertedRt[iFlow].Sval}
+						tmp := storageold.JsonCompleteData{Sts: (convertedRt[iFlow].Sts / 1000 * 1000), Corrupted: true, Sval: convertedRt[iFlow].Sval}
 						fullReport.Data = append(fullReport.Data, tmp)
 						iFlow = +1
 					}
