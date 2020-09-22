@@ -22,15 +22,14 @@ func tcpServer(rst chan bool) {
 			"listening on 0.0.0.0:" + globals.TCPport,
 			[]int{1}, true})
 	for {
-		var c chan net.Conn
+		c := make(chan net.Conn, 1)
 		go func(c chan net.Conn, srv net.Listener) {
-		finished:
 			for {
 				conn, e := srv.Accept()
 				if e == nil {
 					select {
 					case c <- conn:
-						break finished
+						return
 					case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 					}
 				} else {
@@ -51,8 +50,6 @@ func tcpServer(rst chan bool) {
 					//goland:noinspection GoUnhandledErrorResult
 					nc.Close()
 				})
-
-			go handler(nc)
 		case <-rst:
 			fmt.Println("Closing sensorManager.tcpServer")
 

@@ -73,12 +73,23 @@ func Start(sd chan bool) {
 				sensorDeclaration[i] = strings.Trim(el, " ")
 			}
 			if id, err := strconv.Atoi(sensorDeclaration[0]); err == nil {
+				fn := func(a string, list []string) bool {
+					for _, b := range list {
+						if b == a {
+							return true
+						}
+					}
+					return false
+				}
 				newSensor := SensorDefinition{
-					Mac:        mac,
-					Id:         id,
-					Attributes: sensorDeclaration[1:],
-					Active:     false,
-					Disabled:   false,
+					Mac:      mac,
+					Id:       id,
+					Bypass:   fn("bypass", sensorDeclaration[1:]),
+					Report:   fn("report", sensorDeclaration[1:]),
+					Enforce:  fn("enforce", sensorDeclaration[1:]),
+					Strict:   fn("strict", sensorDeclaration[1:]),
+					Active:   false,
+					Disabled: false,
 				}
 				DeclaredSensors.Lock()
 				DeclaredSensors.Mac[mac] = newSensor

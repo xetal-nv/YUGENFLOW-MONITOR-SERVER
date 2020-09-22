@@ -21,7 +21,7 @@ func Start() {
 
 	APIport = internalConfig.Section("server").Key("http_port").MustString("8080")
 	TCPport = internalConfig.Section("server").Key("tcp_port").MustString("3333")
-	fmt.Printf("API and TCP ports set to %s and %s respectively\n", APIport, TCPport)
+	//fmt.Printf("API and TCP ports set to %s and %s respectively\n", APIport, TCPport)
 
 	ChannellingLength = internalConfig.Section("buffers").Key("channelling").MustInt(5)
 	ShutdownTime = internalConfig.Section("buffers").Key("shutdown").MustInt(3)
@@ -29,7 +29,7 @@ func Start() {
 	SensorTimeout = internalConfig.Section("timeouts").Key("device").MustInt(5)
 
 	CRCused = internalConfig.Section("sensors").Key("crc_enabled").MustBool(true)
-	fmt.Println("!!! WARNING: CRC usage is set to", CRCused, "!!!")
+	fmt.Printf("*** WARNING: CRC usage is set to %v ***\n", CRCused)
 
 	//for _, b := range Config.Section("gates").KeyStrings() {
 	//	fmt.Println(b, Config.Section("gates").Key(b))
