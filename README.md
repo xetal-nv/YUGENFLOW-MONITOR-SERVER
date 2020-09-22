@@ -79,6 +79,7 @@ Configuration files: gateserver.ini, configuration.ini
 Resource folders: 
 
 **TO BE DONE (in priority order)**  
- - everything
+ - everything  
+ - disable sensors and keep the state after server stop-start  
 
 

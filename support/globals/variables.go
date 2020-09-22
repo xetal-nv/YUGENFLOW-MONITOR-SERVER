@@ -12,10 +12,10 @@ const (
 var Config *ini.File
 
 // logFiles
-var SensorManagerLog, DeviceManagerLog int
+var SensorManagerLog, DeviceManagerLog, SensorDBLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
 var DebugActive, CRCused, SensorEEPROMResetEnabled bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout int
-var APIport, TCPport string
+var APIport, TCPport, DiskCachePath string

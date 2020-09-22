@@ -25,18 +25,16 @@ func tcpServer(rst chan bool) {
 	for {
 		c := make(chan net.Conn, 1)
 		go func(c chan net.Conn, srv net.Listener) {
-			for {
-				conn, e := srv.Accept()
-				if e == nil {
-					select {
-					case c <- conn:
-						return
-					case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-					}
-				} else {
-					if globals.DebugActive {
-						log.Printf("sensorManager.tcpServer: Error accepting: %v\n", e)
-					}
+			conn, e := srv.Accept()
+			if e == nil {
+				select {
+				case c <- conn:
+					return
+				case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+				}
+			} else {
+				if globals.DebugActive {
+					log.Printf("sensorManager.tcpServer: Error accepting: %v\n", e)
 				}
 			}
 		}(c, srv)

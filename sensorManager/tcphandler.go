@@ -16,8 +16,6 @@ import (
 	send data using gateManager channels to the proper gates
 */
 
-// TODO check if we keep stuff as is in memory or not
-
 func handler(conn net.Conn) {
 
 	mac := make([]byte, 6) // received amc address
@@ -27,7 +25,7 @@ func handler(conn net.Conn) {
 	defer func() {
 
 		// We close the channel and update the sensor definition entry, when applicable
-		conn.Close()
+		_ = conn.Close()
 		if sensorDef.Mac != "" {
 			DeclaredSensors.Lock()
 			sensorDef.CurrentChannel = nil
@@ -37,8 +35,21 @@ func handler(conn net.Conn) {
 
 	}()
 
-	// TODO we better store it
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
+	// the IP is checked in the disabled list
+	MaliciousIPS.RLock()
+	if MaliciousIPS.Disabled[ipc] {
+		MaliciousIPS.RUnlock()
+		// We wait assuming it is an attack to slow it down
+		wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
+		time.Sleep(time.Duration(wait) * time.Second)
+		mlogger.Warning(globals.SensorManagerLog,
+			mlogger.LoggerData{"device " + ipc,
+				"malicious, connection refused",
+				[]int{1}, true})
+		return
+	}
+	MaliciousIPS.RUnlock()
 
 	// Initially receive the MAC value to identify the sensor
 	if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
@@ -67,8 +78,14 @@ func handler(conn net.Conn) {
 		// sensor configuration data is retrieved and it is verified that no channel is already open
 		DeclaredSensors.Lock()
 		sensorDef = DeclaredSensors.Mac[mach]
+		if sensorDef.Mac == "" {
+			// the default definition will be used
+			sensorDef = DeclaredSensors.Mac["default"]
+			sensorDef.Mac = mach
+		}
 
 		// TODO add limit on sensorDef.SuspectedConnection to disable the sensor and add it to a blocked list
+		//  use also a suspected IP list
 
 		if sensorDef.CurrentChannel != nil {
 			DeclaredSensors.Unlock()
@@ -89,7 +106,7 @@ func handler(conn net.Conn) {
 				// We wait assuming it is an attack to slow it down
 				wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
 				time.Sleep(time.Duration(wait) * time.Second)
-				// TODO store in a list of suspected devices/ip
+				// TODO store in a list of suspected devices and ip
 				return
 			}
 		}

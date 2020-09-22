@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gateserver/dbs/sensorDB"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
 	"gateserver/sensormodels"
@@ -16,6 +17,7 @@ import (
 
 // in progress
 func main() {
+	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
@@ -24,6 +26,7 @@ func main() {
 	globals.DebugActive = *debug
 	globals.TCPdeadline = *tcpdeadline
 	globals.SensorEEPROMResetEnabled = *eeprom
+	globals.DiskCachePath = *dcpath
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *debug {
@@ -37,6 +40,7 @@ func main() {
 	}
 
 	globals.Start()
+	sensorDB.Start()
 
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
@@ -61,6 +65,7 @@ func main() {
 				wg.Done()
 			}(ch)
 		}
+		sensorDB.Close()
 		wg.Wait()
 		time.Sleep(2 * time.Second)
 		fmt.Println("Closing YugenFlow Server completed")
@@ -69,7 +74,7 @@ func main() {
 
 	if globals.DebugActive {
 		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
-		//go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
+		//go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
 	}
 
 	go sensorManager.Start(sd[0])
