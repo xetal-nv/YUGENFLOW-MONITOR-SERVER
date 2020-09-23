@@ -64,7 +64,6 @@ func Start(sd chan bool) {
 	// First we load any eventual sensor declaration
 	ActiveSensors.Mac = make(map[string]SensorChannel)
 	ActiveSensors.Id = make(map[int]string)
-	foundDefault := false
 
 	for _, mac := range globals.Config.Section("sensors").KeyStrings() {
 		if sensorDeclarationRaw := globals.Config.Section("sensors").Key(mac).Value(); sensorDeclarationRaw != "" {
@@ -97,7 +96,6 @@ func Start(sd chan bool) {
 						time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 						os.Exit(0)
 					}
-					foundDefault = (mac == "default")
 				} else {
 					mlogger.Panic(globals.SensorManagerLog,
 						mlogger.LoggerData{"sensorManager.Start",
@@ -107,13 +105,6 @@ func Start(sd chan bool) {
 				}
 			}
 		}
-	}
-	if !foundDefault {
-		mlogger.Panic(globals.SensorManagerLog,
-			mlogger.LoggerData{"sensorManager.Start",
-				"default sensor declaration missing", []int{1}, true}, true)
-		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
-		os.Exit(0)
 	}
 
 	recovery.RunWith(

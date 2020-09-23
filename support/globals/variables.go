@@ -6,6 +6,9 @@ import "gopkg.in/ini.v1"
 
 const (
 	VERSION = "2.0.0"
+	SEVERE  = 2
+	NORMAL  = 1
+	OFF     = 0
 )
 
 // ini files
@@ -18,5 +21,5 @@ var SensorManagerLog, DeviceManagerLog, SensorDBLog int
 //noinspection GoExportedOwnDeclaration
 var DebugActive, CRCused, SensorEEPROMResetEnabled bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
-	MaliciousTriesMac int
+	MaliciousTriesMac, MalicioudMode int
 var APIport, TCPport, DiskCachePath string

@@ -29,5 +29,7 @@ type sensorDefinition struct {
 	report   bool
 	enforce  bool
 	strict   bool
+	accept   bool
+	active   bool
 	channels SensorChannel
 }

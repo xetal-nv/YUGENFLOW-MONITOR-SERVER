@@ -2,6 +2,7 @@ package sensorManager
 
 import (
 	"fmt"
+	"gateserver/codings"
 	"gateserver/dataformats"
 	"gateserver/dbs/sensorDB"
 	"gateserver/support/globals"
@@ -10,7 +11,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -21,6 +21,26 @@ import (
 */
 
 func handler(conn net.Conn) {
+
+	// support methods
+	deadlineFailed := func(ipc string, e error) {
+		if globals.DebugActive {
+			fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
+		}
+		mlogger.Error(globals.SensorManagerLog,
+			mlogger.LoggerData{"sensor " + ipc,
+				"error on setting deadline: " + e.Error(),
+				[]int{}, false})
+	}
+	failedRead := func(mach, ipc string, e error) {
+		if globals.DebugActive {
+			log.Printf("sensorManager.handler: error reading from %v//%v : %v\n", ipc, mach, e)
+		}
+		mlogger.Error(globals.SensorManagerLog,
+			mlogger.LoggerData{mach + " read error",
+				"ip: " + ipc,
+				[]int{1}, true})
+	}
 
 	var sensorDef sensorDefinition
 	mac := make([]byte, 6) // received amc address
@@ -55,13 +75,7 @@ func handler(conn net.Conn) {
 
 	// Initially receive the MAC value to identify the sensor
 	if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
-		if globals.DebugActive {
-			fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
-		}
-		mlogger.Error(globals.SensorManagerLog,
-			mlogger.LoggerData{"sensor " + ipc,
-				"error on setting deadline: " + e.Error(),
-				[]int{}, false})
+		deadlineFailed(ipc, e)
 		return
 	}
 	if _, e := conn.Read(mac); e != nil {
@@ -74,7 +88,7 @@ func handler(conn net.Conn) {
 				[]int{1}, true})
 		// A delay is inserted in case this is a malicious attempt and we mark the IP as suspicious
 		time.Sleep(time.Duration(globals.SensorTimeout) * time.Second)
-		_, _ = sensorDB.AddIP([]byte(ipc), globals.MaliciousTriesIP)
+		_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
 		return
 	} else {
 		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", "", -1), " ")
@@ -93,17 +107,13 @@ func handler(conn net.Conn) {
 		// read sensor definition form the sensor DB and store it locally
 		def, erDB := sensorDB.ReadDefinition([]byte(mach))
 		if erDB != nil {
-			def, erDB = sensorDB.ReadDefinition([]byte("default"))
-			if erDB != nil {
-				// this should never happen
-				if globals.DebugActive {
-					fmt.Println("sensor ", ipc, "read sensorDB error:", erDB.Error())
-				}
-				mlogger.Error(globals.SensorManagerLog,
-					mlogger.LoggerData{"sensor " + ipc,
-						"error reading sensorDB :" + e.Error(),
-						[]int{1}, true})
-				return
+			// the sensor has no definition
+			def = dataformats.SensorDefinition{
+				Id:      -1,
+				Bypass:  false,
+				Report:  false,
+				Enforce: false,
+				Strict:  false,
 			}
 		}
 		sensorDef = sensorDefinition{
@@ -113,6 +123,8 @@ func handler(conn net.Conn) {
 			report:  def.Report,
 			enforce: def.Enforce,
 			strict:  def.Strict,
+			accept:  !def.Bypass && !def.Report && !def.Enforce && !def.Strict,
+			active:  false,
 		}
 
 		// sensor configuration data is retrieved and it is verified that no channel is already open
@@ -137,7 +149,7 @@ func handler(conn net.Conn) {
 				// We wait assuming it is an attack to slow it down and mark the IP as suspicious
 				wait := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(globals.MaliciousTimeout)
 				time.Sleep(time.Duration(wait) * time.Second)
-				_, _ = sensorDB.AddIP([]byte(ipc), globals.MaliciousTriesIP)
+				_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
 				return
 			}
 		}
@@ -179,31 +191,18 @@ func handler(conn net.Conn) {
 		}
 
 		if e := conn.SetDeadline(time.Time{}); e != nil {
-			if globals.DebugActive {
-				fmt.Printf("sensorManager.handler: timeout reset error %v with device %v//%v\n", e.Error(), ipc, mach)
-			}
-			mlogger.Info(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensor " + mach,
-					"failed to reset deadline timeouts",
-					[]int{}, false})
+			deadlineFailed(ipc, e)
 		}
 
 		if globals.DebugActive {
-			fmt.Printf("%+v\n", sensorDef)
-			fmt.Println(sensorDB.LookUpMac([]byte(strconv.Itoa(sensorDef.id))))
+			fmt.Printf("Sensor Definition: %+v\n", sensorDef)
 		}
 
 		loop := true
 		for loop {
 			cmd := make([]byte, 1)
 			if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
-				if globals.DebugActive {
-					fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
-				}
-				mlogger.Error(globals.SensorManagerLog,
-					mlogger.LoggerData{"sensor " + ipc,
-						"error on setting deadline: " + e.Error(),
-						[]int{}, false})
+				deadlineFailed(ipc, e)
 				return
 			}
 			if _, e := conn.Read(cmd); e != nil {
@@ -218,22 +217,64 @@ func handler(conn net.Conn) {
 							[]int{1}, true})
 					loop = false
 				} else {
-					if globals.DebugActive {
-						log.Printf("sensorManager.handler: error reading from %v//%v : %v\n", ipc, mach, e)
-					}
-					mlogger.Error(globals.SensorManagerLog,
-						mlogger.LoggerData{mach + " read error",
-							"ip: " + ipc,
-							[]int{1}, true})
+					failedRead(mach, ipc, e)
 				}
 				loop = false
 			} else {
 				// TODO Core part, based on the existing server
 				switch cmd[0] {
 				case 1:
-					fmt.Println("ok")
-					loop = false
+					//fmt.Println("ok")
+					//loop = false
 					// this is a data packet
+					var data []byte
+					if globals.CRCused {
+						data = make([]byte, 4)
+					} else {
+						data = make([]byte, 3)
+					}
+					if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
+						deadlineFailed(ipc, e)
+						return
+					}
+					if _, e := conn.Read(data); e != nil {
+						failedRead(mach, ipc, e)
+						// A delay is inserted in case this is a malicious attempt
+						time.Sleep(time.Duration(globals.SensorTimeout) * time.Second)
+						// in case of malicious mode severe we flag the mac
+						if globals.MalicioudMode == globals.SEVERE {
+							_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+						}
+						loop = false
+					} else {
+						// valid data
+						valid := true
+						if globals.CRCused {
+							msg := append(cmd, data[:3]...)
+							crc := codings.Crc8(msg)
+							if crc != data[3] {
+								if globals.DebugActive {
+									fmt.Print("servers.handlerTCPRequest: wrong CRC on received message\n")
+								}
+								valid = false
+							}
+						}
+						if valid {
+							// data is valid, we flag the device as active if needed
+							if !sensorDef.active {
+								if err := sensorDB.MarkDeviceActive([]byte(mach)); err == nil {
+									sensorDef.active = true
+								}
+							}
+							deviceId := int(data[1]) | int(data[0])<<8
+							if globals.DebugActive {
+								fmt.Printf("Valid data (%v) for device ID %v\n", valid, deviceId)
+							}
+							// TODO HERE what happens here depends on the sensor ID flags
+							fmt.Println("id's", sensorDef.id, deviceId)
+							loop = false
+						}
+					}
 				default:
 					fmt.Println("not ok")
 					loop = false

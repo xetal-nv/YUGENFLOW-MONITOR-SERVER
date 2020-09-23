@@ -33,6 +33,7 @@ func Start() {
 	fmt.Printf("*** WARNING: CRC usage is set to %v ***\n", CRCused)
 	MaliciousTriesIP = internalConfig.Section("sensors").Key("maliciousIP_threshold").MustInt(50)
 	MaliciousTriesMac = internalConfig.Section("sensors").Key("maliciousMAC_threshold").MustInt(5)
+	MalicioudMode = internalConfig.Section("sensors").Key("malicious_control").MustInt(0)
 
 	//for _, b := range Config.Section("gates").KeyStrings() {
 	//	fmt.Println(b, Config.Section("gates").Key(b))
