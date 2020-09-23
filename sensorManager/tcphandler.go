@@ -6,6 +6,7 @@ import (
 	"gateserver/dbs/sensorDB"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
+	"io"
 	"log"
 	"math/rand"
 	"net"
@@ -21,8 +22,8 @@ import (
 
 func handler(conn net.Conn) {
 
-	mac := make([]byte, 6) // received amc address
 	var sensorDef sensorDefinition
+	mac := make([]byte, 6) // received amc address
 
 	// cleaning up at closure
 	defer func() {
@@ -143,7 +144,7 @@ func handler(conn net.Conn) {
 		// the sensor is returned and this is not suspected to be a malicious attack
 		sensorDef.channels = SensorChannel{
 			Tcp:     conn,
-			Process: make(chan dataformats.SensorCommand, globals.ChannellingLength),
+			Process: make(chan dataformats.CommandAnswer, globals.ChannellingLength),
 		}
 
 		ActiveSensors.Mac[sensorDef.mac] = sensorDef.channels
@@ -187,13 +188,60 @@ func handler(conn net.Conn) {
 					[]int{}, false})
 		}
 
-		// TODO make core loop for data read, command send and command answer read
+		if globals.DebugActive {
+			fmt.Printf("%+v\n", sensorDef)
+			fmt.Println(sensorDB.LookUpMac([]byte(strconv.Itoa(sensorDef.id))))
+		}
 
-		fmt.Printf("%+v\n", sensorDef)
-		fmt.Println(sensorDB.LookUpMac([]byte(strconv.Itoa(sensorDef.id))))
+		loop := true
+		for loop {
+			cmd := make([]byte, 1)
+			if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
+				if globals.DebugActive {
+					fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
+				}
+				mlogger.Error(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensor " + ipc,
+						"error on setting deadline: " + e.Error(),
+						[]int{}, false})
+				return
+			}
+			if _, e := conn.Read(cmd); e != nil {
+				if e == io.EOF {
+					// in case of channel closed (EOF) it gets logged and the handler terminated
+					if globals.DebugActive {
+						fmt.Printf("sensorManager.handler: connection lost with device %v//%v\n", ipc, mach)
+					}
+					mlogger.Error(globals.SensorManagerLog,
+						mlogger.LoggerData{mach + " connection lost",
+							"ip: " + ipc,
+							[]int{1}, true})
+					loop = false
+				} else {
+					if globals.DebugActive {
+						log.Printf("sensorManager.handler: error reading from %v//%v : %v\n", ipc, mach, e)
+					}
+					mlogger.Error(globals.SensorManagerLog,
+						mlogger.LoggerData{mach + " read error",
+							"ip: " + ipc,
+							[]int{1}, true})
+				}
+				loop = false
+			} else {
+				// TODO Core part, based on the existing server
+				switch cmd[0] {
+				case 1:
+					fmt.Println("ok")
+					loop = false
+					// this is a data packet
+				default:
+					fmt.Println("not ok")
+					loop = false
+					// this is a command answer
+				}
+			}
+		}
+
 	}
 
-	for {
-		time.Sleep(36 * time.Hour)
-	}
 }

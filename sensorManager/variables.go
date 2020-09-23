@@ -10,7 +10,7 @@ import (
 
 type SensorChannel struct {
 	Tcp     net.Conn
-	Process chan dataformats.SensorCommand
+	Process chan dataformats.CommandAnswer
 }
 
 //ActiveSensors is used as lock and contains the assigned channels
@@ -24,6 +24,7 @@ var ActiveSensors struct {
 type sensorDefinition struct {
 	mac      string
 	id       int
+	idSent   int
 	bypass   bool
 	report   bool
 	enforce  bool
