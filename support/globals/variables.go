@@ -17,5 +17,6 @@ var SensorManagerLog, DeviceManagerLog, SensorDBLog int
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
 var DebugActive, CRCused, SensorEEPROMResetEnabled bool
-var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout int
+var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
+	MaliciousTriesMac int
 var APIport, TCPport, DiskCachePath string

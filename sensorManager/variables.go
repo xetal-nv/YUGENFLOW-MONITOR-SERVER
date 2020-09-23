@@ -30,17 +30,3 @@ type sensorDefinition struct {
 	strict   bool
 	channels SensorChannel
 }
-
-// TODO var below to be moved to the database
-// MaliciousDevices stored all suspected devices (map[mac]ip) classified in suspected and disabled
-var MaliciousDevices struct {
-	sync.RWMutex `json:"-"`
-	Suspected    map[string]string `json:"suspectedDevices"`
-	Disabled     map[string]string `json:"disabledDevices"`
-}
-
-// MaliciousIPS stores all suspected IP's, the boolean indicated if it is suspected (false) or disabled (true)
-var MaliciousIPS struct {
-	sync.RWMutex `json:"-"`
-	Disabled     map[string]bool `json:"disabledIPS"`
-}
