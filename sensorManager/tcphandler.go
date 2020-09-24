@@ -251,7 +251,6 @@ func handler(conn net.Conn) {
 						}
 					} else {
 						// potentially valid package
-						//valid := true
 						if globals.CRCused {
 							msg := append(cmd, data[:3]...)
 							crc := codings.Crc8(msg)
@@ -278,7 +277,6 @@ func handler(conn net.Conn) {
 								continue
 							}
 						}
-						//if valid {
 
 						// package is valid, we extract the ID
 						sensorDef.idSent = int(data[1]) | int(data[0])<<8
@@ -427,26 +425,16 @@ func handler(conn net.Conn) {
 
 							if err := sensorDB.MarkDeviceActive([]byte(mach)); err == nil {
 								sensorDef.active = true
+								mlogger.Info(globals.SensorManagerLog,
+									mlogger.LoggerData{"sensor " + mach,
+										"is active",
+										[]int{}, true})
 							}
 						}
 
-						// the sensor can now be considered valid
-						// TODO HERE
+						// the sensor can now be considered valid and we send the data to the gate
+						gateManager.DistributeData(sensorDef.id, int(data[2]))
 
-						println("sensor valid")
-
-						mlogger.Info(globals.SensorManagerLog,
-							mlogger.LoggerData{"sensor " + mach,
-								"is active",
-								[]int{}, true})
-
-						time.Sleep(time.Second)
-
-						mlogger.Info(globals.SensorManagerLog,
-							mlogger.LoggerData{"sensor " + mach,
-								"disconnected",
-								[]int{}, true})
-						return
 					}
 				default:
 					// this is a command answer

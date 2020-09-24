@@ -89,7 +89,7 @@ func Close() {
 		})
 	}
 	_ = main.Close()
-	fmt.Println("SensorDB cleaned and closed")
+	fmt.Println("Closing SensorDB")
 	mlogger.Info(globals.SensorDBLog,
 		mlogger.LoggerData{"sensorDB.Start", "service stopped",
 			[]int{1}, true})

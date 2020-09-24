@@ -13,5 +13,6 @@ func refreshEEPROM(conn net.Conn, mach string) error {
 //  in case of timeout the sensor will be disconnected and marked suspicious (if applicable)
 //  we need to also update the lookup db
 func setID(conn net.Conn, id int) error {
+	println("sensor setID to be done")
 	return nil
 }

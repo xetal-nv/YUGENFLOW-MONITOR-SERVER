@@ -32,7 +32,7 @@ func Start(sd chan bool) {
 			[]int{0}, true})
 
 	var rstC []chan bool
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 2; i++ {
 		rstC = append(rstC, make(chan bool))
 	}
 
@@ -129,11 +129,20 @@ func Start(sd chan bool) {
 		}
 	}
 
-	recovery.RunWith(
+	go recovery.RunWith(
 		func() { tcpServer(rstC[0]) },
 		func() {
 			mlogger.Recovered(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.tcpServer",
+					"service terminated and recovered unexpectedly",
+					[]int{1}, true})
+		})
+
+	recovery.RunWith(
+		func() { sensorReset(rstC[1]) },
+		func() {
+			mlogger.Recovered(globals.SensorManagerLog,
+				mlogger.LoggerData{"sensorManager.sensorReset",
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		})
