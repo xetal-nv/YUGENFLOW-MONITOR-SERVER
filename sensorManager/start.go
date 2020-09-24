@@ -147,6 +147,8 @@ func Start(sd chan bool) {
 					[]int{1}, true})
 		})
 
+	startstopCommandProcess = make(chan string, globals.ChannellingLength)
+
 	//for {
 	//	time.Sleep(36 * time.Hour)
 	//}

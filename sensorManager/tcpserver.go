@@ -52,7 +52,14 @@ func tcpServer(rst chan bool) {
 				})
 		case <-rst:
 			fmt.Println("Closing sensorManager.tcpServer")
-
+			// we stop all running sensor processes
+			ActiveSensors.Lock()
+			for _, el := range ActiveSensors.Mac {
+				_ = el.Tcp.Close()
+				el.Reset <- true
+				<-el.Reset
+			}
+			ActiveSensors.Unlock()
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.tcpServer",
 					"service stopped",

@@ -19,9 +19,10 @@ import (
 
 /*
 	initiate the TCP channels with all checks
-	send data using gateManager channels to the proper gates
+	send data using gateManager to the proper gates
 */
 
+// TODO command process needs to be done still !!!
 func handler(conn net.Conn) {
 
 	// support methods
@@ -53,11 +54,17 @@ func handler(conn net.Conn) {
 		// We close the channel and update the sensor definition entry, when applicable
 		_ = conn.Close()
 		if sensorDef.mac != "" {
+			// TODO kill command process first
+			if sensorDef.channels.Reset != nil {
+				sensorDef.channels.Reset <- true
+				go func() { <-sensorDef.channels.Reset }()
+			}
 			ActiveSensors.Lock()
 			delete(ActiveSensors.Id, sensorDef.id)
 			delete(ActiveSensors.Mac, sensorDef.mac)
 			ActiveSensors.Unlock()
 			_ = sensorDB.DeleteDevice([]byte(sensorDef.mac))
+			//startstopCommandProcess <- sensorDef.mac
 		}
 
 	}()
@@ -166,11 +173,14 @@ func handler(conn net.Conn) {
 			}
 		}()
 		sensorDef.channels = SensorChannel{
-			Tcp:     conn,
-			Process: make(chan dataformats.CommandAnswer, globals.ChannellingLength),
+			Tcp:      conn,
+			Commands: make(chan dataformats.CommandAnswer, globals.ChannellingLength),
+			Reset:    make(chan bool, 1),
 		}
 
 		ActiveSensors.Mac[sensorDef.mac] = sensorDef.channels
+		//startstopCommandProcess <- sensorDef.mac
+		go sensorCommand(sensorDef.channels, sensorDef.mac)
 		ActiveSensors.Unlock()
 
 		// if enabled, the EEPROM is refreshed
@@ -437,16 +447,125 @@ func handler(conn net.Conn) {
 
 					}
 				default:
-					// this is a command answer
-					// TODO everything and must be skipped till device is active
-					if !sensorDef.active {
-						fmt.Println("not ok")
+					// TODO de malicious must be reset here also !!!
+
+					if sensorDef.channels.Commands == nil {
+						// process is corrupted, we must terminate it
+						if globals.DebugActive {
+							fmt.Printf("sensorManager.handler: sensor commands channel found invalid\n")
+						}
+						mlogger.Error(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.handler",
+								"critical error, sensor commands channel found invalid",
+								[]int{}, false})
+						return
 					}
-					mlogger.Info(globals.SensorManagerLog,
-						mlogger.LoggerData{"sensor " + mach,
-							"disconnected",
-							[]int{}, true})
-					return
+					// this is a command answer
+					// only the answer to setid can be allowed when the sensor is not active
+					if !sensorDef.active &&
+						!(sensorDef.id == -1 && sensorDef.idSent == 65535 && cmd[0] == cmdAPI["setid"].cmd) {
+						// command answer received from a non active sensor
+						if globals.DebugActive {
+							fmt.Printf("sensorManager.handler: device %v//%v not active and sending non-data packages\n", ipc, mach)
+						}
+						sensorDef.failures += 1
+						if sensorDef.failures > globals.FailureThreshold {
+							_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+							// A delay is inserted in case this is a malicious attempt
+							others.WaitRandom(globals.MaliciousTimeout)
+							return
+						}
+					} else {
+						// we verify that we received a command answer from an active device
+						if v, ok := cmdAnswerLen[cmd[0]]; ok {
+							// in case if no CRC the length needs to be decrease
+							if !globals.CRCused {
+								v -= 1
+							}
+							// check if command answer is fully correct and forward it to the command process
+							if v == 0 {
+								//this can only happen when CRC is not used
+								sensorDef.channels.Commands <- cmd
+								if ans := <-sensorDef.channels.Commands; ans != nil {
+									sensorDef.failures += 1
+									if sensorDef.failures > globals.FailureThreshold {
+										_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+										// A delay is inserted in case this is a malicious attempt
+										others.WaitRandom(globals.MaliciousTimeout)
+										return
+									}
+								}
+							} else {
+								cmdd := make([]byte, v)
+								if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
+									deadlineFailed(mach, e)
+									return
+								}
+								if _, e := conn.Read(cmdd); e != nil {
+									failedRead(mach, ipc, e)
+									// in case of malicious mode severe we flag the mac and the IP
+									sensorDef.failures += 1
+									if sensorDef.failures > globals.FailureThreshold {
+										_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+										// A delay is inserted in case this is a malicious attempt
+										others.WaitRandom(globals.MaliciousTimeout)
+										return
+									}
+								} else {
+									cmd = append(cmd, cmdd...)
+									//valid := true
+									if globals.CRCused {
+										crc := codings.Crc8(cmd[:len(cmd)-1])
+										if crc != cmd[len(cmd)-1] {
+											if globals.DebugActive {
+												fmt.Print("sensorManager.handler: wrong CRC on received command answer\n")
+											}
+											mlogger.Info(globals.SensorManagerLog,
+												mlogger.LoggerData{"sensor " + mach,
+													"wrong CRC on received command answer",
+													[]int{}, true})
+											//valid = false
+											// with a wrong CRC the message is rejected but the connection is not closed
+											if globals.CRCMaliciousCount {
+												// in case of malicious mode severe we flag the mac and the IP
+												sensorDef.failures += 1
+												if sensorDef.failures > globals.FailureThreshold {
+													_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+													// A delay is inserted in case this is a malicious attempt
+													others.WaitRandom(globals.MaliciousTimeout)
+													return
+												}
+											}
+											continue
+										}
+									}
+
+									select {
+									case sensorDef.channels.Commands <- cmd[:len(cmd)-1]:
+										// in case we receive a valid answer to setid, we close the channel
+										if cmd[0] == cmdAPI["setid"].cmd {
+											return
+										}
+									case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+										// internal issue, all goroutines will close on time out including the channel
+										if globals.DebugActive {
+											log.Printf("sensorManager.handler: hanging operation in sending "+
+												"command answer %v\n", cmd)
+										}
+									}
+								}
+							}
+						} else {
+							// illegal command answer received
+							sensorDef.failures += 1
+							if sensorDef.failures > globals.FailureThreshold {
+								_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+								// A delay is inserted in case this is a malicious attempt
+								others.WaitRandom(globals.MaliciousTimeout)
+								return
+							}
+						}
+					}
 				}
 			}
 		}

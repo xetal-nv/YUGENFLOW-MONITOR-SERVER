@@ -9,4 +9,4 @@ type FlowData struct {
 	Netflow int    `json:"netflow"`
 }
 
-type CommandAnswer interface{} // TODO define this channel
+type CommandAnswer []byte
