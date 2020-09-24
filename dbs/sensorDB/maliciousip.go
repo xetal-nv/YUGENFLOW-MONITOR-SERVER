@@ -19,7 +19,7 @@ func CheckIP(ip []byte, threshold int) (danger bool, err error) {
 	return
 }
 
-func RemoveIP(ip []byte) (err error) {
+func RemoveSuspecteIP(ip []byte) (err error) {
 	err = main.Update(func(tx *bolt.Tx) error {
 		err = tx.Bucket([]byte(maliciousIp)).Delete(ip)
 		if err != nil {

@@ -21,12 +21,14 @@ func main() {
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
+	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 
 	flag.Parse()
 	globals.DebugActive = *debug
 	globals.TCPdeadline = *tcpdeadline
 	globals.SensorEEPROMResetEnabled = *eeprom
 	globals.DiskCachePath = *dcpath
+	globals.FailureThreshold = *failTh
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *debug {
@@ -38,6 +40,7 @@ func main() {
 	if *eeprom {
 		fmt.Printf("*** WARNING: sensor EEPROM refresh enabled ***\n")
 	}
+	fmt.Printf("*** WARNING: failure threshold set to %v ***\n", *failTh)
 
 	globals.Start()
 	sensorDB.Start()

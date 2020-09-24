@@ -31,5 +31,6 @@ type sensorDefinition struct {
 	strict   bool
 	accept   bool
 	active   bool
+	failures int
 	channels SensorChannel
 }

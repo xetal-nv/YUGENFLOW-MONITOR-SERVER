@@ -21,7 +21,7 @@ func Start(sd chan bool) {
 		fmt.Println("Fatal Error: Unable to set yugenflow_sensorManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.SensorManagerLog, 40, 30, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.SensorManagerLog, 50, 30, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
@@ -29,7 +29,7 @@ func Start(sd chan bool) {
 	mlogger.Info(globals.SensorManagerLog,
 		mlogger.LoggerData{"sensorManager.Start",
 			"service started",
-			[]int{1}, true})
+			[]int{0}, true})
 
 	var rstC []chan bool
 	for i := 0; i < 1; i++ {
@@ -56,7 +56,7 @@ func Start(sd chan bool) {
 		mlogger.Info(globals.SensorManagerLog,
 			mlogger.LoggerData{"sensorManager.Start",
 				"service stopped",
-				[]int{1}, true})
+				[]int{0}, true})
 		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 		sd <- true
 	}(sd, rstC)
@@ -72,6 +72,13 @@ func Start(sd chan bool) {
 				sensorDeclaration[i] = strings.Trim(el, " ")
 			}
 			if id, err := strconv.Atoi(sensorDeclaration[0]); err == nil {
+				if id < 0 {
+					mlogger.Warning(globals.SensorManagerLog,
+						mlogger.LoggerData{"sensorManager.Start",
+							"illegal declaration for mac " + mac,
+							[]int{}, false})
+					continue
+				}
 				fn := func(a string, list []string) bool {
 					for _, b := range list {
 						if b == a {
@@ -82,19 +89,34 @@ func Start(sd chan bool) {
 				}
 
 				if err := sensorDB.AddLookUp([]byte(strconv.Itoa(id)), mac); err == nil {
-					if err = sensorDB.WriteDefinition([]byte(mac), dataformats.SensorDefinition{
-						Id:      id,
-						Bypass:  fn("bypass", sensorDeclaration[1:]),
-						Report:  fn("report", sensorDeclaration[1:]),
-						Enforce: fn("enforce", sensorDeclaration[1:]),
-						Strict:  fn("strict", sensorDeclaration[1:]),
-					}); err != nil {
-						_ = sensorDB.DeleteLookUp([]byte(sensorDeclaration[0]))
-						mlogger.Panic(globals.SensorManagerLog,
+					if len(sensorDeclaration) > 1 {
+						definition := dataformats.SensorDefinition{
+							Id:      id,
+							Bypass:  fn("bypass", sensorDeclaration[1:]),
+							Report:  fn("report", sensorDeclaration[1:]),
+							Enforce: fn("enforce", sensorDeclaration[1:]),
+							Strict:  fn("strict", sensorDeclaration[1:]),
+						}
+						// bypass has priority on strict
+						definition.Strict = definition.Strict && !definition.Bypass
+						// enforce does nothing if strict is given
+						definition.Enforce = definition.Enforce && !definition.Strict
+						if err = sensorDB.WriteDefinition([]byte(mac), definition); err != nil {
+							_ = sensorDB.DeleteLookUp([]byte(sensorDeclaration[0]))
+							mlogger.Panic(globals.SensorManagerLog,
+								mlogger.LoggerData{"sensorManager.Start",
+									"failed to load declaration for " + mac, []int{}, false}, true)
+							time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+							os.Exit(0)
+						}
+					} else {
+						if globals.DebugActive {
+							fmt.Println("illegal sensor declaration given for mac", mac)
+						}
+						mlogger.Warning(globals.SensorManagerLog,
 							mlogger.LoggerData{"sensorManager.Start",
-								"failed to load declaration for " + mac, []int{}, false}, true)
-						time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
-						os.Exit(0)
+								"illegal declaration for mac " + mac,
+								[]int{}, false})
 					}
 				} else {
 					mlogger.Panic(globals.SensorManagerLog,

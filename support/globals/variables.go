@@ -15,11 +15,11 @@ const (
 var Config *ini.File
 
 // logFiles
-var SensorManagerLog, DeviceManagerLog, SensorDBLog int
+var SevereFailureThreshold, SensorManagerLog, DeviceManagerLog, SensorDBLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
-var DebugActive, CRCused, SensorEEPROMResetEnabled bool
+var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
-	MaliciousTriesMac, MalicioudMode int
+	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal int
 var APIport, TCPport, DiskCachePath string

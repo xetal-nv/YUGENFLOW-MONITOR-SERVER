@@ -34,6 +34,12 @@ func Start() {
 	MaliciousTriesIP = internalConfig.Section("sensors").Key("maliciousIP_threshold").MustInt(50)
 	MaliciousTriesMac = internalConfig.Section("sensors").Key("maliciousMAC_threshold").MustInt(5)
 	MalicioudMode = internalConfig.Section("sensors").Key("malicious_control").MustInt(0)
+	FailureThreshold = internalConfig.Section("sensors").Key("failure_threshold").MustInt(5)
+	CRCMaliciousCount = internalConfig.Section("sensors").Key("CRC_errors_included").MustBool(false)
+	MaximumInvalidIDInternal = internalConfig.Section("sensors").Key("maximum_undefined_time").MustInt(5)
+	if MalicioudMode == 2 {
+		FailureThreshold = SevereFailureThreshold
+	}
 
 	//for _, b := range Config.Section("gates").KeyStrings() {
 	//	fmt.Println(b, Config.Section("gates").Key(b))

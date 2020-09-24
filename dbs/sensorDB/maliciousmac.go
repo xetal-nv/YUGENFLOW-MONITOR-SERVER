@@ -19,7 +19,7 @@ func CheckMAC(mac []byte, threshold int) (danger bool, err error) {
 	return
 }
 
-func RemoveMAC(mac []byte) (err error) {
+func RemoveSuspectedMAC(mac []byte) (err error) {
 	err = main.Update(func(tx *bolt.Tx) error {
 		err = tx.Bucket([]byte(maliciousMac)).Delete(mac)
 		if err != nil {

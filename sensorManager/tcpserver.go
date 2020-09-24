@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
-	"log"
 	"net"
+	"os"
 	"time"
 	"xetal.ddns.net/utils/recovery"
 )
@@ -14,14 +14,15 @@ import (
 func tcpServer(rst chan bool) {
 	srv, e := net.Listen("tcp4", "0.0.0.0:"+globals.TCPport)
 	if e != nil {
-		log.Fatal("sensorManager.tcpServer: fatal error:", e)
+		fmt.Println("sensorManager.tcpServer: fatal error:", e)
+		os.Exit(0)
 	}
 	defer srv.Close()
 
 	mlogger.Info(globals.SensorManagerLog,
 		mlogger.LoggerData{"sensorManager.tcpServer",
 			"listening on 0.0.0.0:" + globals.TCPport,
-			[]int{1}, true})
+			[]int{}, true})
 	for {
 		c := make(chan net.Conn, 1)
 		go func(c chan net.Conn, srv net.Listener) {
@@ -34,14 +35,14 @@ func tcpServer(rst chan bool) {
 				}
 			} else {
 				if globals.DebugActive {
-					log.Printf("sensorManager.tcpServer: Error accepting: %v\n", e)
+					fmt.Printf("sensorManager.tcpServer: Error accepting: %v\n", e)
 				}
 			}
 		}(c, srv)
 		select {
 		case nc := <-c:
 			if globals.DebugActive {
-				log.Printf("sensorManager.tcpServer: device connected\n")
+				fmt.Printf("sensorManager.tcpServer: device connected\n")
 			}
 			go recovery.CleanPanic(
 				func() { handler(nc) },
@@ -55,7 +56,7 @@ func tcpServer(rst chan bool) {
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.tcpServer",
 					"service stopped",
-					[]int{1}, true})
+					[]int{}, true})
 			rst <- true
 
 		}

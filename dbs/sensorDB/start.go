@@ -13,11 +13,12 @@ import (
 var main *bolt.DB
 
 const (
-	definitions   = "definitions"   // sensor definitions
-	lookup        = "lookup"        // id to mac table
-	activeDevices = "activeDevices" // active devices
-	maliciousMac  = "maliciousMac"  // mac of malicious devices
-	maliciousIp   = "maliciousIp"   // ip of malicious devices
+	definitions    = "definitions"    // sensor definitions
+	lookup         = "lookup"         // id to mac table
+	activeDevices  = "activeDevices"  // active devices
+	invalidDevices = "invalidDevices" // active devices
+	maliciousMac   = "maliciousMac"   // mac of malicious devices
+	maliciousIp    = "maliciousIp"    // ip of malicious devices
 )
 
 func Start() {
@@ -55,6 +56,10 @@ func Start() {
 		if err != nil {
 			return errors.New("could not create " + activeDevices + " bucket: " + err.Error())
 		}
+		_, err = tx.CreateBucketIfNotExists([]byte(invalidDevices))
+		if err != nil {
+			return errors.New("could not create " + invalidDevices + " bucket: " + err.Error())
+		}
 		_, err = tx.CreateBucketIfNotExists([]byte(maliciousMac))
 		if err != nil {
 			return errors.New("could not create " + maliciousMac + " bucket: " + err.Error())
@@ -77,8 +82,14 @@ func Start() {
 }
 
 func Close() {
+	for _, el := range []string{definitions, activeDevices, lookup, invalidDevices} {
+		_ = main.Update(func(tx *bolt.Tx) error {
+			_ = tx.DeleteBucket([]byte(el))
+			return nil
+		})
+	}
 	_ = main.Close()
-	fmt.Println("SensorDB closed")
+	fmt.Println("SensorDB cleaned and closed")
 	mlogger.Info(globals.SensorDBLog,
 		mlogger.LoggerData{"sensorDB.Start", "service stopped",
 			[]int{1}, true})

@@ -30,7 +30,7 @@ func Start(sd chan bool) {
 	mlogger.Info(globals.DeviceManagerLog,
 		mlogger.LoggerData{"gateManager.Start",
 			"service started",
-			[]int{1}, true})
+			[]int{0}, true})
 
 	var rstC []chan bool
 	for i := 0; i < 0; i++ {
@@ -57,7 +57,7 @@ func Start(sd chan bool) {
 		mlogger.Info(globals.DeviceManagerLog,
 			mlogger.LoggerData{"gateManager.Start",
 				"service stopped",
-				[]int{1}, true})
+				[]int{0}, true})
 		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 		sd <- true
 	}(sd, rstC)
