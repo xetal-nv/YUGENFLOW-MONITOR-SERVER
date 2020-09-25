@@ -173,9 +173,10 @@ func handler(conn net.Conn) {
 			}
 		}()
 		sensorDef.channels = SensorChannel{
-			Tcp:      conn,
-			Commands: make(chan dataformats.CommandAnswer, globals.ChannellingLength),
-			Reset:    make(chan bool, 1),
+			Tcp:       conn,
+			CmdAnswer: make(chan dataformats.Commandding, globals.ChannellingLength),
+			Commands:  make(chan dataformats.Commandding, globals.ChannellingLength),
+			Reset:     make(chan bool, 1),
 		}
 
 		ActiveSensors.Mac[sensorDef.mac] = sensorDef.channels
@@ -449,7 +450,7 @@ func handler(conn net.Conn) {
 				default:
 					// TODO de malicious must be reset here also !!!
 
-					if sensorDef.channels.Commands == nil {
+					if sensorDef.channels.CmdAnswer == nil {
 						// process is corrupted, we must terminate it
 						if globals.DebugActive {
 							fmt.Printf("sensorManager.handler: sensor commands channel found invalid\n")
@@ -485,8 +486,8 @@ func handler(conn net.Conn) {
 							// check if command answer is fully correct and forward it to the command process
 							if v == 0 {
 								//this can only happen when CRC is not used
-								sensorDef.channels.Commands <- cmd
-								if ans := <-sensorDef.channels.Commands; ans != nil {
+								sensorDef.channels.CmdAnswer <- cmd
+								if ans := <-sensorDef.channels.CmdAnswer; ans != nil {
 									sensorDef.failures += 1
 									if sensorDef.failures > globals.FailureThreshold {
 										_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
@@ -541,7 +542,7 @@ func handler(conn net.Conn) {
 									}
 
 									select {
-									case sensorDef.channels.Commands <- cmd[:len(cmd)-1]:
+									case sensorDef.channels.CmdAnswer <- cmd[:len(cmd)-1]:
 										// in case we receive a valid answer to setid, we close the channel
 										if cmd[0] == cmdAPI["setid"].cmd {
 											return

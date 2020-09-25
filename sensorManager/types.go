@@ -6,9 +6,10 @@ import (
 )
 
 type SensorChannel struct {
-	Tcp      net.Conn
-	Commands chan dataformats.CommandAnswer
-	Reset    chan bool
+	Tcp       net.Conn
+	CmdAnswer chan dataformats.Commandding
+	Commands  chan dataformats.Commandding
+	Reset     chan bool
 }
 
 // device commands describer for conversion from/to binary to/from param execution
