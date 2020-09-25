@@ -28,6 +28,7 @@ func Start() {
 
 	SensorTimeout = internalConfig.Section("timeouts").Key("device").MustInt(5)
 	MaliciousTimeout = internalConfig.Section("timeouts").Key("malicious").MustInt(120)
+	ZombieTimeout = internalConfig.Section("timeouts").Key("zombie").MustInt(24)
 
 	CRCused = internalConfig.Section("sensors").Key("crc_enabled").MustBool(true)
 	fmt.Printf("*** WARNING: CRC usage is set to %v ***\n", CRCused)

@@ -10,5 +10,5 @@ func SensorUsed(id int) bool {
 // TODO
 func DistributeData(id, data int) {
 	// to be done
-	fmt.Printf("gate %v has received data %v\n", id, data)
+	fmt.Printf("sensor %v has sent data %v to its gate\n", id, data)
 }
