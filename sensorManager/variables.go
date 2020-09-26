@@ -5,8 +5,11 @@ import (
 	"time"
 )
 
-// this channel is used to create and kill command processes
-var startstopCommandProcess chan string
+// maximum number of TCP connections
+const MAXTCP = 200
+
+// this channel is used tor regulate the number of active sensors
+var tokens chan interface{}
 
 //ActiveSensors is used as lock and contains the assigned channels
 var ActiveSensors struct {

@@ -39,7 +39,7 @@ func handlerReset(id int) {
 		if doIt, e := supp.InClosureTime(resetBG.start, resetBG.end); e == nil {
 			if doIt && !done {
 				//if !done {
-				rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
+				rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{0})
 				if rt.State {
 					//fmt.Println(rt.State)
 					done = true
@@ -87,7 +87,7 @@ func handlerReset(id int) {
 						log.Printf("servers.handlerReset: resetting device to asymmetric behaviour %v\n", id)
 						//fmt.Printf("servers.handlerReset: resetting device to asymmetric behaviour %v\n", id)
 						//noinspection GoUnusedCallResult
-						rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{})
+						rt := exeBinaryCommand(strconv.Itoa(id), "rstbg", []int{0})
 						log.Printf("servers.handlerReset: reset due to sensor asymmetry for %v has answered %v\n", id, rt.State)
 						//fmt.Printf("servers.handlerReset: reset due to sensor asymmetry for %v has answered %v\n", id, rt.State)
 					case <-time.After(500 * time.Millisecond):

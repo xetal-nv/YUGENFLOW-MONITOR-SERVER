@@ -98,7 +98,7 @@ func handlerTCPRequest(conn net.Conn) {
 						log.Printf("servers.handlerTCPRequest: suspicious malicious device %v//%v\n", ipc, mach)
 						go func() {
 							supp.DLog <- supp.DevData{"servers.handlerTCPRequest: suspected malicious device " + mach + "@" + ipc,
-								supp.Timestamp(), "", []int{}, true}
+								supp.Timestamp(), "", []int{0}, true}
 						}()
 						tsNow := supp.Timestamp()
 						for (tsNow + int64(malTimeout*1000)) > supp.Timestamp() {

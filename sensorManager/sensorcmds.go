@@ -1,6 +1,8 @@
 package sensorManager
 
-import "net"
+import (
+	"net"
+)
 
 // TODO to be done
 func refreshEEPROM(conn net.Conn, mach string) error {

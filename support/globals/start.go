@@ -24,11 +24,13 @@ func Start() {
 	//fmt.Printf("API and TCP ports set to %s and %s respectively\n", APIport, TCPport)
 
 	ChannellingLength = internalConfig.Section("buffers").Key("channelling").MustInt(5)
+	SecurityLength = internalConfig.Section("buffers").Key("security").MustInt(50)
 	ShutdownTime = internalConfig.Section("buffers").Key("shutdown").MustInt(3)
 
 	SensorTimeout = internalConfig.Section("timeouts").Key("device").MustInt(5)
 	MaliciousTimeout = internalConfig.Section("timeouts").Key("malicious").MustInt(120)
 	ZombieTimeout = internalConfig.Section("timeouts").Key("zombie").MustInt(24)
+	RepetitiveTimeout = internalConfig.Section("timeouts").Key("repetitive").MustInt(20)
 
 	CRCused = internalConfig.Section("sensors").Key("crc_enabled").MustBool(true)
 	fmt.Printf("*** WARNING: CRC usage is set to %v ***\n", CRCused)

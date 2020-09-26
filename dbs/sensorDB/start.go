@@ -72,7 +72,7 @@ func Start() {
 	}); err != nil {
 		mlogger.Panic(globals.SensorDBLog,
 			mlogger.LoggerData{"sensorDB.Start", "Error in opening buckets: " + err.Error(),
-				[]int{}, false}, true)
+				[]int{0}, false}, true)
 	}
 	mlogger.Info(globals.SensorDBLog,
 		mlogger.LoggerData{"sensorDB.Start", "service started",

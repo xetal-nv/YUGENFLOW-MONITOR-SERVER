@@ -11,7 +11,7 @@ func sensorReset(rst chan bool) {
 	mlogger.Info(globals.SensorManagerLog,
 		mlogger.LoggerData{"sensorManager.sensorReset",
 			"service started",
-			[]int{}, true})
+			[]int{0}, true})
 	for {
 		select {
 		case <-rst:
@@ -19,7 +19,7 @@ func sensorReset(rst chan bool) {
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.sensorReset",
 					"service stopped",
-					[]int{}, true})
+					[]int{0}, true})
 			rst <- true
 		case <-time.After(time.Hour):
 			// TODO reset

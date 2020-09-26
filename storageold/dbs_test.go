@@ -185,7 +185,7 @@ func Test_DBS(t *testing.T) {
 		fmt.Println(s1.UnmarshalSliceSS(tag, ts, vals))
 	}
 
-	//if tag, ts, vals, e := ReadLastNTS(&s1, 3, []int{}, false); e != nil {
+	//if tag, ts, vals, e := ReadLastNTS(&s1, 3, []int{0}, false); e != nil {
 	if tag, ts, vals, e := ReadLastNTS(&s1, 100, false); e != nil {
 		t.Fatal(e)
 	} else {

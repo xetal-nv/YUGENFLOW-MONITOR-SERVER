@@ -14,7 +14,7 @@ func sensorCommand(chs SensorChannel, mac string) {
 	mlogger.Info(globals.SensorManagerLog,
 		mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 			"service started",
-			[]int{}, true})
+			[]int{0}, true})
 	if globals.DebugActive {
 		fmt.Println("sensorManager.sensorCommand: started", mac)
 	}
@@ -27,14 +27,10 @@ finished:
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 					"service killed due to zombie timeout",
-					[]int{}, true})
+					[]int{0}, true})
 			return
 		case <-chs.Reset:
 			// reset request received, the routine is terminated normally
-			mlogger.Info(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
-					"service stopped",
-					[]int{}, true})
 			break finished
 		case ans := <-chs.CmdAnswer:
 			// this is an unsolicited command answer, we report error
@@ -48,14 +44,10 @@ finished:
 				mlogger.Info(globals.SensorManagerLog,
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to sensor timeout",
-						[]int{}, true})
+						[]int{0}, true})
 				//_ = chs.Tcp.Close()
 				return
 			case <-chs.Reset:
-				mlogger.Info(globals.SensorManagerLog,
-					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
-						"service stopped",
-						[]int{}, true})
 				break finished
 			}
 		case cmd := <-chs.Commands:
@@ -96,19 +88,11 @@ finished:
 							}
 						case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 						case <-chs.Reset:
-							mlogger.Info(globals.SensorManagerLog,
-								mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
-									"service stopped",
-									[]int{}, true})
 							break finished
 						}
 					}
 				case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 				case <-chs.Reset:
-					mlogger.Info(globals.SensorManagerLog,
-						mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
-							"service stopped",
-							[]int{}, true})
 					break finished
 				}
 			}
@@ -128,6 +112,10 @@ finished:
 			wg.Wait()
 		}
 	}
+	mlogger.Info(globals.SensorManagerLog,
+		mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
+			"service stopped",
+			[]int{0}, true})
 	if globals.DebugActive {
 		fmt.Println("sensorManager.sensorCommand: ended", mac)
 	}

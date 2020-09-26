@@ -179,7 +179,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							// Calculate the confidence measurement (number wrong data / number data
 							if sp.netFlow != 0 {
 								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
-									supp.Timestamp(), "not zero flow received during closure time", []int{}, true}
+									supp.Timestamp(), "not zero flow received during closure time", []int{0}, true}
 							}
 							// sp.netFlow = 0
 						} else {
@@ -193,7 +193,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							// fmt.Println(spaceName, counter.netFlow, sp.netFlow)
 							if of {
 								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
-									supp.Timestamp(), "overflow on counter", []int{}, true}
+									supp.Timestamp(), "overflow on counter", []int{0}, true}
 							}
 							// Calculate the confidence measurement (number wrong data / number data for DVL only
 							if counter.netFlow < 0 {
@@ -220,7 +220,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 								v.NetFlow = sum
 								if of {
 									supp.DLog <- supp.DevData{"spaces.samplers counter.entries  " + strconv.Itoa(sp.id),
-										supp.Timestamp(), "overflow on netflow counter", []int{}, true}
+										supp.Timestamp(), "overflow on netflow counter", []int{0}, true}
 								}
 
 								// over and underflow needs to force reset of values with the correct difference
@@ -340,7 +340,7 @@ func sampler(spaceName string, prevStageChan, nextStageChan chan spaceEntries, s
 							if cd == 1 {
 								supp.DLog <- supp.DevData{"spaces.samplers counter " + spaceName + " current",
 									supp.Timestamp(), "inconsistent counter vs entries",
-									[]int{}, true}
+									[]int{0}, true}
 							}
 						}
 					} else if compressionMode == "2" {

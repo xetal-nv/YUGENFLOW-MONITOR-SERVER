@@ -229,13 +229,13 @@ func ReadHeader(tag string, sDB bool) (hd HeaderData, err error) {
 	co := make(chan dbOutChan)
 	if sDB {
 		select {
-		case statsChanOut <- dbOutCommChan{[]byte(tag + "header"), 28, []int{}, co}:
+		case statsChanOut <- dbOutCommChan{[]byte(tag + "header"), 28, []int{0}, co}:
 		case <-time.After(time.Duration(timeout) * time.Second):
 			return hd, errors.New("ReadHeader " + tag + " stats time out")
 		}
 	} else {
 		select {
-		case currentChanOut <- dbOutCommChan{[]byte(tag + "header"), 28, []int{}, co}:
+		case currentChanOut <- dbOutCommChan{[]byte(tag + "header"), 28, []int{0}, co}:
 		case <-time.After(time.Duration(timeout) * time.Second):
 			return hd, errors.New("ReadHeader " + tag + " current time out")
 		}

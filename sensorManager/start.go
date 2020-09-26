@@ -21,7 +21,7 @@ func Start(sd chan bool) {
 		fmt.Println("Fatal Error: Unable to set yugenflow_sensorManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.SensorManagerLog, 50, 30, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.SensorManagerLog, 50, 50, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
@@ -76,7 +76,7 @@ func Start(sd chan bool) {
 					mlogger.Warning(globals.SensorManagerLog,
 						mlogger.LoggerData{"sensorManager.Start",
 							"illegal declaration for mac " + mac,
-							[]int{}, false})
+							[]int{0}, false})
 					continue
 				}
 				fn := func(a string, list []string) bool {
@@ -105,7 +105,7 @@ func Start(sd chan bool) {
 							_ = sensorDB.DeleteLookUp([]byte(sensorDeclaration[0]))
 							mlogger.Panic(globals.SensorManagerLog,
 								mlogger.LoggerData{"sensorManager.Start",
-									"failed to load declaration for " + mac, []int{}, false}, true)
+									"failed to load declaration for " + mac, []int{0}, false}, true)
 							time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 							os.Exit(0)
 						}
@@ -116,12 +116,12 @@ func Start(sd chan bool) {
 						mlogger.Warning(globals.SensorManagerLog,
 							mlogger.LoggerData{"sensorManager.Start",
 								"illegal declaration for mac " + mac,
-								[]int{}, false})
+								[]int{0}, false})
 					}
 				} else {
 					mlogger.Panic(globals.SensorManagerLog,
 						mlogger.LoggerData{"sensorManager.Start",
-							"failed to load declaration for " + mac, []int{}, false}, true)
+							"failed to load declaration for " + mac, []int{0}, false}, true)
 					time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
 					os.Exit(0)
 				}
@@ -147,7 +147,7 @@ func Start(sd chan bool) {
 					[]int{1}, true})
 		})
 
-	startstopCommandProcess = make(chan string, globals.ChannellingLength)
+	//startstopCommandProcess = make(chan string, globals.ChannellingLength)
 
 	//for {
 	//	time.Sleep(36 * time.Hour)

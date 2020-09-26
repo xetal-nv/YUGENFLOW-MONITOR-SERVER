@@ -21,5 +21,6 @@ var SevereFailureThreshold, SensorManagerLog, DeviceManagerLog, SensorDBLog int
 //noinspection GoExportedOwnDeclaration
 var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
-	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout int
+	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,
+	RepetitiveTimeout, SecurityLength int
 var APIport, TCPport, DiskCachePath string
