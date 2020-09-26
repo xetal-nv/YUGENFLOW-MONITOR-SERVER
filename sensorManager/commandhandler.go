@@ -90,9 +90,10 @@ finished:
 					if valid {
 						select {
 						case rtIssuer = <-chs.CmdAnswer:
-							// TODO check if answer is correct
-							//  we need to decrypt and check if the first byte is the same!
-							rtResponder = []byte("")
+							// we check if the answer is semantically correct
+							if rtIssuer[0] == cmd[0] {
+								rtResponder = nil
+							}
 						case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 						case <-chs.Reset:
 							mlogger.Info(globals.SensorManagerLog,

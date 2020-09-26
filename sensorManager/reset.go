@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-// TODO
 func sensorReset(rst chan bool) {
 	mlogger.Info(globals.SensorManagerLog,
 		mlogger.LoggerData{"sensorManager.sensorReset",

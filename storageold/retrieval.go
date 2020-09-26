@@ -184,7 +184,7 @@ func RetrieveSampleFromFile(startup bool) {
 // January 15 2019, living, morning, 10:30, 15
 // Furthermore, recovery files will be rejected of older than MAXAGE hours (TBD)
 // Comments in the recovery file need to start with the symbol #
-// TODO to be tested it in a real installation
+
 //noinspection GoUnusedParameter
 func RetrievePresenceFromFile(startup bool) {
 	//fmt.Println("RetrievePresenceFromFile")

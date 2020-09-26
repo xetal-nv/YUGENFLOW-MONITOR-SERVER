@@ -23,7 +23,6 @@ import (
 	send data using gateManager to the proper gates
 */
 
-// TODO command process needs to be done still !!!
 func handler(conn net.Conn) {
 
 	// support methods
