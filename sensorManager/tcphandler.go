@@ -23,6 +23,8 @@ import (
 	send data using gateManager to the proper gates
 */
 
+// TODO do we enforce enforce by using a timed routine that check on the result after some time?
+
 func handler(conn net.Conn) {
 
 	// support methods
@@ -72,10 +74,14 @@ func handler(conn net.Conn) {
 			_ = sensorDB.DeleteDevice([]byte(sensorDef.mac))
 			//startstopCommandProcess <- sensorDef.mac
 			// release TCO token
+			tokens <- nil
 			if globals.DebugActive {
 				fmt.Printf("sensorManager.tcpServer: released token, left: %v\n", len(tokens))
 			}
-			tokens <- nil
+		}
+		//. in case of valid ID we remove the lookup entry as well
+		if sensorDef.id != -1 {
+			_ = sensorDB.DeleteLookUp([]byte{byte(sensorDef.id)})
 		}
 
 	}()
@@ -333,7 +339,7 @@ func handler(conn net.Conn) {
 
 							// if required we change the sensor ID itself
 							if sensorDef.idSent != sensorDef.id && sensorDef.enforce {
-								if err := setID(conn, sensorDef.id, sensorDef.mac); err == nil {
+								if err := setID(sensorDef.channels, sensorDef.id); err == nil {
 									sensorDef.idSent = sensorDef.id
 									sensorDef.enforce = false
 								} else {
@@ -456,6 +462,13 @@ func handler(conn net.Conn) {
 									err = sensorDB.RemoveSuspectedMAC([]byte(mach))
 								}
 							}()
+
+							if err := sensorDB.AddLookUp([]byte{byte(sensorDef.id)}, sensorDef.mac); err != nil {
+								mlogger.Error(globals.SensorManagerLog,
+									mlogger.LoggerData{"sensor " + mach,
+										"failed to saving lookup declaration", []int{0}, true})
+								return
+							}
 
 							if err := sensorDB.MarkDeviceActive([]byte(mach)); err == nil {
 								sensorDef.active = true

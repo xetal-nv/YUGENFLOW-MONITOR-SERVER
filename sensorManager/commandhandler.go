@@ -58,10 +58,10 @@ finished:
 			// verify if the command exists and send it to the device
 			if _, ok := cmdAnswerLen[cmd[0]]; ok {
 				if globals.DebugActive {
-					fmt.Printf("Received %v by user for device %v\n", cmd, mac)
-				}
-				if globals.DebugActive && cmd[0] == cmdAPI["setid"].cmd {
-					fmt.Printf("Changed id to %v from %v by user\n", int(cmd[2]), mac)
+					fmt.Printf("Received command %v for device %v\n", cmd, mac)
+					if cmd[0] == cmdAPI["setid"].cmd {
+						fmt.Printf("Changing id to %v for device %v\n", int(cmd[2]), mac)
+					}
 				}
 				cmd = append(cmd, codings.Crc8(cmd))
 				ready := make(chan bool)
