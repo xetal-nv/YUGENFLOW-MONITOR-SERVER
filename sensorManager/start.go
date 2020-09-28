@@ -138,11 +138,13 @@ func Start(sd chan bool) {
 					[]int{1}, true})
 		})
 
+	ResetChannel = make(chan string, globals.ChannellingLength)
+
 	recovery.RunWith(
-		func() { sensorReset(rstC[1]) },
+		func() { sensorBGReset(ResetChannel, rstC[1]) },
 		func() {
 			mlogger.Recovered(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensorManager.sensorReset",
+				mlogger.LoggerData{"sensorManager.sensorBGReset",
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		})

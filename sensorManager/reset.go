@@ -5,11 +5,23 @@ import (
 	"gateserver/supp"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
+	"strconv"
 	"strings"
 	"time"
 )
 
-func sensorReset(rst chan bool) {
+func sensorBGReset(forceReset chan string, rst chan bool) {
+
+	resetFn := func(channels SensorChannel) bool {
+		// TODO to be done
+		println("reset BG")
+		return true
+	}
+
+	mlogger.Info(globals.SensorManagerLog,
+		mlogger.LoggerData{"sensorManager.sensorBGReset",
+			"service started",
+			[]int{0}, true})
 	if globals.ResetSlot != "" {
 		var start, stop time.Time
 		period := strings.Split(globals.ResetSlot, " ")
@@ -22,63 +34,125 @@ func sensorReset(rst chan bool) {
 			}
 		}
 		if valid {
-			mlogger.Info(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensorManager.sensorReset",
-					"service started",
-					[]int{0}, true})
 			if globals.DebugActive {
 				fmt.Printf("*** INFO: sensor reset is set from %v tp %v\n", start, stop)
 			}
-			var macs []string
 			var channels []SensorChannel
+			var macs []string
+			done := false
 			for {
 				select {
 				case <-rst:
-					fmt.Println("Closing sensorManager.sensorReset")
+					fmt.Println("Closing sensorManager.sensorBGReset")
 					mlogger.Info(globals.SensorManagerLog,
-						mlogger.LoggerData{"sensorManager.sensorReset",
+						mlogger.LoggerData{"sensorManager.sensorBGReset",
 							"service stopped",
 							[]int{0}, true})
 					rst <- true
 					return
+				case mac := <-forceReset:
+					ActiveSensors.RLock()
+					chs, ok := ActiveSensors.Mac[mac]
+					ActiveSensors.RUnlock()
+					if ok {
+						// reset
+						if resetFn(chs) {
+							mac = ""
+						}
+					}
+					forceReset <- mac
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
-					// TODO HERE
 					if doIt, e := supp.InClosureTime(start, stop); e == nil {
 						//  then cycle among all devices till all are reset
-						fmt.Println(doIt)
+						if doIt && !done {
+							// we are in the reset interval and we still need to reset
+							if channels == nil {
+								// in this case we need to load the list of devices to be reset
+								ActiveSensors.RLock()
+								for k, v := range ActiveSensors.Mac {
+									macs = append(macs, k)
+									channels = append(channels, v)
+								}
+								ActiveSensors.RUnlock()
+							}
+							var channelsLeft []SensorChannel
+							var macsLeft []string
+							// try to reset all devices
+							for i, el := range channels {
+								if !resetFn(el) {
+									channelsLeft = append(channelsLeft, el)
+									macsLeft = append(macsLeft, macs[i])
+								} else {
+									if globals.DebugActive {
+										fmt.Println("sensorManager.sensorBGReset:", macs[i],
+											"BG reset executed")
+									}
+									mlogger.Info(globals.SensorManagerLog,
+										mlogger.LoggerData{"sensorManager.sensorBGReset: " + macs[i],
+											"BG reset executed",
+											[]int{0}, true})
+								}
+							}
+							if channelsLeft != nil {
+								copy(channels, channelsLeft)
+								copy(macs, macsLeft)
+							} else {
+								channels = nil
+								macs = nil
+							}
+
+							if channelsLeft == nil {
+								//println("done BGreset")
+								done = true
+							}
+						} else {
+							if !doIt {
+								done = false
+								if channels != nil {
+									mlogger.Warning(globals.SensorManagerLog,
+										mlogger.LoggerData{"sensorManager.sensorBGReset",
+											"service failed for " + strconv.Itoa(len(channels)) + " sensors",
+											[]int{}, false})
+									channels = nil
+								}
+							}
+						}
 					} else {
 						// error
-						fmt.Println("error")
+						mlogger.Error(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.sensorBGReset",
+								"service failed to initialised new loop",
+								[]int{1}, true})
 					}
-					if macs == nil {
-						ActiveSensors.RLock()
-						for k, v := range ActiveSensors.Mac {
-							macs = append(macs, k)
-							channels = append(channels, v)
-
-						}
-						ActiveSensors.RUnlock()
-						fmt.Println("NEW DEVICES TO BE RESET", macs, channels)
-						// TODO reset
-						//  will try to reset every day in a given interval all sensors that are
-						//  in ActiveSensors and marked as active in sensorDB
-					}
-					//} else {
-					//	if len(macs) > 1 {
-					//		macs = macs[1:]
-					//		channels = channels[1:]
-					//		fmt.Println("DEVICES TO BE STILL RESET", macs, channels)
-					//	} else {
-					//		macs = nil
-					//		channels = nil
-					//	}
-					//}
 				}
 			}
 		}
 	}
 	if globals.DebugActive {
-		fmt.Println(globals.ResetSlot, globals.ResetPeriod)
-		fmt.Println("*** WARNING: sensor reset is disabled ***")
+		fmt.Println("*** WARNING: periodic sensor reset is disabled ***")
+	}
+	// we only listed to reset and forceReset
+	for {
+		select {
+		case <-rst:
+			fmt.Println("Closing sensorManager.sensorBGReset")
+			mlogger.Info(globals.SensorManagerLog,
+				mlogger.LoggerData{"sensorManager.sensorBGReset",
+					"service stopped",
+					[]int{0}, true})
+			rst <- true
+			return
+		case mac := <-forceReset:
+			ActiveSensors.RLock()
+			chs, ok := ActiveSensors.Mac[mac]
+			ActiveSensors.RUnlock()
+			if ok {
+				// reset
+				if resetFn(chs) {
+					mac = ""
+				}
+			}
+			forceReset <- mac
+		}
 	}
 }
