@@ -46,8 +46,6 @@ func main() {
 	sensorDB.Start()
 	sensorManager.LoadSensorEEPROMSettings()
 
-	os.Exit(0)
-
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
@@ -79,8 +77,8 @@ func main() {
 	}(c, sd)
 
 	if globals.DebugActive {
-		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '1'})
-		go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{'a', 'b', 'c', '1', '2', '3'})
+		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
+		go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
 	}
 
 	go sensorManager.Start(sd[0])

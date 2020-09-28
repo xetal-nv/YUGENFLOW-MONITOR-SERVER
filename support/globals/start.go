@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/ini.v1"
 	"os"
+	"strings"
 )
 
 func Start() {
@@ -45,8 +46,16 @@ func Start() {
 	if MalicioudMode == 2 {
 		FailureThreshold = SevereFailureThreshold
 	}
+	AsymmetryValue = internalConfig.Section("sensors").Key("asymmetry_value").MustInt(3)
+	AsymmetryMax = internalConfig.Section("sensors").Key("asymmetry_max").MustInt(5)
+	ResetPeriod = internalConfig.Section("sensors").Key("reset_period").MustInt(20)
+	ResetSlot = internalConfig.Section("sensors").Key("reset_slot").MustString("")
+	if ResetSlot != "" {
+		ResetSlot = strings.Trim(strings.Replace(ResetSlot, ".", ":", -1), "")
+	}
 
 	SensorSettingsFile = internalConfig.Section("options").Key("sensorEEPROM").MustString("")
+	EnforceStrict = internalConfig.Section("options").Key("enforce_strict").MustBool(false)
 
 	//for _, b := range Config.Section("gates").KeyStrings() {
 	//	fmt.Println(b, Config.Section("gates").Key(b))

@@ -19,8 +19,9 @@ var SevereFailureThreshold, SensorManagerLog, DeviceManagerLog, SensorDBLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
-var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount bool
+var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceStrict bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
 	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,
-	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep int
-var APIport, TCPport, DiskCachePath, SensorSettingsFile string
+	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep,
+	AsymmetryValue, AsymmetryMax, ResetPeriod int
+var APIport, TCPport, DiskCachePath, SensorSettingsFile, ResetSlot string

@@ -23,8 +23,6 @@ import (
 	send data using gateManager to the proper gates
 */
 
-// TODO do we enforce enforce by using a timed routine that check on the result after some time?
-
 func handler(conn net.Conn) {
 
 	// support methods
@@ -48,6 +46,7 @@ func handler(conn net.Conn) {
 	}
 
 	var sensorDef sensorDefinition
+	enforceLoop := -1      // used to check the enforce tag execution
 	mac := make([]byte, 6) // received amc address
 
 	// cleaning up at closure
@@ -219,9 +218,12 @@ func handler(conn net.Conn) {
 						[]int{0}, true})
 				return
 			}
+			if globals.DebugActive {
+				fmt.Printf("refreshing EEPROM successful : %v\n", mach)
+			}
 			mlogger.Info(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensor " + mach,
-					"refreshing EEPROM successful",
+				mlogger.LoggerData{"EEPROM sensor " + mach,
+					"refreshing successful",
 					[]int{0}, true})
 		}
 
@@ -342,6 +344,7 @@ func handler(conn net.Conn) {
 								if err := setID(sensorDef.channels, sensorDef.id); err == nil {
 									sensorDef.idSent = sensorDef.id
 									sensorDef.enforce = false
+									enforceLoop = enforceTries
 								} else {
 									if globals.DebugActive {
 										fmt.Printf("Sensor %v has failed to change id\n", sensorDef.mac)
@@ -661,6 +664,37 @@ func handler(conn net.Conn) {
 							}
 						}
 					}
+				}
+			}
+			if enforceLoop >= 0 {
+				if sensorDef.id != sensorDef.idSent {
+					if enforceLoop == 0 {
+						if globals.EnforceStrict {
+							if globals.DebugActive {
+								fmt.Printf("Sensor %v disconnected due to failed ID enforce\n", sensorDef.mac)
+							}
+							mlogger.Info(globals.SensorManagerLog,
+								mlogger.LoggerData{"sensor " + mach,
+									"enforce has failed, sensor disconnected",
+									[]int{0}, true})
+							return
+						} else {
+							if globals.DebugActive {
+								fmt.Printf("Sensor %v failed ID enforce\n", sensorDef.mac)
+							}
+							mlogger.Info(globals.SensorManagerLog,
+								mlogger.LoggerData{"sensor " + mach,
+									"enforce has failed",
+									[]int{0}, true})
+							enforceLoop = -1
+						}
+					} else {
+						enforceLoop--
+						//println("not done")
+					}
+				} else {
+					enforceLoop = -1
+					//println("done")
 				}
 			}
 		}

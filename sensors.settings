@@ -1,4 +1,5 @@
 # Sensor setting file
 # Format:
-#
+# {mac} {srate} {savg} {bgth*16} {occth*16}
 * 64 10 1.7 1.8
+0a:0b:0c:01:02:01 _ _ 1 _

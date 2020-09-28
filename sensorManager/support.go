@@ -47,7 +47,17 @@ func maliciousSetIdDOS(ipc, mac string) bool {
 	}
 }
 
-// TODO check how this works actually .... and document it
+/*
+	setSensorParameters read all sensor parameters ignoring any data being sent.
+	The data is contained in the file sensors.settings and each line specifies on sensor as:
+
+	{mac} {srate} {savg} {bgth*16} {occth*16}
+
+	- comments start with #
+	- a mac set to * (wildcard) indicated settings valid for every sensor
+	- a setting set to _ either takes the value from the mac wildcard (if given) or ignore the setting
+
+*/
 func LoadSensorEEPROMSettings() {
 
 	if globals.SensorEEPROMResetEnabled {
@@ -150,6 +160,7 @@ func LoadSensorEEPROMSettings() {
 							if id == "*" {
 								commonSensorSpecs = tempSpecs
 							} else {
+								id = strings.Replace(id, ":", "", -1)
 								sensorData[id] = tempSpecs
 							}
 						}
@@ -159,10 +170,12 @@ func LoadSensorEEPROMSettings() {
 					log.Fatal("Error reading setting sensor settings from file " + globals.SensorSettingsFile)
 				}
 
-				fmt.Println(commonSensorSpecs)
+				fmt.Println("EEPROM Reference definition: ", commonSensorSpecs)
 				if refGen {
 					if err := expandSpecs(); err == nil {
-						fmt.Printf("%+v\n", sensorData)
+						if globals.DebugActive {
+							fmt.Printf("EEPROM Sensor definitions: %+v\n", sensorData)
+						}
 					} else {
 						log.Fatal(err.Error())
 					}

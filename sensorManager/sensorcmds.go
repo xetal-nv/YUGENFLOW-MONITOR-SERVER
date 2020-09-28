@@ -2,8 +2,12 @@ package sensorManager
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"gateserver/codings"
 	"gateserver/support/globals"
+	"github.com/fpessolano/mlogger"
+	"math"
 	"net"
 	"time"
 )
@@ -41,8 +45,109 @@ func setID(chs SensorChannel, id int) error {
 	return globals.Error
 }
 
-// TODO to be done
-func refreshEEPROM(conn net.Conn, mach string) error {
-	println("sensor EEPROM refresh to be done")
-	return nil
+func refreshEEPROM(conn net.Conn, mac string) (err error) {
+
+	// sends the command for a maximum of eepromResetTries times before reporting error
+	sendCommand := func(command string, value uint32) (e error) {
+		e = errors.New("server.setSensorParameters: Failed to execute command " + command)
+		//timeout := 1
+		//mainLoop:
+		for i := 0; i < eepromResetTries; i++ {
+			time.Sleep(time.Duration(globals.SensorEEPROMResetStep) * time.Second)
+			if v, ok := cmdAPI[command]; ok {
+				cmd := []byte{v.cmd}
+				bs := make([]byte, 4)
+				//binary.BigEndian.PutUint32(bs, uint32(specs.srate))
+				binary.BigEndian.PutUint32(bs, value)
+				cmd = append(cmd, bs[4-v.lgt:4]...)
+				cmd = append(cmd, codings.Crc8(cmd))
+				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
+					if _, e := conn.Write(cmd); e == nil {
+						//log.Printf("Sent %x on device %v\n", cmd, mac)
+					readLoop:
+						// we give it a maximum of max (4, eepromResetTries) for the sensor to answer to the command
+						for j := 0; j < int(math.Max(float64(4), float64(eepromResetTries))); j++ {
+							ans := make([]byte, 1)
+							if e := conn.SetReadDeadline(time.Now().Add(time.Duration(10*globals.SensorTimeout) *
+								time.Second)); e == nil {
+								if _, e := conn.Read(ans); e == nil {
+									switch ans[0] {
+									case 1:
+										// sensor data, discard the rest of the message
+										var data []byte
+										if globals.CRCused {
+											data = make([]byte, 4)
+										} else {
+											data = make([]byte, 3)
+										}
+										_, _ = conn.Read(data)
+									case cmd[0]:
+										// answer to command, discard CRC if present
+										if globals.CRCused {
+											_, _ = conn.Read(make([]byte, 1))
+										}
+										//log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
+										//break mainLoop
+										return nil
+									default:
+										//log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
+										// illegal answer
+										break readLoop
+									}
+								} else {
+									//log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
+								}
+							}
+						}
+					} else {
+						//log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
+					}
+				}
+				// reset the all deadlines
+				_ = conn.SetDeadline(time.Time{})
+			}
+		}
+		return
+	}
+
+	time.Sleep(time.Duration(globals.SensorEEPROMResetDelay) * time.Second)
+	if specs, ok := sensorData[mac]; ok || commonSensorSpecs.savg != 0 {
+		//fmt.Println("found")
+		//os.Exit(1)
+		if !ok {
+			specs = commonSensorSpecs
+		}
+		eLab := "("
+		if e := sendCommand("srate", uint32(specs.srate)); e != nil {
+			//log.Println(e)
+			eLab += "srate "
+		}
+		if e := sendCommand("savg", uint32(specs.savg)); e != nil {
+			//log.Println(e)
+			eLab += "savg "
+		}
+		if e := sendCommand("bgth", uint32(math.Round(specs.bgth*16))); e != nil {
+			//log.Println(e)
+			eLab += "bgth "
+		}
+		if e := sendCommand("occth", uint32(math.Round(specs.occth*16))); e != nil {
+			//log.Println(e)
+			eLab += "occth "
+		}
+		if eLab != "(" {
+			err = errors.New("Failed to execute commands " + eLab + ") for device " + mac)
+		}
+	} else {
+		//fmt.Println("not found")
+		mlogger.Recovered(globals.SensorManagerLog,
+			mlogger.LoggerData{"sensorManager.SensorEEPROMResetEnabled mac: " + mac,
+				"sensorData cache is corrupted",
+				[]int{1}, true})
+		//os.Exit(1)
+		err = errors.New("servers.SensorEEPROMResetEnabled: sensorData cache is corrupted for device " + mac)
+	}
+	//fmt.Println(err)
+	//os.Exit(1)
+	return
+	//}
 }

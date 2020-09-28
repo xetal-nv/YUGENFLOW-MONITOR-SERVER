@@ -8,6 +8,12 @@ import (
 // maximum number of TCP connections
 const MAXTCP = 200
 
+// how many times the server tries to reset the sensor eeprom before reporting an error
+const eepromResetTries = 3
+
+// how many times the server tries to execute the enforce tag before disconnecting the sensor
+const enforceTries = 10
+
 // contains sensor EERPROM values (if applicable)
 var commonSensorSpecs sensorSpecs
 var sensorData map[string]sensorSpecs

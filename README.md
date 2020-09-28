@@ -80,6 +80,6 @@ Resource folders:
 
 **TO BE DONE (in priority order)**  
  - everything  
- - disable sensors and keep the state after server stop-start  
+ - clean code  
 
 
