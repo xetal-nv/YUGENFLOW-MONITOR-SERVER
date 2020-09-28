@@ -3,7 +3,7 @@ package sensorManager
 import (
 	"fmt"
 	"gateserver/dataformats"
-	"gateserver/dbs/sensorDB"
+	"gateserver/storage/sensorDB"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"os"

@@ -2,7 +2,7 @@ main.exe
 *.raw
 /.recoveryavg
 /.recoverypres
-/dbs/
+/storage/
 /.idea/
 /log/
 /html/js/dat.js

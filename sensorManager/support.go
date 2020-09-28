@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"gateserver/dbs/sensorDB"
+	"gateserver/storage/sensorDB"
 	"gateserver/supp"
 	"gateserver/support/globals"
 	"gateserver/support/others"

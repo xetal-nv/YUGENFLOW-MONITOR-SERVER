@@ -2,6 +2,7 @@ package sensorManager
 
 import (
 	"fmt"
+	"gateserver/codings"
 	"gateserver/supp"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
@@ -13,9 +14,12 @@ import (
 func sensorBGReset(forceReset chan string, rst chan bool) {
 
 	resetFn := func(channels SensorChannel) bool {
-		// TODO to be done
-		println("reset BG")
-		return true
+		cmd := []byte{cmdAPI["rstbg"].cmd}
+		cmd = append(cmd, codings.Crc8(cmd))
+		//println("reset BG")
+		channels.Commands <- cmd
+		res := <-channels.Commands
+		return res != nil
 	}
 
 	mlogger.Info(globals.SensorManagerLog,

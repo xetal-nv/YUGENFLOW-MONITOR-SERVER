@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gateserver/dbs/sensorDB"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
 	"gateserver/sensormodels"
+	"gateserver/storage/sensorDB"
 	"gateserver/support/globals"
 	"os"
 	"os/signal"
