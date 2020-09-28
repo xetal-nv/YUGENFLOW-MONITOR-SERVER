@@ -8,6 +8,10 @@ import (
 // maximum number of TCP connections
 const MAXTCP = 200
 
+// contains sensor EERPROM values (if applicable)
+var commonSensorSpecs sensorSpecs
+var sensorData map[string]sensorSpecs
+
 // this channel is used tor regulate the number of active sensors
 var tokens chan interface{}
 

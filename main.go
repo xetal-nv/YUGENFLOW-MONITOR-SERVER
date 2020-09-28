@@ -40,10 +40,13 @@ func main() {
 	if *eeprom {
 		fmt.Printf("*** WARNING: sensor EEPROM refresh enabled ***\n")
 	}
-	fmt.Printf("*** WARNING: failure threshold set to %v ***\n", *failTh)
+	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 
 	globals.Start()
 	sensorDB.Start()
+	sensorManager.LoadSensorEEPROMSettings()
+
+	os.Exit(0)
 
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)

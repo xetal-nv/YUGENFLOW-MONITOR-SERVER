@@ -78,7 +78,7 @@ func Start() {
 		mlogger.LoggerData{"sensorDB.Start", "service started",
 			[]int{1}, true})
 
-	fmt.Println("SensorDB initialised")
+	fmt.Println("*** INFO: SensorDB initialised ***")
 }
 
 func Close() {

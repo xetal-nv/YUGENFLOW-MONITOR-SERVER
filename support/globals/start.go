@@ -31,6 +31,8 @@ func Start() {
 	MaliciousTimeout = internalConfig.Section("timeouts").Key("malicious").MustInt(120)
 	ZombieTimeout = internalConfig.Section("timeouts").Key("zombie").MustInt(24)
 	RepetitiveTimeout = internalConfig.Section("timeouts").Key("repetitive").MustInt(20)
+	SensorEEPROMResetDelay = internalConfig.Section("timeouts").Key("eeprom_delay").MustInt(10)
+	SensorEEPROMResetStep = internalConfig.Section("timeouts").Key("eeprom_step").MustInt(3)
 
 	CRCused = internalConfig.Section("sensors").Key("crc_enabled").MustBool(true)
 	fmt.Printf("*** WARNING: CRC usage is set to %v ***\n", CRCused)
@@ -43,6 +45,8 @@ func Start() {
 	if MalicioudMode == 2 {
 		FailureThreshold = SevereFailureThreshold
 	}
+
+	SensorSettingsFile = internalConfig.Section("options").Key("sensorEEPROM").MustString("")
 
 	//for _, b := range Config.Section("gates").KeyStrings() {
 	//	fmt.Println(b, Config.Section("gates").Key(b))

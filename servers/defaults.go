@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-const maxSensors = 200                     // maximum number of allowed processors
-const minDelayRefusedConnection = 30       // minimum delay for refused connection
-const sensorEEPROMfile = ".sensorsettings" // file containing the sensor eerpom values
-const eepromResetTries = 3                 // how many times the server tries to reset the sensor eeprom before reporting an error
+const maxSensors = 200                      // maximum number of allowed processors
+const minDelayRefusedConnection = 30        // minimum delay for refused connection
+const sensorEEPROMfile = "sensors.settings" // file containing the sensor eerpom values
+const eepromResetTries = 3                  // how many times the server tries to reset the sensor eeprom before reporting an error
 
 // device commands describer for conversion from/to binary to/from param execution
 type cmdSpecs struct {

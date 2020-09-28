@@ -390,7 +390,7 @@ func setupHTTP() error {
 
 /*
 	setSensorParameters read all sensor parameters ignoring any data being sent.
-	The data is contained in the file .sensorsettings and each line specifies on sensor as:
+	The data is contained in the file sensors.settings and each line specifies on sensor as:
 
 	{mac} {srate} {savg} {bgth*16} {occth*16}
 
