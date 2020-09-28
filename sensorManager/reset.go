@@ -5,7 +5,6 @@ import (
 	"gateserver/supp"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
-	"os"
 	"strings"
 	"time"
 )
@@ -30,6 +29,8 @@ func sensorReset(rst chan bool) {
 			if globals.DebugActive {
 				fmt.Printf("*** INFO: sensor reset is set from %v tp %v\n", start, stop)
 			}
+			var macs []string
+			var channels []SensorChannel
 			for {
 				select {
 				case <-rst:
@@ -41,12 +42,37 @@ func sensorReset(rst chan bool) {
 					rst <- true
 					return
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
-					if globals.ResetSlot == "" {
+					// TODO HERE
+					if doIt, e := supp.InClosureTime(start, stop); e == nil {
+						//  then cycle among all devices till all are reset
+						fmt.Println(doIt)
+					} else {
+						// error
+						fmt.Println("error")
+					}
+					if macs == nil {
+						ActiveSensors.RLock()
+						for k, v := range ActiveSensors.Mac {
+							macs = append(macs, k)
+							channels = append(channels, v)
+
+						}
+						ActiveSensors.RUnlock()
+						fmt.Println("NEW DEVICES TO BE RESET", macs, channels)
 						// TODO reset
 						//  will try to reset every day in a given interval all sensors that are
 						//  in ActiveSensors and marked as active in sensorDB
-
 					}
+					//} else {
+					//	if len(macs) > 1 {
+					//		macs = macs[1:]
+					//		channels = channels[1:]
+					//		fmt.Println("DEVICES TO BE STILL RESET", macs, channels)
+					//	} else {
+					//		macs = nil
+					//		channels = nil
+					//	}
+					//}
 				}
 			}
 		}
@@ -54,6 +80,5 @@ func sensorReset(rst chan bool) {
 	if globals.DebugActive {
 		fmt.Println(globals.ResetSlot, globals.ResetPeriod)
 		fmt.Println("*** WARNING: sensor reset is disabled ***")
-		os.Exit(0)
 	}
 }

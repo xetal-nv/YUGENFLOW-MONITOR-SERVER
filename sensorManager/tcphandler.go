@@ -480,7 +480,7 @@ func handler(conn net.Conn) {
 								ActiveSensors.Unlock()
 								mlogger.Info(globals.SensorManagerLog,
 									mlogger.LoggerData{"sensor " + mach,
-										"is active",
+										"is active with ID " + strconv.Itoa(sensorDef.id),
 										[]int{0}, true})
 							}
 						}

@@ -2,7 +2,6 @@ package sensorManager
 
 import (
 	"sync"
-	"time"
 )
 
 // maximum number of TCP connections
@@ -43,13 +42,6 @@ var cmdAnswerLen = map[byte]int{
 	7:  3,
 	9:  3,
 	11: 3,
-}
-
-var resetBG struct {
-	start    time.Time
-	end      time.Time
-	interval time.Duration
-	valid    bool
 }
 
 // provides length for legal server2gate commands

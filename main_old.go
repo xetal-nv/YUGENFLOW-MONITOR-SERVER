@@ -20,7 +20,7 @@ import (
 
 var version = ""
 
-func main1() {
+func main_old() {
 	folder, _ := supp.GetCurrentExecDir()
 	var cdelay = flag.Int("cdelay", 90, "recovery delay in secs")
 	var dbs = flag.String("dbs", "", "databases root folder")
