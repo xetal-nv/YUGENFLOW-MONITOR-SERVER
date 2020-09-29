@@ -6,6 +6,8 @@ import (
 	"gateserver/support/globals"
 )
 
+// NOTE: this is build for one or two sensors gates.
+
 func gate(in chan dataformats.FlowData, stop chan interface{}, gateName string, sensors map[int]dataformats.SensorDefinition) {
 	// TODO everything
 	if globals.DebugActive {
