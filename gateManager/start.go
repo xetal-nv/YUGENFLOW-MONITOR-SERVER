@@ -62,6 +62,19 @@ func Start(sd chan bool) {
 		sd <- true
 	}(sd, rstC)
 
+	// initialisation of configuration
+	for _, b := range globals.Config.Section("gates").KeyStrings() {
+		fmt.Println(b, globals.Config.Section("gates").Key(b))
+	}
+
+	for _, b := range globals.Config.Section("entries").KeyStrings() {
+		fmt.Println(b, globals.Config.Section("entries").Key(b))
+	}
+
+	for _, b := range globals.Config.Section("spaces").KeyStrings() {
+		fmt.Println(b, globals.Config.Section("spaces").Key(b))
+	}
+
 	//recovery.RunWith(
 	//	func() { ApiManager(rstC[0]) },
 	//	func() {

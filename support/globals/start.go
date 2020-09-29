@@ -57,16 +57,4 @@ func Start() {
 	SensorSettingsFile = internalConfig.Section("options").Key("sensorEEPROM").MustString("")
 	EnforceStrict = internalConfig.Section("options").Key("enforce_strict").MustBool(false)
 
-	//for _, b := range Config.Section("gates").KeyStrings() {
-	//	fmt.Println(b, Config.Section("gates").Key(b))
-	//}
-	//
-	//for _, b := range Config.Section("entries").KeyStrings() {
-	//	fmt.Println(b, Config.Section("entries").Key(b))
-	//}
-	//
-	//for _, b := range Config.Section("spaces").KeyStrings() {
-	//	fmt.Println(b, Config.Section("spaces").Key(b))
-	//}
-
 }
