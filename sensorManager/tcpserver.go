@@ -10,7 +10,7 @@ import (
 	"xetal.ddns.net/utils/recovery"
 )
 
-func tcpServer(rst chan bool) {
+func tcpServer(rst chan interface{}) {
 
 	srv, e := net.Listen("tcp4", "0.0.0.0:"+globals.TCPport)
 	if e != nil {
@@ -82,16 +82,16 @@ func tcpServer(rst chan bool) {
 			// we stop all running sensor processes
 			ActiveSensors.Lock()
 			for _, el := range ActiveSensors.Mac {
-				_ = el.Tcp.Close()
-				el.Reset <- true
-				<-el.Reset
+				_ = el.tcp.Close()
+				el.reset <- true
+				<-el.reset
 			}
 			ActiveSensors.Unlock()
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.tcpServer",
 					"service stopped",
 					[]int{0}, true})
-			rst <- true
+			rst <- nil
 
 		}
 	}

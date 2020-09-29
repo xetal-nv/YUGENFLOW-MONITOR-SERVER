@@ -29,7 +29,7 @@ finished:
 					"service killed due to zombie timeout",
 					[]int{0}, true})
 			return
-		case <-chs.Reset:
+		case <-chs.reset:
 			// reset request received, the routine is terminated normally
 			break finished
 		case ans := <-chs.CmdAnswer:
@@ -45,9 +45,9 @@ finished:
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to sensor timeout",
 						[]int{0}, true})
-				//_ = chs.Tcp.Close()
+				//_ = chs.tcp.Close()
 				return
-			case <-chs.Reset:
+			case <-chs.reset:
 				break finished
 			}
 		case cmd := <-chs.Commands:
@@ -67,8 +67,8 @@ finished:
 				ready := make(chan bool)
 				go func(ba []byte) {
 					ret := false
-					if e := chs.Tcp.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
-						if _, e := chs.Tcp.Write(ba); e == nil {
+					if e := chs.tcp.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
+						if _, e := chs.tcp.Write(ba); e == nil {
 							ret = true
 						}
 					}
@@ -87,12 +87,12 @@ finished:
 								rtResponder = nil
 							}
 						case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-						case <-chs.Reset:
+						case <-chs.reset:
 							break finished
 						}
 					}
 				case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-				case <-chs.Reset:
+				case <-chs.reset:
 					break finished
 				}
 			}
@@ -119,5 +119,5 @@ finished:
 	if globals.DebugActive {
 		fmt.Println("sensorManager.sensorCommand: ended", mac)
 	}
-	chs.Reset <- true
+	chs.reset <- true
 }

@@ -21,7 +21,7 @@ func setID(chs SensorChannel, id int) error {
 		fmt.Printf("sensor setID to be done %v:%x\n", id, cmd)
 
 	}
-	if chs.Tcp == nil || chs.CmdAnswer == nil || chs.Commands == nil || chs.Reset == nil {
+	if chs.tcp == nil || chs.CmdAnswer == nil || chs.Commands == nil || chs.reset == nil {
 		return globals.Error
 	}
 	select {

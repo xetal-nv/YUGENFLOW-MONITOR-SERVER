@@ -23,5 +23,5 @@ var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceSt
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
 	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,
 	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep,
-	AsymmetryValue, AsymmetryMax, ResetPeriod int
+	AsymmetryValue, AsymmetryIter, ResetPeriod int
 var APIport, TCPport, DiskCachePath, SensorSettingsFile, ResetSlot string

@@ -19,6 +19,7 @@ import (
 func main() {
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
+	var dev = flag.Bool("dev", false, "to be removed")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
@@ -76,11 +77,16 @@ func main() {
 		os.Exit(0)
 	}(c, sd)
 
-	if globals.DebugActive {
-		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
-		go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
+	//if globals.DebugActive {
+	if *dev {
+		go sensormodels.SensorModel(1, 7000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
+		go sensormodels.SensorModel(4, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
+		//time.Sleep(3*time.Second)
+		//go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
 	}
 
+	//goland:noinspection ALL
 	go sensorManager.Start(sd[0])
+	//goland:noinspection ALL
 	gateManager.Start(sd[1])
 }

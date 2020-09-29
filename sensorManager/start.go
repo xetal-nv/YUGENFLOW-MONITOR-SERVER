@@ -31,20 +31,20 @@ func Start(sd chan bool) {
 			"service started",
 			[]int{0}, true})
 
-	var rstC []chan bool
+	var rstC []chan interface{}
 	for i := 0; i < 2; i++ {
-		rstC = append(rstC, make(chan bool))
+		rstC = append(rstC, make(chan interface{}))
 	}
 
 	// setting up closure and shutdown
-	go func(sd chan bool, rstC []chan bool) {
+	go func(sd chan bool, rstC []chan interface{}) {
 		<-sd
 		fmt.Println("Closing sensorManager")
 		var wg sync.WaitGroup
 		for _, ch := range rstC {
 			wg.Add(1)
-			go func(ch chan bool) {
-				ch <- true
+			go func(ch chan interface{}) {
+				ch <- nil
 				select {
 				case <-ch:
 				case <-time.After(2 * time.Second):

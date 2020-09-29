@@ -56,10 +56,10 @@ func handler(conn net.Conn) {
 		// if the mac is given, we need to reset all sensor data
 		if sensorDef.mac != "" {
 			// kill command process first
-			if sensorDef.channels.Reset != nil {
+			if sensorDef.channels.reset != nil {
 				select {
-				case sensorDef.channels.Reset <- true:
-					<-sensorDef.channels.Reset
+				case sensorDef.channels.reset <- true:
+					<-sensorDef.channels.reset
 				case <-time.After(time.Duration(globals.SensorTimeout)):
 					// this might lead to a zombie that will kill itself eventually
 				}
@@ -189,10 +189,10 @@ func handler(conn net.Conn) {
 			}
 		}()
 		sensorDef.channels = SensorChannel{
-			Tcp:       conn,
+			tcp:       conn,
 			CmdAnswer: make(chan dataformats.Commandding, globals.ChannellingLength),
 			Commands:  make(chan dataformats.Commandding, globals.ChannellingLength),
-			Reset:     make(chan bool, 1),
+			reset:     make(chan bool, 1),
 		}
 
 		ActiveSensors.Mac[sensorDef.mac] = sensorDef.channels
@@ -322,6 +322,25 @@ func handler(conn net.Conn) {
 
 						// if the sensor is not yet active, we go through the verifications needed to determine if the device is valid and active
 						if !sensorDef.active {
+
+							// check for possible attack on duplicated ID
+							if sensorDef.id == -1 {
+								ActiveSensors.RLock()
+								if _, alreadyInUse := ActiveSensors.Id[sensorDef.idSent]; alreadyInUse {
+									if globals.DebugActive {
+										fmt.Printf("Potential malicious device using ID %v with mac %v and ip %v\n",
+											sensorDef.idSent, mach, ipc)
+									}
+									// potential malicious attack, IP and MAc are marked
+									ActiveSensors.RUnlock()
+									_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
+									_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+									// A delay is inserted in case this is a malicious attempt
+									others.WaitRandom(globals.MaliciousTimeout)
+									return
+								}
+								ActiveSensors.RUnlock()
+							}
 							if globals.DebugActive {
 								fmt.Printf("New Sensor with Definition: %+v\n", sensorDef)
 							}
@@ -482,11 +501,42 @@ func handler(conn net.Conn) {
 									mlogger.LoggerData{"sensor " + mach,
 										"is active with ID " + strconv.Itoa(sensorDef.id),
 										[]int{0}, true})
+								gateManager.SensorList.RLock()
+								//fmt.Println(sensorDef.id, gateManager.SensorList.DataChannel[sensorDef.id])
+								//fmt.Println(sensorDef.id, gateManager.SensorList.GateList[sensorDef.id])
+								sensorDef.channels.gateChannel = gateManager.SensorList.DataChannel[sensorDef.id]
+								gateManager.SensorList.RUnlock()
 							}
 						}
 
 						// the sensor can now be considered valid and we send the data to the gate
-						gateManager.DistributeData(sensorDef.id, int(data[2]))
+						if sensorDef.channels.gateChannel == nil {
+							// somehow sensor definition got corrupted
+							if globals.DebugActive {
+								fmt.Printf("Sensor %v has no valid gate associated\n", sensorDef.mac)
+							}
+							mlogger.Info(globals.SensorManagerLog,
+								mlogger.LoggerData{"sensor " + mach,
+									"has no valid gate associated",
+									[]int{0}, true})
+							return
+						} else {
+							for _, ch := range sensorDef.channels.gateChannel {
+								//fmt.Println(sensorDef.id, "sending data", ch)
+								flow := int(data[2])
+								if flow == 255 {
+									flow = -1
+								}
+								ch <- dataformats.FlowData{
+									Type:    "sensor",
+									Name:    mach,
+									Id:      sensorDef.id,
+									Ts:      time.Now().UnixNano(),
+									Netflow: flow,
+								}
+							}
+						}
+						//gateManager.DistributeData(sensorDef.id, int(data[2]))
 
 					}
 				default:

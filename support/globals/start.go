@@ -47,7 +47,12 @@ func Start() {
 		FailureThreshold = SevereFailureThreshold
 	}
 	AsymmetryValue = internalConfig.Section("sensors").Key("asymmetry_value").MustInt(3)
-	AsymmetryMax = internalConfig.Section("sensors").Key("asymmetry_max").MustInt(5)
+	AsymmetryIter = internalConfig.Section("sensors").Key("asymmetry_iter").MustInt(5)
+	if AsymmetryIter == 0 {
+		fmt.Printf("*** INFO: gate asymmetry is disabled ***\n")
+	} else {
+		fmt.Printf("*** INFO: gate asymmetry is enabled (%v, %v) ***\n", AsymmetryValue, AsymmetryIter)
+	}
 	ResetPeriod = internalConfig.Section("sensors").Key("reset_period").MustInt(20)
 	ResetSlot = internalConfig.Section("sensors").Key("reset_slot").MustString("")
 	if ResetSlot != "" {

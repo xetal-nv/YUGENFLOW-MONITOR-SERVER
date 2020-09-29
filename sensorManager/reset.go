@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func sensorBGReset(forceReset chan string, rst chan bool) {
+func sensorBGReset(forceReset chan string, rst chan interface{}) {
 
 	resetFn := func(channels SensorChannel) bool {
 		cmd := []byte{cmdAPI["rstbg"].cmd}
@@ -52,7 +52,7 @@ func sensorBGReset(forceReset chan string, rst chan bool) {
 						mlogger.LoggerData{"sensorManager.sensorBGReset",
 							"service stopped",
 							[]int{0}, true})
-					rst <- true
+					rst <- nil
 					return
 				case mac := <-forceReset:
 					ActiveSensors.RLock()
@@ -144,7 +144,7 @@ func sensorBGReset(forceReset chan string, rst chan bool) {
 				mlogger.LoggerData{"sensorManager.sensorBGReset",
 					"service stopped",
 					[]int{0}, true})
-			rst <- true
+			rst <- nil
 			return
 		case mac := <-forceReset:
 			ActiveSensors.RLock()
