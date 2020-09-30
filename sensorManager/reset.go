@@ -16,9 +16,29 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 	resetFn := func(channels SensorChannel) bool {
 		cmd := []byte{cmdAPI["rstbg"].cmd}
 		cmd = append(cmd, codings.Crc8(cmd))
-		//println("reset BG")
-		channels.Commands <- cmd
-		res := <-channels.Commands
+		var res []byte
+		select {
+		case channels.Commands <- cmd:
+			select {
+			case res = <-channels.Commands:
+			case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+			case <-rst:
+				fmt.Println("Closing sensorManager.sensorBGReset")
+				mlogger.Info(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensorManager.sensorBGReset",
+						"service stopped",
+						[]int{0}, true})
+				rst <- nil
+			}
+		case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+		case <-rst:
+			fmt.Println("Closing sensorManager.sensorBGReset")
+			mlogger.Info(globals.SensorManagerLog,
+				mlogger.LoggerData{"sensorManager.sensorBGReset",
+					"service stopped",
+					[]int{0}, true})
+			rst <- nil
+		}
 		return res != nil
 	}
 

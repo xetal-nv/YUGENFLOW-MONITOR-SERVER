@@ -15,13 +15,13 @@ const (
 var Config *ini.File
 
 // logFiles
-var SevereFailureThreshold, SensorManagerLog, DeviceManagerLog, SensorDBLog int
+var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
-var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceStrict bool
+var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceStrict, AsymmetricNull bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
 	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,
 	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep,
-	AsymmetryValue, AsymmetryIter, ResetPeriod int
+	AsymmetryMax, AsymmetryIter, ResetPeriod int
 var APIport, TCPport, DiskCachePath, SensorSettingsFile, ResetSlot string

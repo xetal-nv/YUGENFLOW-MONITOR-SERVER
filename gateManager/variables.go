@@ -15,7 +15,8 @@ var SensorList struct {
 // channels to connect to a gates
 var GateList struct {
 	sync.RWMutex
-	SensorList  map[string]map[int]dataformats.SensorDefinition
-	DataChannel map[string]chan dataformats.FlowData
-	StopChannel map[string]chan interface{}
+	SensorList         map[string]map[int]dataformats.SensorDefinition
+	DataChannel        map[string]chan dataformats.FlowData
+	ConfigurationReset map[string]chan interface{}
+	StopChannel        map[string]chan interface{}
 }

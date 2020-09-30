@@ -251,8 +251,10 @@ func main_old() {
 			mac := []byte{'a', 'b', 'c'}
 			mac = append(mac, []byte(strconv.Itoa(i))...)
 			go func(i int, mac []byte) {
+				tmp := make([]byte, len(mac))
+				copy(tmp, mac)
 				time.Sleep(time.Duration(rand.Intn(360)) * time.Second)
-				sensormodels.SensorModel(i-100, 5000000, 100, []int{-1, 0, 1}, mac)
+				sensormodels.SensorModel(i-100, 5000000, 100, []int{-1, 0, 1}, tmp)
 			}(i, mac)
 		}
 		for i := 300; i < 450; i++ {

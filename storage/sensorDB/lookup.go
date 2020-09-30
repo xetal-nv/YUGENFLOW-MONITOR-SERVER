@@ -7,6 +7,7 @@ import (
 )
 
 func LookUpMac(id []byte) (mac string, err error) {
+	//fmt.Printf("read lookup: %x\n", id)
 	err = main.View(func(tx *bolt.Tx) error {
 		macb := tx.Bucket([]byte(lookup)).Get(id)
 		if macb == nil {
@@ -19,6 +20,7 @@ func LookUpMac(id []byte) (mac string, err error) {
 }
 
 func AddLookUp(id []byte, mac string) error {
+	//fmt.Printf("add lookup: %x\n", id)
 	macb := []byte(mac)
 	err := main.Update(func(tx *bolt.Tx) error {
 		err := tx.Bucket([]byte(lookup)).Put(id, macb)
@@ -34,6 +36,7 @@ func AddLookUp(id []byte, mac string) error {
 }
 
 func DeleteLookUp(id []byte) (err error) {
+	//fmt.Printf("delete lookup: %x\n", id)
 	err = main.Update(func(tx *bolt.Tx) error {
 		err = tx.Bucket([]byte(lookup)).Delete(id)
 		if err != nil {

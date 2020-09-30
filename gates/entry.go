@@ -155,12 +155,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 										supp.Timestamp(), "", []int{1}, false}
 								}(message)
 								log.Println(message)
-								//fmt.Printf("Sensor %v of gate %v has been disabled due to exceeding limit on asymmetric reset\n",
-								//	gateListEntry[sensorToGate[data.id]][index], sensorToGate[data.id])
 								var tmp, tmpDiff, tmpTimes []int
-								//fmt.Println(gateListEntry[sensorToGate[data.id]])
-								//fmt.Println(sensorDifferential[sensorToGate[data.id]])
-								//fmt.Println(sensorDifferentialTimes[sensorToGate[data.id]])
 								for i, val := range gateListEntry[sensorToGate[data.id]] {
 									if i != index {
 										tmp = append(tmp, val)
@@ -171,9 +166,6 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 								gateListEntry[sensorToGate[data.id]] = tmp
 								sensorDifferential[sensorToGate[data.id]] = tmpDiff
 								sensorDifferentialTimes[sensorToGate[data.id]] = tmpTimes
-								//fmt.Println(gateListEntry[sensorToGate[data.id]])
-								//fmt.Println(sensorDifferential[sensorToGate[data.id]])
-								//fmt.Println(sensorDifferentialTimes[sensorToGate[data.id]])
 							}
 						}
 					} else {

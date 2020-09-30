@@ -22,16 +22,16 @@ import (
 func Start(sd chan bool) {
 	var err error
 
-	if globals.DeviceManagerLog, err = mlogger.DeclareLog("yugenflow_gateManager", false); err != nil {
+	if globals.GateManagerLog, err = mlogger.DeclareLog("yugenflow_gateManager", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yugenflow_gateManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.DeviceManagerLog, 40, 30, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.GateManagerLog, 40, 30, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
 
-	mlogger.Info(globals.DeviceManagerLog,
+	mlogger.Info(globals.GateManagerLog,
 		mlogger.LoggerData{"gateManager.Start",
 			"service started",
 			[]int{0}, true})
@@ -71,7 +71,7 @@ func Start(sd chan bool) {
 		}
 		GateList.Unlock()
 		wg.Wait()
-		mlogger.Info(globals.DeviceManagerLog,
+		mlogger.Info(globals.GateManagerLog,
 			mlogger.LoggerData{"gateManager.Start",
 				"service stopped",
 				[]int{0}, true})
@@ -87,6 +87,7 @@ func Start(sd chan bool) {
 	SensorList.DataChannel = make(map[int]([]chan dataformats.FlowData))
 	GateList.SensorList = make(map[string]map[int]dataformats.SensorDefinition)
 	GateList.DataChannel = make(map[string]chan dataformats.FlowData)
+	GateList.ConfigurationReset = make(map[string]chan interface{})
 	GateList.StopChannel = make(map[string]chan interface{})
 
 	for _, gt := range globals.Config.Section("gates").KeyStrings() {
@@ -96,6 +97,7 @@ func Start(sd chan bool) {
 		} else {
 			gateDef := globals.Config.Section("gates").Key(currentGate).MustString("")
 			if gateDef != "" {
+				var gateSensorsOrdered []int
 				sensors := strings.Split(gateDef, " ")
 
 				// semantics check of the gate definitions (reject sensor and !sensor in the same gate)
@@ -103,11 +105,19 @@ func Start(sd chan bool) {
 				if len(sensors) == 2 {
 					for i, s := range sensors {
 						sensors[i] = strings.Trim(strings.Replace(s, "!", "", -1), "")
-					}
-					for _, s := range sensors {
-						illegal = strings.Contains(" "+gateDef, " "+s) && strings.Contains(gateDef, "!"+s)
-						if illegal {
+						if val, err := strconv.Atoi(sensors[i]); err == nil {
+							gateSensorsOrdered = append(gateSensorsOrdered, val)
+						} else {
+							illegal = true
 							break
+						}
+					}
+					if !illegal {
+						for _, s := range sensors {
+							illegal = strings.Contains(" "+gateDef, " "+s) && strings.Contains(gateDef, "!"+s)
+							if illegal {
+								break
+							}
 						}
 					}
 				} else {
@@ -139,13 +149,15 @@ func Start(sd chan bool) {
 				// channels are created only if the sensor list is valid
 				if GateList.SensorList[currentGate] != nil {
 					GateList.DataChannel[currentGate] = newDataChannel
+					GateList.ConfigurationReset[currentGate] = make(chan interface{}, 1)
 					GateList.StopChannel[currentGate] = make(chan interface{}, 1)
 					go recovery.RunWith(
 						func() {
-							gate(GateList.DataChannel[currentGate], GateList.StopChannel[currentGate], currentGate, GateList.SensorList[currentGate])
+							gate(currentGate, gateSensorsOrdered, GateList.DataChannel[currentGate], GateList.StopChannel[currentGate],
+								GateList.ConfigurationReset[currentGate], GateList.SensorList[currentGate])
 						},
 						func() {
-							mlogger.Recovered(globals.SensorManagerLog,
+							mlogger.Recovered(globals.GateManagerLog,
 								mlogger.LoggerData{"gateManager.gate: " + currentGate,
 									"service terminated and recovered unexpectedly",
 									[]int{1}, true})
@@ -173,7 +185,7 @@ func Start(sd chan bool) {
 	//recovery.RunWith(
 	//	func() { ApiManager(rstC[0]) },
 	//	func() {
-	//		mlogger.Recovered(globals.DeviceManagerLog,
+	//		mlogger.Recovered(globals.GateManagerLog,
 	//			mlogger.LoggerData{"clientManager.ApiManager",
 	//				"ApiManager service terminated and recovered unexpectedly",
 	//				[]int{1}, true})
