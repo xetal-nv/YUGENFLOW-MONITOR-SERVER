@@ -13,9 +13,6 @@ import (
 )
 
 // NOTE: the code is build for one or two sensors gates.
-
-// TODO: logAll (if needed) for debug
-
 func detectTransition(id string, gateSensorsOrdered []int, sensorLatestData map[int]sensorData,
 	scratchPad scratchData) (map[int]sensorData, scratchData, int) {
 	rt := 0

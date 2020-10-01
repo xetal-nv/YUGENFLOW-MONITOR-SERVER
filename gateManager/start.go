@@ -52,7 +52,7 @@ func Start(sd chan bool) {
 				ch <- nil
 				select {
 				case <-ch:
-				case <-time.After(2 * time.Second):
+				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
 				}
 				wg.Done()
 			}(ch)
@@ -64,7 +64,7 @@ func Start(sd chan bool) {
 				ch <- nil
 				select {
 				case <-ch:
-				case <-time.After(2 * time.Second):
+				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
 				}
 				wg.Done()
 			}(ch)

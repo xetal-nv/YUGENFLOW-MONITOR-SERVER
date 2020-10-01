@@ -18,11 +18,11 @@ var ResetChannel chan string
 var Config *ini.File
 
 // logFiles
-var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog int
+var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog, EntryManagerLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
-var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceStrict, AsymmetricNull bool
+var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceStrict, AsymmetricNull, LogToFileAll bool
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
 	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,
 	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep,

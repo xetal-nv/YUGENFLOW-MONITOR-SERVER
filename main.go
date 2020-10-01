@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gateserver/entryManager"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
 	"gateserver/sensormodels"
@@ -18,6 +19,7 @@ import (
 // in progress
 func main() {
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
+	//var de = flag.Bool("dumpentry", false, "dump all entry data to log files")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var dev = flag.Bool("dev", false, "to be removed")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
@@ -30,6 +32,7 @@ func main() {
 	globals.SensorEEPROMResetEnabled = *eeprom
 	globals.DiskCachePath = *dcpath
 	globals.FailureThreshold = *failTh
+	//globals.LogToFileAll = *de
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *debug {
@@ -41,6 +44,9 @@ func main() {
 	if *eeprom {
 		fmt.Printf("*** WARNING: sensor EEPROM refresh enabled ***\n")
 	}
+	//if *de {
+	//	log.Printf("*** WARNING: dump all data is enabled ***\n")
+	//}
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 
 	globals.Start()
@@ -50,7 +56,7 @@ func main() {
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -88,7 +94,9 @@ func main() {
 	}
 
 	//goland:noinspection ALL
-	go sensorManager.Start(sd[0])
+	go entryManager.Start(sd[0])
 	//goland:noinspection ALL
-	gateManager.Start(sd[1])
+	go sensorManager.Start(sd[1])
+	//goland:noinspection ALL
+	gateManager.Start(sd[2])
 }
