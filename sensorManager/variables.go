@@ -20,9 +20,6 @@ var sensorData map[string]sensorSpecs
 // this channel is used tor regulate the number of active sensors
 var tokens chan interface{}
 
-// this channel is used to reset a sensor (sends the MAC)
-var ResetChannel chan string
-
 //ActiveSensors is used as lock and contains the assigned channels
 var ActiveSensors struct {
 	sync.RWMutex

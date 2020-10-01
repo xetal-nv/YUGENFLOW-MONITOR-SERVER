@@ -139,7 +139,7 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 		}
 	} else {
 		//fmt.Println("not found")
-		mlogger.Recovered(globals.SensorManagerLog,
+		mlogger.Warning(globals.SensorManagerLog,
 			mlogger.LoggerData{"sensorManager.SensorEEPROMResetEnabled mac: " + mac,
 				"sensorData cache is corrupted",
 				[]int{1}, true})

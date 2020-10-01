@@ -138,10 +138,8 @@ func Start(sd chan bool) {
 					[]int{1}, true})
 		})
 
-	ResetChannel = make(chan string, globals.ChannellingLength)
-
 	recovery.RunWith(
-		func() { sensorBGReset(ResetChannel, rstC[1]) },
+		func() { sensorBGReset(globals.ResetChannel, rstC[1]) },
 		func() {
 			mlogger.Recovered(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensorManager.sensorBGReset",

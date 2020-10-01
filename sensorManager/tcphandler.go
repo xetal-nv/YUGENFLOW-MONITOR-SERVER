@@ -522,11 +522,11 @@ func handler(conn net.Conn) {
 							return
 						} else {
 							for _, ch := range sensorDef.channels.gateChannel {
-								//fmt.Println(sensorDef.id, "sending data", ch)
 								flow := int(data[2])
 								if flow == 255 {
 									flow = -1
 								}
+								//fmt.Println(sensorDef.id, "sending data", ch, flow)
 								ch <- dataformats.FlowData{
 									Type:    "sensor",
 									Name:    mach,

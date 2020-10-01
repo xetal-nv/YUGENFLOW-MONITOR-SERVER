@@ -18,6 +18,7 @@ func sensorCommand(chs SensorChannel, mac string) {
 	if globals.DebugActive {
 		fmt.Println("sensorManager.sensorCommand: started", mac)
 	}
+	allowedUnexpectedAnswers := globals.FailureThreshold
 finished:
 	for {
 		// we return always nil when there are no errors, something otherwise
@@ -28,14 +29,28 @@ finished:
 				mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 					"service killed due to zombie timeout",
 					[]int{0}, true})
+			// closing the channel causes the TCP handler also to close
+			_ = chs.tcp.Close()
 			return
 		case <-chs.reset:
 			// reset request received, the routine is terminated normally
 			break finished
 		case ans := <-chs.CmdAnswer:
+			if allowedUnexpectedAnswers == 0 {
+				if globals.DebugActive {
+					fmt.Println("sensorManager.sensorCommand:", mac, "too many unexpected data, connection closed")
+				}
+				mlogger.Info(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
+						"too many unexpected data, connection closed",
+						[]int{1}, true})
+				// closing the channel causes the TCP handler also to close
+				_ = chs.tcp.Close()
+				return
+			}
 			// this is an unsolicited command answer, we report error
 			if globals.DebugActive {
-				fmt.Printf("unexpected answer %x fpr %v\n", ans, mac)
+				fmt.Printf("!!! unexpected answer %x fpr %v !!!\n", ans, mac)
 			}
 			select {
 			case chs.CmdAnswer <- []byte("e"):
@@ -50,6 +65,7 @@ finished:
 			case <-chs.reset:
 				break finished
 			}
+			allowedUnexpectedAnswers -= 1
 		case cmd := <-chs.Commands:
 			// this is a command request
 			// we return nil to the command issuer in case of failed and not null to the commander responder in case of error
@@ -110,6 +126,7 @@ finished:
 			go fn(chs.Commands, rtIssuer)
 			go fn(chs.CmdAnswer, rtResponder)
 			wg.Wait()
+			allowedUnexpectedAnswers = globals.FailureThreshold
 		}
 	}
 	mlogger.Info(globals.SensorManagerLog,

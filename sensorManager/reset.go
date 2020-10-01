@@ -13,7 +13,10 @@ import (
 
 func sensorBGReset(forceReset chan string, rst chan interface{}) {
 
+	// return true is successful
 	resetFn := func(channels SensorChannel) bool {
+		fmt.Println("resetting")
+		//return true
 		cmd := []byte{cmdAPI["rstbg"].cmd}
 		cmd = append(cmd, codings.Crc8(cmd))
 		var res []byte
@@ -31,13 +34,6 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 				rst <- nil
 			}
 		case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-		case <-rst:
-			fmt.Println("Closing sensorManager.sensorBGReset")
-			mlogger.Info(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensorManager.sensorBGReset",
-					"service stopped",
-					[]int{0}, true})
-			rst <- nil
 		}
 		return res != nil
 	}
@@ -80,11 +76,28 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 					ActiveSensors.RUnlock()
 					if ok {
 						// reset
-						if resetFn(chs) {
+						if !resetFn(chs) {
 							mac = ""
 						}
+					} else {
+						mac = ""
 					}
-					forceReset <- mac
+					select {
+					case forceReset <- mac:
+					case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+						// we detach the answe with a zombie timeout
+						go func() {
+							select {
+							case forceReset <- mac:
+							case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
+								mlogger.Warning(globals.SensorManagerLog,
+									mlogger.LoggerData{"sensorManager.sensorBGReset",
+										"potential zombie",
+										[]int{1}, true})
+							}
+						}()
+					}
+
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
 					if doIt, e := supp.InClosureTime(start, stop); e == nil {
 						//  then cycle among all devices till all are reset
@@ -172,11 +185,25 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 			ActiveSensors.RUnlock()
 			if ok {
 				// reset
-				if resetFn(chs) {
+				if !resetFn(chs) {
 					mac = ""
 				}
 			}
-			forceReset <- mac
+			select {
+			case forceReset <- mac:
+			case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+				// we detach the answe with a zombie timeout
+				go func() {
+					select {
+					case forceReset <- mac:
+					case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
+						mlogger.Warning(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.sensorBGReset",
+								"potential zombie",
+								[]int{1}, true})
+					}
+				}()
+			}
 		}
 	}
 }

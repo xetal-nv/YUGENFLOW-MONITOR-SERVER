@@ -11,6 +11,9 @@ const (
 	OFF     = 0
 )
 
+// this channel is used to reset a sensor (sends the MAC)
+var ResetChannel chan string
+
 // ini files
 var Config *ini.File
 
@@ -23,5 +26,5 @@ var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceSt
 var ChannellingLength, ShutdownTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP,
 	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,
 	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep,
-	AsymmetryMax, AsymmetryIter, ResetPeriod int
+	AsymmetryMax, AsymmetryIter, AsyncRestFails, ResetPeriod int
 var APIport, TCPport, DiskCachePath, SensorSettingsFile, ResetSlot string
