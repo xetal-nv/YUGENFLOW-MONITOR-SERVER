@@ -108,6 +108,10 @@ func Start(sd chan bool) {
 	GateStructure.Unlock()
 	EntryStructure.Unlock()
 
+	//fmt.Println(GateStructure)
+	//fmt.Println(EntryStructure)
+	//os.Exit(0)
+
 	// setting up closure and shutdown
 	<-sd
 	fmt.Println("Closing entryManager")
@@ -119,7 +123,7 @@ func Start(sd chan bool) {
 			ch <- nil
 			select {
 			case <-ch:
-			case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
+			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 			}
 			wg.Done()
 		}(ch)
@@ -130,7 +134,7 @@ func Start(sd chan bool) {
 		mlogger.LoggerData{"entryManager.Start",
 			"service stopped",
 			[]int{0}, true})
-	time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	sd <- true
 
 	//for _, current := range globals.Config.Section("spaces").KeyStrings() {

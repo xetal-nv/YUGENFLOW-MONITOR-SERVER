@@ -47,7 +47,7 @@ func Start(sd chan bool) {
 				ch <- nil
 				select {
 				case <-ch:
-				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
+				case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 				}
 				wg.Done()
 			}(ch)
@@ -57,7 +57,7 @@ func Start(sd chan bool) {
 			mlogger.LoggerData{"sensorManager.Start",
 				"service stopped",
 				[]int{0}, true})
-		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+		time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 		sd <- true
 	}(sd, rstC)
 
@@ -106,7 +106,7 @@ func Start(sd chan bool) {
 						mlogger.Panic(globals.SensorManagerLog,
 							mlogger.LoggerData{"sensorManager.Start",
 								"failed to load declaration for " + mac, []int{0}, false}, true)
-						time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+						time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 						os.Exit(0)
 					}
 				} else {
@@ -122,7 +122,7 @@ func Start(sd chan bool) {
 				//	mlogger.Panic(globals.SensorManagerLog,
 				//		mlogger.LoggerData{"sensorManager.Start",
 				//			"failed to load declaration for " + mac, []int{0}, false}, true)
-				//	time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+				//	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 				//	os.Exit(0)
 				//}
 			}

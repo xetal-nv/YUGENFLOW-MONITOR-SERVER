@@ -116,7 +116,7 @@ finished:
 			var wg sync.WaitGroup
 			wg.Add(2)
 
-			fn := func(ch chan dataformats.Commandding, msg dataformats.Commandding) {
+			fn := func(ch chan dataformats.Commanding, msg dataformats.Commanding) {
 				defer wg.Done()
 				select {
 				case ch <- msg:

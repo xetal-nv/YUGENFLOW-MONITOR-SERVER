@@ -190,8 +190,8 @@ func handler(conn net.Conn) {
 		}()
 		sensorDef.channels = SensorChannel{
 			tcp:       conn,
-			CmdAnswer: make(chan dataformats.Commandding, globals.ChannellingLength),
-			Commands:  make(chan dataformats.Commandding, globals.ChannellingLength),
+			CmdAnswer: make(chan dataformats.Commanding, globals.ChannellingLength),
+			Commands:  make(chan dataformats.Commanding, globals.ChannellingLength),
 			reset:     make(chan bool, 1),
 		}
 

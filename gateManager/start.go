@@ -138,7 +138,7 @@ func Start(sd chan bool) {
 			ch <- nil
 			select {
 			case <-ch:
-			case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
+			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 			}
 			wg.Done()
 		}(ch)
@@ -149,6 +149,6 @@ func Start(sd chan bool) {
 		mlogger.LoggerData{"gateManager.Start",
 			"service stopped",
 			[]int{0}, true})
-	time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	sd <- true
 }

@@ -20,6 +20,11 @@ func entry(entryname string, in chan dataformats.FlowData, stop chan interface{}
 			fmt.Println("Closing entryManager.entry:", entryname)
 			stop <- nil
 		case data := <-in:
+			if _, ok := gates[data.Name]; ok {
+				if gates[data.Name].Reversed {
+					data.Netflow *= -1
+				}
+			}
 			fmt.Printf("Entry %v received data %+v\n", entryname, data)
 		}
 	}

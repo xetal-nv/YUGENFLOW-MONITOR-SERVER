@@ -71,7 +71,7 @@ func main() {
 				ch <- true
 				select {
 				case <-ch:
-				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
+				case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 				}
 				wg.Done()
 			}(ch)
@@ -95,6 +95,7 @@ func main() {
 
 	//goland:noinspection ALL
 	go entryManager.Start(sd[0])
+	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	//goland:noinspection ALL
 	go sensorManager.Start(sd[1])
 	//goland:noinspection ALL

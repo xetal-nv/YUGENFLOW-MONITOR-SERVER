@@ -34,7 +34,7 @@ func Start() {
 	MaliciousTimeout = internalConfig.Section("timeouts").Key("malicious").MustInt(120)
 	ZombieTimeout = internalConfig.Section("timeouts").Key("zombie").MustInt(24)
 	RepetitiveTimeout = internalConfig.Section("timeouts").Key("repetitive").MustInt(20)
-	ShutdownTime = internalConfig.Section("timeouts").Key("shutdown").MustInt(3)
+	SettleTime = internalConfig.Section("timeouts").Key("shutdown").MustInt(3)
 
 	SensorEEPROMResetDelay = internalConfig.Section("eeprom").Key("eeprom_delay").MustInt(10)
 	SensorEEPROMResetStep = internalConfig.Section("eeprom").Key("eeprom_step").MustInt(3)

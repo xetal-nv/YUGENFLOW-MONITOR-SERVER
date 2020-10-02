@@ -9,4 +9,4 @@ type FlowData struct {
 	Netflow int    `json:"netflow"`
 }
 
-type Commandding []byte
+type Commanding []byte

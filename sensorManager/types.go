@@ -7,8 +7,8 @@ import (
 
 type SensorChannel struct {
 	tcp         net.Conn
-	CmdAnswer   chan dataformats.Commandding
-	Commands    chan dataformats.Commandding
+	CmdAnswer   chan dataformats.Commanding
+	Commands    chan dataformats.Commanding
 	gateChannel []chan dataformats.FlowData
 	reset       chan bool
 }

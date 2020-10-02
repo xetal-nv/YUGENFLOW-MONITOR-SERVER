@@ -10,6 +10,7 @@ import (
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"math"
+	"os"
 	"strconv"
 	"time"
 )
@@ -157,9 +158,26 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 	//fmt.Println(scratchPad)
 	//fmt.Println(sensorLatestData)
 
+	// we try to acquire the gate channels
+	// this will only fail if the server is corrupted therefore, the server should be closed
+	tries := 5
 	entryManager.GateStructure.RLock()
-	gateEntryChannels := entryManager.GateStructure.DataChannel[gateName]
+	gateEntryChannels, ok := entryManager.GateStructure.DataChannel[gateName]
 	entryManager.GateStructure.RUnlock()
+	for !ok {
+		if tries == 0 {
+			fmt.Printf("Gate %v has failed top start\n", gateName)
+			os.Exit(0)
+		} else {
+			tries -= 1
+		}
+		time.Sleep(time.Duration(globals.SettleTime) * time.Second)
+		entryManager.GateStructure.RLock()
+		gateEntryChannels, ok = entryManager.GateStructure.DataChannel[gateName]
+		entryManager.GateStructure.RUnlock()
+	}
+
+	//fmt.Println(gateName, gateEntryChannels)
 
 	if globals.DebugActive {
 		fmt.Printf("Gate %v has been started\n", gateName)
