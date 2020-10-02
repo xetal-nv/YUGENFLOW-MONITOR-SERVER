@@ -1,8 +1,9 @@
 package entryManager
 
 type gateflow struct {
-	in  int
-	out int
+	name string
+	in   int
+	out  int
 }
 
 // entry data

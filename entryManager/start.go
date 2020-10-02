@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"xetal.ddns.net/utils/recovery"
 )
 
 func Start(sd chan bool) {
@@ -86,17 +85,18 @@ func Start(sd chan bool) {
 					EntryStructure.DataChannel[currentEntry] = newDataChannel
 					EntryStructure.ConfigurationReset[currentEntry] = make(chan interface{}, 1)
 					EntryStructure.StopChannel[currentEntry] = make(chan interface{}, 1)
-					go recovery.RunWith(
-						func() {
-							entry(currentEntry, EntryStructure.DataChannel[currentEntry], EntryStructure.StopChannel[currentEntry],
-								EntryStructure.ConfigurationReset[currentEntry], EntryStructure.GateList[currentEntry])
-						},
-						func() {
-							mlogger.Recovered(globals.GateManagerLog,
-								mlogger.LoggerData{"entryManager.entry: " + currentEntry,
-									"service terminated and recovered unexpectedly",
-									[]int{1}, true})
-						})
+					entryData := entryData{
+						name:  currentEntry,
+						ts:    time.Now().UnixNano(),
+						count: 0,
+						flows: nil,
+					}
+					entryData.flows = make(map[string]gateflow)
+					for gate := range EntryStructure.GateList[currentEntry] {
+						entryData.flows[gate] = gateflow{name: gate}
+					}
+					go entry(currentEntry, entryData, EntryStructure.DataChannel[currentEntry], EntryStructure.StopChannel[currentEntry],
+						EntryStructure.ConfigurationReset[currentEntry], EntryStructure.GateList[currentEntry])
 				}
 
 			} else {
