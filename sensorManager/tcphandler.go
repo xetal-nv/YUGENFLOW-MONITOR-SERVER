@@ -501,11 +501,11 @@ func handler(conn net.Conn) {
 									mlogger.LoggerData{"sensor " + mach,
 										"is active with ID " + strconv.Itoa(sensorDef.id),
 										[]int{0}, true})
-								gateManager.SensorList.RLock()
-								//fmt.Println(sensorDef.id, gateManager.SensorList.DataChannel[sensorDef.id])
-								//fmt.Println(sensorDef.id, gateManager.SensorList.GateList[sensorDef.id])
-								sensorDef.channels.gateChannel = gateManager.SensorList.DataChannel[sensorDef.id]
-								gateManager.SensorList.RUnlock()
+								gateManager.SensorStructure.RLock()
+								//fmt.Println(sensorDef.id, gateManager.SensorStructure.DataChannel[sensorDef.id])
+								//fmt.Println(sensorDef.id, gateManager.SensorStructure.GateStructure[sensorDef.id])
+								sensorDef.channels.gateChannel = gateManager.SensorStructure.DataChannel[sensorDef.id]
+								gateManager.SensorStructure.RUnlock()
 							}
 						}
 

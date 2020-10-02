@@ -3,6 +3,8 @@ package gateManager
 import (
 	"fmt"
 	"gateserver/dataformats"
+	"gateserver/entryManager"
+	"gateserver/storage/coredbs"
 	"gateserver/storage/sensorDB"
 	"gateserver/supp"
 	"gateserver/support/globals"
@@ -154,6 +156,10 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 
 	//fmt.Println(scratchPad)
 	//fmt.Println(sensorLatestData)
+
+	entryManager.GateStructure.RLock()
+	gateEntryChannels := entryManager.GateStructure.DataChannel[gateName]
+	entryManager.GateStructure.RUnlock()
 
 	if globals.DebugActive {
 		fmt.Printf("Gate %v has been started\n", gateName)
@@ -308,7 +314,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 				}
 
 				//fmt.Println(gateSensorsOrdered, sensorLatestData, scratchPad)
-
 				sensorLatestData[data.Id] = sensorData{
 					id:  data.Id,
 					ts:  data.Ts,
@@ -316,8 +321,22 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 				}
 				var nv int
 				sensorLatestData, scratchPad, nv = detectTransition(gateName, gateSensorsOrdered, sensorLatestData, scratchPad)
-				// TODO send data to entry
-				fmt.Printf(" ===>>> Gate %v calculated value: %+v\n", gateName, nv)
+				newGateData := dataformats.FlowData{
+					Type:    "gate",
+					Name:    gateName,
+					Id:      0,
+					Ts:      data.Ts,
+					Netflow: nv,
+				}
+				go func(data dataformats.FlowData) {
+					coredbs.SaveGateData(newGateData)
+				}(newGateData)
+				if globals.DebugActive {
+					fmt.Printf(" ===>>> Gate %v calculated value: %+v\n", gateName, nv)
+				}
+				for _, ch := range gateEntryChannels {
+					ch <- newGateData
+				}
 			} else {
 				if globals.DebugActive {
 					fmt.Printf(" ===>>> Gate %v reject: %+v\n", gateName, data)

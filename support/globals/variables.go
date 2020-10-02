@@ -15,7 +15,7 @@ const (
 var ResetChannel chan string
 
 // ini files
-var Config *ini.File
+var Config, AccessData *ini.File
 
 // logFiles
 var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog, EntryManagerLog int

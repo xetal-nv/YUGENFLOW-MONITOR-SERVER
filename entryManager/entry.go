@@ -2,19 +2,26 @@ package entryManager
 
 import (
 	"fmt"
-	"gateserver/support/globals"
-	"github.com/fpessolano/mlogger"
+	"gateserver/dataformats"
 )
 
-func entry(rst chan interface{}) {
-	// TODO everything, must include duping data as well
+func entry(entryname string, in chan dataformats.FlowData, stop chan interface{},
+	resetEntry chan interface{}, gates map[string]dataformats.GateDefinition) {
 
-	<-rst
-	fmt.Println("Closing entryManager.entry")
-	mlogger.Info(globals.SensorManagerLog,
-		mlogger.LoggerData{"entryManager.entry",
-			"service stopped",
-			[]int{0}, true})
-	rst <- nil
+	// TODO everything, must include dumping data as well?
+
+	fmt.Printf("Entry %v has been started\n", entryname)
+
+	for {
+		select {
+		case <-resetEntry:
+			fmt.Println("Resetting entryManager.entry:", entryname)
+		case <-stop:
+			fmt.Println("Closing entryManager.entry:", entryname)
+			stop <- nil
+		case data := <-in:
+			fmt.Printf("Entry %v received data %+v\n", entryname, data)
+		}
+	}
 
 }

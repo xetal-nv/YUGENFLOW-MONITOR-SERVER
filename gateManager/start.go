@@ -36,63 +36,18 @@ func Start(sd chan bool) {
 			"service started",
 			[]int{0}, true})
 
-	var rstC []chan interface{}
-	for i := 0; i < 0; i++ {
-		rstC = append(rstC, make(chan interface{}))
-	}
-
-	// setting up closure and shutdown
-	go func(sd chan bool, rstC []chan interface{}) {
-		<-sd
-		fmt.Println("Closing gateManager")
-		var wg sync.WaitGroup
-		for _, ch := range rstC {
-			wg.Add(1)
-			go func(ch chan interface{}) {
-				ch <- nil
-				select {
-				case <-ch:
-				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
-				}
-				wg.Done()
-			}(ch)
-		}
-		GateList.Lock()
-		for _, ch := range GateList.StopChannel {
-			wg.Add(1)
-			go func(ch chan interface{}) {
-				ch <- nil
-				select {
-				case <-ch:
-				case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
-				}
-				wg.Done()
-			}(ch)
-		}
-		GateList.Unlock()
-		wg.Wait()
-		mlogger.Info(globals.GateManagerLog,
-			mlogger.LoggerData{"gateManager.Start",
-				"service stopped",
-				[]int{0}, true})
-		time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
-		sd <- true
-	}(sd, rstC)
-
-	// initialisation of gates
-
-	SensorList.Lock()
-	GateList.Lock()
-	SensorList.GateList = make(map[int][]string)
-	SensorList.DataChannel = make(map[int]([]chan dataformats.FlowData))
-	GateList.SensorList = make(map[string]map[int]dataformats.SensorDefinition)
-	GateList.DataChannel = make(map[string]chan dataformats.FlowData)
-	GateList.ConfigurationReset = make(map[string]chan interface{})
-	GateList.StopChannel = make(map[string]chan interface{})
+	SensorStructure.Lock()
+	GateStructure.Lock()
+	SensorStructure.GateList = make(map[int][]string)
+	SensorStructure.DataChannel = make(map[int]([]chan dataformats.FlowData))
+	GateStructure.SensorList = make(map[string]map[int]dataformats.SensorDefinition)
+	GateStructure.DataChannel = make(map[string]chan dataformats.FlowData)
+	GateStructure.ConfigurationReset = make(map[string]chan interface{})
+	GateStructure.StopChannel = make(map[string]chan interface{})
 
 	for _, gt := range globals.Config.Section("gates").KeyStrings() {
 		currentGate := gt
-		if _, ok := GateList.SensorList[currentGate]; ok {
+		if _, ok := GateStructure.SensorList[currentGate]; ok {
 			fmt.Println("Duplicated gate %v in configuration.ini ignored\n", currentGate)
 		} else {
 			gateDef := globals.Config.Section("gates").Key(currentGate).MustString("")
@@ -131,12 +86,12 @@ func Start(sd chan bool) {
 				newDataChannel := make(chan dataformats.FlowData, globals.ChannellingLength)
 				for _, currentSensor := range sensors {
 					if sensorId, err := strconv.Atoi(strings.Trim(strings.Replace(currentSensor, "!", "", -1), "")); err == nil {
-						SensorList.GateList[sensorId] = append(SensorList.GateList[sensorId], currentGate)
-						SensorList.DataChannel[sensorId] = append(SensorList.DataChannel[sensorId], newDataChannel)
-						if GateList.SensorList[currentGate] == nil {
-							GateList.SensorList[currentGate] = make(map[int]dataformats.SensorDefinition)
+						SensorStructure.GateList[sensorId] = append(SensorStructure.GateList[sensorId], currentGate)
+						SensorStructure.DataChannel[sensorId] = append(SensorStructure.DataChannel[sensorId], newDataChannel)
+						if GateStructure.SensorList[currentGate] == nil {
+							GateStructure.SensorList[currentGate] = make(map[int]dataformats.SensorDefinition)
 						}
-						GateList.SensorList[currentGate][sensorId] = dataformats.SensorDefinition{
+						GateStructure.SensorList[currentGate][sensorId] = dataformats.SensorDefinition{
 							Id:        sensorId,
 							Reversed:  strings.Contains(currentSensor, "!"),
 							Suspected: 0,
@@ -147,14 +102,14 @@ func Start(sd chan bool) {
 					}
 				}
 				// channels are created only if the sensor list is valid
-				if GateList.SensorList[currentGate] != nil {
-					GateList.DataChannel[currentGate] = newDataChannel
-					GateList.ConfigurationReset[currentGate] = make(chan interface{}, 1)
-					GateList.StopChannel[currentGate] = make(chan interface{}, 1)
+				if GateStructure.SensorList[currentGate] != nil {
+					GateStructure.DataChannel[currentGate] = newDataChannel
+					GateStructure.ConfigurationReset[currentGate] = make(chan interface{}, 1)
+					GateStructure.StopChannel[currentGate] = make(chan interface{}, 1)
 					go recovery.RunWith(
 						func() {
-							gate(currentGate, gateSensorsOrdered, GateList.DataChannel[currentGate], GateList.StopChannel[currentGate],
-								GateList.ConfigurationReset[currentGate], GateList.SensorList[currentGate])
+							gate(currentGate, gateSensorsOrdered, GateStructure.DataChannel[currentGate], GateStructure.StopChannel[currentGate],
+								GateStructure.ConfigurationReset[currentGate], GateStructure.SensorList[currentGate])
 						},
 						func() {
 							mlogger.Recovered(globals.GateManagerLog,
@@ -169,29 +124,31 @@ func Start(sd chan bool) {
 		}
 	}
 
-	//fmt.Printf("%+v", GateList.SensorList)
-	GateList.Unlock()
-	SensorList.Unlock()
-	//os.Exit(0)
+	GateStructure.Unlock()
+	SensorStructure.Unlock()
 
-	//for _, current := range globals.Config.Section("entries").KeyStrings() {
-	//	fmt.Println(current, globals.Config.Section("entries").Key(current))
-	//}
-	//
-	//for _, current := range globals.Config.Section("spaces").KeyStrings() {
-	//	fmt.Println(current, globals.Config.Section("spaces").Key(current))
-	//}
-
-	//recovery.RunWith(
-	//	func() { ApiManager(rstC[0]) },
-	//	func() {
-	//		mlogger.Recovered(globals.GateManagerLog,
-	//			mlogger.LoggerData{"clientManager.ApiManager",
-	//				"ApiManager service terminated and recovered unexpectedly",
-	//				[]int{1}, true})
-	//	})
-
-	for {
-		time.Sleep(36 * time.Hour)
+	// shutdown procedure
+	<-sd
+	fmt.Println("Closing gateManager")
+	var wg sync.WaitGroup
+	GateStructure.Lock()
+	for _, ch := range GateStructure.StopChannel {
+		wg.Add(1)
+		go func(ch chan interface{}) {
+			ch <- nil
+			select {
+			case <-ch:
+			case <-time.After(time.Duration(globals.ShutdownTime) * time.Second):
+			}
+			wg.Done()
+		}(ch)
 	}
+	GateStructure.Unlock()
+	wg.Wait()
+	mlogger.Info(globals.GateManagerLog,
+		mlogger.LoggerData{"gateManager.Start",
+			"service stopped",
+			[]int{0}, true})
+	time.Sleep(time.Duration(globals.ShutdownTime) * time.Second)
+	sd <- true
 }
