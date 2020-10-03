@@ -129,7 +129,7 @@ func TimedIntDBSSetUp(folder string, fd bool) error {
 		//for i := 0; i < s.NumField(); i++ {
 		//	f := s.Field(i)
 		//	fmt.Printf("%d: %s %s = %v\n", i,
-		//		typeOfT.Field(i).Name, f.Type(), f.Interface())
+		//		typeOfT.Field(i).Id, f.Type(), f.Interface())
 		//}
 		//os.Exit(1)
 		currentDB, err = badger.Open(optsCurr)

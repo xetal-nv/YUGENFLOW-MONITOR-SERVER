@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+var saveToDB bool
+
 // channels to send data from a gate to the entries it contributes to
 var GateStructure struct {
 	sync.RWMutex
@@ -15,8 +17,8 @@ var GateStructure struct {
 // channels to connect to an entry
 var EntryStructure struct {
 	sync.RWMutex
-	GateList           map[string]map[string]dataformats.GateDefinition
-	DataChannel        map[string]chan dataformats.FlowData
-	ConfigurationReset map[string]chan interface{}
-	StopChannel        map[string]chan interface{}
+	GateList    map[string]map[string]dataformats.GateDefinition
+	DataChannel map[string]chan dataformats.FlowData
+	SetReset    map[string]chan bool
+	StopChannel map[string]chan interface{}
 }

@@ -346,9 +346,11 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 					Ts:      data.Ts,
 					Netflow: nv,
 				}
-				go func(data dataformats.FlowData) {
-					coredbs.SaveGateData(newGateData)
-				}(newGateData)
+				if saveToDB {
+					go func(data dataformats.FlowData) {
+						coredbs.SaveGateData(newGateData)
+					}(newGateData)
+				}
 				if globals.DebugActive {
 					fmt.Printf(" ===>>> Gate %v calculated value: %+v\n", gateName, nv)
 				}

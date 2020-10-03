@@ -34,10 +34,14 @@ func Start(sd chan bool) {
 	GateStructure.DataChannel = make(map[string]([]chan dataformats.FlowData))
 	EntryStructure.GateList = make(map[string]map[string]dataformats.GateDefinition)
 	EntryStructure.DataChannel = make(map[string]chan dataformats.FlowData)
-	EntryStructure.ConfigurationReset = make(map[string]chan interface{})
+	EntryStructure.SetReset = make(map[string]chan bool)
 	EntryStructure.StopChannel = make(map[string]chan interface{})
 
+	saveToDB = globals.Config.Section("entries").Key("save").MustBool(false)
 	for _, en := range globals.Config.Section("entries").KeyStrings() {
+		if en == "save" {
+			continue
+		}
 		currentEntry := en
 		if _, ok := EntryStructure.GateList[currentEntry]; ok {
 			fmt.Println("Duplicated entry %v in configuration.ini ignored\n", currentEntry)
@@ -83,20 +87,21 @@ func Start(sd chan bool) {
 				// channels are created only if the sensor list is valid
 				if EntryStructure.GateList[currentEntry] != nil {
 					EntryStructure.DataChannel[currentEntry] = newDataChannel
-					EntryStructure.ConfigurationReset[currentEntry] = make(chan interface{}, 1)
+					EntryStructure.SetReset[currentEntry] = make(chan bool, globals.ChannellingLength)
 					EntryStructure.StopChannel[currentEntry] = make(chan interface{}, 1)
-					entryData := entryData{
-						name:  currentEntry,
-						ts:    time.Now().UnixNano(),
-						count: 0,
-						flows: nil,
+					entryData := dataformats.Entrydata{
+						Id:    currentEntry,
+						Ts:    time.Now().UnixNano(),
+						Count: 0,
+						Flows: nil,
+						State: true,
 					}
-					entryData.flows = make(map[string]gateflow)
+					entryData.Flows = make(map[string]dataformats.Flow)
 					for gate := range EntryStructure.GateList[currentEntry] {
-						entryData.flows[gate] = gateflow{name: gate}
+						entryData.Flows[gate] = dataformats.Flow{Id: gate}
 					}
 					go entry(currentEntry, entryData, EntryStructure.DataChannel[currentEntry], EntryStructure.StopChannel[currentEntry],
-						EntryStructure.ConfigurationReset[currentEntry], EntryStructure.GateList[currentEntry])
+						EntryStructure.SetReset[currentEntry], EntryStructure.GateList[currentEntry])
 				}
 
 			} else {

@@ -69,6 +69,11 @@ func Start() {
 	}
 	EnforceStrict = internalConfig.Section("security").Key("enforce_strict").MustBool(false)
 
+	SaveState = internalConfig.Section("shutdown").Key("save_state").MustBool(false)
+	if SaveState {
+		fmt.Printf("*** INFO: Server state is being preserved ***\n")
+	}
+
 	ResetChannel = make(chan string, ChannellingLength)
 
 	// Access configuration
