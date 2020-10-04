@@ -17,7 +17,7 @@ var GateStructure struct {
 // channels to connect to an entry
 var EntryStructure struct {
 	sync.RWMutex
-	GateList    map[string]map[string]dataformats.GateDefinition
+	GateList    map[string]map[string]dataformats.GateState
 	DataChannel map[string]chan dataformats.FlowData
 	SetReset    map[string]chan bool
 	StopChannel map[string]chan interface{}

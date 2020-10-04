@@ -23,7 +23,7 @@ const (
 
 func Start() {
 	var err error
-	if globals.SensorDBLog, err = mlogger.DeclareLog("yugenflow_gsensorDB", false); err != nil {
+	if globals.SensorDBLog, err = mlogger.DeclareLog("yugenflow_sensorDB", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yugenflow_gsensorDB logfile.")
 		os.Exit(0)
 	}

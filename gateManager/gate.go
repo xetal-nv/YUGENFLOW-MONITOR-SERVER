@@ -166,7 +166,7 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 	entryManager.GateStructure.RUnlock()
 	for !ok {
 		if tries == 0 {
-			fmt.Printf("Gate %v has failed top start\n", gateName)
+			fmt.Printf("Gate %v has failed to start\n", gateName)
 			os.Exit(0)
 		} else {
 			tries -= 1

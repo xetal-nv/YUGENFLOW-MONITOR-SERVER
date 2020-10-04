@@ -3,16 +3,19 @@ package entryManager
 import (
 	"fmt"
 	"gateserver/dataformats"
+	"gateserver/spaceManager"
 	"gateserver/storage/coredbs"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
+	"os"
 	"sync"
+	"time"
 )
 
 var once sync.Once
 
-func entry(entryname string, entryRegister dataformats.Entrydata, in chan dataformats.FlowData, stop chan interface{},
-	setReset chan bool, gates map[string]dataformats.GateDefinition) {
+func entry(entryname string, entryRegister dataformats.EntryState, in chan dataformats.FlowData, stop chan interface{},
+	setReset chan bool, gates map[string]dataformats.GateState) {
 
 	once.Do(func() {
 		if globals.SaveState {
@@ -27,29 +30,55 @@ func entry(entryname string, entryRegister dataformats.Entrydata, in chan datafo
 	})
 
 	defer func() {
+		println("a")
 		if e := recover(); e != nil {
-			mlogger.Recovered(globals.GateManagerLog,
+			mlogger.Recovered(globals.EntryManagerLog,
 				mlogger.LoggerData{"entryManager.entry: " + entryname,
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
+			go entry(entryname, entryRegister, in, stop, setReset, gates)
 		}
-		go entry(entryname, entryRegister, in, stop, setReset, gates)
 	}()
 
-	fmt.Printf("Entry %v has been started\n", entryname)
+	tries := 5
+	spaceManager.EntryStructure.RLock()
+	entrySpaceChannels, ok := spaceManager.EntryStructure.DataChannel[entryname]
+	spaceManager.EntryStructure.RUnlock()
+	for !ok {
+		if tries == 0 {
+			fmt.Printf("Entry %v has failed to start\n", entryname)
+			os.Exit(0)
+		} else {
+			tries -= 1
+		}
+		time.Sleep(time.Duration(globals.SettleTime) * time.Second)
+		spaceManager.EntryStructure.RLock()
+		entrySpaceChannels, ok = spaceManager.EntryStructure.DataChannel[entryname]
+		spaceManager.EntryStructure.RUnlock()
+	}
+
+	if globals.DebugActive {
+		fmt.Printf("Entry %v has been started\n", entryname)
+	}
+	mlogger.Info(globals.EntryManagerLog,
+		mlogger.LoggerData{"entryManager.entry: " + entryname,
+			"service started",
+			[]int{0}, true})
 
 	for {
 		select {
 		case entryRegister.State = <-setReset:
-			fmt.Printf("State of entry %v set to %v\n", entryname, entryRegister.State)
+			if globals.DebugActive {
+				fmt.Printf("State of entry %v set to %v\n", entryname, entryRegister.State)
+			}
 			setReset <- entryRegister.State
 			if entryRegister.State {
-				mlogger.Info(globals.GateManagerLog,
+				mlogger.Info(globals.EntryManagerLog,
 					mlogger.LoggerData{"entryManager.entry: " + entryname,
 						"state set to true",
 						[]int{0}, true})
 			} else {
-				mlogger.Info(globals.GateManagerLog,
+				mlogger.Info(globals.EntryManagerLog,
 					mlogger.LoggerData{"entryManager.entry: " + entryname,
 						"state set to false",
 						[]int{0}, true})
@@ -63,7 +92,12 @@ func entry(entryname string, entryRegister dataformats.Entrydata, in chan datafo
 				}
 			}
 			fmt.Println("Closing entryManager.entry:", entryname)
+			mlogger.Info(globals.EntryManagerLog,
+				mlogger.LoggerData{"entryManager.entry: " + entryname,
+					"service stopped",
+					[]int{0}, true})
 			stop <- nil
+			break
 		case data := <-in:
 			if data.Netflow != 0 && entryRegister.State {
 				if _, ok := gates[data.Name]; ok {
@@ -85,12 +119,16 @@ func entry(entryname string, entryRegister dataformats.Entrydata, in chan datafo
 				entryRegister.Flows[data.Name] = tempRegister
 				//fmt.Println(entryRegister.flows[data.Id])
 				if saveToDB {
-					go func(nd dataformats.Entrydata) {
+					go func(nd dataformats.EntryState) {
 						coredbs.SaveEntryData(nd)
 					}(entryRegister)
 				}
-				// TODO send to space
-				fmt.Printf("Entry %v registry data \n\t%+v\n", entryname, entryRegister)
+				if globals.DebugActive {
+					fmt.Printf("Entry %v registry data \n\t%+v\n", entryname, entryRegister)
+				}
+				for _, ch := range entrySpaceChannels {
+					ch <- entryRegister
+				}
 			}
 		}
 	}

@@ -15,7 +15,7 @@ type SensorDefinition struct {
 }
 
 // gate data model
-type GateDefinition struct {
+type GateState struct {
 	Id        string `json:"id"`
 	Reversed  bool   `json:"reversed"`
 	Suspected int    `json:"numberMarkings"`
@@ -30,10 +30,20 @@ type Flow struct {
 }
 
 // entry flow data model used for database storage
-type Entrydata struct {
-	Id    string          `json:"id"`
-	Ts    int64           `json:"ts"`
-	Count int             `json:"netflow"`
-	State bool            `json:"-"`
-	Flows map[string]Flow `json:"flows"`
+type EntryState struct {
+	Id       string          `json:"id"`
+	Ts       int64           `json:"ts"`
+	Count    int             `json:"netflow"`
+	State    bool            `json:"-"`
+	Reversed bool            `json:"reversed"`
+	Flows    map[string]Flow `json:"flows"`
+}
+
+// space flow data model used for database storage
+type SpaceState struct {
+	Id    string                `json:"id"`
+	Ts    int64                 `json:"ts"`
+	Count int                   `json:"netflow"`
+	State bool                  `json:"-"`
+	Flows map[string]EntryState `json:"flows"`
 }

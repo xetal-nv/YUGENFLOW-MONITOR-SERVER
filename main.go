@@ -84,6 +84,15 @@ func main() {
 		os.Exit(0)
 	}(c, sd)
 
+	//goland:noinspection ALL
+	go spaceManager.Start(sd[0])
+	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
+	//goland:noinspection ALL
+	go entryManager.Start(sd[1])
+	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
+	//goland:noinspection ALL
+	go sensorManager.Start(sd[2])
+
 	//if globals.DebugActive {
 	if *dev {
 		go sensormodels.SensorModel(1, 7000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
@@ -94,15 +103,6 @@ func main() {
 		//go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
 	}
 
-	// TODO spacemanager!!!
-	//goland:noinspection ALL
-	go spaceManager.Start(sd[0])
-	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
-	//goland:noinspection ALL
-	go entryManager.Start(sd[1])
-	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
-	//goland:noinspection ALL
-	go sensorManager.Start(sd[2])
 	//goland:noinspection ALL
 	gateManager.Start(sd[3])
 }

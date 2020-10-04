@@ -31,9 +31,9 @@ func Start(sd chan bool) {
 	EntryStructure.Lock()
 	SpaceStructure.Lock()
 	EntryStructure.SpaceList = make(map[string][]string)
-	EntryStructure.DataChannel = make(map[string]([]chan dataformats.Entrydata))
-	SpaceStructure.EntryList = make(map[string]map[string]dataformats.GateDefinition)
-	SpaceStructure.DataChannel = make(map[string]chan dataformats.Entrydata)
+	EntryStructure.DataChannel = make(map[string]([]chan dataformats.EntryState))
+	SpaceStructure.EntryList = make(map[string]map[string]dataformats.EntryState)
+	SpaceStructure.DataChannel = make(map[string]chan dataformats.EntryState)
 	SpaceStructure.SetReset = make(map[string]chan bool)
 	SpaceStructure.StopChannel = make(map[string]chan interface{})
 
@@ -64,20 +64,21 @@ func Start(sd chan bool) {
 				}
 
 				entries = strings.Split(spaceDef, " ")
-				newDataChannel := make(chan dataformats.Entrydata, globals.ChannellingLength)
+				newDataChannel := make(chan dataformats.EntryState, globals.ChannellingLength)
 				for _, ce := range entries {
 					ceName := strings.Trim(strings.Replace(ce, "!", "", -1), "")
 					EntryStructure.SpaceList[ceName] = append(EntryStructure.SpaceList[ceName], currentSpace)
 					EntryStructure.DataChannel[ceName] = append(EntryStructure.DataChannel[ceName], newDataChannel)
 					if SpaceStructure.EntryList[currentSpace] == nil {
-						SpaceStructure.EntryList[currentSpace] = make(map[string]dataformats.GateDefinition)
+						SpaceStructure.EntryList[currentSpace] = make(map[string]dataformats.EntryState)
 					}
-					// TODO need to change type to also add data on gates and entries
-					SpaceStructure.EntryList[currentSpace][ceName] = dataformats.GateDefinition{
-						Id:        ceName,
-						Reversed:  strings.Contains(ce, "!"),
-						Suspected: 0,
-						Disabled:  false,
+					SpaceStructure.EntryList[currentSpace][ceName] = dataformats.EntryState{
+						Id:       ceName,
+						Ts:       0,
+						Count:    0,
+						State:    true,
+						Reversed: strings.Contains(ce, "!"),
+						Flows:    nil,
 					}
 				}
 
@@ -86,19 +87,20 @@ func Start(sd chan bool) {
 					SpaceStructure.DataChannel[currentSpace] = newDataChannel
 					SpaceStructure.SetReset[currentSpace] = make(chan bool, globals.ChannellingLength)
 					SpaceStructure.StopChannel[currentSpace] = make(chan interface{}, 1)
-					entryData := dataformats.Entrydata{
+					spaceRegister := dataformats.SpaceState{
 						Id:    currentSpace,
 						Ts:    time.Now().UnixNano(),
 						Count: 0,
 						Flows: nil,
 						State: true,
 					}
-					entryData.Flows = make(map[string]dataformats.Flow)
-					for gate := range SpaceStructure.EntryList[currentSpace] {
-						entryData.Flows[gate] = dataformats.Flow{Id: gate}
+					spaceRegister.Flows = make(map[string]dataformats.EntryState)
+					for entry := range SpaceStructure.EntryList[currentSpace] {
+						//spaceRegister.Flows[entry] = dataformats.EntryState{Id: entry}
+						spaceRegister.Flows[entry] = SpaceStructure.EntryList[currentSpace][entry]
 					}
-					//go entry(currentSpace, entryData, SpaceStructure.DataChannel[currentSpace], SpaceStructure.StopChannel[currentSpace],
-					//	SpaceStructure.SetReset[currentSpace], SpaceStructure.GateList[currentSpace])
+					go space(currentSpace, spaceRegister, SpaceStructure.DataChannel[currentSpace], SpaceStructure.StopChannel[currentSpace],
+						SpaceStructure.SetReset[currentSpace], SpaceStructure.EntryList[currentSpace])
 				}
 
 			} else {
@@ -110,9 +112,10 @@ func Start(sd chan bool) {
 	EntryStructure.Unlock()
 	SpaceStructure.Unlock()
 
-	fmt.Println(EntryStructure)
-	fmt.Println(SpaceStructure)
-	os.Exit(0)
+	//fmt.Println(EntryStructure)
+	//fmt.Println(SpaceStructure)
+	//time.Sleep(3*time.Second)
+	//os.Exit(0)
 
 	// setting up closure and shutdown
 	<-sd

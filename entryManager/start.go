@@ -32,7 +32,7 @@ func Start(sd chan bool) {
 	EntryStructure.Lock()
 	GateStructure.EntryList = make(map[string][]string)
 	GateStructure.DataChannel = make(map[string]([]chan dataformats.FlowData))
-	EntryStructure.GateList = make(map[string]map[string]dataformats.GateDefinition)
+	EntryStructure.GateList = make(map[string]map[string]dataformats.GateState)
 	EntryStructure.DataChannel = make(map[string]chan dataformats.FlowData)
 	EntryStructure.SetReset = make(map[string]chan bool)
 	EntryStructure.StopChannel = make(map[string]chan interface{})
@@ -74,9 +74,9 @@ func Start(sd chan bool) {
 					GateStructure.EntryList[cgName] = append(GateStructure.EntryList[cgName], currentEntry)
 					GateStructure.DataChannel[cgName] = append(GateStructure.DataChannel[cgName], newDataChannel)
 					if EntryStructure.GateList[currentEntry] == nil {
-						EntryStructure.GateList[currentEntry] = make(map[string]dataformats.GateDefinition)
+						EntryStructure.GateList[currentEntry] = make(map[string]dataformats.GateState)
 					}
-					EntryStructure.GateList[currentEntry][cgName] = dataformats.GateDefinition{
+					EntryStructure.GateList[currentEntry][cgName] = dataformats.GateState{
 						Id:        cgName,
 						Reversed:  strings.Contains(cg, "!"),
 						Suspected: 0,
@@ -89,18 +89,18 @@ func Start(sd chan bool) {
 					EntryStructure.DataChannel[currentEntry] = newDataChannel
 					EntryStructure.SetReset[currentEntry] = make(chan bool, globals.ChannellingLength)
 					EntryStructure.StopChannel[currentEntry] = make(chan interface{}, 1)
-					entryData := dataformats.Entrydata{
+					entryRegister := dataformats.EntryState{
 						Id:    currentEntry,
 						Ts:    time.Now().UnixNano(),
 						Count: 0,
 						Flows: nil,
 						State: true,
 					}
-					entryData.Flows = make(map[string]dataformats.Flow)
+					entryRegister.Flows = make(map[string]dataformats.Flow)
 					for gate := range EntryStructure.GateList[currentEntry] {
-						entryData.Flows[gate] = dataformats.Flow{Id: gate}
+						entryRegister.Flows[gate] = dataformats.Flow{Id: gate}
 					}
-					go entry(currentEntry, entryData, EntryStructure.DataChannel[currentEntry], EntryStructure.StopChannel[currentEntry],
+					go entry(currentEntry, entryRegister, EntryStructure.DataChannel[currentEntry], EntryStructure.StopChannel[currentEntry],
 						EntryStructure.SetReset[currentEntry], EntryStructure.GateList[currentEntry])
 				}
 
