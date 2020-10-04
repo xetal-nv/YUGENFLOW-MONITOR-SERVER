@@ -14,8 +14,6 @@ var once sync.Once
 func entry(entryname string, entryRegister dataformats.Entrydata, in chan dataformats.FlowData, stop chan interface{},
 	setReset chan bool, gates map[string]dataformats.GateDefinition) {
 
-	// TODO adjust prints/clean
-
 	once.Do(func() {
 		if globals.SaveState {
 			if state, err := coredbs.LoadEntryState(entryname); err == nil {

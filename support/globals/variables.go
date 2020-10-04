@@ -18,7 +18,7 @@ var ResetChannel chan string
 var Config, AccessData *ini.File
 
 // logFiles
-var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog, EntryManagerLog int
+var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog, EntryManagerLog, SpaceManagerLog int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration

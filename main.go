@@ -7,6 +7,7 @@ import (
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
 	"gateserver/sensormodels"
+	"gateserver/spaceManager"
 	"gateserver/storage/sensorDB"
 	"gateserver/support/globals"
 	"os"
@@ -56,7 +57,7 @@ func main() {
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 4; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -93,11 +94,15 @@ func main() {
 		//go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
 	}
 
+	// TODO spacemanager!!!
 	//goland:noinspection ALL
-	go entryManager.Start(sd[0])
+	go spaceManager.Start(sd[0])
 	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	//goland:noinspection ALL
-	go sensorManager.Start(sd[1])
+	go entryManager.Start(sd[1])
+	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	//goland:noinspection ALL
-	gateManager.Start(sd[2])
+	go sensorManager.Start(sd[2])
+	//goland:noinspection ALL
+	gateManager.Start(sd[3])
 }
