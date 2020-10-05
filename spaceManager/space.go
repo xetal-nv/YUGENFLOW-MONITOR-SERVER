@@ -16,6 +16,8 @@ var once sync.Once
 // TODO add shadowspacing (saving real data vs adjusted data)
 //  it needs two options one to enable it and one for the empty space interval
 
+// TODO skipping negatives seems to work, clean code and add the reset slot !!!
+
 func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataformats.EntryState, stop chan interface{},
 	setReset chan bool, entries map[string]dataformats.EntryState) {
 
@@ -85,22 +87,29 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					[]int{0}, true})
 			stop <- nil
 		case data := <-in:
-			fmt.Printf("Space %v received data \n\t%+v\n", spacename, data)
+			//fmt.Printf("Space %v received data \n\t%+v\n", spacename, data)
 			if data.Count != 0 && spaceRegister.State {
 				if _, ok := entries[data.Id]; ok {
-					if entries[data.Id].Reversed {
-						data.Count *= -1
-					}
+					data.Reversed = entries[data.Id].Reversed
+					//	//if entries[data.Id].Reversed {
+					//	data.Count *= -1
+					//}
 					// TODO adjust for the case that flows are discordant also !!!
 					if !globals.AcceptNegatives {
-						if delta := (data.Count - spaceRegister.Flows[data.Id].Count) + spaceRegister.Count; delta < 0 {
+						delta := spaceRegister.Count
+						if data.Reversed {
+							delta -= (data.Count - spaceRegister.Flows[data.Id].Count)
+						} else {
+							delta += (data.Count - spaceRegister.Flows[data.Id].Count)
+						}
+						if delta < 0 {
 							// count total is negative, entry needs to be adjusted
-							fmt.Printf("\tdata adjusted data:%v oldFlow:%v oldtotal:%v delta:%v\n",
-								data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta)
+							fmt.Printf("\n!!!!! data adjusted data:%v oldFlow:%v oldtotal:%v delta:%v reversed:%v\n",
+								data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta, data.Reversed)
 							tmp := dataformats.EntryState{
-								Id:       data.Id,
-								Ts:       data.Ts,
-								Count:    spaceRegister.Flows[data.Id].Count - spaceRegister.Count,
+								Id: data.Id,
+								Ts: data.Ts,
+								//Count:    spaceRegister.Flows[data.Id].Count - spaceRegister.Count,
 								State:    data.State,
 								Reversed: data.Reversed,
 								Flows:    make(map[string]dataformats.Flow),
@@ -112,8 +121,10 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 							}
 							// TODO adjust flows using also spaceRegister.Flows[data.Id] flows
 							if tmp.Reversed {
-								delta = -delta
+								delta *= -1
 							}
+							tmp.Count = data.Count - delta
+
 						finished:
 							for delta != 0 {
 								for i := range tmp.Flows {
@@ -139,9 +150,14 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 						}
 					}
 					spaceRegister.Flows[data.Id] = data
+					spaceRegister.Ts = data.Ts
 					spaceRegister.Count = 0
 					for _, entry := range spaceRegister.Flows {
-						spaceRegister.Count += entry.Count
+						if entry.Reversed {
+							spaceRegister.Count -= entry.Count
+						} else {
+							spaceRegister.Count += entry.Count
+						}
 						//fmt.Println(entry.Count)
 					}
 					//fmt.Println("\t", spaceRegister.Count)
@@ -159,18 +175,18 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					//fmt.Println(string(s))
 					gateCount := 0
 					entryCount := 0
-					for _, entryFlow := range spaceRegister.Flows {
+					for key, entryFlow := range spaceRegister.Flows {
+						tempGateCount := 0
 						for _, gateflow := range entryFlow.Flows {
-							if entryFlow.Reversed {
-								gateCount += -(gateflow.In + gateflow.Out)
-							} else {
-								gateCount += gateflow.In + gateflow.Out
-							}
+							tempGateCount += gateflow.In + gateflow.Out
 						}
-						if entryFlow.Reversed {
+						//if entryFlow.Reversed {
+						if entries[key].Reversed {
 							entryCount -= entryFlow.Count
+							gateCount -= tempGateCount
 						} else {
 							entryCount += entryFlow.Count
+							gateCount += tempGateCount
 						}
 					}
 
@@ -180,9 +196,11 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 						os.Exit(0)
 					}
 
-					go func(nd dataformats.SpaceState) {
-						coredbs.SaveSpaceData(nd)
-					}(spaceRegister)
+					fmt.Println(spaceRegister)
+
+					//go func(nd dataformats.SpaceState) {
+					//	coredbs.SaveSpaceData(nd)
+					//}(spaceRegister)
 					if globals.Shadowing {
 						go func(nd dataformats.SpaceState) {
 							coredbs.SaveShadowSpaceData(nd)

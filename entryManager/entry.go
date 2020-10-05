@@ -136,11 +136,12 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 				if globals.DebugActive {
 					fmt.Printf("Entry %v registry data \n\t%+v\n", entryname, entryRegister)
 				}
+				ts := time.Now().UnixNano()
 				for _, ch := range entrySpaceChannels {
 					// to avoid pointer issues we make a deep copy of the register to send
 					copyState := dataformats.EntryState{
 						Id:       entryRegister.Id,
-						Ts:       entryRegister.Ts,
+						Ts:       ts,
 						Count:    entryRegister.Count,
 						State:    entryRegister.State,
 						Reversed: entryRegister.Reversed,
