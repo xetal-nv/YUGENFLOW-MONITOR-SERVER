@@ -17,7 +17,7 @@ func SaveEntryData(nd dataformats.EntryState) {
 
 // TODO this is just a placeholder
 func SaveSpaceData(nd dataformats.SpaceState) {
-	fmt.Printf("TBD: Store space data %+v\n", nd)
+	fmt.Printf("TBD: Store space data %+v\n\n", nd)
 }
 
 // TODO this is just a placeholder

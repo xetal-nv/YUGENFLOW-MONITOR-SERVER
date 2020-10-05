@@ -46,7 +46,7 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 	spaceManager.EntryStructure.RUnlock()
 	for !ok {
 		if tries == 0 {
-			fmt.Printf("Entry %v has failed to start\n", entryname)
+			fmt.Printf("Entry %v has failed to start or is not used\n", entryname)
 			os.Exit(0)
 		} else {
 			tries -= 1
@@ -117,6 +117,16 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 					tempRegister.In += data.Netflow
 				}
 				entryRegister.Flows[data.Name] = tempRegister
+				//test := 0
+				//for _, el := range entryRegister.Flows {
+				//	test += el.Out + el.In
+				//}
+				//if test != entryRegister.Count {
+				//	fmt.Println(entryRegister)
+				//	//os.Exit(0)
+				//} else {
+				//	fmt.Println(entryRegister.Count, data.Netflow, entryRegister.Flows[data.Name])
+				//}
 				//fmt.Println(entryRegister.flows[data.Id])
 				if saveToDB {
 					go func(nd dataformats.EntryState) {
@@ -127,7 +137,24 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 					fmt.Printf("Entry %v registry data \n\t%+v\n", entryname, entryRegister)
 				}
 				for _, ch := range entrySpaceChannels {
-					ch <- entryRegister
+					// to avoid pointer issues we make a deep copy of the register to send
+					copyState := dataformats.EntryState{
+						Id:       entryRegister.Id,
+						Ts:       entryRegister.Ts,
+						Count:    entryRegister.Count,
+						State:    entryRegister.State,
+						Reversed: entryRegister.Reversed,
+						Flows:    make(map[string]dataformats.Flow),
+					}
+					for key, el := range entryRegister.Flows {
+						tmp := dataformats.Flow{
+							Id:  el.Id,
+							In:  el.In,
+							Out: el.Out,
+						}
+						copyState.Flows[key] = tmp
+					}
+					ch <- copyState
 				}
 			}
 		}

@@ -5,7 +5,9 @@ import (
 	"gateserver/dataformats"
 	"gateserver/storage/coredbs"
 	"gateserver/support/globals"
+	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
+	"os"
 	"sync"
 )
 
@@ -83,27 +85,29 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					[]int{0}, true})
 			stop <- nil
 		case data := <-in:
-			//fmt.Printf("Space %v received data \n\t%+v\n", spacename, data)
+			fmt.Printf("Space %v received data \n\t%+v\n", spacename, data)
 			if data.Count != 0 && spaceRegister.State {
 				if _, ok := entries[data.Id]; ok {
 					if entries[data.Id].Reversed {
 						data.Count *= -1
 					}
 					// TODO adjust for the case that flows are discordant also !!!
-					//  not working
 					if !globals.AcceptNegatives {
 						if delta := (data.Count - spaceRegister.Flows[data.Id].Count) + spaceRegister.Count; delta < 0 {
-							fmt.Println("data adjusted", data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta)
+							// count total is negative, entry needs to be adjusted
+							fmt.Printf("\tdata adjusted data:%v oldFlow:%v oldtotal:%v delta:%v\n",
+								data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta)
 							tmp := dataformats.EntryState{
 								Id:       data.Id,
 								Ts:       data.Ts,
-								Count:    data.Count - delta,
+								Count:    spaceRegister.Flows[data.Id].Count - spaceRegister.Count,
 								State:    data.State,
 								Reversed: data.Reversed,
-								Flows:    nil,
+								Flows:    make(map[string]dataformats.Flow),
 							}
-							tmp.Flows = make(map[string]dataformats.Flow)
+							//tmp.Flows = make(map[string]dataformats.Flow)
 							for key, value := range data.Flows {
+								// since data was duplicated before being send, we can use a shallow copy
 								tmp.Flows[key] = value
 							}
 							// TODO adjust flows using also spaceRegister.Flows[data.Id] flows
@@ -138,7 +142,9 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					spaceRegister.Count = 0
 					for _, entry := range spaceRegister.Flows {
 						spaceRegister.Count += entry.Count
+						//fmt.Println(entry.Count)
 					}
+					//fmt.Println("\t", spaceRegister.Count)
 					//fmt.Println("\t", spaceRegister.Count)
 					//if spaceRegister.Count < 0 {
 					//	os.Exit(0)
@@ -149,6 +155,31 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					if globals.DebugActive {
 						fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)
 					}
+					//s, _ := json.MarshalIndent(spaceRegister, "", "\t")
+					//fmt.Println(string(s))
+					gateCount := 0
+					entryCount := 0
+					for _, entryFlow := range spaceRegister.Flows {
+						for _, gateflow := range entryFlow.Flows {
+							if entryFlow.Reversed {
+								gateCount += -(gateflow.In + gateflow.Out)
+							} else {
+								gateCount += gateflow.In + gateflow.Out
+							}
+						}
+						if entryFlow.Reversed {
+							entryCount -= entryFlow.Count
+						} else {
+							entryCount += entryFlow.Count
+						}
+					}
+
+					if spaceRegister.Count != entryCount || spaceRegister.Count != gateCount {
+						others.PrettyPrint(spaceRegister)
+						fmt.Println(spaceRegister.Count, entryCount, gateCount)
+						os.Exit(0)
+					}
+
 					go func(nd dataformats.SpaceState) {
 						coredbs.SaveSpaceData(nd)
 					}(spaceRegister)

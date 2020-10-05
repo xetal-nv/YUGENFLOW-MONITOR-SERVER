@@ -14,7 +14,7 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 
 	// return true is successful
 	resetFn := func(channels SensorChannel) bool {
-		fmt.Println("resetting")
+		//fmt.Println("resetting")
 		//return true
 		cmd := []byte{cmdAPI["rstbg"].cmd}
 		cmd = append(cmd, codings.Crc8(cmd))
