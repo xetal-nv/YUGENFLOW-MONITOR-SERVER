@@ -30,6 +30,9 @@ func Start() {
 	ChannellingLength = internalConfig.Section("buffers").Key("channelling").MustInt(5)
 	SecurityLength = internalConfig.Section("buffers").Key("security").MustInt(50)
 
+	Shadowing = internalConfig.Section("corrections").Key("shadowing").MustBool(false)
+	AcceptNegatives = internalConfig.Section("corrections").Key("accept_errors").MustBool(false)
+
 	SensorTimeout = internalConfig.Section("timeouts").Key("device").MustInt(5)
 	MaliciousTimeout = internalConfig.Section("timeouts").Key("malicious").MustInt(120)
 	ZombieTimeout = internalConfig.Section("timeouts").Key("zombie").MustInt(24)

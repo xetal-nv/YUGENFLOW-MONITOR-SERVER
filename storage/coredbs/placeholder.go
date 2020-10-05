@@ -21,6 +21,11 @@ func SaveSpaceData(nd dataformats.SpaceState) {
 }
 
 // TODO this is just a placeholder
+func SaveShadowSpaceData(nd dataformats.SpaceState) {
+	fmt.Printf("TBD: Store shadow space data %+v\n", nd)
+}
+
+// TODO this is just a placeholder
 func SaveEntryState(entryName string, nd dataformats.EntryState) error {
 	fmt.Printf("TBD: Store entry %v state %+v\n", entryName, nd)
 	return nil

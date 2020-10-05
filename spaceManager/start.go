@@ -36,6 +36,7 @@ func Start(sd chan bool) {
 	SpaceStructure.DataChannel = make(map[string]chan dataformats.EntryState)
 	SpaceStructure.SetReset = make(map[string]chan bool)
 	SpaceStructure.StopChannel = make(map[string]chan interface{})
+	SpaceStructure.reset = false
 
 	for _, sp := range globals.Config.Section("spaces").KeyStrings() {
 		currentSpace := sp
@@ -105,6 +106,29 @@ func Start(sd chan bool) {
 
 			} else {
 				fmt.Printf("Invalid space definition %v in configuration.ini ignored\n", currentSpace)
+			}
+		}
+	}
+
+	for _, sp := range globals.Config.Section("reset").KeyStrings() {
+		currentSpace := sp
+		slot := globals.Config.Section("reset").Key(currentSpace).MustString("")
+		if slot != "" {
+			var start, stop time.Time
+			valid := false
+			period := strings.Split(slot, " ")
+			if len(period) == 2 {
+				if v, e := time.Parse(globals.TimeLayoutDot, strings.Trim(period[0], " ")); e == nil {
+					start = v
+					if v, e = time.Parse(globals.TimeLayoutDot, strings.Trim(period[1], " ")); e == nil {
+						stop = v
+						valid = true
+					}
+				}
+				if valid {
+					SpaceStructure.start = start
+					SpaceStructure.stop = stop
+				}
 			}
 		}
 	}

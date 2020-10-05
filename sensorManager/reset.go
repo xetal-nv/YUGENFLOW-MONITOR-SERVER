@@ -3,7 +3,6 @@ package sensorManager
 import (
 	"fmt"
 	"gateserver/codings"
-	"gateserver/supp"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"strconv"
@@ -46,9 +45,9 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 		var start, stop time.Time
 		period := strings.Split(globals.ResetSlot, " ")
 		valid := false
-		if v, e := time.Parse(supp.TimeLayout, strings.Trim(period[0], " ")); e == nil {
+		if v, e := time.Parse(globals.TimeLayout, strings.Trim(period[0], " ")); e == nil {
 			start = v
-			if v, e = time.Parse(supp.TimeLayout, strings.Trim(period[1], " ")); e == nil {
+			if v, e = time.Parse(globals.TimeLayout, strings.Trim(period[1], " ")); e == nil {
 				stop = v
 				valid = true
 			}
@@ -99,7 +98,7 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 					}
 
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
-					if doIt, e := supp.InClosureTime(start, stop); e == nil {
+					if doIt, e := globals.InClosureTime(start, stop); e == nil {
 						//  then cycle among all devices till all are reset
 						if doIt && !done {
 							// we are in the reset interval and we still need to reset

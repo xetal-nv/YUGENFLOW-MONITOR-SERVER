@@ -8,6 +8,7 @@ import (
 	"gateserver/sensorManager"
 	"gateserver/sensormodels"
 	"gateserver/spaceManager"
+	"gateserver/storage/coredbs"
 	"gateserver/storage/sensorDB"
 	"gateserver/support/globals"
 	"os"
@@ -19,6 +20,7 @@ import (
 
 // in progress
 func main() {
+	var dbpath = flag.String("db", "mongodb://localhost:27017", "database path")
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
 	//var de = flag.Bool("dumpentry", false, "dump all entry data to log files")
 	var debug = flag.Bool("debug", false, "enable debug mode")
@@ -26,6 +28,8 @@ func main() {
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
+	var user = flag.String("user", "", "user name")
+	var pwd = flag.String("pwd", "", "user password")
 
 	flag.Parse()
 	globals.DebugActive = *debug
@@ -33,6 +37,10 @@ func main() {
 	globals.SensorEEPROMResetEnabled = *eeprom
 	globals.DiskCachePath = *dcpath
 	globals.FailureThreshold = *failTh
+	globals.DBpath = *dbpath
+	globals.DBUser = *user
+	globals.DBUserPassword = *pwd
+
 	//globals.LogToFileAll = *de
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
@@ -50,6 +58,7 @@ func main() {
 	//}
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 
+	coredbs.Start()
 	globals.Start()
 	sensorDB.Start()
 	sensorManager.LoadSensorEEPROMSettings()
@@ -79,6 +88,11 @@ func main() {
 		}
 		sensorDB.Close()
 		wg.Wait()
+		if err := coredbs.Disconnect(); err != nil {
+			fmt.Println("Error in disconnecting from the YugenFlow Database")
+		} else {
+			fmt.Println("Disconnected from YugenFlow Database")
+		}
 		time.Sleep(2 * time.Second)
 		fmt.Println("Closing YugenFlow Server completed")
 		os.Exit(0)
