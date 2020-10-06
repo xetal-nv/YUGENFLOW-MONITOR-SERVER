@@ -14,6 +14,7 @@ import (
 
 var once sync.Once
 
+// TODO how do we manager flow overflow!
 func entry(entryname string, entryRegister dataformats.EntryState, in chan dataformats.FlowData, stop chan interface{},
 	setReset chan bool, gates map[string]dataformats.GateState) {
 

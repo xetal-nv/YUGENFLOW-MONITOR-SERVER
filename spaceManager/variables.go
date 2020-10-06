@@ -17,7 +17,7 @@ var EntryStructure struct {
 var SpaceStructure struct {
 	sync.RWMutex
 	reset       bool
-	start, stop time.Time
+	ResetTime   map[string][]time.Time
 	EntryList   map[string]map[string]dataformats.EntryState
 	DataChannel map[string]chan dataformats.EntryState
 	SetReset    map[string]chan bool

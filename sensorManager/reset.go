@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gateserver/codings"
 	"gateserver/support/globals"
+	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
 	"strconv"
 	"strings"
@@ -98,7 +99,7 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 					}
 
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
-					if doIt, e := globals.InClosureTime(start, stop); e == nil {
+					if doIt, e := others.InClosureTime(start, stop); e == nil {
 						//  then cycle among all devices till all are reset
 						if doIt && !done {
 							// we are in the reset interval and we still need to reset

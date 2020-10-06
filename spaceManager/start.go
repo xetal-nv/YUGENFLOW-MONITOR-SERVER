@@ -40,6 +40,28 @@ func Start(sd chan bool) {
 
 	for _, sp := range globals.Config.Section("spaces").KeyStrings() {
 		currentSpace := sp
+		slot := globals.Config.Section("reset").Key(currentSpace).MustString("")
+		if slot != "" {
+			var start, stop time.Time
+			valid := false
+			period := strings.Split(slot, " ")
+			if len(period) == 2 {
+				if v, e := time.Parse(globals.TimeLayoutDot, strings.Trim(period[0], " ")); e == nil {
+					start = v
+					if v, e = time.Parse(globals.TimeLayoutDot, strings.Trim(period[1], " ")); e == nil {
+						stop = v
+						valid = true
+					}
+				}
+				if valid {
+					if SpaceStructure.ResetTime == nil {
+						SpaceStructure.ResetTime = make(map[string][]time.Time)
+					}
+					SpaceStructure.ResetTime[currentSpace] = []time.Time{start, stop}
+					//fmt.Println(currentSpace,start,stop)
+				}
+			}
+		}
 		if _, ok := SpaceStructure.EntryList[currentSpace]; ok {
 			fmt.Println("Duplicated entry %v in configuration.ini ignored\n", currentSpace)
 		} else {
@@ -100,35 +122,20 @@ func Start(sd chan bool) {
 						//spaceRegister.Flows[entry] = dataformats.EntryState{Id: entry}
 						spaceRegister.Flows[entry] = SpaceStructure.EntryList[currentSpace][entry]
 					}
-					go space(currentSpace, spaceRegister, SpaceStructure.DataChannel[currentSpace], SpaceStructure.StopChannel[currentSpace],
-						SpaceStructure.SetReset[currentSpace], SpaceStructure.EntryList[currentSpace])
+					if slot, ok := SpaceStructure.ResetTime[currentSpace]; ok {
+						go space(currentSpace, spaceRegister, SpaceStructure.DataChannel[currentSpace],
+							SpaceStructure.StopChannel[currentSpace], SpaceStructure.SetReset[currentSpace],
+							SpaceStructure.EntryList[currentSpace], slot)
+					} else {
+						go space(currentSpace, spaceRegister, SpaceStructure.DataChannel[currentSpace],
+							SpaceStructure.StopChannel[currentSpace], SpaceStructure.SetReset[currentSpace],
+							SpaceStructure.EntryList[currentSpace], nil)
+					}
+
 				}
 
 			} else {
 				fmt.Printf("Invalid space definition %v in configuration.ini ignored\n", currentSpace)
-			}
-		}
-	}
-
-	for _, sp := range globals.Config.Section("reset").KeyStrings() {
-		currentSpace := sp
-		slot := globals.Config.Section("reset").Key(currentSpace).MustString("")
-		if slot != "" {
-			var start, stop time.Time
-			valid := false
-			period := strings.Split(slot, " ")
-			if len(period) == 2 {
-				if v, e := time.Parse(globals.TimeLayoutDot, strings.Trim(period[0], " ")); e == nil {
-					start = v
-					if v, e = time.Parse(globals.TimeLayoutDot, strings.Trim(period[1], " ")); e == nil {
-						stop = v
-						valid = true
-					}
-				}
-				if valid {
-					SpaceStructure.start = start
-					SpaceStructure.stop = stop
-				}
 			}
 		}
 	}
