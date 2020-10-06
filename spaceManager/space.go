@@ -8,15 +8,14 @@ import (
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
 	"os"
+	"strconv"
 	"sync"
 )
 
 var once sync.Once
 
 // TODO add shadowspacing (saving real data vs adjusted data)
-//  it needs two options one to enable it and one for the empty space interval
-
-// TODO skipping negatives seems to work, clean code and add the reset slot !!!
+//  it needs the empty space interval
 
 func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataformats.EntryState, stop chan interface{},
 	setReset chan bool, entries map[string]dataformats.EntryState) {
@@ -87,14 +86,12 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					[]int{0}, true})
 			stop <- nil
 		case data := <-in:
-			//fmt.Printf("Space %v received data \n\t%+v\n", spacename, data)
+			//if globals.DebugActive {
+			//	fmt.Printf("Space %v received data \n\t%+v\n", spacename, data)
+			//}
 			if data.Count != 0 && spaceRegister.State {
 				if _, ok := entries[data.Id]; ok {
 					data.Reversed = entries[data.Id].Reversed
-					//	//if entries[data.Id].Reversed {
-					//	data.Count *= -1
-					//}
-					// TODO adjust for the case that flows are discordant also !!!
 					if !globals.AcceptNegatives {
 						delta := spaceRegister.Count
 						if data.Reversed {
@@ -104,8 +101,8 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 						}
 						if delta < 0 {
 							// count total is negative, entry needs to be adjusted
-							fmt.Printf("\n!!!!! data adjusted data:%v oldFlow:%v oldtotal:%v delta:%v reversed:%v\n",
-								data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta, data.Reversed)
+							//fmt.Printf("\n!!!!! data adjusted data:%v oldFlow:%v oldtotal:%v delta:%v reversed:%v\n",
+							//	data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta, data.Reversed)
 							tmp := dataformats.EntryState{
 								Id: data.Id,
 								Ts: data.Ts,
@@ -119,7 +116,6 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 								// since data was duplicated before being send, we can use a shallow copy
 								tmp.Flows[key] = value
 							}
-							// TODO adjust flows using also spaceRegister.Flows[data.Id] flows
 							if tmp.Reversed {
 								delta *= -1
 							}
@@ -143,10 +139,7 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 									}
 								}
 							}
-							//tmp.Flows
-							//fmt.Println("\t", data)
 							data = tmp
-							//fmt.Println("\t", data)
 						}
 					}
 					spaceRegister.Flows[data.Id] = data
@@ -158,21 +151,11 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 						} else {
 							spaceRegister.Count += entry.Count
 						}
-						//fmt.Println(entry.Count)
 					}
-					//fmt.Println("\t", spaceRegister.Count)
-					//fmt.Println("\t", spaceRegister.Count)
-					//if spaceRegister.Count < 0 {
-					//	os.Exit(0)
-					//}
-					//for _, entry := range spaceRegister.Flows {
-					//	fmt.Println(entry.Count)
-					//}
 					if globals.DebugActive {
 						fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)
 					}
-					//s, _ := json.MarshalIndent(spaceRegister, "", "\t")
-					//fmt.Println(string(s))
+
 					gateCount := 0
 					entryCount := 0
 					for key, entryFlow := range spaceRegister.Flows {
@@ -191,23 +174,37 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					}
 
 					if spaceRegister.Count != entryCount || spaceRegister.Count != gateCount {
-						others.PrettyPrint(spaceRegister)
-						fmt.Println(spaceRegister.Count, entryCount, gateCount)
-						os.Exit(0)
+						spaceRegister.Invalid = true
+						if globals.DebugActive {
+							fmt.Printf("Space %v report error in data total:%v entry:%v gate:%v\n",
+								spacename, spaceRegister.Count, entryCount, gateCount)
+							others.PrettyPrint(spaceRegister)
+							os.Exit(0)
+						} else {
+							mlogger.Warning(globals.SpaceManagerLog,
+								mlogger.LoggerData{"entryManager.entry wroing count: " + spacename,
+									"total:" + strconv.Itoa(spaceRegister.Count) + " entry:" +
+										strconv.Itoa(entryCount) + " gate:" + strconv.Itoa(gateCount),
+									[]int{0}, true})
+						}
+					} else {
+						spaceRegister.Invalid = false
 					}
 
-					fmt.Println(spaceRegister)
+					go func(nd dataformats.SpaceState) {
+						coredbs.SaveSpaceData(nd)
+					}(spaceRegister)
 
-					//go func(nd dataformats.SpaceState) {
-					//	coredbs.SaveSpaceData(nd)
-					//}(spaceRegister)
 					if globals.Shadowing {
 						go func(nd dataformats.SpaceState) {
 							coredbs.SaveShadowSpaceData(nd)
 						}(spaceRegister)
 					}
 				} else {
-					// report issue?
+					mlogger.Warning(globals.SpaceManagerLog,
+						mlogger.LoggerData{"entryManager.entry: " + spacename,
+							"data from entry " + data.Id + " not in configuration",
+							[]int{0}, true})
 				}
 			}
 		}

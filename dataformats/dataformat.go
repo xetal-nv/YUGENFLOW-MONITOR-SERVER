@@ -41,9 +41,10 @@ type EntryState struct {
 
 // space flow data model used for database storage
 type SpaceState struct {
-	Id    string                `json:"id"`
-	Ts    int64                 `json:"ts"`
-	Count int                   `json:"netflow"`
-	State bool                  `json:"-"`
-	Flows map[string]EntryState `json:"flows"`
+	Id      string                `json:"id"`
+	Ts      int64                 `json:"ts"`
+	Count   int                   `json:"netflow"`
+	State   bool                  `json:"-"`
+	Invalid bool                  `json:"-"`
+	Flows   map[string]EntryState `json:"flows"`
 }
