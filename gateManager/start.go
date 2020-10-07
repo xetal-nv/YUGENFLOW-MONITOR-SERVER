@@ -45,11 +45,7 @@ func Start(sd chan bool) {
 	GateStructure.ConfigurationReset = make(map[string]chan interface{})
 	GateStructure.StopChannel = make(map[string]chan interface{})
 
-	saveToDB = globals.Config.Section("gates").Key("save").MustBool(false)
 	for _, gt := range globals.Config.Section("gates").KeyStrings() {
-		if gt == "save" {
-			continue
-		}
 		currentGate := gt
 		if _, ok := GateStructure.SensorList[currentGate]; ok {
 			fmt.Println("Duplicated gate %v in configuration.ini ignored\n", currentGate)

@@ -5,8 +5,6 @@ import (
 	"sync"
 )
 
-var saveToDB bool
-
 // channels to send data from a sensor to the gates it contributes to
 var SensorStructure struct {
 	sync.RWMutex

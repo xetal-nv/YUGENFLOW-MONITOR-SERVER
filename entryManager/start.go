@@ -37,11 +37,7 @@ func Start(sd chan bool) {
 	EntryStructure.SetReset = make(map[string]chan bool)
 	EntryStructure.StopChannel = make(map[string]chan interface{})
 
-	saveToDB = globals.Config.Section("entries").Key("save").MustBool(false)
 	for _, en := range globals.Config.Section("entries").KeyStrings() {
-		if en == "save" {
-			continue
-		}
 		currentEntry := en
 		if _, ok := EntryStructure.GateList[currentEntry]; ok {
 			fmt.Println("Duplicated entry %v in configuration.ini ignored\n", currentEntry)

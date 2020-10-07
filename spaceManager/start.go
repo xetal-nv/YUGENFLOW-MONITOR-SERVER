@@ -117,17 +117,33 @@ func Start(sd chan bool) {
 						Flows: nil,
 						State: true,
 					}
+					shadowSpaceRegister := dataformats.SpaceState{
+						Id:    currentSpace,
+						Ts:    spaceRegister.Ts,
+						Count: 0,
+						Flows: nil,
+						State: true,
+					}
 					spaceRegister.Flows = make(map[string]dataformats.EntryState)
+					shadowSpaceRegister.Flows = make(map[string]dataformats.EntryState)
 					for entry := range SpaceStructure.EntryList[currentSpace] {
 						//spaceRegister.Flows[entry] = dataformats.EntryState{Id: entry}
 						spaceRegister.Flows[entry] = SpaceStructure.EntryList[currentSpace][entry]
+						shadowSpaceRegister.Flows[entry] = dataformats.EntryState{
+							Id:       spaceRegister.Flows[entry].Id,
+							Ts:       spaceRegister.Flows[entry].Ts,
+							Count:    spaceRegister.Flows[entry].Count,
+							State:    spaceRegister.Flows[entry].State,
+							Reversed: spaceRegister.Flows[entry].Reversed,
+							Flows:    nil,
+						}
 					}
 					if slot, ok := SpaceStructure.ResetTime[currentSpace]; ok {
-						go space(currentSpace, spaceRegister, SpaceStructure.DataChannel[currentSpace],
+						go space(currentSpace, spaceRegister, shadowSpaceRegister, SpaceStructure.DataChannel[currentSpace],
 							SpaceStructure.StopChannel[currentSpace], SpaceStructure.SetReset[currentSpace],
 							SpaceStructure.EntryList[currentSpace], slot)
 					} else {
-						go space(currentSpace, spaceRegister, SpaceStructure.DataChannel[currentSpace],
+						go space(currentSpace, spaceRegister, shadowSpaceRegister, SpaceStructure.DataChannel[currentSpace],
 							SpaceStructure.StopChannel[currentSpace], SpaceStructure.SetReset[currentSpace],
 							SpaceStructure.EntryList[currentSpace], nil)
 					}

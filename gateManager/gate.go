@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gateserver/dataformats"
 	"gateserver/entryManager"
-	"gateserver/storage/coredbs"
 	"gateserver/storage/sensorDB"
 	"gateserver/supp"
 	"gateserver/support/globals"
@@ -345,11 +344,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 					Id:      0,
 					Ts:      data.Ts,
 					Netflow: nv,
-				}
-				if saveToDB {
-					go func(data dataformats.FlowData) {
-						coredbs.SaveGateData(newGateData)
-					}(newGateData)
 				}
 				if globals.DebugActive {
 					fmt.Printf(" ===>>> Gate %v calculated value: %+v\n", gateName, nv)

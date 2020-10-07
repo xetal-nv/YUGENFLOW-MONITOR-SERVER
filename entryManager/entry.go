@@ -14,7 +14,6 @@ import (
 
 var once sync.Once
 
-// TODO how do we manager flow overflow!
 func entry(entryname string, entryRegister dataformats.EntryState, in chan dataformats.FlowData, stop chan interface{},
 	setReset chan bool, gates map[string]dataformats.GateState) {
 
@@ -106,34 +105,20 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 						data.Netflow *= -1
 					}
 				}
-				entryRegister.Count += data.Netflow
+				entryRegister.Count = data.Netflow
 				tempRegister := dataformats.Flow{
-					Id:  data.Name,
-					In:  entryRegister.Flows[data.Name].In,
-					Out: entryRegister.Flows[data.Name].Out,
-				}
-				if data.Netflow < 0 {
-					tempRegister.Out += data.Netflow
-				} else {
-					tempRegister.In += data.Netflow
+					Id:        data.Name,
+					Variation: data.Netflow,
 				}
 				entryRegister.Flows[data.Name] = tempRegister
-				//test := 0
-				//for _, el := range entryRegister.Flows {
-				//	test += el.Out + el.In
-				//}
-				//if test != entryRegister.Count {
-				//	fmt.Println(entryRegister)
-				//	//os.Exit(0)
-				//} else {
-				//	fmt.Println(entryRegister.Count, data.Netflow, entryRegister.Flows[data.Name])
-				//}
-				//fmt.Println(entryRegister.flows[data.Id])
-				if saveToDB {
-					go func(nd dataformats.EntryState) {
-						coredbs.SaveEntryData(nd)
-					}(entryRegister)
+				for key := range entryRegister.Flows {
+					if key != data.Name {
+						tmp := entryRegister.Flows[key]
+						tmp.Variation = 0
+						entryRegister.Flows[key] = tmp
+					}
 				}
+
 				if globals.DebugActive {
 					fmt.Printf("Entry %v registry data \n\t%+v\n", entryname, entryRegister)
 				}
@@ -150,9 +135,8 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 					}
 					for key, el := range entryRegister.Flows {
 						tmp := dataformats.Flow{
-							Id:  el.Id,
-							In:  el.In,
-							Out: el.Out,
+							Id:        el.Id,
+							Variation: el.Variation,
 						}
 						copyState.Flows[key] = tmp
 					}

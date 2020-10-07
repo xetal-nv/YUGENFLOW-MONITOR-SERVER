@@ -8,19 +8,51 @@ import (
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 )
 
 var once sync.Once
 
-// TODO add shadowspacing (saving real data vs adjusted data)
-//  it needs the empty space interval
+func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.EntryState) dataformats.SpaceState {
+	spaceRegister.Flows[data.Id] = data
+	for key, entry := range spaceRegister.Flows {
+		if key != data.Id {
+			entry.Count = 0
+			for i, val := range entry.Flows {
+				val.Variation = 0
+				entry.Flows[i] = val
+			}
+			//entry.Flows = make(map[string]dataformats.Flow)
+			spaceRegister.Flows[key] = entry
+		} else {
+			entry.Count = data.Count
+			entry.Reversed = data.Reversed
+			entry.State = data.State
+			entry.Ts = data.Ts
+			for i, val := range entry.Flows {
+				val.Variation = data.Flows[i].Variation
+				entry.Flows[i] = val
+			}
+		}
+	}
+	spaceRegister.Ts = data.Ts
+	//spaceRegister.Count = 0
+	for _, entry := range spaceRegister.Flows {
+		if entry.Reversed {
+			spaceRegister.Count -= entry.Count
+		} else {
+			spaceRegister.Count += entry.Count
+		}
+	}
+	return spaceRegister
+}
 
-func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataformats.EntryState, stop chan interface{},
+func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.SpaceState, in chan dataformats.EntryState, stop chan interface{},
 	setReset chan bool, entries map[string]dataformats.EntryState, resetSlot []time.Time) {
 
+	// spaceRegister contains the data to be shared with the clients
+	// shadowSpaceRegister is a register copy without reset form debugging. It might overflow
 	once.Do(func() {
 		if resetSlot != nil {
 			fmt.Printf("*** Space %v has reset slot set from %v:%v to %v:%v Server Time ***\n",
@@ -34,6 +66,15 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					spaceRegister = state
 				} else {
 					fmt.Println("Error reading state for space:", spacename)
+					os.Exit(0)
+				}
+			}
+			if state, err := coredbs.LoadSpaceShadowState(spacename); err == nil {
+				if state.Id == spacename {
+					shadowSpaceRegister = state
+				} else {
+					fmt.Println("Error reading shadow state for space:", spacename)
+					os.Exit(0)
 				}
 			}
 		}
@@ -47,7 +88,7 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		}
-		go space(spacename, spaceRegister, in, stop, setReset, entries, resetSlot)
+		go space(spacename, spaceRegister, shadowSpaceRegister, in, stop, setReset, entries, resetSlot)
 	}()
 
 	if globals.DebugActive {
@@ -57,15 +98,13 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 		mlogger.LoggerData{"entryManager.entry: " + spacename,
 			"service started",
 			[]int{0}, true})
-	//fmt.Println("register:", spaceRegister)
-	//fmt.Println("entries:", entries)
-	//
 
 	resetDone := false
 
 	for {
 		select {
 		case spaceRegister.State = <-setReset:
+			shadowSpaceRegister.State = spaceRegister.State
 			if globals.DebugActive {
 				fmt.Printf("State of space %v set to %v\n", spacename, spaceRegister.State)
 			}
@@ -87,6 +126,11 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					fmt.Println("Error saving state for space:", spacename)
 				} else {
 					fmt.Println("Successful saving state for space:", spacename)
+					if err := coredbs.SaveSpaceShadowState(spacename, shadowSpaceRegister); err != nil {
+						fmt.Println("Error saving shadow state for space:", spacename)
+					} else {
+						fmt.Println("Successful saving shadow state for space:", spacename)
+					}
 				}
 			}
 			fmt.Println("Closing spaceManager.space:", spacename)
@@ -95,151 +139,126 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 					"service stopped",
 					[]int{0}, true})
 			stop <- nil
+
 		case data := <-in:
 			if spaceRegister.State {
 				// space is enabled
-				if data.Count != 0 {
-					// data is significant
-					// we verify if we are in a reset slot
-					resetTime := resetSlot != nil
-					if resetTime {
-						if inTime, err := others.InClosureTime(resetSlot[0], resetSlot[1]); err != nil {
-							mlogger.Warning(globals.SpaceManagerLog,
-								mlogger.LoggerData{"entryManager.entry: " + spacename,
-									"failed to check reset time",
-									[]int{0}, true})
-							continue
-						} else {
-							resetTime = resetTime && inTime
-						}
-					}
-					// TODO and add option to not reset the flows
-					// TODO ERROR flows are wrong .... we need to reset also at entry level!!!
-					if resetTime {
-						if !resetDone {
-							//println("reset")
-							resetDone = true
-							spaceRegister.Count = 0
-							spaceRegister.Ts = time.Now().UnixNano()
-							for i, entry := range spaceRegister.Flows {
-								entry.Count = 0
-								entry.Flows = make(map[string]dataformats.Flow)
-								spaceRegister.Flows[i] = entry
-							}
-							go func(nd dataformats.SpaceState) {
-								coredbs.SaveSpaceData(nd)
-							}(spaceRegister)
-
-							if globals.Shadowing {
-								go func(nd dataformats.SpaceState) {
-									coredbs.SaveShadowSpaceData(nd)
-								}(spaceRegister)
-							}
-						}
+				// we verify if we are in a reset slot
+				resetTime := resetSlot != nil
+				if resetTime {
+					if inTime, err := others.InClosureTime(resetSlot[0], resetSlot[1]); err != nil {
+						mlogger.Warning(globals.SpaceManagerLog,
+							mlogger.LoggerData{"entryManager.entry: " + spacename,
+								"failed to check reset time",
+								[]int{0}, true})
+						continue
 					} else {
-						resetDone = false
+						resetTime = resetTime && inTime
+					}
+				}
+				if resetTime {
+					if !resetDone {
+						println("reset")
+						resetDone = true
+						spaceRegister.Count = 0
+						spaceRegister.Ts = time.Now().UnixNano()
+						for i, entry := range spaceRegister.Flows {
+							entry.Count = 0
+							entry.Flows = make(map[string]dataformats.Flow)
+							spaceRegister.Flows[i] = entry
+						}
+						go func(nd dataformats.SpaceState) {
+							coredbs.SaveSpaceData(nd)
+						}(spaceRegister)
+
+					}
+					// the shadow register is always kept updated
+					shadowSpaceRegister = updateRegister(shadowSpaceRegister, data)
+					if globals.Shadowing {
+						go func(nd dataformats.SpaceState) {
+							coredbs.SaveShadowSpaceData(nd)
+						}(shadowSpaceRegister)
+					}
+
+				} else {
+					resetDone = false
+					if data.Count != 0 {
+						// data is significant
 						// we are in a activity slot
 						if _, ok := entries[data.Id]; ok {
 							// entry sending data is in the configuration
 							data.Reversed = entries[data.Id].Reversed
+
+							// the shadow register is updated with the received data
+							shadowSpaceRegister = updateRegister(shadowSpaceRegister, data)
+
+							// the data is updated in case it leads to a negative count if the option is enabled
 							if !globals.AcceptNegatives {
-								delta := spaceRegister.Count
+								newData := data.Count
 								if data.Reversed {
-									delta -= (data.Count - spaceRegister.Flows[data.Id].Count)
-								} else {
-									delta += (data.Count - spaceRegister.Flows[data.Id].Count)
+									newData = -newData
 								}
+								delta := newData + spaceRegister.Count
 								if delta < 0 {
-									// count total is negative, entry needs to be adjusted
-									//fmt.Printf("\n!!!!! data adjusted data:%v oldFlow:%v oldtotal:%v delta:%v reversed:%v\n",
-									//	data.Count, spaceRegister.Flows[data.Id].Count, spaceRegister.Count, delta, data.Reversed)
-									tmp := dataformats.EntryState{
-										Id: data.Id,
-										Ts: data.Ts,
-										//Count:    spaceRegister.Flows[data.Id].Count - spaceRegister.Count,
+									// the new data brings the final count below zero
+
+									// the total count is updated according to the reversed flag
+									if data.Reversed {
+										data.Count = spaceRegister.Count
+									} else {
+										data.Count = -spaceRegister.Count
+									}
+
+									// the gate flows are updated according to the delta and the reversed flag
+									entry := dataformats.EntryState{
+										Id:       data.Id,
+										Ts:       data.Ts,
+										Count:    data.Count,
 										State:    data.State,
 										Reversed: data.Reversed,
 										Flows:    make(map[string]dataformats.Flow),
 									}
-									//tmp.Flows = make(map[string]dataformats.Flow)
 									for key, value := range data.Flows {
-										// since data was duplicated before being send, we can use a shallow copy
-										tmp.Flows[key] = value
+										// since data was duplicated before being sent, we can use a shallow copy
+										entry.Flows[key] = value
 									}
-									if tmp.Reversed {
+									if entry.Reversed {
 										delta *= -1
 									}
-									tmp.Count = data.Count - delta
 
+									// the error is distributed among all flows
 								finished:
 									for delta != 0 {
-										for i := range tmp.Flows {
+										for i := range entry.Flows {
 											if delta < 0 {
-												flow := tmp.Flows[i]
-												flow.In += 1
-												tmp.Flows[i] = flow
+												flow := entry.Flows[i]
+												flow.Variation += 1
+												entry.Flows[i] = flow
 												delta += 1
 											} else if delta > 0 {
-												flow := tmp.Flows[i]
-												flow.Out -= 1
-												tmp.Flows[i] = flow
+												flow := entry.Flows[i]
+												flow.Variation -= 1
+												entry.Flows[i] = flow
 												delta -= 1
 											} else {
 												break finished
 											}
 										}
 									}
-									data = tmp
+									data = entry
 								}
 							}
-							spaceRegister.Flows[data.Id] = data
-							spaceRegister.Ts = data.Ts
-							spaceRegister.Count = 0
-							for _, entry := range spaceRegister.Flows {
-								if entry.Reversed {
-									spaceRegister.Count -= entry.Count
-								} else {
-									spaceRegister.Count += entry.Count
-								}
-							}
+
+							// register is updated with an inspected received data
+							spaceRegister = updateRegister(spaceRegister, data)
+
 							if globals.DebugActive {
 								fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)
 							}
 
-							gateCount := 0
-							entryCount := 0
-							for key, entryFlow := range spaceRegister.Flows {
-								tempGateCount := 0
-								for _, gateflow := range entryFlow.Flows {
-									tempGateCount += gateflow.In + gateflow.Out
-								}
-								//if entryFlow.Reversed {
-								if entries[key].Reversed {
-									entryCount -= entryFlow.Count
-									gateCount -= tempGateCount
-								} else {
-									entryCount += entryFlow.Count
-									gateCount += tempGateCount
-								}
-							}
-
-							if spaceRegister.Count != entryCount || spaceRegister.Count != gateCount {
-								spaceRegister.Invalid = true
-								if globals.DebugActive {
-									fmt.Printf("Space %v report error in data total:%v entry:%v gate:%v\n",
-										spacename, spaceRegister.Count, entryCount, gateCount)
-									others.PrettyPrint(spaceRegister)
-									os.Exit(0)
-								} else {
-									mlogger.Warning(globals.SpaceManagerLog,
-										mlogger.LoggerData{"entryManager.entry wroing count: " + spacename,
-											"total:" + strconv.Itoa(spaceRegister.Count) + " entry:" +
-												strconv.Itoa(entryCount) + " gate:" + strconv.Itoa(gateCount),
-											[]int{0}, true})
-								}
-							} else {
-								spaceRegister.Invalid = false
-							}
+							//fmt.Println()
+							//fmt.Println(spaceRegister)
+							//fmt.Println(shadowSpaceRegister)
 
 							go func(nd dataformats.SpaceState) {
 								coredbs.SaveSpaceData(nd)
@@ -261,5 +280,4 @@ func space(spacename string, spaceRegister dataformats.SpaceState, in chan dataf
 			}
 		}
 	}
-
 }

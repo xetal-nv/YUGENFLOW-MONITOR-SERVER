@@ -14,7 +14,7 @@ import (
 var client *mongo.Client
 
 //var keysCol, dataCol, modelCol, latestCol, refreshCol, geoExternalsDB, geoDB, correctionDB *mongo.Collection
-var spaceDB, shadowDataDB, entryDB, gateDB, stateDB *mongo.Collection
+var dataDB, shadowDataDB, stateDB, shadowStateDB *mongo.Collection
 
 const (
 	TO = 10
@@ -50,11 +50,10 @@ func Start() (err error) {
 			return
 		}
 		// Create/load collections
-		spaceDB = client.Database(DB).Collection("spaceDB")
+		dataDB = client.Database(DB).Collection("dataDB")
 		shadowDataDB = client.Database(DB).Collection("shadowDataDB")
-		entryDB = client.Database(DB).Collection("entryDB")
-		gateDB = client.Database(DB).Collection("gateDB")
 		stateDB = client.Database(DB).Collection("stateDB")
+		shadowStateDB = client.Database(DB).Collection("shadowStateDB")
 	}
 	mlogger.Info(globals.DBSLogger,
 		mlogger.LoggerData{"coreDBS.Start", "service started",

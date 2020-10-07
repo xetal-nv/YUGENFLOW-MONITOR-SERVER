@@ -6,16 +6,6 @@ import (
 )
 
 // TODO this is just a placeholder
-func SaveGateData(nd dataformats.FlowData) {
-	fmt.Printf("TBD: Store gate data %+v\n", nd)
-}
-
-// TODO this is just a placeholder
-func SaveEntryData(nd dataformats.EntryState) {
-	fmt.Printf("TBD: Store entry data %+v\n", nd)
-}
-
-// TODO this is just a placeholder
 func SaveSpaceData(nd dataformats.SpaceState) {
 	fmt.Printf("TBD: Store space data %+v\n\n", nd)
 }
@@ -45,6 +35,18 @@ func SaveSpaceState(entryName string, nd dataformats.SpaceState) error {
 
 // TODO this is just a placeholder
 func LoadSpaceState(entryName string) (dataformats.SpaceState, error) {
+	fmt.Printf("TBD: Load space %v state\n", entryName)
+	return dataformats.SpaceState{}, nil
+}
+
+// TODO this is just a placeholder
+func SaveSpaceShadowState(entryName string, nd dataformats.SpaceState) error {
+	fmt.Printf("TBD: Store space %v state %+v\n", entryName, nd)
+	return nil
+}
+
+// TODO this is just a placeholder
+func LoadSpaceShadowState(entryName string) (dataformats.SpaceState, error) {
 	fmt.Printf("TBD: Load space %v state\n", entryName)
 	return dataformats.SpaceState{}, nil
 }

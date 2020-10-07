@@ -58,7 +58,10 @@ func main() {
 	//}
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 
-	coredbs.Start()
+	if err := coredbs.Start(); err != nil {
+		fmt.Println("Failed top start the data database:", err.Error())
+		os.Exit(0)
+	}
 	globals.Start()
 	sensorDB.Start()
 	sensorManager.LoadSensorEEPROMSettings()
@@ -109,10 +112,10 @@ func main() {
 
 	//if globals.DebugActive {
 	if *dev {
-		go sensormodels.SensorModel(1, 7000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
-		go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
-		go sensormodels.SensorModel(0, 7000, 7, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x07})
-		go sensormodels.SensorModel(2, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x08})
+		go sensormodels.SensorModel(0, 7000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
+		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
+		go sensormodels.SensorModel(2, 7000, 7, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x07})
+		go sensormodels.SensorModel(3, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x08})
 		//time.Sleep(3*time.Second)
 		//go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
 	}
