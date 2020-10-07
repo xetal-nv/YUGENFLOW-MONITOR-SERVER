@@ -73,10 +73,11 @@ func handler(conn net.Conn) {
 			_ = sensorDB.DeleteDevice([]byte(sensorDef.mac))
 			//startstopCommandProcess <- sensorDef.mac
 			// release TCO token
-			tokens <- nil
-			if globals.DebugActive {
-				fmt.Printf("sensorManager.tcpServer: released token, left: %v\n", len(tokens))
-			}
+		}
+		//println("ok")
+		tokens <- nil
+		if globals.DebugActive {
+			fmt.Printf("sensorManager.tcpServer: released token, left: %v\n", len(tokens))
 		}
 		//. in case of valid ID we remove the lookup entry as well
 		if sensorDef.id != -1 {
