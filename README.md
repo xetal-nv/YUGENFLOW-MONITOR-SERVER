@@ -12,7 +12,6 @@ Golang Packages (to be revised):
  - go.etcd.io/bbolt/  
  - xetal.ddns.net/supportservices  
  - github.com/mongodb/mongo  
- - github.com/allegro/bigcache  
  - github.com/fpessolano/mlogger  (>=0.2.1)  
  - github.com/gorilla/mux  
  - gopkg.in/ini.v1  

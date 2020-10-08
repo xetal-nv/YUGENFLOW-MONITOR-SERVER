@@ -57,6 +57,10 @@ func tcpServer(rst chan interface{}) {
 						}
 					case <-time.After((time.Duration(globals.SensorTimeout) * time.Second)):
 						_ = conn.Close()
+						mlogger.Info(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.tcpServer token service",
+								"no token left",
+								[]int{1}, true})
 					}
 
 				} else {
