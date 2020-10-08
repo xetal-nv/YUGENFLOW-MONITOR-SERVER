@@ -317,6 +317,21 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 				}
 			}
 			go func() { ce <- rt }()
+			// patch for hardware rstbg issue
+			if rt != nil && cmd[0] == cmdAPI["rstbg"].cmd {
+				time.Sleep(2 * time.Second)
+				mutexConnMAC.RLock()
+				conn, ok := sensorConnMAC[mac]
+				mutexConnMAC.RUnlock()
+				if ok {
+					_ = conn.Close()
+					//fmt.Println("channel closed for back reset")
+					go func() {
+						support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
+							support.Timestamp(), "command closed TCP channel", []int{1}, true}
+					}()
+				}
+			}
 		case <-stop:
 		}
 	}

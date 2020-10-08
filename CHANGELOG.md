@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.3b]
+### Changed
+- Added channel closure in case of background reset  
+
 ## [0.9.1]
 ### adapted from [v.0.7.3] version, see its changelog for more information  
 
