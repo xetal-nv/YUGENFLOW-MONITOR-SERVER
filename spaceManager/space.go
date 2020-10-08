@@ -7,7 +7,6 @@ import (
 	"gateserver/support/globals"
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
-	"os"
 	"sync"
 	"time"
 )
@@ -65,16 +64,16 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 				if state.Id == spacename {
 					spaceRegister = state
 				} else {
-					fmt.Println("Error reading state for space:", spacename)
-					os.Exit(0)
+					fmt.Println("Error reading state for space:", spacename, ". Will assume null state")
+					//os.Exit(0)
 				}
 			}
 			if state, err := coredbs.LoadSpaceShadowState(spacename); err == nil {
 				if state.Id == spacename {
 					shadowSpaceRegister = state
 				} else {
-					fmt.Println("Error reading shadow state for space:", spacename)
-					os.Exit(0)
+					fmt.Println("Error reading shadow state for space:", spacename, ". Will assume null state")
+					//os.Exit(0)
 				}
 			}
 		}
@@ -122,11 +121,11 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 			}
 		case <-stop:
 			if globals.SaveState {
-				if err := coredbs.SaveSpaceState(spacename, spaceRegister); err != nil {
+				if err := coredbs.SaveSpaceState(spaceRegister); err != nil {
 					fmt.Println("Error saving state for space:", spacename)
 				} else {
 					fmt.Println("Successful saving state for space:", spacename)
-					if err := coredbs.SaveSpaceShadowState(spacename, shadowSpaceRegister); err != nil {
+					if err := coredbs.SaveSpaceShadowState(shadowSpaceRegister); err != nil {
 						fmt.Println("Error saving shadow state for space:", spacename)
 					} else {
 						fmt.Println("Successful saving shadow state for space:", spacename)
@@ -168,7 +167,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 							spaceRegister.Flows[i] = entry
 						}
 						go func(nd dataformats.SpaceState) {
-							coredbs.SaveSpaceData(nd)
+							_ = coredbs.SaveSpaceData(nd)
 						}(spaceRegister)
 
 					}
@@ -176,7 +175,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 					shadowSpaceRegister = updateRegister(shadowSpaceRegister, data)
 					if globals.Shadowing {
 						go func(nd dataformats.SpaceState) {
-							coredbs.SaveShadowSpaceData(nd)
+							_ = coredbs.SaveShadowSpaceData(nd)
 						}(shadowSpaceRegister)
 					}
 
@@ -261,19 +260,19 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 							//fmt.Println(shadowSpaceRegister)
 
 							go func(nd dataformats.SpaceState) {
-								coredbs.SaveSpaceData(nd)
+								_ = coredbs.SaveSpaceData(nd)
 							}(spaceRegister)
 
 							if globals.Shadowing {
 								go func(nd dataformats.SpaceState) {
-									coredbs.SaveShadowSpaceData(nd)
+									_ = coredbs.SaveShadowSpaceData(nd)
 								}(spaceRegister)
 							}
 						} else {
 							mlogger.Warning(globals.SpaceManagerLog,
-								mlogger.LoggerData{"entryManager.entry: " + spacename,
-									"data from entry " + data.Id + " not in configuration",
-									[]int{0}, true})
+								mlogger.LoggerData{Id: "entryManager.entry: " + spacename,
+									Message: "data from entry " + data.Id + " not in configuration",
+									Data:    []int{0}, Aggregate: true})
 						}
 					}
 				}

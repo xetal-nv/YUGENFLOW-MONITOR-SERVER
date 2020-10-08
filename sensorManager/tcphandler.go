@@ -54,17 +54,17 @@ func handler(conn net.Conn) {
 		// We close the channel and update the sensor definition entry, when applicable
 		_ = conn.Close()
 		// if the mac is given, we need to reset all sensor data
-		if sensorDef.mac != "" {
-			// kill command process first
-			if sensorDef.channels.reset != nil {
-				select {
-				case sensorDef.channels.reset <- true:
-					<-sensorDef.channels.reset
-				case <-time.After(time.Duration(globals.SensorTimeout)):
-					// this might lead to a zombie that will kill itself eventually
-				}
-
+		// kill command process first
+		if sensorDef.channels.reset != nil {
+			select {
+			case sensorDef.channels.reset <- true:
+				<-sensorDef.channels.reset
+			case <-time.After(time.Duration(globals.SensorTimeout)):
+				// this might lead to a zombie that will kill itself eventually
 			}
+
+		}
+		if sensorDef.mac != "" {
 			// remove entry from active sensor list
 			ActiveSensors.Lock()
 			delete(ActiveSensors.Id, sensorDef.id)

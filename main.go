@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-// in progress
+// to be split back-end, API and web server
 func main() {
 	var dbpath = flag.String("db", "mongodb://localhost:27017", "database path")
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
