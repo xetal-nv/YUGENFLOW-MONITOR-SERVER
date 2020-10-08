@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gateserver/avgsManager"
 	"gateserver/entryManager"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
@@ -69,7 +70,7 @@ func main() {
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 5; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -121,5 +122,7 @@ func main() {
 	}
 
 	//goland:noinspection ALL
-	gateManager.Start(sd[3])
+	go gateManager.Start(sd[3])
+
+	avgsManager.Start(sd[4])
 }

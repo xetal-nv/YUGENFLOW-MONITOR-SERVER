@@ -14,6 +14,7 @@ import (
 func sensorBGReset(forceReset chan string, rst chan interface{}) {
 
 	// return true is successful
+	// TODO add option to turn off channel (from ini)
 	resetFn := func(channels SensorChannel) bool {
 		//fmt.Println("resetting")
 		//return true
@@ -85,7 +86,7 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 					select {
 					case forceReset <- mac:
 					case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-						// we detach the answe with a zombie timeout
+						// we detach the answer with a zombie timeout
 						go func() {
 							select {
 							case forceReset <- mac:
