@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+// TODO in case of asymmetry add option (ini file) to reset all sensors
+
 // NOTE: the code is build for one or two sensors gates.
 func detectTransition(id string, gateSensorsOrdered []int, sensorLatestData map[int]sensorData,
 	scratchPad scratchData) (map[int]sensorData, scratchData, int) {
