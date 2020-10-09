@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
 // NOTE this is build for one or two sensors gates. Part of the code can support more, but the algorithm not
@@ -66,6 +67,7 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 	if LogToFileAll {
 		f, err = os.Create("log/entry_" + strconv.Itoa(id) + ".txt")
 	}
+	day := time.Now().Day()
 
 	//fmt.Println(sensorListEntry)
 	//fmt.Println(id, gateListEntry[sensorToGate[id]])
@@ -93,6 +95,14 @@ func entryProcessingCore(id int, in chan sensorData, sensorListEntry map[int]sen
 		nv := data.val
 		// add here the control on how many it went asymmetric
 		//fmt.Println(gateListEntry[sensorToGate[data.id]])
+
+		// every day we reset the asymmetry conditions
+		if time.Now().Day() != day {
+			day = time.Now().Day()
+			for i := range sensorDifferential[sensorToGate[data.id]] {
+				sensorDifferential[sensorToGate[data.id]][i] = 0
+			}
+		}
 
 		// check for asymmetry in gate sensor dictating reset if there is more than one device in the gate
 		if maximumAsymmetry != 0 && len(gateListEntry[sensorToGate[data.id]]) > 1 {
