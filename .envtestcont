@@ -1,4 +1,4 @@
-##### SERVER SETUP #####
+cls##### SERVER SETUP #####
 ## ADDRESSES
 ## HTTPSPORTS = app port, api port ## If the ports are the same, one server only will be activates
 HTTPSPORTS = 8080
@@ -30,19 +30,15 @@ MACSTRICT = 0
 #GATE_number = device_id device_id ...
 #GATE_number = device_mac?device_id device_id ...
 #GATE_0 = 66:66:66:66:66:67?1 0
-GATE_0 = 2 1
-#GATE_1 = 4 3
-#GATE_2 = 6 5
-#GATE_3 = 8 7
+GATE_0 = 0 1
+
 
 ## ENTRY COMPOSITION
 ## An Entry is a groups of gates defining the entry into a space, number has to increase from 0
 ## IMPORTANT: Gates CANNOT be shared among entries
 ##ENTRY_id = gate_id gate_id ...
 ENTRY_0 = 0
-#ENTRY_1 = 1
-#ENTRY_2 = 2
-#ENTRY_3 = 3
+
 
 ## SPACES DECLARATIONS
 ## Define the region where gates are to be combined in terms of name and maximum occuopancy (optional)

@@ -408,6 +408,8 @@ func handlerTCPRequest(conn net.Conn) {
 								}
 							}
 							if valid {
+
+								//fmt.Printf("%x\n", data
 								// remove device from the pending list
 								if pending {
 									mutexPendingDevices.Lock()
