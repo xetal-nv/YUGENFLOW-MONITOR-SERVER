@@ -31,7 +31,7 @@ func main() {
 	var dmode = flag.Int("dmode", 0, "activate and select a development mode")
 	var env = flag.String("env", "", "configuration filename")
 	var ks = flag.Bool("ks", false, "enable kill switch")
-	var noml = flag.Bool("nomal", false, "disable malicious attack checks")
+	//var noml = flag.Bool("nomal", false, "disable malicious attack checks")
 	var norst = flag.Bool("norst", false, "disable start-up device reset - deprecated now default")
 	var forcerst = flag.Bool("forcerst", false, "enable start-up device reset")
 	var repcon = flag.Bool("repcon", false, "enable reporting on current data ")
@@ -90,9 +90,9 @@ func main() {
 	if *ks {
 		log.Printf("!!! WARNING KILL SWITCH ENABLED !!!\n")
 	}
-	if *noml {
-		log.Printf("!!! WARNING MALICIOUS CHECKS DISABLED !!!\n")
-	}
+	//if *noml {
+	//	log.Printf("!!! WARNING MALICIOUS CHECKS DISABLED !!!\n")
+	//}
 	if *forcerst {
 		log.Printf("!!! WARNING START-UP RESET ENABLED !!!\n")
 	}
@@ -121,7 +121,7 @@ func main() {
 	support.RotInt = *ri
 	support.RotSize = *rs
 	support.DelLogs = *dl
-	support.MalOn = !*noml
+	support.MalOn = false
 	support.RstON = *forcerst
 	spaces.CrashMaxDelay = int64(*cdelay) * 1000
 	servers.KSwitch = *ks
