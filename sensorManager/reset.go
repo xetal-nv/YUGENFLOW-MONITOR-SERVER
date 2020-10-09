@@ -14,10 +14,7 @@ import (
 func sensorBGReset(forceReset chan string, rst chan interface{}) {
 
 	// return true is successful
-	// TODO add option to turn off channel (from ini)
 	resetFn := func(channels SensorChannel) bool {
-		//fmt.Println("resetting")
-		//return true
 		cmd := []byte{cmdAPI["rstbg"].cmd}
 		cmd = append(cmd, codings.Crc8(cmd))
 		var res []byte
@@ -72,31 +69,23 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 					rst <- nil
 					return
 				case mac := <-forceReset:
+					// an answer is not needed back to the reset commander
 					ActiveSensors.RLock()
 					chs, ok := ActiveSensors.Mac[mac]
 					ActiveSensors.RUnlock()
 					if ok {
 						// reset
 						if !resetFn(chs) {
-							mac = ""
+							mlogger.Warning(globals.SensorManagerLog,
+								mlogger.LoggerData{"sensorManager.sensorBGReset: mac " + mac,
+									"reset has failed",
+									[]int{1}, true})
 						}
 					} else {
-						mac = ""
-					}
-					select {
-					case forceReset <- mac:
-					case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-						// we detach the answer with a zombie timeout
-						go func() {
-							select {
-							case forceReset <- mac:
-							case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
-								mlogger.Warning(globals.SensorManagerLog,
-									mlogger.LoggerData{"sensorManager.sensorBGReset",
-										"potential zombie",
-										[]int{1}, true})
-							}
-						}()
+						mlogger.Warning(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.sensorBGReset: mac " + mac,
+								"reset has failed",
+								[]int{1}, true})
 					}
 
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):

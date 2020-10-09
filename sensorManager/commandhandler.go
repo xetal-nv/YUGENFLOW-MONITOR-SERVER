@@ -67,8 +67,11 @@ finished:
 			}
 			allowedUnexpectedAnswers -= 1
 		case cmd := <-chs.Commands:
+			// TODO add option to turn off channel (from ini)
+
 			// this is a command request
-			// we return nil to the command issuer in case of failed and not null to the commander responder in case of error
+			// we return nil to the command issuer in case of failed and not null to the commander
+			// responder in case of error
 			var rtIssuer []byte
 			rtResponder := []byte("e")
 			// verify if the command exists and send it to the device

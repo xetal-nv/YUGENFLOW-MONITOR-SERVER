@@ -29,7 +29,7 @@ func calculator(rst chan interface{}) {
 		println(def)
 	}
 
-	os.Exit(0)
+	//os.Exit(0)
 
 	select {
 	case <-rst:

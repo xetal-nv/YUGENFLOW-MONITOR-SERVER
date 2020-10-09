@@ -157,7 +157,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 				}
 				if resetTime {
 					if !resetDone {
-						println("reset")
+						//println("reset")
 						resetDone = true
 						spaceRegister.Count = 0
 						spaceRegister.Ts = time.Now().UnixNano()

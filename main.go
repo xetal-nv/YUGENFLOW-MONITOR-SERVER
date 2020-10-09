@@ -115,7 +115,7 @@ func main() {
 	if *dev {
 		go sensormodels.SensorModel(0, 7000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
 		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
-		go sensormodels.SensorModel(2, 7000, 7, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x07})
+		go sensormodels.SensorModel(2, 7000, 15, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x07})
 		go sensormodels.SensorModel(3, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x08})
 		//time.Sleep(3*time.Second)
 		//go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
@@ -123,6 +123,6 @@ func main() {
 
 	//goland:noinspection ALL
 	go gateManager.Start(sd[3])
-
+	//goland:noinspection ALL
 	avgsManager.Start(sd[4])
 }

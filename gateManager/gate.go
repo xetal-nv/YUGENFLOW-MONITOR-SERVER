@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-// TODO in case of asymmetry add option (ini file) to reset all sensors
-
 // NOTE: the code is build for one or two sensors gates.
 func detectTransition(id string, gateSensorsOrdered []int, sensorLatestData map[int]sensorData,
 	scratchPad scratchData) (map[int]sensorData, scratchData, int) {
@@ -128,7 +126,7 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 	var scratchPad, scratchPadOriginal scratchData
 	gateSensorsOrderedOriginal := make([]int, len(gateSensorsOrdered))
 	sensorDifferential := make(map[int]int)
-	sensorDifferentialFails := make(map[int]int)
+	//sensorDifferentialFails := make(map[int]int)
 	sensorDifferentialTimes := make(map[int]int)
 	sensorLatestData := make(map[int]sensorData)
 	sensorLatestDataOriginal := make(map[int]sensorData)
@@ -140,13 +138,15 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 	scratchPadOriginal.unusedSampleSumOut = make(map[int]int)
 	copy(gateSensorsOrderedOriginal, gateSensorsOrdered)
 
+	asymmetryResetCounter := globals.AsymmetryReset
+
 	for i := range sensors {
 		scratchPad.senData[i] = sensorData{i, 0, 0}
 		scratchPadOriginal.senData[i] = sensorData{i, 0, 0}
 		sensorLatestData[i] = sensorData{i, 0, 0}
 		sensorLatestDataOriginal[i] = sensorData{i, 0, 0}
 		sensorDifferential[i] = 0
-		sensorDifferentialFails[i] = 0
+		//sensorDifferentialFails[i] = 0
 		sensorDifferentialTimes[i] = 0
 	}
 	for i := range sensorLatestData {
@@ -188,8 +188,9 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 		select {
 		case <-resetGate:
 			// the gate configuration is reset
+			asymmetryResetCounter = globals.AsymmetryReset
 			sensorDifferential = make(map[int]int)
-			sensorDifferentialFails = make(map[int]int)
+			//sensorDifferentialFails = make(map[int]int)
 			sensorDifferentialTimes = make(map[int]int)
 			gateSensorsOrdered = make([]int, len(gateSensorsOrderedOriginal))
 			copy(gateSensorsOrdered, gateSensorsOrderedOriginal)
@@ -202,7 +203,7 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 			for i, el := range scratchPadOriginal.unusedSampleSumOut {
 				scratchPad.unusedSampleSumOut[i] = el
 				sensorDifferential[i] = 0
-				sensorDifferentialFails[i] = 0
+				//sensorDifferentialFails[i] = 0
 				sensorDifferentialTimes[i] = 0
 			}
 			for i, el := range scratchPadOriginal.unusedSampleSumIn {
@@ -251,62 +252,29 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 					if max-min >= globals.AsymmetryMax {
 						sensorDifferentialTimes[sensorID] += 1
 						if sensorDifferentialTimes[sensorID] < globals.AsymmetryIter {
-							if mac, err := sensorDB.LookUpMac([]byte{byte(sensorID)}); err == nil {
-								select {
-								case globals.ResetChannel <- string(mac):
-									// the result of the reset it actually does not matter as the device might be also disconnected
-									go func() {
-										select {
-										case <-globals.ResetChannel:
-										case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
-										}
-									}()
-									//ans := <- globals.ResetChannel
-									//if ans == mac {
-									//fmt.Printf("Gate %v sensor %v:%v reset\n", gateName, sensorID, string(mac))
-									//} else {
-									//	fmt.Printf("Gate %v sensor %v:%v failed to reset\n", gateName, sensorID, string(mac))
-									//}
-									for i := range sensorDifferential {
-										sensorDifferential[i] = 0
-									}
-								case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-									//case <-time.After(time.Second):
-									if sensorDifferentialFails[sensorID] == globals.AsyncRestFails {
-										// there have been too many tried, reset is counted
+							// we try to reset the background of all sensors in the gate
+							for id := range sensorDifferential {
+								sensorDifferential[id] = 0
+								if mac, err := sensorDB.LookUpMac([]byte{byte(id)}); err == nil {
+									select {
+									case globals.ResetChannel <- string(mac):
+									case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 										if globals.DebugActive {
-											fmt.Printf("Gate %v sensor %v:%v failed to reset too many times\n", gateName, sensorID, string(mac))
+											fmt.Printf("gateManager.gate: gate %v sensor %v reset failed\n", gateName, id)
 										}
-										for i := range sensorDifferential {
-											sensorDifferential[i] = 0
-										}
-										sensorDifferentialFails[sensorID] = 0
-									} else {
-										// reset will be tried again
-										if globals.DebugActive {
-											fmt.Printf("Gate %v sensor %v:%v failed to reset\n", gateName, sensorID, string(mac))
-										}
-										sensorDifferentialTimes[sensorID] -= 1
-										sensorDifferentialFails[sensorID] += 1
+										mlogger.Warning(globals.GateManagerLog,
+											mlogger.LoggerData{"sensorManager.gateManager: " + strconv.Itoa(id),
+												"reset has failed for timeout",
+												[]int{1}, true})
 									}
-								}
-							} else {
-								if sensorDifferentialFails[sensorID] == globals.AsyncRestFails {
-									// there have been too many tried, reset is counted
-									if globals.DebugActive {
-										fmt.Printf("Missing entry for sensor %v in lookup DBS, reset counted\n", sensorID)
-									}
-									for i := range sensorDifferential {
-										sensorDifferential[i] = 0
-									}
-									sensorDifferentialFails[sensorID] = 0
 								} else {
-									// reset does not count
 									if globals.DebugActive {
-										fmt.Printf("Missing entry for sensor %v in lookup DBS, reset skipped\n", sensorID)
+										fmt.Printf("gateManager.gate: gate %v sensor %v not properly active\n", gateName, id)
 									}
-									sensorDifferentialTimes[sensorID] -= 1
-									sensorDifferentialFails[sensorID] += 1
+									mlogger.Warning(globals.GateManagerLog,
+										mlogger.LoggerData{"sensorManager.gateManager: " + strconv.Itoa(id),
+											"reset has failed for missing entry",
+											[]int{1}, true})
 								}
 							}
 						} else {
@@ -316,7 +284,7 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 							mlogger.Warning(globals.GateManagerLog,
 								mlogger.LoggerData{"gateManager.gate: " + gateName,
 									"sensor disabled: " + strconv.Itoa(sensorID),
-									[]int{0}, false})
+									[]int{1}, true})
 							delete(sensorLatestData, sensorID)
 							delete(scratchPad.senData, sensorID)
 							delete(scratchPad.unusedSampleSumIn, sensorID)
@@ -349,6 +317,16 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 				}
 				if globals.DebugActive {
 					fmt.Printf(" ===>>> Gate %v calculated value: %+v\n", gateName, nv)
+				}
+				// after a globals.AsymmetryReset number of correct samples asymmetry is reset
+				if asymmetryResetCounter -= 1; asymmetryResetCounter == 0 {
+					for i, el := range scratchPadOriginal.unusedSampleSumOut {
+						scratchPad.unusedSampleSumOut[i] = el
+						sensorDifferential[i] = 0
+						//sensorDifferentialFails[i] = 0
+						sensorDifferentialTimes[i] = 0
+						asymmetryResetCounter = globals.AsymmetryReset
+					}
 				}
 				for _, ch := range gateEntryChannels {
 					ch <- newGateData

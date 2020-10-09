@@ -79,6 +79,7 @@ Resource folders:
 
 **TO BE DONE (in priority order)**  
  - everything  
+ - mode state to disk cache from dbs  
  - clean code  
 
 
