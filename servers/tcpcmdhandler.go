@@ -251,6 +251,14 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 	}()
 	for {
 		select {
+		case <-time.After(time.Duration(30 * time.Hour)):
+			// we check if this is a zombie and terminate it
+			mutexConnMAC.RLock()
+			_, ok := sensorConnMAC[mac]
+			mutexConnMAC.RUnlock()
+			if !ok {
+				return
+			}
 		case newId := <-devId:
 			id = []int{newId}
 		case <-ci:
