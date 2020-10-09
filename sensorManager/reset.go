@@ -84,8 +84,8 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 					} else {
 						mlogger.Warning(globals.SensorManagerLog,
 							mlogger.LoggerData{"sensorManager.sensorBGReset: mac " + mac,
-								"reset has failed",
-								[]int{1}, true})
+								"reset skipped as sensor not active",
+								[]int{0}, true})
 					}
 
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
