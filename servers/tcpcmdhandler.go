@@ -280,7 +280,7 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 				}
 				cmd = append(cmd, codings.Crc8(cmd))
 				ready := make(chan bool)
-				go func(ba []byte) {
+				go func(ba []byte, ready chan bool) {
 					mutexConnMAC.RLock()
 					conn, ok := sensorConnMAC[mac]
 					mutexConnMAC.RUnlock()
@@ -293,12 +293,13 @@ func handlerCommandAnswer(mac string, ci, ce chan []byte, stop chan bool, devId 
 							}
 						}
 					} else {
+						ready <- false
 						go func() {
 							support.DLog <- support.DevData{"servers.handlerCommandAnswer device " + strconv.Itoa(id[0]),
 								support.Timestamp(), "command to closed TCP channel", []int{1}, true}
 						}()
 					}
-				}(cmd)
+				}(cmd, ready)
 				select {
 				case valid := <-ready:
 					if valid {

@@ -4,10 +4,8 @@ import (
 	"context"
 	"gateserver/support"
 	"log"
-	"math/rand"
 	"net"
 	"os"
-	"time"
 )
 
 // start of the TCP server, including set-up
@@ -46,28 +44,28 @@ func StartTCP(sd chan context.Context) {
 
 	log.Printf("servers.StartTCP: listening on 0.0.0.0:%v\n", port)
 	for {
-		select {
-		case <-tcpTokens:
-			if support.Debug != 0 {
-				log.Println("Reserved TCP token, remaining:", len(tcpTokens))
+		//select {
+		//case <-tcpTokens:
+		//if support.Debug != 0 {
+		//	log.Println("Reserved TCP token, remaining:", len(tcpTokens))
+		//}
+		// Listen for an incoming connection.
+		conn, e := l.Accept()
+		if e != nil {
+			log.Printf("servers.StartTCP: Error accepting: %v\n", e)
+			if l != nil {
+				_ = l.Close()
 			}
-			// Listen for an incoming connection.
-			conn, e := l.Accept()
-			if e != nil {
-				log.Printf("servers.StartTCP: Error accepting: %v\n", e)
-				if l != nil {
-					_ = l.Close()
-				}
-			}
-			// Handle connections in a new goroutine.
-			log.Printf("servers.StartTCP: A device has connected.\n")
-			go handlerTCPRequest(conn)
-		default:
-			support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",
-				support.Timestamp(), "", []int{1}, true}
-			r := rand.Intn(minDelayRefusedConnection)
-			time.Sleep(time.Duration(minDelayRefusedConnection+r) * time.Second)
 		}
+		// Handle connections in a new goroutine.
+		log.Printf("servers.StartTCP: A device has connected.\n")
+		go handlerTCPRequest(conn)
+		//default:
+		//	support.DLog <- support.DevData{"servers.StartTCP: exceeding number of allowed connections",
+		//		support.Timestamp(), "", []int{1}, true}
+		//	r := rand.Intn(minDelayRefusedConnection)
+		//	time.Sleep(time.Duration(minDelayRefusedConnection+r) * time.Second)
+		//}
 
 	}
 }

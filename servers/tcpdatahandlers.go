@@ -42,7 +42,16 @@ func handlerTCPRequest(conn net.Conn) {
 			sensorChanUsedID[deviceId] = false
 			mutexSensorMacs.Unlock()
 			// reset the command thread
-			stop <- true
+			select {
+			case stop <- true:
+			case <-time.After(time.Duration(timeout) * time.Second):
+				go func() {
+					select {
+					case stop <- true:
+					case <-time.After(time.Duration(TCPdeadline) * time.Hour):
+					}
+				}()
+			}
 		}
 		// clean up foe eventual unknown device
 		mutexUnknownMac.Lock()
@@ -57,12 +66,13 @@ func handlerTCPRequest(conn net.Conn) {
 		mutexConnMAC.Lock()
 		delete(sensorConnMAC, string(mac))
 		mutexConnMAC.Unlock()
+
+		//tcpTokens <- true
+		//if support.Debug != 0 {
+		//	log.Println("Releasing TCP token, remaining:", len(tcpTokens))
+		//}
 		//noinspection GoUnhandledErrorResult
 		conn.Close()
-		tcpTokens <- true
-		if support.Debug != 0 {
-			log.Println("Releasing TCP token, remaining:", len(tcpTokens))
-		}
 	}()
 
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
@@ -349,11 +359,12 @@ func handlerTCPRequest(conn net.Conn) {
 				loop = false
 			}
 
+		finished:
 			for loop {
 				cmd := make([]byte, 1)
 				if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
 					log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
-					return
+					break finished
 				}
 				if _, e := conn.Read(cmd); e != nil {
 
@@ -376,7 +387,7 @@ func handlerTCPRequest(conn net.Conn) {
 						}
 						if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
 							log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
-							return
+							break finished
 						}
 						if _, e := conn.Read(data); e != nil {
 							// A delay is inserted in case this is a malicious attempt
@@ -470,7 +481,7 @@ func handlerTCPRequest(conn net.Conn) {
 											) {
 												mutexSensorMacs.Unlock()
 											} else {
-												return
+												break finished
 											}
 											//mutexSensorMacs.Unlock()
 										}
@@ -543,7 +554,7 @@ func handlerTCPRequest(conn net.Conn) {
 									cmdd := make([]byte, v)
 									if e := conn.SetDeadline(time.Now().Add(time.Duration(TCPdeadline) * time.Hour)); e != nil {
 										log.Printf("servers.handlerTCPRequest: error on setting deadline for %v : %v\n", ipc, e)
-										return
+										break finished
 									}
 									if _, e := conn.Read(cmdd); e != nil {
 										loop = false
