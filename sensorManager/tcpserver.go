@@ -62,7 +62,6 @@ func tcpServer(rst chan interface{}) {
 								"no token left",
 								[]int{1}, true})
 					}
-
 				} else {
 					if globals.DebugActive {
 						fmt.Printf("sensorManager.tcpServer: Error accepting: %v\n", e)
@@ -78,6 +77,7 @@ func tcpServer(rst chan interface{}) {
 			go recovery.CleanPanic(
 				func() { handler(nc) },
 				func() {
+					// this is redundant
 					//goland:noinspection GoUnhandledErrorResult
 					nc.Close()
 				})

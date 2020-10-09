@@ -52,13 +52,19 @@ func handler(conn net.Conn) {
 	// cleaning up at closure
 	defer func() {
 		// We close the channel and update the sensor definition entry, when applicable
-		_ = conn.Close()
 		// if the mac is given, we need to reset all sensor data
 		// kill command process first
 		if sensorDef.channels.reset != nil {
 			select {
 			case sensorDef.channels.reset <- true:
-				<-sensorDef.channels.reset
+				//println("ok")
+				go func() {
+					select {
+					case <-sensorDef.channels.reset:
+					case <-time.After(time.Duration(globals.SensorTimeout)):
+						// this might lead to a zombie that will kill itself eventually
+					}
+				}()
 			case <-time.After(time.Duration(globals.SensorTimeout)):
 				// this might lead to a zombie that will kill itself eventually
 			}
@@ -74,16 +80,17 @@ func handler(conn net.Conn) {
 			//startstopCommandProcess <- sensorDef.mac
 			// release TCO token
 		}
-		//println("ok")
-		tokens <- nil
-		if globals.DebugActive {
-			fmt.Printf("sensorManager.tcpServer: released token, left: %v\n", len(tokens))
-		}
 		//. in case of valid ID we remove the lookup entry as well
 		if sensorDef.id != -1 {
 			_ = sensorDB.DeleteLookUp([]byte{byte(sensorDef.id)})
 		}
-
+		_ = conn.Close()
+		//println("ok")
+		// this is will not stay a zombie
+		tokens <- nil
+		if globals.DebugActive {
+			fmt.Printf("sensorManager.tcpServer: released token, left: %v\n", len(tokens))
+		}
 	}()
 
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]

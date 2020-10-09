@@ -78,6 +78,7 @@ Configuration files: gateserver.ini, configuration.ini
 Resource folders: 
 
 **TO BE DONE (in priority order)**  
+ - CHECK NOTHING GETS STALLED ON CHANNELS !!!  USE DEFAULT ?  
  - everything  
  - mode state to disk cache from dbs  
  - clean code  

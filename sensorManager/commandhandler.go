@@ -24,14 +24,19 @@ finished:
 		// we return always nil when there are no errors, something otherwise
 		select {
 		case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
-			// we assume this routine is a zombie and terminate it
-			mlogger.Info(globals.SensorManagerLog,
-				mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
-					"service killed due to zombie timeout",
-					[]int{0}, true})
-			// closing the channel causes the TCP handler also to close
-			_ = chs.tcp.Close()
-			return
+			// we check if this routine is a zombie and terminate it in that case
+			ActiveSensors.RLock()
+			_, active := ActiveSensors.Mac[mac]
+			ActiveSensors.RUnlock()
+			if !active {
+				mlogger.Info(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
+						"service killed due to zombie timeout",
+						[]int{0}, true})
+				// closing the channel causes the TCP handler also to close
+				_ = chs.tcp.Close()
+				return
+			}
 		case <-chs.reset:
 			// reset request received, the routine is terminated normally
 			break finished
@@ -67,8 +72,6 @@ finished:
 			}
 			allowedUnexpectedAnswers -= 1
 		case cmd := <-chs.Commands:
-			// TODO add option to turn off channel (from ini)
-
 			// this is a command request
 			// we return nil to the command issuer in case of failed and not null to the commander
 			// responder in case of error
@@ -109,6 +112,11 @@ finished:
 						case <-chs.reset:
 							break finished
 						}
+						// make optional
+						if cmd[0] == cmdAPI["rstbg"].cmd && globals.ResetCloseTCP {
+							//println("bye")
+							_ = chs.tcp.Close()
+						}
 					}
 				case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 				case <-chs.reset:
@@ -139,5 +147,9 @@ finished:
 	if globals.DebugActive {
 		fmt.Println("sensorManager.sensorCommand: ended", mac)
 	}
-	chs.reset <- true
+	select {
+	case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
+	case chs.reset <- true:
+	}
+
 }

@@ -46,6 +46,7 @@ func Start() {
 	CRCused = internalConfig.Section("sensors").Key("crc_enabled").MustBool(true)
 	fmt.Printf("*** WARNING: CRC usage is set to %v ***\n", CRCused)
 	MaximumInvalidIDInternal = internalConfig.Section("sensors").Key("maximum_undefined_time").MustInt(5)
+	ResetCloseTCP = internalConfig.Section("sensors").Key("reset_closure").MustBool(true)
 	AsymmetryMax = internalConfig.Section("sensors").Key("asymmetry_max").MustInt(3)
 	AsymmetryIter = internalConfig.Section("sensors").Key("asymmetry_iter").MustInt(5)
 	if AsymmetryIter == 0 {

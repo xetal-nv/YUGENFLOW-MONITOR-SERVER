@@ -87,7 +87,6 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 								"reset skipped as sensor not active",
 								[]int{0}, true})
 					}
-
 				case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
 					if doIt, e := others.InClosureTime(start, stop); e == nil {
 						//  then cycle among all devices till all are reset
@@ -170,30 +169,39 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 			rst <- nil
 			return
 		case mac := <-forceReset:
+			// an answer is not needed back to the reset commander
 			ActiveSensors.RLock()
 			chs, ok := ActiveSensors.Mac[mac]
 			ActiveSensors.RUnlock()
 			if ok {
 				// reset
 				if !resetFn(chs) {
-					mac = ""
+					mlogger.Warning(globals.SensorManagerLog,
+						mlogger.LoggerData{"sensorManager.sensorBGReset: mac " + mac,
+							"reset has failed",
+							[]int{1}, true})
 				}
+			} else {
+				mlogger.Warning(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensorManager.sensorBGReset: mac " + mac,
+						"reset skipped as sensor not active",
+						[]int{0}, true})
 			}
-			select {
-			case forceReset <- mac:
-			case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-				// we detach the answe with a zombie timeout
-				go func() {
-					select {
-					case forceReset <- mac:
-					case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
-						mlogger.Warning(globals.SensorManagerLog,
-							mlogger.LoggerData{"sensorManager.sensorBGReset",
-								"potential zombie",
-								[]int{1}, true})
-					}
-				}()
-			}
+			//select {
+			//case forceReset <- mac:
+			//case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+			//	// we detach the answe with a zombie timeout
+			//	go func() {
+			//		select {
+			//		case forceReset <- mac:
+			//		case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
+			//			mlogger.Warning(globals.SensorManagerLog,
+			//				mlogger.LoggerData{"sensorManager.sensorBGReset",
+			//					"potential zombie",
+			//					[]int{1}, true})
+			//		}
+			//	}()
+			//}
 		}
 	}
 }
