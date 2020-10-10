@@ -26,7 +26,7 @@ finished:
 		case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
 			// we check if this routine is a zombie and terminate it in that case
 			ActiveSensors.RLock()
-			_, active := ActiveSensors.Mac[mac]
+			newChs, active := ActiveSensors.Mac[mac]
 			ActiveSensors.RUnlock()
 			if !active {
 				mlogger.Info(globals.SensorManagerLog,
@@ -34,7 +34,19 @@ finished:
 						"service killed due to zombie timeout",
 						[]int{0}, true})
 				// closing the channel causes the TCP handler also to close
-				_ = chs.tcp.Close()
+				if chs.tcp != nil {
+					_ = chs.tcp.Close()
+				}
+				return
+			} else if newChs.tcp != chs.tcp || chs.tcp == nil {
+				mlogger.Info(globals.SensorManagerLog,
+					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
+						"service killed due to zombie timeout",
+						[]int{0}, true})
+				// closing the channel causes the TCP handler also to close
+				if chs.tcp != nil {
+					_ = chs.tcp.Close()
+				}
 				return
 			}
 		case <-chs.reset:
