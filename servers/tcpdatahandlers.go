@@ -42,16 +42,16 @@ func handlerTCPRequest(conn net.Conn) {
 			sensorChanUsedID[deviceId] = false
 			mutexSensorMacs.Unlock()
 			// reset the command thread
-			select {
-			case stop <- true:
-			case <-time.After(time.Duration(timeout) * time.Second):
-				go func() {
-					select {
-					case stop <- true:
-					case <-time.After(time.Duration(TCPdeadline) * time.Hour):
-					}
-				}()
-			}
+			//select {
+			//case stop <- true:
+			//case <-time.After(time.Duration(timeout) * time.Second):
+			//	go func() {
+			//		select {
+			//		case stop <- true:
+			//		case <-time.After(time.Duration(TCPdeadline) * time.Hour):
+			//		}
+			//	}()
+			//}
 		}
 		// clean up foe eventual unknown device
 		mutexUnknownMac.Lock()
