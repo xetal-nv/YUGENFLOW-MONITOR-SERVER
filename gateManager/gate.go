@@ -162,6 +162,7 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 	// we try to acquire the gate channels
 	// this will only fail if the server is corrupted therefore, the server should be closed
 	tries := 5
+	day := time.Now().Day()
 	entryManager.GateStructure.RLock()
 	gateEntryChannels, ok := entryManager.GateStructure.DataChannel[gateName]
 	entryManager.GateStructure.RUnlock()
@@ -231,6 +232,13 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 				}
 				if globals.AsymmetryIter != 0 && len(gateSensorsOrdered) > 1 &&
 					!(globals.AsymmetricNull && data.Netflow == 0) {
+					// every day we reset the asymmetry conditions
+					if time.Now().Day() != day {
+						day = time.Now().Day()
+						for i := range sensorDifferential {
+							sensorDifferential[i] = 0
+						}
+					}
 					sensorDifferential[data.Id] += 1
 					//fmt.Println(gateName, ":", sensorDifferential)
 					var sensorID int
