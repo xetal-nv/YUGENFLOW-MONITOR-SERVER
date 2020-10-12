@@ -149,6 +149,7 @@ func handlerTCPRequest(conn net.Conn) {
 			) {
 				gates.MutexDeclaredDevices.RUnlock()
 			} else {
+				gates.MutexDeclaredDevices.RUnlock()
 				return
 			}
 			//if _, ok := gates.DeclaredDevices[string(mac)]; !ok {
