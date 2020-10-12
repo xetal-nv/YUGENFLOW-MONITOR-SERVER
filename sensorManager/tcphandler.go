@@ -371,8 +371,9 @@ func handler(conn net.Conn) {
 								if err := setID(sensorDef.channels, sensorDef.id); err == nil {
 									sensorDef.idSent = sensorDef.id
 									sensorDef.enforce = false
+									//enforceLoop = enforceTries
+								} else if enforceLoop == -1 {
 									enforceLoop = enforceTries
-								} else {
 									if globals.DebugActive {
 										fmt.Printf("Sensor %v has failed to change id\n", sensorDef.mac)
 									}
@@ -391,9 +392,31 @@ func handler(conn net.Conn) {
 										}
 									}
 									continue
+								} else if enforceLoop -= 1; enforceLoop == 0 {
+									if globals.EnforceStrict {
+										if globals.DebugActive {
+											fmt.Printf("Sensor %v disconnected due to failed ID enforce\n", sensorDef.mac)
+										}
+										mlogger.Info(globals.SensorManagerLog,
+											mlogger.LoggerData{"sensor " + mach,
+												"enforce has failed, sensor disconnected",
+												[]int{0}, true})
+										return
+									} else {
+										if globals.DebugActive {
+											fmt.Printf("Sensor %v failed ID enforce\n", sensorDef.mac)
+										}
+										mlogger.Info(globals.SensorManagerLog,
+											mlogger.LoggerData{"sensor " + mach,
+												"enforce has failed",
+												[]int{0}, true})
+										continue
+									}
+								} else {
+									continue
 								}
 							}
-							sensorDef.enforce = false
+							//sensorDef.enforce = false
 
 							// in case the sent ID and the defined ID is -1 is is set to 0xffff,
 							// the sensor is considered not active
@@ -529,11 +552,15 @@ func handler(conn net.Conn) {
 									[]int{0}, true})
 							return
 						} else {
+							flow := int(data[2])
+							if flow == 255 {
+								flow = -1
+							}
 							for _, ch := range sensorDef.channels.gateChannel {
-								flow := int(data[2])
-								if flow == 255 {
-									flow = -1
-								}
+								//flow := int(data[2])
+								//if flow == 255 {
+								//	flow = -1
+								//}
 								//fmt.Println(sensorDef.id, "sending data", ch, flow)
 								ch <- dataformats.FlowData{
 									Type:    "sensor",
@@ -724,37 +751,37 @@ func handler(conn net.Conn) {
 					}
 				}
 			}
-			if enforceLoop >= 0 {
-				if sensorDef.id != sensorDef.idSent {
-					if enforceLoop == 0 {
-						if globals.EnforceStrict {
-							if globals.DebugActive {
-								fmt.Printf("Sensor %v disconnected due to failed ID enforce\n", sensorDef.mac)
-							}
-							mlogger.Info(globals.SensorManagerLog,
-								mlogger.LoggerData{"sensor " + mach,
-									"enforce has failed, sensor disconnected",
-									[]int{0}, true})
-							return
-						} else {
-							if globals.DebugActive {
-								fmt.Printf("Sensor %v failed ID enforce\n", sensorDef.mac)
-							}
-							mlogger.Info(globals.SensorManagerLog,
-								mlogger.LoggerData{"sensor " + mach,
-									"enforce has failed",
-									[]int{0}, true})
-							enforceLoop = -1
-						}
-					} else {
-						enforceLoop--
-						//println("not done")
-					}
-				} else {
-					enforceLoop = -1
-					//println("done")
-				}
-			}
+			//if enforceLoop >= 0 {
+			//	if sensorDef.id != sensorDef.idSent {
+			//		if enforceLoop == 0 {
+			//			if globals.EnforceStrict {
+			//				if globals.DebugActive {
+			//					fmt.Printf("Sensor %v disconnected due to failed ID enforce\n", sensorDef.mac)
+			//				}
+			//				mlogger.Info(globals.SensorManagerLog,
+			//					mlogger.LoggerData{"sensor " + mach,
+			//						"enforce has failed, sensor disconnected",
+			//						[]int{0}, true})
+			//				return
+			//			} else {
+			//				if globals.DebugActive {
+			//					fmt.Printf("Sensor %v failed ID enforce\n", sensorDef.mac)
+			//				}
+			//				mlogger.Info(globals.SensorManagerLog,
+			//					mlogger.LoggerData{"sensor " + mach,
+			//						"enforce has failed",
+			//						[]int{0}, true})
+			//				enforceLoop = -1
+			//			}
+			//		} else {
+			//			enforceLoop--
+			//			//println("not done")
+			//		}
+			//	} else {
+			//		enforceLoop = -1
+			//		//println("done")
+			//	}
+			//}
 		}
 
 	}

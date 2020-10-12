@@ -23,8 +23,6 @@ External services:
   - tbd  
 
 **API:(TBD)**  
-/ks -> if enabled, kills the server  
-/dvl -> if enabled, shows latest developer log 
 /asys -> information on all current analyses  
 /info -> installation information  
 /pending -> list all devices pending for connection approval (only current connections)    
@@ -57,20 +55,22 @@ n/a
 See gateserver.ini and configuration.ini  file for configuration example  
 
 **COMMAND LINE OPTIONS:**  
--debug                  : enables debug mode (to be done)  
--db path                : set database path (to be done)  
--dc path                : set disk cache path (to be done)  
--user username          : set username (to be done)  
--pwd password           : set password (to be done)      
+-debug                  : enable debug mode 
+-env                    : enable development mode
+-db path                : set database path  
+-dc path                : set disk cache path  
+-user username          : set username   
+-pwd password           : set password       
+-eeprom                 : enables refresh of device eeprom at every connection   
+-tdl int                : TCP read deadline in hours (default 24)   
+-fth int                : set failure threshold in severe mode (default 3)   
+
 -echo                   : enter the echo mode (to be done)  
 -cdelay int             : specifies the maximum delay for recovery data usage(to be done)  
--dmode Int              : specifies an execution mode (0: default, 1: full test, 2: short test) (to be done)  
 -dumpentry              : forces all entry values/activity to be written in a log file for debug (to be done)  
 -st string              : set start time, time specified as HH:MM (to be done)  
--eeprom                 : enables refresh of device eeprom at every connection (to be done)  
 -nosample               : disable automatic check for database recovery (to be done)  
 -dbsupdate              : enable DBS integrity check HTTP API (to be done)  
--tdl int                : TCP read deadline in hours (default 24) (to be done)  
 
 **INSTALLATION**  
 Executable file: gateserver(.exe)  
