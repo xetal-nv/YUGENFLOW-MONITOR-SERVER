@@ -2,6 +2,7 @@ package spaceManager
 
 import (
 	"fmt"
+	"gateserver/avgsManager"
 	"gateserver/dataformats"
 	"gateserver/storage/coredbs"
 	"gateserver/support/globals"
@@ -99,6 +100,17 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 			[]int{0}, true})
 
 	resetDone := false
+	avgsManager.LatestData.RLock()
+	calculator := avgsManager.LatestData.Channel[spacename]
+	avgsManager.LatestData.RUnlock()
+
+	for calculator == nil {
+		fmt.Printf("Space %v waiting for calculator to be ready\n", spacename)
+		time.Sleep(time.Duration(globals.SettleTime*3) * time.Second)
+		avgsManager.LatestData.RLock()
+		calculator = avgsManager.LatestData.Channel[spacename]
+		avgsManager.LatestData.RUnlock()
+	}
 
 	for {
 		select {
@@ -255,12 +267,16 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 								fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)
 							}
 
-							//fmt.Println()
+							//fmt.Println(spacename,"sending data", spaceRegister)
 							//fmt.Println(spaceRegister)
 							//fmt.Println(shadowSpaceRegister)
 
 							go func(nd dataformats.SpaceState) {
 								_ = coredbs.SaveSpaceData(nd)
+							}(spaceRegister)
+
+							go func(nd dataformats.SpaceState) {
+								calculator <- nd
 							}(spaceRegister)
 
 							if globals.Shadowing {

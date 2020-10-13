@@ -103,13 +103,18 @@ func Start(sd chan bool) {
 				}
 				// channels are created only if the sensor list is valid
 				if GateStructure.SensorList[currentGate] != nil {
+					copyMap := make(map[int]dataformats.SensorDefinition)
+					for k, v := range GateStructure.SensorList[currentGate] {
+						copyMap[k] = v
+					}
 					GateStructure.DataChannel[currentGate] = newDataChannel
-					GateStructure.ConfigurationReset[currentGate] = make(chan interface{}, 1)
-					GateStructure.StopChannel[currentGate] = make(chan interface{}, 1)
+					chanReset := make(chan interface{}, 1)
+					GateStructure.ConfigurationReset[currentGate] = chanReset
+					chanStop := make(chan interface{}, 1)
+					GateStructure.StopChannel[currentGate] = chanStop
 					go recovery.RunWith(
 						func() {
-							gate(currentGate, gateSensorsOrdered, GateStructure.DataChannel[currentGate], GateStructure.StopChannel[currentGate],
-								GateStructure.ConfigurationReset[currentGate], GateStructure.SensorList[currentGate])
+							gate(currentGate, gateSensorsOrdered, newDataChannel, chanStop, chanReset, copyMap)
 						},
 						func() {
 							mlogger.Recovered(globals.GateManagerLog,

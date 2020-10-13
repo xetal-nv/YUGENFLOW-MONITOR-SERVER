@@ -31,7 +31,7 @@ type Flow struct {
 // entry flow data model used for database storage
 type EntryState struct {
 	Id       string          `json:"id"`
-	Ts       int64           `json:"ts"`
+	Ts       int64           `json:"Ts"`
 	Count    int             `json:"netflow"`
 	State    bool            `json:"-"`
 	Reversed bool            `json:"reversed"`
@@ -41,7 +41,7 @@ type EntryState struct {
 // space flow data model used for database storage
 type SpaceState struct {
 	Id    string                `json:"id"`
-	Ts    int64                 `json:"ts"`
+	Ts    int64                 `json:"Ts"`
 	Count int                   `json:"netflow"`
 	State bool                  `json:"-"`
 	Flows map[string]EntryState `json:"flows"`

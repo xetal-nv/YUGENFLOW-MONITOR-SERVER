@@ -2,8 +2,10 @@ package avgsManager
 
 import (
 	"fmt"
+	"gateserver/dataformats"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
+	"gopkg.in/ini.v1"
 	"os"
 	"sync"
 	"time"
@@ -27,8 +29,18 @@ func Start(sd chan bool) {
 			"service started",
 			[]int{0}, true})
 
+	var listSpaces []string
+	for _, sp := range globals.Config.Section("spaces").KeyStrings() {
+		listSpaces = append(listSpaces, sp)
+	}
+
+	if len(listSpaces) == 0 {
+		fmt.Printf("No spaces are defined in configuration.ini file\n")
+		os.Exit(0)
+	}
+
 	var rstC []chan interface{}
-	for i := 0; i < 1; i++ {
+	for i := 0; i < len(listSpaces); i++ {
 		rstC = append(rstC, make(chan interface{}))
 	}
 
@@ -49,7 +61,7 @@ func Start(sd chan bool) {
 			}(ch)
 		}
 		wg.Wait()
-		mlogger.Info(globals.SensorManagerLog,
+		mlogger.Info(globals.AvgsLogger,
 			mlogger.LoggerData{"avgsManager.Start",
 				"service stopped",
 				[]int{0}, true})
@@ -57,11 +69,97 @@ func Start(sd chan bool) {
 		sd <- true
 	}(sd, rstC)
 
+	var maxTick int = 0
+	realTimeDefinitions := make(map[string]int)
+	referenceDefinitions := make(map[string]int) // TODO needs samples every tot seconds
+
+	// load definitions of measurements from measurements.ini
+	definitions, err := ini.InsensitiveLoad("measurements.ini")
+	if err != nil {
+		fmt.Printf("Fail to read measurements.ini file: %v\n", err)
+		os.Exit(0)
+	}
+
+	tick := definitions.Section("system").Key("tick").MustInt(5)
+
+	for _, def := range definitions.Section("realtime").KeyStrings() {
+		duration := definitions.Section("realtime").Key(def).MustInt(0)
+		if duration != 0 {
+			realTimeDefinitions[def] = duration
+			if duration > maxTick {
+				maxTick = duration
+			}
+		} else {
+			fmt.Printf("Measurement definition for %v is invalid\n", def)
+		}
+	}
+
+	for _, def := range definitions.Section("reference").KeyStrings() {
+		duration := definitions.Section("reference").Key(def).MustInt(0)
+		if duration != 0 {
+			referenceDefinitions[def] = duration
+		} else {
+			fmt.Printf("Measurement definition for %v is invalid\n", def)
+		}
+	}
+
+	LatestData.Lock()
+	RegisterChannels.Lock()
+	LatestData.Channel = make(map[string]chan dataformats.SpaceState)
+	RegisterChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
+	RegisterChannels.ChannelOut = make(map[string]chan dataformats.SimpleSample)
+
+	for i := 0; i < len(listSpaces)-1; i++ {
+		name := listSpaces[i]
+		ldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
+		LatestData.Channel[name] = ldChan
+		regIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		regOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		RegisterChannels.channelIn[name] = regIn
+		RegisterChannels.ChannelOut[name] = regOut
+		go recovery.RunWith(
+			func() {
+				calculator(name, ldChan, rstC[i],
+					tick, maxTick, realTimeDefinitions, referenceDefinitions, regIn)
+			},
+			func() {
+				mlogger.Recovered(globals.AvgsLogger,
+					mlogger.LoggerData{"avgsManager.calculator for space: " + listSpaces[i],
+						"service terminated and recovered unexpectedly",
+						[]int{1}, true})
+			})
+		go recovery.RunWith(
+			func() {
+				SafeRegister(name, regIn, regOut, dataformats.SimpleSample{})
+			},
+			nil)
+	}
+	last := len(listSpaces) - 1
+	name := listSpaces[last]
+	LldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
+	LatestData.Channel[name] = LldChan
+	regIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	regOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	RegisterChannels.channelIn[name] = regIn
+	RegisterChannels.ChannelOut[name] = regOut
+
+	go recovery.RunWith(
+		func() {
+			SafeRegister(name, regIn, regOut, dataformats.SimpleSample{})
+		},
+		nil)
+
+	RegisterChannels.Unlock()
+	LatestData.Unlock()
+
 	recovery.RunWith(
-		func() { calculator(rstC[0]) },
+		func() {
+			calculator(name, LldChan, rstC[last],
+				tick, maxTick, realTimeDefinitions, referenceDefinitions, regIn)
+		},
 		func() {
 			mlogger.Recovered(globals.AvgsLogger,
-				mlogger.LoggerData{"avgsManager.calculator",
+				mlogger.LoggerData{"avgsManager.calculator for space: " + listSpaces[len(listSpaces)-1],
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		})

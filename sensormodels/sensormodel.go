@@ -93,7 +93,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 					fmt.Printf("Sensor %v answering %v to received command\n", mach, msg)
 					_, e = conn.Write(msg)
 					if v[0] == 14 {
-						// fmt.Printf("Sensor %v disconnecting with new id\n", mach)
+						fmt.Printf("Sensor %v disconnecting with new id\n", mach)
 						go func() {
 							time.Sleep(10 * time.Second)
 							id = int(v[2]) + int(v[1])*256

@@ -8,3 +8,8 @@ type FlowData struct {
 	Ts      int64  `json:"timestamp"`
 	Netflow int    `json:"netflow"`
 }
+
+type SimpleSample struct {
+	Ts  int64
+	Val float64
+}
