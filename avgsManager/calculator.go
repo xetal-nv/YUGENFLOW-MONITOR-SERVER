@@ -9,20 +9,24 @@ import (
 	"time"
 )
 
-// TODO this process will receive every new value and calculate the averages as indicated in a measurement.ini
-// TODO reference measurement are to be treated diofferently (not sliding window)
 func calculator(space string, latestData chan dataformats.SpaceState, rst chan interface{},
 	tick, maxTick int, realTimeDefinitions, referenceDefinitions map[string]int,
-	register chan dataformats.SimpleSample) {
+	regRealTime, regReference chan dataformats.SimpleSample) {
 
-	defer func() { //catch or finally
-		if err := recover(); err != nil { //catch
+	// for development only, comment afterwards
+	defer func() {
+		if err := recover(); err != nil {
 			fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
 			os.Exit(1)
 		}
 	}()
 
 	var samples []dataformats.SpaceState
+	lastReferenceMeasurement := make(map[string]int64)
+
+	for i := range referenceDefinitions {
+		lastReferenceMeasurement[i] = 0
+	}
 
 	mlogger.Info(globals.AvgsLogger,
 		mlogger.LoggerData{"avgsManager.calculator for space: " + space,
@@ -86,41 +90,80 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 			}
-
-			// TODO add reference (non sliding windowq)
-			//  and send to register
-			for _, period := range realTimeDefinitions {
+			// real time measurements
+			for measurementName, period := range realTimeDefinitions {
 				var selected []dataformats.SimpleSample
+				adjPeriod := int64(period) * 1000000000
 			foundall:
 				for i := len(samples) - 1; i >= 0; i-- {
-					if samples[i].Ts+int64(period)*1000000000 >= samples[len(samples)-1].Ts {
-						selected = append(selected, dataformats.SimpleSample{samples[i].Ts, float64(samples[i].Count)})
+					if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
+						selected = append(selected, dataformats.SimpleSample{Ts: samples[i].Ts, Val: float64(samples[i].Count)})
 					} else {
-						if selected[len(selected)-1].Ts != samples[len(samples)-1].Ts-int64(period)*1000000000 {
-							selected = append(selected, dataformats.SimpleSample{samples[len(samples)-1].Ts - int64(period)*1000000000,
-								float64(samples[i].Count)})
+						if selected[len(selected)-1].Ts != samples[len(samples)-1].Ts-adjPeriod {
+							selected = append(selected, dataformats.SimpleSample{Ts: samples[len(samples)-1].Ts - adjPeriod,
+								Val: float64(samples[i].Count)})
 						}
 						break foundall
 					}
 				}
-				// TODO do all measurements
-				// real time measurement calculation
+
+				// measurement calculation
 				if len(selected) > 1 {
 					var tot float64 = 0
 					length := int(selected[0].Ts - selected[len(selected)-1].Ts)
 					for i := len(selected) - 1; i > 0; i-- {
 						tot += selected[i].Val * float64(int(selected[i-1].Ts-selected[i].Ts))
 						//tot += int(selected[i-1].ts - selected[i].ts)
-						//fmt.Println(key, selected[i].val, int(selected[i-1].ts - selected[i].ts), tot)
+						//fmt.Println(measurementName, selected[i].val, int(selected[i-1].ts - selected[i].ts), tot)
 					}
 					tot = float64(int64((tot*100)/float64(length))) / 100
-					register <- dataformats.SimpleSample{
-						Ts:  selected[0].Ts / 1000000000,
-						Val: tot,
+					regRealTime <- dataformats.SimpleSample{
+						Qualifier: measurementName,
+						Ts:        selected[0].Ts / 1000000000,
+						Val:       tot,
 					}
 					//fmt.Println(space, key, selected[0].Ts/1000000000, tot)
 				}
 			}
+			// reference measurements
+			for measurementName, period := range referenceDefinitions {
+				adjPeriod := int64(period) * 1000000000
+				if lastReferenceMeasurement[measurementName]+int64(adjPeriod) < samples[len(samples)-1].Ts {
+					// time for a new reference measurement
+					var selected []dataformats.SimpleSample
+				foundall2:
+					for i := len(samples) - 1; i >= 0; i-- {
+						if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
+							selected = append(selected, dataformats.SimpleSample{Ts: samples[i].Ts, Val: float64(samples[i].Count)})
+						} else {
+							if selected[len(selected)-1].Ts != samples[len(samples)-1].Ts-adjPeriod {
+								selected = append(selected, dataformats.SimpleSample{Ts: samples[len(samples)-1].Ts - adjPeriod,
+									Val: float64(samples[i].Count)})
+							}
+							break foundall2
+						}
+					}
+					// measurement calculation
+					if len(selected) > 1 {
+						var tot float64 = 0
+						length := int(selected[0].Ts - selected[len(selected)-1].Ts)
+						for i := len(selected) - 1; i > 0; i-- {
+							tot += selected[i].Val * float64(int(selected[i-1].Ts-selected[i].Ts))
+							//tot += int(selected[measurementName-1].ts - selected[measurementName].ts)
+							//fmt.Println(measurementName, selected[i].Val, int(selected[i-1].Ts - selected[i].Ts), tot)
+						}
+						tot = float64(int64((tot*100)/float64(length))) / 100
+						regReference <- dataformats.SimpleSample{
+							Qualifier: measurementName,
+							Ts:        selected[0].Ts / 1000000000,
+							Val:       tot,
+						}
+						//fmt.Println(space, measurementName, selected[0].Ts/1000000000, tot)
+						lastReferenceMeasurement[measurementName] = samples[len(samples)-1].Ts
+					}
+				}
+			}
+
 		}
 	}
 }

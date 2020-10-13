@@ -10,6 +10,7 @@ type FlowData struct {
 }
 
 type SimpleSample struct {
-	Ts  int64
-	Val float64
+	Qualifier string  `json:"qualifier"`
+	Ts        int64   `json:"timestamp"`
+	Val       float64 `json:"value"`
 }

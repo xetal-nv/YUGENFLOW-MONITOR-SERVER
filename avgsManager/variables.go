@@ -10,7 +10,13 @@ var LatestData struct {
 	Channel map[string]chan dataformats.SpaceState
 }
 
-var RegisterChannels struct {
+var RegRealTimeChannels struct {
+	sync.RWMutex
+	channelIn  map[string]chan dataformats.SimpleSample
+	ChannelOut map[string]chan dataformats.SimpleSample
+}
+
+var RegReferenceChannels struct {
 	sync.RWMutex
 	channelIn  map[string]chan dataformats.SimpleSample
 	ChannelOut map[string]chan dataformats.SimpleSample

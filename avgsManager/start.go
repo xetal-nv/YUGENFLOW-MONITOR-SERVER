@@ -98,29 +98,39 @@ func Start(sd chan bool) {
 		duration := definitions.Section("reference").Key(def).MustInt(0)
 		if duration != 0 {
 			referenceDefinitions[def] = duration
+			if duration > maxTick {
+				maxTick = duration
+			}
 		} else {
 			fmt.Printf("Measurement definition for %v is invalid\n", def)
 		}
 	}
 
 	LatestData.Lock()
-	RegisterChannels.Lock()
+	RegRealTimeChannels.Lock()
+	RegReferenceChannels.Lock()
 	LatestData.Channel = make(map[string]chan dataformats.SpaceState)
-	RegisterChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
-	RegisterChannels.ChannelOut = make(map[string]chan dataformats.SimpleSample)
+	RegRealTimeChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
+	RegRealTimeChannels.ChannelOut = make(map[string]chan dataformats.SimpleSample)
+	RegReferenceChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
+	RegReferenceChannels.ChannelOut = make(map[string]chan dataformats.SimpleSample)
 
 	for i := 0; i < len(listSpaces)-1; i++ {
 		name := listSpaces[i]
 		ldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
 		LatestData.Channel[name] = ldChan
-		regIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-		regOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-		RegisterChannels.channelIn[name] = regIn
-		RegisterChannels.ChannelOut[name] = regOut
+		regRTIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		regRTOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		RegRealTimeChannels.channelIn[name] = regRTIn
+		RegRealTimeChannels.ChannelOut[name] = regRTOut
+		regRfIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		regRfOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		RegReferenceChannels.channelIn[name] = regRfIn
+		RegReferenceChannels.ChannelOut[name] = regRfOut
 		go recovery.RunWith(
 			func() {
-				calculator(name, ldChan, rstC[i],
-					tick, maxTick, realTimeDefinitions, referenceDefinitions, regIn)
+				calculator(name, ldChan, rstC[i], tick, maxTick, realTimeDefinitions, referenceDefinitions,
+					regRTIn, regRfIn)
 			},
 			func() {
 				mlogger.Recovered(globals.AvgsLogger,
@@ -130,7 +140,12 @@ func Start(sd chan bool) {
 			})
 		go recovery.RunWith(
 			func() {
-				SafeRegister(name, regIn, regOut, dataformats.SimpleSample{})
+				LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, dataformats.SimpleSample{})
+			},
+			nil)
+		go recovery.RunWith(
+			func() {
+				LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, dataformats.SimpleSample{})
 			},
 			nil)
 	}
@@ -138,24 +153,22 @@ func Start(sd chan bool) {
 	name := listSpaces[last]
 	LldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
 	LatestData.Channel[name] = LldChan
-	regIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-	regOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-	RegisterChannels.channelIn[name] = regIn
-	RegisterChannels.ChannelOut[name] = regOut
+	regRTIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	regRTOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	RegRealTimeChannels.channelIn[name] = regRTIn
+	RegRealTimeChannels.ChannelOut[name] = regRTOut
+	regRfIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	regRfOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	RegReferenceChannels.channelIn[name] = regRfIn
+	RegReferenceChannels.ChannelOut[name] = regRfOut
 
-	go recovery.RunWith(
-		func() {
-			SafeRegister(name, regIn, regOut, dataformats.SimpleSample{})
-		},
-		nil)
-
-	RegisterChannels.Unlock()
+	RegRealTimeChannels.Unlock()
 	LatestData.Unlock()
 
 	recovery.RunWith(
 		func() {
-			calculator(name, LldChan, rstC[last],
-				tick, maxTick, realTimeDefinitions, referenceDefinitions, regIn)
+			calculator(name, LldChan, rstC[last], tick, maxTick, realTimeDefinitions, referenceDefinitions,
+				regRTIn, regRfIn)
 		},
 		func() {
 			mlogger.Recovered(globals.AvgsLogger,
@@ -163,6 +176,19 @@ func Start(sd chan bool) {
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		})
+
+	go recovery.RunWith(
+		func() {
+			LatestMeasurementRegister(name+"_realtime",
+				regRTIn, regRTOut, dataformats.SimpleSample{})
+		},
+		nil)
+
+	go recovery.RunWith(
+		func() {
+			LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, dataformats.SimpleSample{})
+		},
+		nil)
 
 	//for {
 	//	time.Sleep(36 * time.Hour)

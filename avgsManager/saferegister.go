@@ -5,13 +5,14 @@ import (
 	"gateserver/dataformats"
 )
 
-// SafeRegister implement a generic single input (n) single output (o)
+// LatestMeasurementRegister implement a generic single input (n) single output (o)
 // non-blocking register. It blocks only when it is not initialised
 
-func SafeRegister(tag string, in, out chan dataformats.SimpleSample, data dataformats.SimpleSample) {
+// TODO needs to differentiate values and store them in a map !!!
+func LatestMeasurementRegister(tag string, in, out chan dataformats.SimpleSample, data dataformats.SimpleSample) {
 	//fmt.Println(tag, "started")
 	for {
-		fmt.Println(tag, data)
+		fmt.Println("register ->", tag, data)
 		select {
 		case data = <-in:
 			//fmt.Println(tag, data)
