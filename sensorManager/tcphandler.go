@@ -5,7 +5,7 @@ import (
 	"gateserver/codings"
 	"gateserver/dataformats"
 	"gateserver/gateManager"
-	"gateserver/storage/sensorDB"
+	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
@@ -76,13 +76,13 @@ func handler(conn net.Conn) {
 			delete(ActiveSensors.Id, sensorDef.id)
 			delete(ActiveSensors.Mac, sensorDef.mac)
 			ActiveSensors.Unlock()
-			_ = sensorDB.DeleteDevice([]byte(sensorDef.mac))
+			_ = diskCache.DeleteDevice([]byte(sensorDef.mac))
 			//startstopCommandProcess <- sensorDef.mac
 			// release TCO token
 		}
 		//. in case of valid ID we remove the lookup entry as well
 		if sensorDef.id != -1 {
-			_ = sensorDB.DeleteLookUp([]byte{byte(sensorDef.id)})
+			_ = diskCache.DeleteLookUp([]byte{byte(sensorDef.id)})
 		}
 		_ = conn.Close()
 		//println("ok")
@@ -95,7 +95,7 @@ func handler(conn net.Conn) {
 
 	ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 	// the IP is checked in the disabled list
-	if banned, err := sensorDB.CheckIP([]byte(ipc), globals.MaliciousTriesIP); err == nil && banned {
+	if banned, err := diskCache.CheckIP([]byte(ipc), globals.MaliciousTriesIP); err == nil && banned {
 		// We wait assuming it is an attack to slow it down
 		others.WaitRandom(globals.MaliciousTimeout)
 		mlogger.Info(globals.SensorManagerLog,
@@ -120,7 +120,7 @@ func handler(conn net.Conn) {
 				[]int{0}, true})
 		// A delay is inserted in case this is a malicious attempt and we mark the IP as suspicious
 		others.WaitRandom(globals.MaliciousTimeout)
-		_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
+		_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
 		return
 	} else {
 		mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", "", -1), " ")
@@ -129,7 +129,7 @@ func handler(conn net.Conn) {
 				"last assigned MAC: " + mach,
 				[]int{0}, true})
 		// the mac is checked in the disabled list
-		if banned, err := sensorDB.CheckMAC([]byte(mach), globals.MaliciousTriesMac); err == nil && banned {
+		if banned, err := diskCache.CheckMAC([]byte(mach), globals.MaliciousTriesMac); err == nil && banned {
 			// We wait assuming it is an attack to slow it down
 			others.WaitRandom(globals.MaliciousTimeout)
 			mlogger.Info(globals.SensorManagerLog,
@@ -140,7 +140,7 @@ func handler(conn net.Conn) {
 		}
 
 		// read sensor definition form the sensor DB and store it locally
-		def, erDB := sensorDB.ReadDefinition([]byte(mach))
+		def, erDB := diskCache.ReadDefinition([]byte(mach))
 		if erDB != nil {
 			// the sensor has no definition
 			def = dataformats.SensorDefinition{
@@ -184,7 +184,7 @@ func handler(conn net.Conn) {
 						[]int{0}, true})
 				// We wait assuming it is an attack to slow it down and mark the IP as suspicious
 				others.WaitRandom(globals.MaliciousTimeout)
-				_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
+				_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
 				return
 			}
 		}
@@ -193,7 +193,7 @@ func handler(conn net.Conn) {
 		go func() {
 			err := globals.SensorDBError
 			for i := 0; i < 5 && err != nil; i++ {
-				err = sensorDB.RemoveSuspecteIP([]byte(ipc))
+				err = diskCache.RemoveSuspecteIP([]byte(ipc))
 			}
 		}()
 		sensorDef.channels = SensorChannel{
@@ -236,7 +236,7 @@ func handler(conn net.Conn) {
 		}
 
 		// sensor is marked as present but not active
-		if err := sensorDB.MarkDeviceNotActive([]byte(mach)); err != nil {
+		if err := diskCache.MarkDeviceNotActive([]byte(mach)); err != nil {
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"sensor " + mach,
 					"failed to add to device list",
@@ -288,7 +288,7 @@ func handler(conn net.Conn) {
 						if globals.MalicioudMode > globals.OFF {
 							sensorDef.failures += 1
 							if sensorDef.failures > globals.FailureThreshold {
-								_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+								_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 								// A delay is inserted in case this is a malicious attempt
 								others.WaitRandom(globals.MaliciousTimeout)
 								return
@@ -314,7 +314,7 @@ func handler(conn net.Conn) {
 									if globals.MalicioudMode > globals.OFF {
 										sensorDef.failures += 1
 										if sensorDef.failures > globals.FailureThreshold {
-											_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+											_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 											// A delay is inserted in case this is a malicious attempt
 											others.WaitRandom(globals.MaliciousTimeout)
 											return
@@ -341,8 +341,8 @@ func handler(conn net.Conn) {
 									}
 									// potential malicious attack, IP and MAc are marked
 									ActiveSensors.RUnlock()
-									_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
-									_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+									_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
+									_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 									// A delay is inserted in case this is a malicious attempt
 									others.WaitRandom(globals.MaliciousTimeout)
 									return
@@ -385,7 +385,7 @@ func handler(conn net.Conn) {
 									if globals.MalicioudMode > globals.OFF {
 										sensorDef.failures += 1
 										if sensorDef.failures > globals.FailureThreshold {
-											_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+											_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 											// A delay is inserted in case this is a malicious attempt
 											others.WaitRandom(globals.MaliciousTimeout)
 											return
@@ -421,7 +421,7 @@ func handler(conn net.Conn) {
 							// in case the sent ID and the defined ID is -1 is is set to 0xffff,
 							// the sensor is considered not active
 							if sensorDef.id == -1 && sensorDef.idSent == 65535 {
-								if reject, newDevice, err := sensorDB.MarkInvalidDevice([]byte(mach), globals.MaximumInvalidIDInternal); err == nil {
+								if reject, newDevice, err := diskCache.MarkInvalidDevice([]byte(mach), globals.MaximumInvalidIDInternal); err == nil {
 									if newDevice {
 										// new device, we wait in case the id gets set
 										if globals.DebugActive {
@@ -435,8 +435,8 @@ func handler(conn net.Conn) {
 										others.WaitRandom(globals.MaliciousTimeout)
 									} else if reject {
 										// the device has been unset for too long. We mark its MAC and disconnect
-										if err := sensorDB.RemoveInvalidDevice([]byte(mach)); err == nil {
-											_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+										if err := diskCache.RemoveInvalidDevice([]byte(mach)); err == nil {
+											_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 											// A delay is inserted in case this is a malicious attempt
 											others.WaitRandom(globals.MaliciousTimeout)
 											return
@@ -446,7 +446,7 @@ func handler(conn net.Conn) {
 								continue
 							}
 
-							if err := sensorDB.RemoveInvalidDevice([]byte(mach)); err != nil {
+							if err := diskCache.RemoveInvalidDevice([]byte(mach)); err != nil {
 								return
 							}
 
@@ -460,7 +460,7 @@ func handler(conn net.Conn) {
 									mlogger.LoggerData{"sensor " + mach,
 										"rejected due to wrong id: " + strconv.Itoa(sensorDef.idSent),
 										[]int{0}, true})
-								_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+								_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 								// A delay is inserted in case this is a malicious attempt
 								others.WaitRandom(globals.MaliciousTimeout)
 								return
@@ -476,7 +476,7 @@ func handler(conn net.Conn) {
 							if !gateManager.SensorUsed(sensorDef.id) {
 								// the sensor is currently not used
 								// we treat it as a sensor with an invalid id
-								if reject, newDevice, err := sensorDB.MarkInvalidDevice([]byte(mach),
+								if reject, newDevice, err := diskCache.MarkInvalidDevice([]byte(mach),
 									globals.MaximumInvalidIDInternal); err == nil {
 									if newDevice {
 										// new device, we wait in case the id gets set
@@ -491,8 +491,8 @@ func handler(conn net.Conn) {
 										others.WaitRandom(globals.MaliciousTimeout)
 									} else if reject {
 										// the device has been unset for too long. We mark its MAC and disconnect
-										if err := sensorDB.RemoveInvalidDevice([]byte(mach)); err == nil {
-											_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+										if err := diskCache.RemoveInvalidDevice([]byte(mach)); err == nil {
+											_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 											// A delay is inserted in case this is a malicious attempt
 											others.WaitRandom(globals.MaliciousTimeout)
 											return
@@ -505,25 +505,25 @@ func handler(conn net.Conn) {
 							go func() {
 								err := globals.SensorDBError
 								for i := 0; i < 5 && err != nil; i++ {
-									err = sensorDB.RemoveInvalidDevice([]byte(mach))
+									err = diskCache.RemoveInvalidDevice([]byte(mach))
 								}
 							}()
 
 							go func() {
 								err := globals.SensorDBError
 								for i := 0; i < 5 && err != nil; i++ {
-									err = sensorDB.RemoveSuspectedMAC([]byte(mach))
+									err = diskCache.RemoveSuspectedMAC([]byte(mach))
 								}
 							}()
 
-							if err := sensorDB.AddLookUp([]byte{byte(sensorDef.id)}, sensorDef.mac); err != nil {
+							if err := diskCache.AddLookUp([]byte{byte(sensorDef.id)}, sensorDef.mac); err != nil {
 								mlogger.Error(globals.SensorManagerLog,
 									mlogger.LoggerData{"sensor " + mach,
 										"failed to saving lookup declaration", []int{0}, true})
 								return
 							}
 
-							if err := sensorDB.MarkDeviceActive([]byte(mach)); err == nil {
+							if err := diskCache.MarkDeviceActive([]byte(mach)); err == nil {
 								sensorDef.active = true
 								ActiveSensors.Lock()
 								ActiveSensors.Id[sensorDef.id] = sensorDef.mac
@@ -615,7 +615,7 @@ func handler(conn net.Conn) {
 											if globals.MalicioudMode > globals.OFF {
 												sensorDef.failures += 1
 												if sensorDef.failures > globals.FailureThreshold {
-													_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+													_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 													// A delay is inserted in case this is a malicious attempt
 													others.WaitRandom(globals.MaliciousTimeout)
 													return
@@ -648,7 +648,7 @@ func handler(conn net.Conn) {
 									if globals.MalicioudMode > globals.OFF {
 										sensorDef.failures += 1
 										if sensorDef.failures > globals.FailureThreshold {
-											_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+											_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 											// A delay is inserted in case this is a malicious attempt
 											others.WaitRandom(globals.MaliciousTimeout)
 											return
@@ -674,7 +674,7 @@ func handler(conn net.Conn) {
 												if globals.MalicioudMode > globals.OFF {
 													sensorDef.failures += 1
 													if sensorDef.failures > globals.FailureThreshold {
-														_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+														_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 														// A delay is inserted in case this is a malicious attempt
 														others.WaitRandom(globals.MaliciousTimeout)
 														return
@@ -693,7 +693,7 @@ func handler(conn net.Conn) {
 												if globals.MalicioudMode > globals.OFF {
 													sensorDef.failures += 1
 													if sensorDef.failures > globals.FailureThreshold {
-														_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+														_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 														// A delay is inserted in case this is a malicious attempt
 														others.WaitRandom(globals.MaliciousTimeout)
 														return
@@ -703,7 +703,7 @@ func handler(conn net.Conn) {
 											// in case we receive a valid answer to setid, we close the channel
 											// this allows for the server to adapt to the new ID
 											if cmd[0] == cmdAPI["setid"].cmd {
-												_ = sensorDB.RemoveSuspectedMAC([]byte(sensorDef.mac))
+												_ = diskCache.RemoveSuspectedMAC([]byte(sensorDef.mac))
 												return
 											}
 										case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
@@ -721,13 +721,13 @@ func handler(conn net.Conn) {
 									}
 								}
 							}
-							_ = sensorDB.RemoveSuspectedMAC([]byte(sensorDef.mac))
+							_ = diskCache.RemoveSuspectedMAC([]byte(sensorDef.mac))
 						} else {
 							// illegal command answer received
 							if globals.MalicioudMode > globals.OFF {
 								sensorDef.failures += 1
 								if sensorDef.failures > globals.FailureThreshold {
-									_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+									_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 									// A delay is inserted in case this is a malicious attempt
 									others.WaitRandom(globals.MaliciousTimeout)
 									return
@@ -742,7 +742,7 @@ func handler(conn net.Conn) {
 						if globals.MalicioudMode > globals.OFF {
 							sensorDef.failures += 1
 							if sensorDef.failures > globals.FailureThreshold {
-								_, _ = sensorDB.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+								_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
 								// A delay is inserted in case this is a malicious attempt
 								others.WaitRandom(globals.MaliciousTimeout)
 								return

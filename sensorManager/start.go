@@ -3,7 +3,7 @@ package sensorManager
 import (
 	"fmt"
 	"gateserver/dataformats"
-	"gateserver/storage/sensorDB"
+	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"os"
@@ -88,7 +88,7 @@ func Start(sd chan bool) {
 					return false
 				}
 
-				//if err := sensorDB.AddLookUp([]byte(strconv.Itoa(id)), mac); err == nil {
+				//if err := diskCache.AddLookUp([]byte(strconv.Itoa(id)), mac); err == nil {
 				if len(sensorDeclaration) > 1 {
 					definition := dataformats.SensorDefinition{
 						Id:      id,
@@ -101,8 +101,8 @@ func Start(sd chan bool) {
 					definition.Strict = definition.Strict && !definition.Bypass
 					// enforce does nothing if strict is given
 					definition.Enforce = definition.Enforce && !definition.Strict
-					if err = sensorDB.WriteDefinition([]byte(mac), definition); err != nil {
-						_ = sensorDB.DeleteLookUp([]byte(sensorDeclaration[0]))
+					if err = diskCache.WriteDefinition([]byte(mac), definition); err != nil {
+						_ = diskCache.DeleteLookUp([]byte(sensorDeclaration[0]))
 						mlogger.Panic(globals.SensorManagerLog,
 							mlogger.LoggerData{"sensorManager.Start",
 								"failed to load declaration for " + mac, []int{0}, false}, true)

@@ -10,7 +10,7 @@ import (
 	"gateserver/sensormodels"
 	"gateserver/spaceManager"
 	"gateserver/storage/coredbs"
-	"gateserver/storage/sensorDB"
+	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
 	"os"
 	"os/signal"
@@ -64,7 +64,7 @@ func main() {
 		os.Exit(0)
 	}
 	globals.Start()
-	sensorDB.Start()
+	diskCache.Start()
 	sensorManager.LoadSensorEEPROMSettings()
 
 	// setup shutdown procedure
@@ -90,7 +90,7 @@ func main() {
 				wg.Done()
 			}(ch)
 		}
-		sensorDB.Close()
+		diskCache.Close()
 		wg.Wait()
 		if err := coredbs.Disconnect(); err != nil {
 			fmt.Println("Error in disconnecting from the YugenFlow Database")

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gateserver/dataformats"
 	"gateserver/entryManager"
-	"gateserver/storage/sensorDB"
+	"gateserver/storage/diskCache"
 	"gateserver/supp"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
@@ -263,7 +263,7 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 							// we try to reset the background of all sensors in the gate
 							for id := range sensorDifferential {
 								sensorDifferential[id] = 0
-								if mac, err := sensorDB.LookUpMac([]byte{byte(id)}); err == nil {
+								if mac, err := diskCache.LookUpMac([]byte{byte(id)}); err == nil {
 									select {
 									case globals.ResetChannel <- string(mac):
 									case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):

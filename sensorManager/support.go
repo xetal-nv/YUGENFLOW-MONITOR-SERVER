@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"gateserver/storage/sensorDB"
+	"gateserver/storage/diskCache"
 	"gateserver/supp"
 	"gateserver/support/globals"
 	"gateserver/support/others"
@@ -41,8 +41,8 @@ func maliciousSetIdDOS(ipc, mac string) bool {
 	case setIdCh <- nil:
 		return false
 	case <-time.After(time.Duration(globals.RepetitiveTimeout/10) * time.Second):
-		_, _ = sensorDB.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
-		_, _ = sensorDB.MarkMAC([]byte(mac), globals.MaliciousTriesMac)
+		_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
+		_, _ = diskCache.MarkMAC([]byte(mac), globals.MaliciousTriesMac)
 		return true
 	}
 }

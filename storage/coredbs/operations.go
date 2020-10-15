@@ -3,11 +3,15 @@ package coredbs
 import (
 	"context"
 	"gateserver/dataformats"
+	"gateserver/support/globals"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
 
 func SaveSpaceData(nd dataformats.SpaceState) error {
+	if globals.DisableDatabase {
+		return nil
+	}
 	//fmt.Printf("TBD: Store space data %+v\n\n", nd)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
 	if _, err := dataDB.InsertOne(ctx, nd); err != nil {
@@ -18,6 +22,9 @@ func SaveSpaceData(nd dataformats.SpaceState) error {
 }
 
 func SaveReferenceData(nd dataformats.SimpleSample) error {
+	if globals.DisableDatabase {
+		return nil
+	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
 	if _, err := referenceDB.InsertOne(ctx, nd); err != nil {
 		return err
@@ -27,6 +34,9 @@ func SaveReferenceData(nd dataformats.SimpleSample) error {
 }
 
 func SaveShadowSpaceData(nd dataformats.SpaceState) error {
+	if globals.DisableDatabase {
+		return nil
+	}
 	//fmt.Printf("TBD: Store shadow space data %+v\n", nd)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
 	if _, err := shadowDataDB.InsertOne(ctx, nd); err != nil {
@@ -36,6 +46,7 @@ func SaveShadowSpaceData(nd dataformats.SpaceState) error {
 	}
 }
 
+// TODO move to cache !!!!
 func SaveSpaceState(nd dataformats.SpaceState) (err error) {
 	//fmt.Printf("TBD: Store space %v state %+v\n", entryName, nd)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
@@ -52,6 +63,7 @@ func SaveSpaceState(nd dataformats.SpaceState) (err error) {
 	}
 }
 
+// TODO move to cache !!!!
 func LoadSpaceState(spaceName string) (state dataformats.SpaceState, err error) {
 	//fmt.Printf("TBD: Load space %v state\n", spaceName)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
@@ -59,6 +71,7 @@ func LoadSpaceState(spaceName string) (state dataformats.SpaceState, err error) 
 	return
 }
 
+// TODO move to cache !!!!
 func SaveSpaceShadowState(nd dataformats.SpaceState) (err error) {
 	//fmt.Printf("TBD: Store space %v state %+v\n", nd.Id, nd)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
@@ -75,6 +88,7 @@ func SaveSpaceShadowState(nd dataformats.SpaceState) (err error) {
 	}
 }
 
+// TODO move to cache !!!!
 func LoadSpaceShadowState(spaceName string) (state dataformats.SpaceState, err error) {
 	//fmt.Printf("TBD: Load space %v state\n", entryName)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)

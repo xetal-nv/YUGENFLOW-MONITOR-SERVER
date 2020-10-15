@@ -22,6 +22,9 @@ const (
 )
 
 func Start() (err error) {
+	if globals.DisableDatabase {
+		return
+	}
 	if globals.DBSLogger, err = mlogger.DeclareLog("yfserver_DBS", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yfserver_DBS logfile.")
 		os.Exit(0)

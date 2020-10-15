@@ -4,7 +4,7 @@ import "errors"
 
 var (
 	KeyInvalid    = errors.New("invalid key")
-	SensorDBError = errors.New("sensorDB operation failed")
+	SensorDBError = errors.New("diskCache operation failed")
 	Error         = errors.New("operation failed")
 
 	//EmailError           = errors.New("device not fully registered")

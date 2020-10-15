@@ -84,9 +84,16 @@ func Start() {
 	ResetChannel = make(chan string, ChannellingLength)
 
 	// Access configuration
+	TCPport = AccessData.Section("tcpserver").Key("tcp_port").MustString("3333")
 
-	//APIport = AccessData.Section("server").Key("http_port").MustString("8079")
+	APIport = AccessData.Section("apiserver").Key("api_port").MustString("")
 
-	TCPport = AccessData.Section("apiserver").Key("tcp_port").MustString("3333")
-
+	DisableDatabase = AccessData.Section("database").Key("disable").MustBool(false)
+	if DisableDatabase {
+		fmt.Printf("*** WARNING: Database is disabled ***\n")
+		APIport = ""
+	}
+	if APIport == "" {
+		fmt.Printf("*** WARNING: API server is disabled ***\n")
+	}
 }

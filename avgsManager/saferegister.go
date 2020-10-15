@@ -1,6 +1,7 @@
 package avgsManager
 
 import (
+	"fmt"
 	"gateserver/dataformats"
 )
 
@@ -23,7 +24,7 @@ func LatestMeasurementRegister(tag string, in chan dataformats.SimpleSample, out
 		//fmt.Println("register ->", tag, data)
 		select {
 		case newData := <-in:
-			//fmt.Println(tag, data)
+			fmt.Println(tag, data)
 			data[newData.Qualifier] = newData
 		case out <- data:
 		}
