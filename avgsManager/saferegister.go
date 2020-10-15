@@ -1,21 +1,30 @@
 package avgsManager
 
 import (
-	"fmt"
 	"gateserver/dataformats"
 )
 
 // LatestMeasurementRegister implement a generic single input (n) single output (o)
 // non-blocking register. It blocks only when it is not initialised
 
-// TODO needs to differentiate values and store them in a map !!!
-func LatestMeasurementRegister(tag string, in, out chan dataformats.SimpleSample, data dataformats.SimpleSample) {
+func LatestMeasurementRegister(tag string, in chan dataformats.SimpleSample, out chan map[string]dataformats.SimpleSample, data map[string]dataformats.SimpleSample) {
 	//fmt.Println(tag, "started")
+
+	defer func() {
+		if err := recover(); err != nil {
+			LatestMeasurementRegister(tag, in, out, data)
+		}
+	}()
+
+	if data == nil {
+		data = make(map[string]dataformats.SimpleSample)
+	}
 	for {
-		fmt.Println("register ->", tag, data)
+		//fmt.Println("register ->", tag, data)
 		select {
-		case data = <-in:
+		case newData := <-in:
 			//fmt.Println(tag, data)
+			data[newData.Qualifier] = newData
 		case out <- data:
 		}
 	}

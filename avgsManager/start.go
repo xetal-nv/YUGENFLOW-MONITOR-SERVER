@@ -13,6 +13,7 @@ import (
 )
 
 func Start(sd chan bool) {
+
 	var err error
 
 	if globals.AvgsLogger, err = mlogger.DeclareLog("yugenflow_avgsManager", false); err != nil {
@@ -71,7 +72,7 @@ func Start(sd chan bool) {
 
 	var maxTick int = 0
 	realTimeDefinitions := make(map[string]int)
-	referenceDefinitions := make(map[string]int) // TODO needs samples every tot seconds
+	referenceDefinitions := make(map[string]int)
 
 	// load definitions of measurements from measurements.ini
 	definitions, err := ini.InsensitiveLoad("measurements.ini")
@@ -81,6 +82,7 @@ func Start(sd chan bool) {
 	}
 
 	tick := definitions.Section("system").Key("tick").MustInt(5)
+	actualsAvailable := definitions.Section("system").Key("actuals").MustBool(false)
 
 	for _, def := range definitions.Section("realtime").KeyStrings() {
 		duration := definitions.Section("realtime").Key(def).MustInt(0)
@@ -111,26 +113,26 @@ func Start(sd chan bool) {
 	RegReferenceChannels.Lock()
 	LatestData.Channel = make(map[string]chan dataformats.SpaceState)
 	RegRealTimeChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
-	RegRealTimeChannels.ChannelOut = make(map[string]chan dataformats.SimpleSample)
+	RegRealTimeChannels.ChannelOut = make(map[string]chan map[string]dataformats.SimpleSample)
 	RegReferenceChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
-	RegReferenceChannels.ChannelOut = make(map[string]chan dataformats.SimpleSample)
+	RegReferenceChannels.ChannelOut = make(map[string]chan map[string]dataformats.SimpleSample)
 
 	for i := 0; i < len(listSpaces)-1; i++ {
 		name := listSpaces[i]
 		ldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
 		LatestData.Channel[name] = ldChan
 		regRTIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-		regRTOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		regRTOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
 		RegRealTimeChannels.channelIn[name] = regRTIn
 		RegRealTimeChannels.ChannelOut[name] = regRTOut
 		regRfIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-		regRfOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+		regRfOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
 		RegReferenceChannels.channelIn[name] = regRfIn
 		RegReferenceChannels.ChannelOut[name] = regRfOut
 		go recovery.RunWith(
 			func() {
 				calculator(name, ldChan, rstC[i], tick, maxTick, realTimeDefinitions, referenceDefinitions,
-					regRTIn, regRfIn)
+					regRTIn, regRfIn, actualsAvailable)
 			},
 			func() {
 				mlogger.Recovered(globals.AvgsLogger,
@@ -138,37 +140,35 @@ func Start(sd chan bool) {
 						"service terminated and recovered unexpectedly",
 						[]int{1}, true})
 			})
-		go recovery.RunWith(
-			func() {
-				LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, dataformats.SimpleSample{})
-			},
-			nil)
-		go recovery.RunWith(
-			func() {
-				LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, dataformats.SimpleSample{})
-			},
-			nil)
+		go LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, nil)
+
+		go LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, nil)
+
 	}
 	last := len(listSpaces) - 1
 	name := listSpaces[last]
 	LldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
 	LatestData.Channel[name] = LldChan
 	regRTIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-	regRTOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	regRTOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
 	RegRealTimeChannels.channelIn[name] = regRTIn
 	RegRealTimeChannels.ChannelOut[name] = regRTOut
 	regRfIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-	regRfOut := make(chan dataformats.SimpleSample, globals.ChannellingLength)
+	regRfOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
 	RegReferenceChannels.channelIn[name] = regRfIn
 	RegReferenceChannels.ChannelOut[name] = regRfOut
 
 	RegRealTimeChannels.Unlock()
 	LatestData.Unlock()
 
+	go LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, nil)
+
+	go LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, nil)
+
 	recovery.RunWith(
 		func() {
 			calculator(name, LldChan, rstC[last], tick, maxTick, realTimeDefinitions, referenceDefinitions,
-				regRTIn, regRfIn)
+				regRTIn, regRfIn, actualsAvailable)
 		},
 		func() {
 			mlogger.Recovered(globals.AvgsLogger,
@@ -176,19 +176,6 @@ func Start(sd chan bool) {
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		})
-
-	go recovery.RunWith(
-		func() {
-			LatestMeasurementRegister(name+"_realtime",
-				regRTIn, regRTOut, dataformats.SimpleSample{})
-		},
-		nil)
-
-	go recovery.RunWith(
-		func() {
-			LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, dataformats.SimpleSample{})
-		},
-		nil)
 
 	//for {
 	//	time.Sleep(36 * time.Hour)

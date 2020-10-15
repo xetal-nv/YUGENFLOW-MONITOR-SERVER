@@ -10,7 +10,8 @@ type FlowData struct {
 }
 
 type SimpleSample struct {
-	Qualifier string  `json:"qualifier"`
-	Ts        int64   `json:"timestamp"`
-	Val       float64 `json:"value"`
+	Qualifier string                `json:"qualifier"`
+	Ts        int64                 `json:"timestamp"`
+	Val       float64               `json:"value"`
+	Flows     map[string]EntryState `json:"flows"`
 }

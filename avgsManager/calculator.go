@@ -3,6 +3,7 @@ package avgsManager
 import (
 	"fmt"
 	"gateserver/dataformats"
+	"gateserver/storage/coredbs"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 func calculator(space string, latestData chan dataformats.SpaceState, rst chan interface{},
 	tick, maxTick int, realTimeDefinitions, referenceDefinitions map[string]int,
-	regRealTime, regReference chan dataformats.SimpleSample) {
+	regRealTime, regReference chan dataformats.SimpleSample, actualsAvailable bool) {
 
 	// for development only, comment afterwards
 	defer func() {
@@ -77,93 +78,231 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			case data := <-latestData:
 				//fmt.Printf("calculator %v received %v\n", space, data)
+				// first we make a deep copy of data
+				newData := dataformats.SpaceState{
+					Id:    data.Id,
+					Ts:    data.Ts,
+					Count: data.Count,
+					State: data.State,
+					Flows: make(map[string]dataformats.EntryState),
+				}
+
+				for en, ev := range data.Flows {
+					newData.Flows[en] = dataformats.EntryState{
+						Id:       ev.Id,
+						Ts:       ev.Ts,
+						Count:    ev.Count,
+						State:    ev.State,
+						Reversed: ev.Reversed,
+						Flows:    make(map[string]dataformats.Flow),
+					}
+					for gn, gv := range ev.Flows {
+						newData.Flows[en].Flows[gn] = dataformats.Flow{
+							Id:        gv.Id,
+							Variation: gv.Variation,
+						}
+					}
+				}
+
+				// the current data is sent immediately
+				if actualsAvailable {
+					regReference <- dataformats.SimpleSample{
+						Qualifier: "actual",
+						Ts:        newData.Ts / 1000000000,
+						Val:       float64(newData.Count),
+						Flows:     newData.Flows,
+					}
+				}
+
 				// we add the new sample and adjust the sliding windows making sure the first and last are
 				// aligned with the maximum sliding windows size
-				refTs := data.Ts
-				samples = append(samples, data)
-				for samples[0].Ts < refTs-int64(maxTick)*1000000000 || len(samples) > 1 {
+				refTs := newData.Ts
+				samples = append(samples, newData)
+				for samples[0].Ts < refTs-int64(maxTick)*1000000000 && len(samples) > 1 {
 					if samples[1].Ts <= refTs-int64(maxTick)*1000000000 {
 						samples = samples[1:]
 					} else {
 						samples[0].Ts = refTs - int64(maxTick)*1000000000
+						samples[0].Flows = nil
 						break
 					}
 				}
-			}
-			// real time measurements
-			for measurementName, period := range realTimeDefinitions {
-				var selected []dataformats.SimpleSample
-				adjPeriod := int64(period) * 1000000000
-			foundall:
-				for i := len(samples) - 1; i >= 0; i-- {
-					if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
-						selected = append(selected, dataformats.SimpleSample{Ts: samples[i].Ts, Val: float64(samples[i].Count)})
-					} else {
-						if selected[len(selected)-1].Ts != samples[len(samples)-1].Ts-adjPeriod {
-							selected = append(selected, dataformats.SimpleSample{Ts: samples[len(samples)-1].Ts - adjPeriod,
-								Val: float64(samples[i].Count)})
-						}
-						break foundall
-					}
-				}
 
-				// measurement calculation
-				if len(selected) > 1 {
-					var tot float64 = 0
-					length := int(selected[0].Ts - selected[len(selected)-1].Ts)
-					for i := len(selected) - 1; i > 0; i-- {
-						tot += selected[i].Val * float64(int(selected[i-1].Ts-selected[i].Ts))
-						//tot += int(selected[i-1].ts - selected[i].ts)
-						//fmt.Println(measurementName, selected[i].val, int(selected[i-1].ts - selected[i].ts), tot)
-					}
-					tot = float64(int64((tot*100)/float64(length))) / 100
-					regRealTime <- dataformats.SimpleSample{
-						Qualifier: measurementName,
-						Ts:        selected[0].Ts / 1000000000,
-						Val:       tot,
-					}
-					//fmt.Println(space, key, selected[0].Ts/1000000000, tot)
-				}
-			}
-			// reference measurements
-			for measurementName, period := range referenceDefinitions {
-				adjPeriod := int64(period) * 1000000000
-				if lastReferenceMeasurement[measurementName]+int64(adjPeriod) < samples[len(samples)-1].Ts {
-					// time for a new reference measurement
-					var selected []dataformats.SimpleSample
-				foundall2:
+				// real time measurements
+				for measurementName, period := range realTimeDefinitions {
+					var selectedSamples []dataformats.SimpleSample
+					adjPeriod := int64(period) * 1000000000
+				foundall:
 					for i := len(samples) - 1; i >= 0; i-- {
 						if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
-							selected = append(selected, dataformats.SimpleSample{Ts: samples[i].Ts, Val: float64(samples[i].Count)})
+							selectedSamples = append(selectedSamples, dataformats.SimpleSample{Ts: samples[i].Ts,
+								//Val: float64(samples[i].Count)})
+								Val: float64(samples[i].Count), Flows: samples[i].Flows})
 						} else {
-							if selected[len(selected)-1].Ts != samples[len(samples)-1].Ts-adjPeriod {
-								selected = append(selected, dataformats.SimpleSample{Ts: samples[len(samples)-1].Ts - adjPeriod,
+							// we need to properly close the interval
+							if selectedSamples[len(selectedSamples)-1].Ts != samples[len(samples)-1].Ts-adjPeriod {
+								selectedSamples = append(selectedSamples, dataformats.SimpleSample{Ts: samples[len(samples)-1].Ts - adjPeriod,
 									Val: float64(samples[i].Count)})
 							}
-							break foundall2
+							break foundall
 						}
 					}
+
+					// the selectedSamples slice starts with the latest entry [0]
 					// measurement calculation
-					if len(selected) > 1 {
+					if len(selectedSamples) > 1 {
+						// both flow and counter can be calculated
 						var tot float64 = 0
-						length := int(selected[0].Ts - selected[len(selected)-1].Ts)
-						for i := len(selected) - 1; i > 0; i-- {
-							tot += selected[i].Val * float64(int(selected[i-1].Ts-selected[i].Ts))
-							//tot += int(selected[measurementName-1].ts - selected[measurementName].ts)
-							//fmt.Println(measurementName, selected[i].Val, int(selected[i-1].Ts - selected[i].Ts), tot)
+						flows := make(map[string]dataformats.EntryState)
+						length := int(selectedSamples[0].Ts - selectedSamples[len(selectedSamples)-1].Ts)
+						for i := len(selectedSamples) - 1; i >= 0; i-- {
+							if i > 0 {
+								// we update the total count
+								tot += selectedSamples[i].Val * float64(int(selectedSamples[i-1].Ts-selectedSamples[i].Ts))
+							}
+							for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
+								if entry, ok := flows[sampleEntryName]; ok {
+									// adjust values and gates
+									entry.Count += sampleEntry.Count
+									for gateSampleName, gateSampleCurrent := range sampleEntry.Flows {
+										if gate, found := entry.Flows[gateSampleName]; found {
+											gate.Variation += gateSampleCurrent.Variation
+											entry.Flows[gateSampleName] = gate
+										} else {
+											// new gate flow, we deep copy it
+											entry.Flows[gateSampleName] = dataformats.Flow{
+												Id:        gateSampleCurrent.Id,
+												Variation: gateSampleCurrent.Variation,
+											}
+										}
+									}
+									flows[sampleEntryName] = entry
+								} else {
+									// new entry, we make a deep copy
+									flows[sampleEntryName] = dataformats.EntryState{
+										Id:       sampleEntry.Id,
+										Ts:       sampleEntry.Ts,
+										Count:    sampleEntry.Count,
+										State:    sampleEntry.State,
+										Reversed: sampleEntry.Reversed,
+										Flows:    make(map[string]dataformats.Flow),
+									}
+									for i, val := range sampleEntry.Flows {
+										flows[sampleEntryName].Flows[i] = dataformats.Flow{
+											Id:        val.Id,
+											Variation: val.Variation,
+										}
+									}
+								}
+							}
 						}
+
+						// result is limited to two digits
 						tot = float64(int64((tot*100)/float64(length))) / 100
-						regReference <- dataformats.SimpleSample{
+
+						// we give it little time to transmit the data, it too late data is thrown away
+						select {
+						case regRealTime <- dataformats.SimpleSample{
 							Qualifier: measurementName,
-							Ts:        selected[0].Ts / 1000000000,
+							Ts:        selectedSamples[0].Ts / 1000000000,
 							Val:       tot,
+							Flows:     flows,
+						}:
+						case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 						}
-						//fmt.Println(space, measurementName, selected[0].Ts/1000000000, tot)
-						lastReferenceMeasurement[measurementName] = samples[len(samples)-1].Ts
+
 					}
 				}
-			}
 
+				//reference measurements
+				for measurementName, period := range referenceDefinitions {
+					adjPeriod := int64(period) * 1000000000
+					if lastReferenceMeasurement[measurementName]+int64(adjPeriod) < samples[len(samples)-1].Ts {
+						// time for a new reference measurement
+						var selectedSamples []dataformats.SimpleSample
+					foundall2:
+						for i := len(samples) - 1; i >= 0; i-- {
+							if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
+								selectedSamples = append(selectedSamples, dataformats.SimpleSample{Ts: samples[i].Ts,
+									Val: float64(samples[i].Count), Flows: samples[i].Flows})
+							} else {
+								if selectedSamples[len(selectedSamples)-1].Ts != samples[len(samples)-1].Ts-adjPeriod {
+									selectedSamples = append(selectedSamples, dataformats.SimpleSample{Ts: samples[len(samples)-1].Ts - adjPeriod,
+										Val: float64(samples[i].Count)})
+								}
+								break foundall2
+							}
+						}
+
+						// measurement calculation
+						if len(selectedSamples) > 1 {
+							var tot float64 = 0
+							flows := make(map[string]dataformats.EntryState)
+							length := int(selectedSamples[0].Ts - selectedSamples[len(selectedSamples)-1].Ts)
+							for i := len(selectedSamples) - 1; i >= 0; i-- {
+								if i > 0 {
+									tot += selectedSamples[i].Val * float64(int(selectedSamples[i-1].Ts-selectedSamples[i].Ts))
+								}
+								for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
+									if entry, ok := flows[sampleEntryName]; ok {
+										// adjust values and gates
+										entry.Count += sampleEntry.Count
+										for gateSampleName, gateSampleCurrent := range sampleEntry.Flows {
+											if gate, found := entry.Flows[gateSampleName]; found {
+												gate.Variation += gateSampleCurrent.Variation
+												entry.Flows[gateSampleName] = gate
+											} else {
+												// new gate flow, we deep copy it
+												entry.Flows[gateSampleName] = dataformats.Flow{
+													Id:        gateSampleCurrent.Id,
+													Variation: gateSampleCurrent.Variation,
+												}
+											}
+										}
+										flows[sampleEntryName] = entry
+									} else {
+										// new entry, we make a deep copy
+										flows[sampleEntryName] = dataformats.EntryState{
+											Id:       sampleEntry.Id,
+											Ts:       sampleEntry.Ts,
+											Count:    sampleEntry.Count,
+											State:    sampleEntry.State,
+											Reversed: sampleEntry.Reversed,
+											Flows:    make(map[string]dataformats.Flow),
+										}
+										for i, val := range sampleEntry.Flows {
+											flows[sampleEntryName].Flows[i] = dataformats.Flow{
+												Id:        val.Id,
+												Variation: val.Variation,
+											}
+										}
+									}
+								}
+
+							}
+							tot = float64(int64((tot*100)/float64(length))) / 100
+							newSample := dataformats.SimpleSample{
+								Qualifier: measurementName,
+								Ts:        selectedSamples[0].Ts / 1000000000,
+								Val:       tot,
+								Flows:     flows,
+							}
+
+							// we give it little time to transmit the data, it too late data is thrown away
+							select {
+							case regReference <- newSample:
+							case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+							}
+
+							lastReferenceMeasurement[measurementName] = samples[len(samples)-1].Ts
+							go func(nd dataformats.SimpleSample) {
+								_ = coredbs.SaveReferenceData(nd)
+							}(newSample)
+						}
+					}
+				}
+
+			}
 		}
 	}
 }

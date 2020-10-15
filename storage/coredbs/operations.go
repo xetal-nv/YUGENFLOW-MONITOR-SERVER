@@ -17,6 +17,15 @@ func SaveSpaceData(nd dataformats.SpaceState) error {
 	}
 }
 
+func SaveReferenceData(nd dataformats.SimpleSample) error {
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	if _, err := referenceDB.InsertOne(ctx, nd); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
 func SaveShadowSpaceData(nd dataformats.SpaceState) error {
 	//fmt.Printf("TBD: Store shadow space data %+v\n", nd)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)

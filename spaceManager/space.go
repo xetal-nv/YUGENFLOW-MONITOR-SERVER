@@ -8,6 +8,7 @@ import (
 	"gateserver/support/globals"
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
+	"os"
 	"sync"
 	"time"
 )
@@ -262,6 +263,8 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 
 							// register is updated with an inspected received data
 							spaceRegister = updateRegister(spaceRegister, data)
+							// space gets its own timestamp
+							spaceRegister.Ts = time.Now().UnixNano()
 
 							if globals.DebugActive {
 								fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)
@@ -275,9 +278,19 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 								_ = coredbs.SaveSpaceData(nd)
 							}(spaceRegister)
 
-							go func(nd dataformats.SpaceState) {
-								calculator <- nd
-							}(spaceRegister)
+							// we give it little time to transmit the data, it too late data is thrown away
+							select {
+							case calculator <- spaceRegister:
+							case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+								if globals.DebugActive {
+									fmt.Println("entryManager.entry:", spacename, "data to calculator discarded due to late answer")
+									os.Exit(0)
+								}
+								mlogger.Warning(globals.SpaceManagerLog,
+									mlogger.LoggerData{Id: "entryManager.entry: " + spacename,
+										Message: "data to calculator discarded due to late answer",
+										Data:    []int{1}, Aggregate: true})
+							}
 
 							if globals.Shadowing {
 								go func(nd dataformats.SpaceState) {
