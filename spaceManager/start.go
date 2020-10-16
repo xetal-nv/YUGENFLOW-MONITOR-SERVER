@@ -7,7 +7,6 @@ import (
 	"github.com/fpessolano/mlogger"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -109,7 +108,7 @@ func Start(sd chan bool) {
 				if SpaceStructure.EntryList[currentSpace] != nil {
 					SpaceStructure.DataChannel[currentSpace] = newDataChannel
 					SpaceStructure.SetReset[currentSpace] = make(chan bool, globals.ChannellingLength)
-					SpaceStructure.StopChannel[currentSpace] = make(chan interface{}, 1)
+					SpaceStructure.StopChannel[currentSpace] = make(chan interface{})
 					spaceRegister := dataformats.SpaceState{
 						Id:    currentSpace,
 						Ts:    time.Now().UnixNano(),
@@ -165,23 +164,24 @@ func Start(sd chan bool) {
 	//os.Exit(0)
 
 	// setting up closure and shutdown
+	// TODO shutdown does not work !!!
 	<-sd
 	fmt.Println("Closing spaceManager")
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	SpaceStructure.Lock()
 	for _, ch := range SpaceStructure.StopChannel {
-		wg.Add(1)
-		go func(ch chan interface{}) {
-			ch <- nil
-			select {
-			case <-ch:
-			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
-			}
-			wg.Done()
-		}(ch)
+		//wg.Add(1)
+		//go func(ch chan interface{}) {
+		ch <- nil
+		select {
+		case <-ch:
+		case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+		}
+		//wg.Done()
+		//}(ch)
 	}
 	SpaceStructure.Unlock()
-	wg.Wait()
+	//wg.Wait()
 	mlogger.Info(globals.SpaceManagerLog,
 		mlogger.LoggerData{"spaceManager.Start",
 			"service stopped",

@@ -7,7 +7,6 @@ import (
 	"github.com/fpessolano/mlogger"
 	"gopkg.in/ini.v1"
 	"os"
-	"sync"
 	"time"
 	"xetal.ddns.net/utils/recovery"
 )
@@ -49,19 +48,19 @@ func Start(sd chan bool) {
 	go func(sd chan bool, rstC []chan interface{}) {
 		<-sd
 		fmt.Println("Closing avgsManager")
-		var wg sync.WaitGroup
+		//var wg sync.WaitGroup
 		for _, ch := range rstC {
-			wg.Add(1)
-			go func(ch chan interface{}) {
-				ch <- nil
-				select {
-				case <-ch:
-				case <-time.After(time.Duration(globals.SettleTime) * time.Second):
-				}
-				wg.Done()
-			}(ch)
+			//wg.Add(1)
+			//go func(ch chan interface{}) {
+			ch <- nil
+			select {
+			case <-ch:
+			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+			}
+			//wg.Done()
+			//}(ch)
 		}
-		wg.Wait()
+		//wg.Wait()
 		mlogger.Info(globals.AvgsLogger,
 			mlogger.LoggerData{"avgsManager.Start",
 				"service stopped",

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"gateserver/avgsManager"
+	"gateserver/dataformats"
 	"gateserver/entryManager"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
@@ -14,7 +15,6 @@ import (
 	"gateserver/support/globals"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -67,6 +67,17 @@ func main() {
 	diskCache.Start()
 	sensorManager.LoadSensorEEPROMSettings()
 
+	a := dataformats.SpaceState{
+		Id:    "test",
+		Ts:    1234,
+		Count: 12,
+	}
+
+	if err := diskCache.SaveState(a); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
@@ -78,26 +89,27 @@ func main() {
 	go func(c chan os.Signal, sd []chan bool) {
 		<-c
 		fmt.Println("\nClosing YugenFlow Server")
-		var wg sync.WaitGroup
+		//var wg sync.WaitGroup
 		for _, ch := range sd {
-			wg.Add(1)
-			go func(ch chan bool) {
-				ch <- true
-				select {
-				case <-ch:
-				case <-time.After(time.Duration(globals.SettleTime) * time.Second):
-				}
-				wg.Done()
-			}(ch)
+			//wg.Add(1)
+			//go func(ch chan bool) {
+			ch <- true
+			//<-ch
+			select {
+			case <-ch:
+			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+			}
+			//	wg.Done()
+			//}(ch)
 		}
+		//wg.Wait()
 		diskCache.Close()
-		wg.Wait()
 		if err := coredbs.Disconnect(); err != nil {
 			fmt.Println("Error in disconnecting from the YugenFlow Database")
 		} else {
 			fmt.Println("Disconnected from YugenFlow Database")
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 		fmt.Println("Closing YugenFlow Server completed")
 		os.Exit(0)
 	}(c, sd)
@@ -124,5 +136,12 @@ func main() {
 	//goland:noinspection ALL
 	go gateManager.Start(sd[3])
 	//goland:noinspection ALL
-	avgsManager.Start(sd[4])
+	go avgsManager.Start(sd[4])
+
+	fmt.Printf("\nYugenFlow Server active on ports %v , %v\n\n", globals.TCPport, globals.APIport)
+
+	// for loop will be replaced with a final call to the API server
+	for {
+		time.Sleep(6000 * time.Hour)
+	}
 }

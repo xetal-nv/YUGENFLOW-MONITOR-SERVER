@@ -5,6 +5,7 @@ import (
 	"gateserver/avgsManager"
 	"gateserver/dataformats"
 	"gateserver/storage/coredbs"
+	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
@@ -62,20 +63,28 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 			fmt.Printf("*** Space %v has not reset slot ***\n", spacename)
 		}
 		if globals.SaveState {
-			if state, err := coredbs.LoadSpaceState(spacename); err == nil {
-				if state.Id == spacename {
-					spaceRegister = state
+			if state, err := diskCache.ReadState(spacename); err == nil {
+				if time.Now().UnixNano() < state.Ts+int64(globals.MaxStateAge)*1000000000 {
+					if state.Id == spacename {
+						spaceRegister = state
+					} else {
+						fmt.Println("*** WARNING: Error reading state for space:", spacename, ". Will assume null state ***")
+						//os.Exit(0)
+					}
 				} else {
-					fmt.Println("Error reading state for space:", spacename, ". Will assume null state")
-					//os.Exit(0)
+					fmt.Println("*** WARNING: State is too old for space:", spacename, ". Will assume null state ***")
 				}
 			}
-			if state, err := coredbs.LoadSpaceShadowState(spacename); err == nil {
-				if state.Id == spacename {
-					shadowSpaceRegister = state
+			if state, err := diskCache.ReadShadowState(spacename); err == nil {
+				if time.Now().UnixNano() < state.Ts+int64(globals.MaxStateAge)*1000000000 {
+					if state.Id == spacename {
+						shadowSpaceRegister = state
+					} else {
+						fmt.Println("*** WARNING: Error reading shadow state for space:", spacename, ". Will assume null state ***")
+						//os.Exit(0)
+					}
 				} else {
-					fmt.Println("Error reading shadow state for space:", spacename, ". Will assume null state")
-					//os.Exit(0)
+					fmt.Println("*** WARNING: Shadow state is too old for space:", spacename, ". Will assume null state ***")
 				}
 			}
 		}
@@ -96,7 +105,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 		fmt.Printf("Space %v has been started\n", spacename)
 	}
 	mlogger.Info(globals.SpaceManagerLog,
-		mlogger.LoggerData{"entryManager.entry: " + spacename,
+		mlogger.LoggerData{"spaceManager.entry: " + spacename,
 			"service started",
 			[]int{0}, true})
 
@@ -134,11 +143,11 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 			}
 		case <-stop:
 			if globals.SaveState {
-				if err := coredbs.SaveSpaceState(spaceRegister); err != nil {
+				if err := diskCache.SaveState(spaceRegister); err != nil {
 					fmt.Println("Error saving state for space:", spacename)
 				} else {
 					fmt.Println("Successful saving state for space:", spacename)
-					if err := coredbs.SaveSpaceShadowState(shadowSpaceRegister); err != nil {
+					if err := diskCache.SaveShadowState(shadowSpaceRegister); err != nil {
 						fmt.Println("Error saving shadow state for space:", spacename)
 					} else {
 						fmt.Println("Successful saving shadow state for space:", spacename)
@@ -147,12 +156,13 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 			}
 			fmt.Println("Closing spaceManager.space:", spacename)
 			mlogger.Info(globals.SpaceManagerLog,
-				mlogger.LoggerData{"entryManager.entry: " + spacename,
+				mlogger.LoggerData{"spacxeManager.entry: " + spacename,
 					"service stopped",
 					[]int{0}, true})
 			stop <- nil
 
 		case data := <-in:
+			println("ggg")
 			if spaceRegister.State {
 				// space is enabled
 				// we verify if we are in a reset slot

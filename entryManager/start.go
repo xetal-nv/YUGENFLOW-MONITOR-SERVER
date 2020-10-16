@@ -7,7 +7,6 @@ import (
 	"github.com/fpessolano/mlogger"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -116,21 +115,21 @@ func Start(sd chan bool) {
 	// setting up closure and shutdown
 	<-sd
 	fmt.Println("Closing entryManager")
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	EntryStructure.Lock()
 	for _, ch := range EntryStructure.StopChannel {
-		wg.Add(1)
-		go func(ch chan interface{}) {
-			ch <- nil
-			select {
-			case <-ch:
-			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
-			}
-			wg.Done()
-		}(ch)
+		//wg.Add(1)
+		//go func(ch chan interface{}) {
+		ch <- nil
+		select {
+		case <-ch:
+		case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+		}
+		//wg.Done()
+		//}(ch)
 	}
 	EntryStructure.Unlock()
-	wg.Wait()
+	//wg.Wait()
 	mlogger.Info(globals.EntryManagerLog,
 		mlogger.LoggerData{"entryManager.Start",
 			"service stopped",

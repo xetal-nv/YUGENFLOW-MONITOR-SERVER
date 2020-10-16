@@ -80,6 +80,7 @@ func Start() {
 	if SaveState {
 		fmt.Printf("*** INFO: Server state is being preserved ***\n")
 	}
+	MaxStateAge = internalConfig.Section("shutdown").Key("state_max_age").MustInt(30)
 
 	ResetChannel = make(chan string, ChannellingLength)
 

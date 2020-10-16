@@ -8,7 +8,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"xetal.ddns.net/utils/recovery"
 )
@@ -135,21 +134,21 @@ func Start(sd chan bool) {
 	// shutdown procedure
 	<-sd
 	fmt.Println("Closing gateManager")
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 	GateStructure.Lock()
 	for _, ch := range GateStructure.StopChannel {
-		wg.Add(1)
-		go func(ch chan interface{}) {
-			ch <- nil
-			select {
-			case <-ch:
-			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
-			}
-			wg.Done()
-		}(ch)
+		//wg.Add(1)
+		//go func(ch chan interface{}) {
+		ch <- nil
+		select {
+		case <-ch:
+		case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+		}
+		//wg.Done()
+		//}(ch)
 	}
 	GateStructure.Unlock()
-	wg.Wait()
+	//wg.Wait()
 	mlogger.Info(globals.GateManagerLog,
 		mlogger.LoggerData{"gateManager.Start",
 			"service stopped",

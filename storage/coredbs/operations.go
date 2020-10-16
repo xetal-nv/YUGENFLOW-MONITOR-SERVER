@@ -4,7 +4,6 @@ import (
 	"context"
 	"gateserver/dataformats"
 	"gateserver/support/globals"
-	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
 
@@ -46,52 +45,52 @@ func SaveShadowSpaceData(nd dataformats.SpaceState) error {
 	}
 }
 
-// TODO move to cache !!!!
-func SaveSpaceState(nd dataformats.SpaceState) (err error) {
-	//fmt.Printf("TBD: Store space %v state %+v\n", entryName, nd)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	filter := bson.M{"id": bson.M{"$eq": nd.Id}}
-	_, err = stateDB.DeleteMany(ctx, filter)
-	if err != nil {
-		return
-	}
-	ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	if _, err := stateDB.InsertOne(ctx, nd); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
-// TODO move to cache !!!!
-func LoadSpaceState(spaceName string) (state dataformats.SpaceState, err error) {
-	//fmt.Printf("TBD: Load space %v state\n", spaceName)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	err = stateDB.FindOne(ctx, bson.M{"id": spaceName}).Decode(&state)
-	return
-}
-
-// TODO move to cache !!!!
-func SaveSpaceShadowState(nd dataformats.SpaceState) (err error) {
-	//fmt.Printf("TBD: Store space %v state %+v\n", nd.Id, nd)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	filter := bson.M{"id": bson.M{"$eq": nd.Id}}
-	_, err = shadowStateDB.DeleteMany(ctx, filter)
-	if err != nil {
-		return
-	}
-	ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	if _, err := shadowStateDB.InsertOne(ctx, nd); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
-// TODO move to cache !!!!
-func LoadSpaceShadowState(spaceName string) (state dataformats.SpaceState, err error) {
-	//fmt.Printf("TBD: Load space %v state\n", entryName)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	err = stateDB.FindOne(ctx, bson.M{"id": spaceName}).Decode(&state)
-	return
-}
+//// TODO move to cache !!!!
+//func SaveSpaceState(nd dataformats.SpaceState) (err error) {
+//	//fmt.Printf("TBD: Store space %v state %+v\n", entryName, nd)
+//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+//	filter := bson.M{"id": bson.M{"$eq": nd.Id}}
+//	_, err = stateDB.DeleteMany(ctx, filter)
+//	if err != nil {
+//		return
+//	}
+//	ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+//	if _, err := stateDB.InsertOne(ctx, nd); err != nil {
+//		return err
+//	} else {
+//		return nil
+//	}
+//}
+//
+//// TODO move to cache !!!!
+//func LoadSpaceState(spaceName string) (state dataformats.SpaceState, err error) {
+//	//fmt.Printf("TBD: Load space %v state\n", spaceName)
+//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+//	err = stateDB.FindOne(ctx, bson.M{"id": spaceName}).Decode(&state)
+//	return
+//}
+//
+//// TODO move to cache !!!!
+//func SaveSpaceShadowState(nd dataformats.SpaceState) (err error) {
+//	//fmt.Printf("TBD: Store space %v state %+v\n", nd.Id, nd)
+//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+//	filter := bson.M{"id": bson.M{"$eq": nd.Id}}
+//	_, err = shadowStateDB.DeleteMany(ctx, filter)
+//	if err != nil {
+//		return
+//	}
+//	ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+//	if _, err := shadowStateDB.InsertOne(ctx, nd); err != nil {
+//		return err
+//	} else {
+//		return nil
+//	}
+//}
+//
+//// TODO move to cache !!!!
+//func LoadSpaceShadowState(spaceName string) (state dataformats.SpaceState, err error) {
+//	//fmt.Printf("TBD: Load space %v state\n", entryName)
+//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+//	err = stateDB.FindOne(ctx, bson.M{"id": spaceName}).Decode(&state)
+//	return
+//}
