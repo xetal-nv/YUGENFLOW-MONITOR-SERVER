@@ -15,16 +15,16 @@ func Start(sd chan bool) {
 
 	var err error
 
-	if globals.AvgsLogger, err = mlogger.DeclareLog("yugenflow_avgsManager", false); err != nil {
+	if globals.AvgsManagerLog, err = mlogger.DeclareLog("yugenflow_avgsManager", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yugenflow_avgsManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.AvgsLogger, 50, 50, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.AvgsManagerLog, 50, 50, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
 
-	mlogger.Info(globals.AvgsLogger,
+	mlogger.Info(globals.AvgsManagerLog,
 		mlogger.LoggerData{"avgsManager.Start",
 			"service started",
 			[]int{0}, true})
@@ -61,7 +61,7 @@ func Start(sd chan bool) {
 			//}(ch)
 		}
 		//wg.Wait()
-		mlogger.Info(globals.AvgsLogger,
+		mlogger.Info(globals.AvgsManagerLog,
 			mlogger.LoggerData{"avgsManager.Start",
 				"service stopped",
 				[]int{0}, true})
@@ -134,7 +134,7 @@ func Start(sd chan bool) {
 					regRTIn, regRfIn, actualsAvailable)
 			},
 			func() {
-				mlogger.Recovered(globals.AvgsLogger,
+				mlogger.Recovered(globals.AvgsManagerLog,
 					mlogger.LoggerData{"avgsManager.calculator for space: " + listSpaces[i],
 						"service terminated and recovered unexpectedly",
 						[]int{1}, true})
@@ -170,7 +170,7 @@ func Start(sd chan bool) {
 				regRTIn, regRfIn, actualsAvailable)
 		},
 		func() {
-			mlogger.Recovered(globals.AvgsLogger,
+			mlogger.Recovered(globals.AvgsManagerLog,
 				mlogger.LoggerData{"avgsManager.calculator for space: " + listSpaces[len(listSpaces)-1],
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})

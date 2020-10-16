@@ -20,7 +20,9 @@ External data:
   - tbd
   
 External services:
-  - tbd  
+  - mongoDB database  
+
+**API:** 
 
 **API:(TBD)**  
 /asys -> information on all current analyses  
@@ -64,17 +66,11 @@ See gateserver.ini and configuration.ini  file for configuration example
 -eeprom                 : enables refresh of device eeprom at every connection   
 -tdl int                : TCP read deadline in hours (default 24)   
 -fth int                : set failure threshold in severe mode (default 3)   
-
--echo                   : enter the echo mode (to be done)  
--cdelay int             : specifies the maximum delay for recovery data usage(to be done)  
--dumpentry              : forces all entry values/activity to be written in a log file for debug (to be done)  
--st string              : set start time, time specified as HH:MM (to be done)  
--nosample               : disable automatic check for database recovery (to be done)  
--dbsupdate              : enable DBS integrity check HTTP API (to be done)  
+-st string              : set start time, time specified as HH:MM   
 
 **INSTALLATION**  
 Executable file: gateserver(.exe)  
-Configuration files: gateserver.ini, configuration.ini  
+Configuration files: gateserver.ini, configuration.ini, measurement.ini, access.ini    
 Resource folders: 
 
 **TO BE DONE (in priority order)**  

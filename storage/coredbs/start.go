@@ -26,11 +26,11 @@ func Start() (err error) {
 	if globals.DisableDatabase {
 		return
 	}
-	if globals.DBSLogger, err = mlogger.DeclareLog("yfserver_DBS", false); err != nil {
-		fmt.Println("Fatal Error: Unable to set yfserver_DBS logfile.")
+	if globals.DBSLog, err = mlogger.DeclareLog("yugenflow_DBS", false); err != nil {
+		fmt.Println("Fatal Error: Unable to set yugenflow_DBS logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.DBSLogger, 80, 20, 10); e != nil {
+	if e := mlogger.SetTextLimit(globals.DBSLog, 80, 20, 10); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
@@ -60,7 +60,7 @@ func Start() (err error) {
 		//stateDB = client.Database(DB).Collection("stateDB")
 		//shadowStateDB = client.Database(DB).Collection("shadowStateDB")
 	}
-	mlogger.Info(globals.DBSLogger,
+	mlogger.Info(globals.DBSLog,
 		mlogger.LoggerData{"coreDBS.Start", "service started",
 			[]int{0}, true})
 	return
@@ -68,7 +68,7 @@ func Start() (err error) {
 
 func Disconnect() error {
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-	mlogger.Info(globals.DBSLogger,
+	mlogger.Info(globals.DBSLog,
 		mlogger.LoggerData{"coreDBS.Start", "service stopped",
 			[]int{0}, true})
 	return client.Disconnect(ctx)

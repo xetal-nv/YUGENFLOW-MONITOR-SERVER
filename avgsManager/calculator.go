@@ -17,7 +17,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 	// for development only, comment afterwards
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
 			os.Exit(1)
 		}
 	}()
@@ -29,7 +29,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 		lastReferenceMeasurement[i] = 0
 	}
 
-	mlogger.Info(globals.AvgsLogger,
+	mlogger.Info(globals.AvgsManagerLog,
 		mlogger.LoggerData{"avgsManager.calculator for space: " + space,
 			"service started",
 			[]int{0}, true})
@@ -37,7 +37,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 	if maxTick < tick {
 		fmt.Printf("Measurement definition are invalid as maximum %v is smaller than tick %v\n", maxTick, tick)
 		<-rst
-		mlogger.Info(globals.AvgsLogger,
+		mlogger.Info(globals.AvgsManagerLog,
 			mlogger.LoggerData{"avgsManager.calculator for space: " + space,
 				"service stopped",
 				[]int{0}, true})
@@ -51,7 +51,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 		for {
 			select {
 			case <-rst:
-				mlogger.Info(globals.AvgsLogger,
+				mlogger.Info(globals.AvgsManagerLog,
 					mlogger.LoggerData{"avgsManager.calculator for space: " + space,
 						"service stopped",
 						[]int{0}, true})

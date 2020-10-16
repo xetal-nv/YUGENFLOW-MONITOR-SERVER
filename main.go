@@ -12,9 +12,11 @@ import (
 	"gateserver/spaceManager"
 	"gateserver/storage/coredbs"
 	"gateserver/storage/diskCache"
+	"gateserver/supp"
 	"gateserver/support/globals"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -31,8 +33,34 @@ func main() {
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 	var user = flag.String("user", "", "user name")
 	var pwd = flag.String("pwd", "", "user password")
+	var st = flag.String("start", "", "set start time expressed as HH:MM")
 
 	flag.Parse()
+
+	if *st != "" {
+		if ns, err := time.Parse(globals.TimeLayout, *st); err != nil {
+			fmt.Println("Syntax error in specified start time", *st)
+			os.Exit(1)
+		} else {
+			now := time.Now()
+			nows := strconv.Itoa(now.Hour()) + ":"
+			mins := "00" + strconv.Itoa(now.Minute())
+			nows += mins[len(mins)-2:]
+			if ne, err := time.Parse(supp.TimeLayout, nows); err != nil {
+				fmt.Println("Syntax error retrieving system current time")
+				os.Exit(1)
+			} else {
+				del := ns.Sub(ne)
+				if del > 0 {
+					fmt.Println("*** INFO : Waiting", del, "before starting server ***")
+					time.Sleep(del)
+				} else {
+					fmt.Println("*** WARNING: cannot wait in the past ***")
+				}
+			}
+		}
+	}
+
 	globals.DebugActive = *debug
 	globals.TCPdeadline = *tcpdeadline
 	globals.SensorEEPROMResetEnabled = *eeprom
