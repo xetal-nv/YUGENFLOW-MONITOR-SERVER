@@ -61,3 +61,21 @@ func ReadDeviceStatus(mac []byte) (active bool, err error) {
 	})
 	return
 }
+
+func ListActiveDevices() (macs []string, status []bool, err error) {
+	err = main.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(activeDevices))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			macs = append(macs, string(k))
+			if string(v) == "0" {
+				status = append(status, false)
+			} else {
+				status = append(status, true)
+			}
+			//fmt.Printf("key=%s, value=%s\n", k, v)
+		}
+		return nil
+	})
+	return
+}

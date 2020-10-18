@@ -57,10 +57,10 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 	// shadowSpaceRegister is a register copy without reset form debugging. It might overflow
 	once.Do(func() {
 		if resetSlot != nil {
-			fmt.Printf("*** Space %v has reset slot set from %v:%v to %v:%v Server Time ***\n",
+			fmt.Printf("*** INFO: Space %v has reset slot set from %v:%v to %v:%v Server Time ***\n",
 				spacename, resetSlot[0].Hour(), resetSlot[0].Minute(), resetSlot[1].Hour(), resetSlot[1].Minute())
 		} else {
-			fmt.Printf("*** Space %v has not reset slot ***\n", spacename)
+			fmt.Printf("*** INFO: Space %v has not reset slot ***\n", spacename)
 		}
 		if globals.SaveState {
 			if state, err := diskCache.ReadState(spacename); err == nil {
@@ -115,7 +115,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 	avgsManager.LatestData.RUnlock()
 
 	for calculator == nil {
-		fmt.Printf("Space %v waiting for calculator to be ready\n", spacename)
+		fmt.Printf("*** INFO: Space %v waiting for calculator to be ready ***\n", spacename)
 		time.Sleep(time.Duration(globals.SettleTime*3) * time.Second)
 		avgsManager.LatestData.RLock()
 		calculator = avgsManager.LatestData.Channel[spacename]
@@ -162,7 +162,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 			stop <- nil
 
 		case data := <-in:
-			println("ggg")
 			if spaceRegister.State {
 				// space is enabled
 				// we verify if we are in a reset slot

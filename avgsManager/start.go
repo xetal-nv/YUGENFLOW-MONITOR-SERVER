@@ -111,21 +111,21 @@ func Start(sd chan bool) {
 	RegRealTimeChannels.Lock()
 	RegReferenceChannels.Lock()
 	LatestData.Channel = make(map[string]chan dataformats.SpaceState)
-	RegRealTimeChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
-	RegRealTimeChannels.ChannelOut = make(map[string]chan map[string]dataformats.SimpleSample)
-	RegReferenceChannels.channelIn = make(map[string]chan dataformats.SimpleSample)
-	RegReferenceChannels.ChannelOut = make(map[string]chan map[string]dataformats.SimpleSample)
+	RegRealTimeChannels.channelIn = make(map[string]chan dataformats.MeasurementSample)
+	RegRealTimeChannels.ChannelOut = make(map[string]chan map[string]dataformats.MeasurementSample)
+	RegReferenceChannels.channelIn = make(map[string]chan dataformats.MeasurementSample)
+	RegReferenceChannels.ChannelOut = make(map[string]chan map[string]dataformats.MeasurementSample)
 
 	for i := 0; i < len(listSpaces)-1; i++ {
 		name := listSpaces[i]
 		ldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
 		LatestData.Channel[name] = ldChan
-		regRTIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-		regRTOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
+		regRTIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
+		regRTOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
 		RegRealTimeChannels.channelIn[name] = regRTIn
 		RegRealTimeChannels.ChannelOut[name] = regRTOut
-		regRfIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-		regRfOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
+		regRfIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
+		regRfOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
 		RegReferenceChannels.channelIn[name] = regRfIn
 		RegReferenceChannels.ChannelOut[name] = regRfOut
 		go recovery.RunWith(
@@ -148,15 +148,15 @@ func Start(sd chan bool) {
 	name := listSpaces[last]
 	LldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
 	LatestData.Channel[name] = LldChan
-	regRTIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-	regRTOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
+	regRTIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
+	regRTOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
 	RegRealTimeChannels.channelIn[name] = regRTIn
 	RegRealTimeChannels.ChannelOut[name] = regRTOut
-	regRfIn := make(chan dataformats.SimpleSample, globals.ChannellingLength)
-	regRfOut := make(chan map[string]dataformats.SimpleSample, globals.ChannellingLength)
+	regRfIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
+	regRfOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
 	RegReferenceChannels.channelIn[name] = regRfIn
 	RegReferenceChannels.ChannelOut[name] = regRfOut
-
+	RegReferenceChannels.Unlock()
 	RegRealTimeChannels.Unlock()
 	LatestData.Unlock()
 

@@ -1,6 +1,7 @@
 package diskCache
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"gateserver/support/globals"
@@ -60,6 +61,23 @@ func RemoveInvalidDevice(mac []byte) (err error) {
 				fmt.Println(err.Error())
 			}
 			return globals.SensorDBError
+		}
+		return nil
+	})
+	return
+}
+
+func ListInvalidDevices() (macs []string, tss []int64, err error) {
+	err = main.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(invalidDevices))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			macs = append(macs, string(k))
+			var ts int64
+			buf := bytes.NewBuffer(v)
+			_ = binary.Read(buf, binary.LittleEndian, &ts)
+			tss = append(tss, ts)
+			//fmt.Printf("key=%s, value=%s\n", k, v)
 		}
 		return nil
 	})

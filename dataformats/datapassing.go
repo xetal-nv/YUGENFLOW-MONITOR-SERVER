@@ -9,8 +9,9 @@ type FlowData struct {
 	Netflow int    `json:"netflow"`
 }
 
-type SimpleSample struct {
+type MeasurementSample struct {
 	Qualifier string                `json:"qualifier"`
+	Space     string                `json:"space"`
 	Ts        int64                 `json:"timestamp"`
 	Val       float64               `json:"value"`
 	Flows     map[string]EntryState `json:"flows"`

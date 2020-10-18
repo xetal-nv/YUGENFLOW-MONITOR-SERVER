@@ -4,6 +4,8 @@ import (
 	"context"
 	"gateserver/dataformats"
 	"gateserver/support/globals"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -20,7 +22,7 @@ func SaveSpaceData(nd dataformats.SpaceState) error {
 	}
 }
 
-func SaveReferenceData(nd dataformats.SimpleSample) error {
+func SaveReferenceData(nd dataformats.MeasurementSample) error {
 	if globals.DisableDatabase {
 		return nil
 	}
@@ -45,52 +47,38 @@ func SaveShadowSpaceData(nd dataformats.SpaceState) error {
 	}
 }
 
-//// TODO move to cache !!!!
-//func SaveSpaceState(nd dataformats.SpaceState) (err error) {
-//	//fmt.Printf("TBD: Store space %v state %+v\n", entryName, nd)
-//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-//	filter := bson.M{"id": bson.M{"$eq": nd.Id}}
-//	_, err = stateDB.DeleteMany(ctx, filter)
-//	if err != nil {
-//		return
-//	}
-//	ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-//	if _, err := stateDB.InsertOne(ctx, nd); err != nil {
-//		return err
-//	} else {
-//		return nil
-//	}
-//}
-//
-//// TODO move to cache !!!!
-//func LoadSpaceState(spaceName string) (state dataformats.SpaceState, err error) {
-//	//fmt.Printf("TBD: Load space %v state\n", spaceName)
-//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-//	err = stateDB.FindOne(ctx, bson.M{"id": spaceName}).Decode(&state)
-//	return
-//}
-//
-//// TODO move to cache !!!!
-//func SaveSpaceShadowState(nd dataformats.SpaceState) (err error) {
-//	//fmt.Printf("TBD: Store space %v state %+v\n", nd.Id, nd)
-//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-//	filter := bson.M{"id": bson.M{"$eq": nd.Id}}
-//	_, err = shadowStateDB.DeleteMany(ctx, filter)
-//	if err != nil {
-//		return
-//	}
-//	ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-//	if _, err := shadowStateDB.InsertOne(ctx, nd); err != nil {
-//		return err
-//	} else {
-//		return nil
-//	}
-//}
-//
-//// TODO move to cache !!!!
-//func LoadSpaceShadowState(spaceName string) (state dataformats.SpaceState, err error) {
-//	//fmt.Printf("TBD: Load space %v state\n", entryName)
-//	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-//	err = stateDB.FindOne(ctx, bson.M{"id": spaceName}).Decode(&state)
-//	return
-//}
+func ReadSpaceData(spacename string, howMany int) (result []dataformats.MeasurementSample, err error) {
+	if howMany == 0 {
+		return
+	}
+	filter := bson.D{{"id", spacename}}
+	opt := options.Find()
+	opt.SetSort(bson.D{{"ts", -1}})
+	opt.SetLimit(int64(howMany))
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	cursor, er := dataDB.Find(ctx, filter, opt)
+	if er != nil {
+		err = er
+		return
+	}
+	err = cursor.All(context.TODO(), &result)
+	return
+}
+
+func ReadReferenceData(spacename string, howMany int) (result []dataformats.MeasurementSample, err error) {
+	if howMany == 0 {
+		return
+	}
+	filter := bson.D{{"space", spacename}}
+	opt := options.Find()
+	opt.SetSort(bson.D{{"ts", -1}})
+	opt.SetLimit(int64(howMany))
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	cursor, er := referenceDB.Find(ctx, filter, opt)
+	if er != nil {
+		err = er
+		return
+	}
+	err = cursor.All(context.TODO(), &result)
+	return
+}

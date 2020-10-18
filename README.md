@@ -23,28 +23,35 @@ External services:
   - mongoDB database  
 
 **API:** 
+/info                               -> installation information  
+/connected                          -> list all connected device which have not been marked invalid and report if they are active or not  
+/invalid                            -> list all connected device which have  been marked invalid and report if the invalidity timestamp  
+/measurements                       -> returns the definition of all active measurement  
+/data                               -> return latest measurements for all spaces  
+/latestdata/{name}                  -> return latest data for space {name}   
+/latestdata/{[name0, name1, ...]}   -> return latest data for spaces [name0, name1, ...]  
+/reference/?n                       -> return the last n reference measurements for all spaces  
+/reference/{name}?n                 -> return oly the last n reference measurements for space {name}   
+/reference/{[name0, ...]}?n         -> return the last n reference measurements for spaces [name0, name1, ...]  
+/real/?n                            -> return the last n real data for all spaces  
+/real/{name}?n                      -> return oly the last n real data for space {name}   
+/real/{[name0, ...]}?n              -> return the last n real data for spaces [name0, name1, ...]  
 
 **API:(TBD)**  
-/asys -> information on all current analyses  
-/info -> installation information  
-/pending -> list all devices pending for connection approval (only current connections)    
-/active -> list all valid connected devices  
-/und -> list all connected devices that are not used in the installation  
-/udef -> list all devices with undefined id 0xff that have been connected  
-/udef/active -> list all connected devices with initial id 0xff  
-/udef/notactive -> list all not connected devices with initial id 0xff  
-/udef/defined -> list all defined devices with initial id 0xff  
-/udef/undefined -> list all not yet defined devices with initial id 0xff  
-/x/y/z -> actual value for data x in space y on averaging z  
-/series?last=x?type=y?space=z?analysis=y -> last x samples of type y from space z and analysis y  
 /series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
 /presence?space=z?analysis=y?start=x0?end=x1 -> samples of type presence from space z and analysis y from timestamp x0 to timestamp x1, the value is set to 2 when activity is detected in the period and the value is equal to the number of detection at the end of the period  
 /command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 /command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 /command?cmd=list -> lists all available commands  
 /command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
+
+these needs to be done better (if at all)  
 /dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
 /dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
+
+missing in this list but needed?    
+/plan/{name}  
+/plan/logo  
 
   
 NOTE: values in val are specified as x,y,n,..   

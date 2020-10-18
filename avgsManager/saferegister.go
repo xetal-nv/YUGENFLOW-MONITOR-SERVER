@@ -1,14 +1,13 @@
 package avgsManager
 
 import (
-	"fmt"
 	"gateserver/dataformats"
 )
 
 // LatestMeasurementRegister implement a generic single input (n) single output (o)
 // non-blocking register. It blocks only when it is not initialised
 
-func LatestMeasurementRegister(tag string, in chan dataformats.SimpleSample, out chan map[string]dataformats.SimpleSample, data map[string]dataformats.SimpleSample) {
+func LatestMeasurementRegister(tag string, in chan dataformats.MeasurementSample, out chan map[string]dataformats.MeasurementSample, data map[string]dataformats.MeasurementSample) {
 	//fmt.Println(tag, "started")
 
 	defer func() {
@@ -18,13 +17,13 @@ func LatestMeasurementRegister(tag string, in chan dataformats.SimpleSample, out
 	}()
 
 	if data == nil {
-		data = make(map[string]dataformats.SimpleSample)
+		data = make(map[string]dataformats.MeasurementSample)
 	}
 	for {
 		//fmt.Println("register ->", tag, data)
 		select {
 		case newData := <-in:
-			fmt.Println(tag, data)
+			//fmt.Println(tag, data)
 			data[newData.Qualifier] = newData
 		case out <- data:
 		}

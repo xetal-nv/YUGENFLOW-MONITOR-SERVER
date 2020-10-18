@@ -6,6 +6,7 @@ import (
 	"github.com/fpessolano/mlogger"
 	"os"
 	"time"
+	"xetal.ddns.net/utils/recovery"
 )
 
 func Start(sd chan bool) {
@@ -15,7 +16,7 @@ func Start(sd chan bool) {
 		fmt.Println("Fatal Error: Unable to set yugenflow_apiManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.ClientManagerLog, 40, 30, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.ClientManagerLog, 80, 30, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
@@ -26,7 +27,7 @@ func Start(sd chan bool) {
 			[]int{1}, true})
 
 	var rstC []chan bool
-	for i := 0; i < 0; i++ {
+	for i := 0; i < 1; i++ {
 		rstC = append(rstC, make(chan bool))
 	}
 
@@ -49,16 +50,12 @@ func Start(sd chan bool) {
 		sd <- true
 	}(sd, rstC)
 
-	//recovery.RunWith(
-	//	func() { ApiManager(rstC[0]) },
-	//	func() {
-	//		mlogger.Recovered(globals.ClientManagerLog,
-	//			mlogger.LoggerData{"clientManager.ApiManager",
-	//				"ApiManager service terminated and recovered unexpectedly",
-	//				[]int{1}, true})
-	//	})
-
-	for {
-		time.Sleep(36 * time.Hour)
-	}
+	recovery.RunWith(
+		func() { ApiManager(rstC[0]) },
+		func() {
+			mlogger.Recovered(globals.ClientManagerLog,
+				mlogger.LoggerData{"clientManager.ApiManager",
+					"ApiManager service terminated and recovered unexpectedly",
+					[]int{1}, true})
+		})
 }

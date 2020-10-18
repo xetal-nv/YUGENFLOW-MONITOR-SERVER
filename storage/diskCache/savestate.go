@@ -8,7 +8,6 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-// TODO replace the db with these funcs!!!
 func ReadState(spaceName string) (space dataformats.SpaceState, err error) {
 	err = main.View(func(tx *bolt.Tx) error {
 		data := tx.Bucket([]byte(savedStates)).Get([]byte(spaceName))

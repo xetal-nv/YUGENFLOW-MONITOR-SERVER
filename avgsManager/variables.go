@@ -12,12 +12,12 @@ var LatestData struct {
 
 var RegRealTimeChannels struct {
 	sync.RWMutex
-	channelIn  map[string]chan dataformats.SimpleSample
-	ChannelOut map[string]chan map[string]dataformats.SimpleSample
+	channelIn  map[string]chan dataformats.MeasurementSample
+	ChannelOut map[string]chan map[string]dataformats.MeasurementSample
 }
 
 var RegReferenceChannels struct {
 	sync.RWMutex
-	channelIn  map[string]chan dataformats.SimpleSample
-	ChannelOut map[string]chan map[string]dataformats.SimpleSample
+	channelIn  map[string]chan dataformats.MeasurementSample
+	ChannelOut map[string]chan map[string]dataformats.MeasurementSample
 }

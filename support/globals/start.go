@@ -34,6 +34,7 @@ func Start() {
 	AcceptNegatives = internalConfig.Section("corrections").Key("accept_errors").MustBool(false)
 
 	SensorTimeout = internalConfig.Section("timeouts").Key("device").MustInt(5)
+	ServerTimeout = internalConfig.Section("timeouts").Key("server").MustInt(5)
 	MaliciousTimeout = internalConfig.Section("timeouts").Key("malicious").MustInt(120)
 	ZombieTimeout = internalConfig.Section("timeouts").Key("zombie").MustInt(24)
 	RepetitiveTimeout = internalConfig.Section("timeouts").Key("repetitive").MustInt(20)
@@ -88,6 +89,7 @@ func Start() {
 	TCPport = AccessData.Section("tcpserver").Key("tcp_port").MustString("3333")
 
 	APIport = AccessData.Section("apiserver").Key("api_port").MustString("")
+	DisableCORS = AccessData.Section("apiserver").Key("disable_cors").MustBool(false)
 
 	DisableDatabase = AccessData.Section("database").Key("disable").MustBool(false)
 	if DisableDatabase {
