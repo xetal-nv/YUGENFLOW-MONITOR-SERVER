@@ -82,3 +82,61 @@ func ReadReferenceData(spacename string, howMany int) (result []dataformats.Meas
 	err = cursor.All(context.TODO(), &result)
 	return
 }
+
+func ReadReferenceDataSeries(spacename string, ts0, ts1 int) (result []dataformats.MeasurementSample, err error) {
+	if ts1 <= ts0 {
+		return
+	}
+	filter := bson.D{{"space", spacename},
+		{"ts", bson.D{{"$lt", ts1}, {"$gt", ts0}}},
+	}
+	opt := options.Find()
+	opt.SetSort(bson.D{{"ts", -1}})
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	cursor, er := referenceDB.Find(ctx, filter, opt)
+	if er != nil {
+		err = er
+		return
+	}
+	err = cursor.All(context.TODO(), &result)
+	return
+}
+
+func ReadSpaceDataSeries(spacename string, ts0, ts1 int) (result []dataformats.MeasurementSample, err error) {
+	if ts1 <= ts0 {
+		return
+	}
+	filter := bson.D{{"id", spacename},
+		{"ts", bson.D{{"$lt", ts1}, {"$gt", ts0}}},
+	}
+	opt := options.Find()
+	opt.SetSort(bson.D{{"ts", -1}})
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	cursor, er := dataDB.Find(ctx, filter, opt)
+	if er != nil {
+		err = er
+		return
+	}
+	err = cursor.All(context.TODO(), &result)
+	return
+}
+
+func VerifyPresence(spacename string, ts0, ts1 int) (present bool, err error) {
+	if ts1 <= ts0 {
+		return
+	}
+	filter := bson.D{{"id", spacename},
+		{"count", bson.D{{"$ne", 0}}},
+		{"ts", bson.D{{"$lt", ts1}, {"$gt", ts0}}},
+	}
+	opt := options.Find()
+	opt.SetSort(bson.D{{"ts", -1}})
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	count, er := dataDB.CountDocuments(ctx, filter)
+	if er != nil {
+		err = er
+		return
+	}
+	present = count >= 2
+	return
+}

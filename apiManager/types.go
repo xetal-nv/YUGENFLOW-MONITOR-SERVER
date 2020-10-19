@@ -47,3 +47,8 @@ type JsonData struct {
 	Type    string                                     `json:"type"`
 	Results map[string][]dataformats.MeasurementSample `json:"measurements"`
 }
+
+type JsonPresence struct {
+	Space    string `json:"space"`
+	Presence bool   `json:"presence"`
+}

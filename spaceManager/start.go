@@ -164,7 +164,6 @@ func Start(sd chan bool) {
 	//os.Exit(0)
 
 	// setting up closure and shutdown
-	// TODO shutdown does not work !!!
 	<-sd
 	fmt.Println("Closing spaceManager")
 	//var wg sync.WaitGroup

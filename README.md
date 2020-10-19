@@ -23,23 +23,30 @@ External services:
   - mongoDB database  
 
 **API:** 
-/info                               -> installation information  
-/connected                          -> list all connected device which have not been marked invalid and report if they are active or not  
-/invalid                            -> list all connected device which have  been marked invalid and report if the invalidity timestamp  
-/measurements                       -> returns the definition of all active measurement  
-/data                               -> return latest measurements for all spaces  
-/latestdata/{name}                  -> return latest data for space {name}   
-/latestdata/{[name0, name1, ...]}   -> return latest data for spaces [name0, name1, ...]  
-/reference/?n                       -> return the last n reference measurements for all spaces  
-/reference/{name}?n                 -> return oly the last n reference measurements for space {name}   
-/reference/{[name0, ...]}?n         -> return the last n reference measurements for spaces [name0, name1, ...]  
-/real/?n                            -> return the last n real data for all spaces  
-/real/{name}?n                      -> return oly the last n real data for space {name}   
-/real/{[name0, ...]}?n              -> return the last n real data for spaces [name0, name1, ...]  
+/info                                   -> installation information  
+/connected                              -> list all connected device which have not been marked invalid and report if they are active or not  
+/invalid                                -> list all connected device which have  been marked invalid and report if the invalidity timestamp  
+/measurements                           -> returns the definition of all active measurement  
+/latestdata                                   -> return latest measurements for all spaces  
+/latestdata/{name}                      -> return latest data for space {name}   
+/latestdata/{[name0, name1, ...]}       -> return latest data for spaces [name0, name1, ...]  
+/reference?n                            -> return the last n reference measurements for all spaces  
+/reference/{name}?n                     -> return oly the last n reference measurements for space {name}   
+/reference/{[name0, ...]}?n             -> return the last n reference measurements for spaces [name0, name1, ...]  
+/delta?n                                -> return the last n real data for all spaces  
+/delta/{name}?n                         -> return oly the last n real data for space {name}   
+/delta/{[name0, ...]}?n                 -> return the last n real data for spaces [name0, name1, ...]  
+/series/reference?x0?x1                 -> return reference data for all spaces in an interval (time is epoch time in seconds)  
+/series/reference/{name}?x0?x1          -> return reference data for space {name} in an interval (time is epoch time in seconds)  
+/series/reference/{[name0, ...]}?x0?x1  -> return reference data for spaces [name0, ...] in an interval (time is epoch time in seconds)  
+/series/delta?x0?x1                     -> return real data for all spaces in an interval (time is epoch time in seconds)  
+/series/delta/{name}?x0?x1              -> return real data for space {name} in an interval (time is epoch time in seconds)  
+/series/delta/{[name0, ...]}?x0?x1      -> return real data for spaces [name0, ...] in an interval (time is epoch time in seconds)   
+/presence?x0?x1                         -> return true or false if there was a person in the given interval for all spaces
+/presence/{name}?x0?x1                  -> return true or false if there was a person in the given interval for space {name}   
+/presence/{[name0, ...]}?x0?x1          -> return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
 
 **API:(TBD)**  
-/series?type=y?space=z?analysis=y?start=x0?end=x1 -> samples of type y from space z and analysis y from timestamp x0 to timestamp x1  
-/presence?space=z?analysis=y?start=x0?end=x1 -> samples of type presence from space z and analysis y from timestamp x0 to timestamp x1, the value is set to 2 when activity is detected in the period and the value is equal to the number of detection at the end of the period  
 /command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
 /command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
 /command?cmd=list -> lists all available commands  
@@ -82,6 +89,7 @@ Resource folders:
 
 **TO BE DONE (in priority order)**  
  - API and webpage  
+ - add script on new data (all new data?)  
  - clean code  
 
 

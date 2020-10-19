@@ -26,8 +26,8 @@ func info() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ClientManagerLog,
-					mlogger.LoggerData{"clientManager.info",
+				mlogger.Recovered(globals.ApiManager,
+					mlogger.LoggerData{"apiManager.info",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
 			}
@@ -89,8 +89,8 @@ func connectedSensors() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ClientManagerLog,
-					mlogger.LoggerData{"clientManager.connectedSensors",
+				mlogger.Recovered(globals.ApiManager,
+					mlogger.LoggerData{"apiManager.connectedSensors",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
 			}
@@ -124,8 +124,8 @@ func invalidSensors() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ClientManagerLog,
-					mlogger.LoggerData{"clientManager.invalidSensors",
+				mlogger.Recovered(globals.ApiManager,
+					mlogger.LoggerData{"apiManager.invalidSensors",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
 			}
@@ -202,8 +202,8 @@ func measurementDefinitions() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ClientManagerLog,
-					mlogger.LoggerData{"clientManager.measurementDefinitions",
+				mlogger.Recovered(globals.ApiManager,
+					mlogger.LoggerData{"apiManager.measurementDefinitions",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
 			}
@@ -219,23 +219,31 @@ func measurementDefinitions() http.Handler {
 	})
 }
 
-func latestData(all, useDB bool, which int) http.Handler {
+func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 	// which :
 	// 0 - all
-	// 1 - real time / real
-	// 2- reference
+	// 1 - real time / delta
+	// 2 - reference
+	// 3 - presence
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				// TODOD remove
-				fmt.Println(e)
-				mlogger.Recovered(globals.ClientManagerLog,
-					mlogger.LoggerData{"clientManager.invalidSensors",
+				mlogger.Recovered(globals.ApiManager,
+					mlogger.LoggerData{"apiManager.latestData",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
 			}
 		}()
+
+		if nonSeriesUseDB && seriesUseDB {
+			mlogger.Error(globals.ApiManager,
+				mlogger.LoggerData{"apiManager.latestData",
+					"internal error nonSeriesUseDB && seriesUseDB true",
+					[]int{1}, true})
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(nil)
+		}
 
 		//Allow CORS here By * or specific origin
 		if globals.DisableCORS {
@@ -268,7 +276,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 		spaceManager.SpaceStructure.RUnlock()
 
 		var results []JsonData
-		if !useDB {
+		if !nonSeriesUseDB && !seriesUseDB {
 			if which == 0 || which == 1 {
 				avgsManager.RegRealTimeChannels.RLock()
 				for _, name := range spaces {
@@ -314,41 +322,120 @@ func latestData(all, useDB bool, which int) http.Handler {
 				avgsManager.RegReferenceChannels.RUnlock()
 			}
 
-		} else {
+		} else if nonSeriesUseDB {
 			numberSamples := 1
-			for _, rp := range strings.Split(r.URL.String(), "?")[1:] {
-				if val, err := strconv.Atoi(rp); err == nil {
-					numberSamples = val
-				}
-			}
-			switch which {
-			case 2:
-				for _, name := range spaces {
-					if data, err := coredbs.ReadReferenceData(name, numberSamples); err == nil {
-						newData := JsonData{
-							Space:   name,
-							Type:    "reference",
-							Results: make(map[string][]dataformats.MeasurementSample),
-						}
-						for _, val := range data {
-							newData.Results[val.Qualifier] = append(newData.Results[val.Qualifier], val)
-						}
-						results = append(results, newData)
+			options := strings.Split(r.URL.String(), "?")[1:]
+			if len(options) <= 1 {
+				if len(options) == 1 {
+					if val, err := strconv.Atoi(options[0]); err == nil {
+						numberSamples = val
 					}
 				}
-			case 1:
-				for _, name := range spaces {
-					if data, err := coredbs.ReadSpaceData(name, numberSamples); err == nil {
-						newData := JsonData{
-							Space:   name,
-							Type:    "real",
-							Results: make(map[string][]dataformats.MeasurementSample),
+				//}
+				//for _, rp := range strings.Split(r.URL.String(), "?")[1:] {
+				//	if val, err := strconv.Atoi(rp); err == nil {
+				//		numberSamples = val
+				//	}
+				//}
+				switch which {
+				case 2:
+					for _, name := range spaces {
+						if data, err := coredbs.ReadReferenceData(name, numberSamples); err == nil {
+							newData := JsonData{
+								Space:   name,
+								Type:    "reference",
+								Results: make(map[string][]dataformats.MeasurementSample),
+							}
+							for _, val := range data {
+								newData.Results[val.Qualifier] = append(newData.Results[val.Qualifier], val)
+							}
+							results = append(results, newData)
 						}
-						for _, val := range data {
-							newData.Results["flows"] = append(newData.Results[val.Qualifier], val)
+					}
+				case 1:
+					for _, name := range spaces {
+						if data, err := coredbs.ReadSpaceData(name, numberSamples); err == nil {
+							newData := JsonData{
+								Space:   name,
+								Type:    "delta",
+								Results: make(map[string][]dataformats.MeasurementSample),
+							}
+							for _, val := range data {
+								newData.Results["delta"] = append(newData.Results["delta"], val)
+							}
+							results = append(results, newData)
 						}
-						results = append(results, newData)
-						fmt.Println(data)
+					}
+				}
+			}
+		} else if seriesUseDB {
+			options := strings.Split(r.URL.String(), "?")[1:]
+			if len(options) == 2 {
+				var t0, t1 int
+				var err error
+				if t0, err = strconv.Atoi(options[0]); err == nil {
+					if t1, err = strconv.Atoi(options[1]); err == nil {
+						if t0 != t1 {
+							if t0 > t1 {
+								tmp := t1
+								t1 = t0
+								t0 = tmp
+							}
+							//if which ==1 || which ==3 {
+							//	t0 *= 1000000000
+							//	t1 *= 1000000000
+							//}
+							//for _, name := range spaces {
+							switch which {
+							case 1:
+								t0 *= 1000000000
+								t1 *= 1000000000
+								for _, name := range spaces {
+									if data, err := coredbs.ReadSpaceDataSeries(name, t0, t1); err == nil {
+										newData := JsonData{
+											Space:   name,
+											Type:    "delta",
+											Results: make(map[string][]dataformats.MeasurementSample),
+										}
+										for _, val := range data {
+											newData.Results["delta"] = append(newData.Results["delta"], val)
+										}
+										results = append(results, newData)
+									}
+								}
+							case 2:
+								for _, name := range spaces {
+									if data, err := coredbs.ReadReferenceDataSeries(name, t0, t1); err == nil {
+										newData := JsonData{
+											Space:   name,
+											Type:    "reference",
+											Results: make(map[string][]dataformats.MeasurementSample),
+										}
+										for _, val := range data {
+											newData.Results[val.Qualifier] = append(newData.Results[val.Qualifier], val)
+										}
+										results = append(results, newData)
+									}
+								}
+							case 3:
+								t0 *= 1000000000
+								t1 *= 1000000000
+								var answer []JsonPresence
+								for _, name := range spaces {
+									if presence, err := coredbs.VerifyPresence(name, t0, t1); err == nil {
+										newData := JsonPresence{
+											Space:    name,
+											Presence: presence,
+										}
+										answer = append(answer, newData)
+									}
+								}
+								w.WriteHeader(http.StatusOK)
+								_ = json.NewEncoder(w).Encode(answer)
+								return
+							}
+							//}
+						}
 					}
 				}
 			}
@@ -366,7 +453,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 //		defer func() {
 //			if e := recover(); e != nil {
 //				//fmt.Println(e)
-//				mlogger.Recovered(globals.ClientManagerLog,
+//				mlogger.Recovered(globals.ApiManager,
 //					mlogger.LoggerData{"clientManager.register",
 //						"route terminated and recovered unexpectedly",
 //						[]int{1}, true})
@@ -406,7 +493,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 //	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //		defer func() {
 //			if e := recover(); e != nil {
-//				mlogger.Recovered(globals.ClientManagerLog,
+//				mlogger.Recovered(globals.ApiManager,
 //					mlogger.LoggerData{"clientManager.executeLink",
 //						"route terminated unexpectedly",
 //						[]int{1}, true})
@@ -445,7 +532,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 //	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //		defer func() {
 //			if e := recover(); e != nil {
-//				mlogger.Recovered(globals.ClientManagerLog,
+//				mlogger.Recovered(globals.ApiManager,
 //					mlogger.LoggerData{"clientManager.deviceCommandLink",
 //						"route terminated unexpectedly",
 //						[]int{1}, true})
@@ -480,7 +567,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 //				case "localadaptation":
 //					command += "/" + mac + "/" + vars["mode"]
 //				default:
-//					mlogger.Warning(globals.ClientManagerLog,
+//					mlogger.Warning(globals.ApiManager,
 //						mlogger.LoggerData{"clientManager.deviceCommandLink",
 //							"illegal API command for device " + mac,
 //							[]int{1}, true})
@@ -512,7 +599,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 //	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //		defer func() {
 //			if e := recover(); e != nil {
-//				mlogger.Recovered(globals.ClientManagerLog,
+//				mlogger.Recovered(globals.ApiManager,
 //					mlogger.LoggerData{"clientManager.deviceCommand",
 //						"route terminated unexpectedly",
 //						[]int{1}, true})
@@ -537,7 +624,7 @@ func latestData(all, useDB bool, which int) http.Handler {
 //				case "result":
 //					command += "/" + mac + "/" + vars["howmany"]
 //				default:
-//					mlogger.Warning(globals.ClientManagerLog,
+//					mlogger.Warning(globals.ApiManager,
 //						mlogger.LoggerData{"clientManager.deviceCommand",
 //							"illegal API command for device " + mac,
 //							[]int{1}, true})

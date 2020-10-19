@@ -21,7 +21,7 @@ var Config, AccessData *ini.File
 
 // logFiles
 var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog, EntryManagerLog,
-	SpaceManagerLog, DBSLog, AvgsManagerLog, ClientManagerLog int
+	SpaceManagerLog, DBSLog, AvgsManagerLog, ApiManager int
 
 // Parameters configurable via ini files
 //noinspection GoExportedOwnDeclaration
