@@ -3,10 +3,10 @@ package avgsManager
 import (
 	"fmt"
 	"gateserver/dataformats"
+	"gateserver/exportManager"
 	"gateserver/storage/coredbs"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
-	"os"
 	"time"
 )
 
@@ -15,12 +15,12 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 	regRealTime, regReference chan dataformats.MeasurementSample, actualsAvailable bool) {
 
 	// for development only, comment afterwards
-	defer func() {
-		if err := recover(); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
-			os.Exit(1)
-		}
-	}()
+	//defer func() {
+	//	if err := recover(); err != nil {
+	//		_, _ = fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+	//		os.Exit(1)
+	//	}
+	//}()
 
 	var samples []dataformats.SpaceState
 	lastReferenceMeasurement := make(map[string]int64)
@@ -106,11 +106,26 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				// the current data is sent immediately
 				if actualsAvailable {
-					regReference <- dataformats.MeasurementSample{
+					select {
+					case regReference <- dataformats.MeasurementSample{
 						Qualifier: "actual",
 						Ts:        newData.Ts / 1000000000,
 						Val:       float64(newData.Count),
-						Flows:     newData.Flows,
+						Flows:     newData.Flows}:
+					case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+					}
+				}
+
+				// the current data is exported immediately
+				if globals.ExportActualCommand != "" {
+					select {
+					case exportManager.ExportActuals <- dataformats.MeasurementSample{
+						Qualifier: "actual",
+						Ts:        newData.Ts / 1000000000,
+						Val:       float64(newData.Count),
+						Flows:     newData.Flows}:
+					default:
+						// we do not wait as the delay might be related to an external script
 					}
 				}
 
@@ -299,6 +314,15 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							go func(nd dataformats.MeasurementSample) {
 								_ = coredbs.SaveReferenceData(nd)
 							}(newSample)
+
+							// the current data is exported immediately
+							if globals.ExportReferenceCommand != "" {
+								select {
+								case exportManager.ExportReference <- newSample:
+								default:
+									// we do not wait as the delay might be related to an external script
+								}
+							}
 						}
 					}
 				}

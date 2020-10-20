@@ -90,10 +90,10 @@ finished:
 			var rtIssuer []byte
 			rtResponder := []byte("e")
 			// verify if the command exists and send it to the device
-			if _, ok := cmdAnswerLen[cmd[0]]; ok {
+			if _, ok := CmdAnswerLen[cmd[0]]; ok {
 				if globals.DebugActive {
 					fmt.Printf("Received command %v for device %v\n", cmd, mac)
-					if cmd[0] == cmdAPI["setid"].cmd {
+					if cmd[0] == CmdAPI["setid"].Cmd {
 						fmt.Printf("Changing id to %v for device %v\n", int(cmd[2]), mac)
 					}
 				}
@@ -125,7 +125,7 @@ finished:
 							break finished
 						}
 						// make optional
-						if cmd[0] == cmdAPI["rstbg"].cmd && globals.ResetCloseTCP {
+						if cmd[0] == CmdAPI["rstbg"].Cmd && globals.ResetCloseTCP {
 							//println("bye")
 							_ = chs.tcp.Close()
 						}

@@ -16,7 +16,7 @@ func setID(chs SensorChannel, id int) error {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(id))
 
-	cmd := []byte{cmdAPI["setid"].cmd, b[6], b[7]}
+	cmd := []byte{CmdAPI["setid"].Cmd, b[6], b[7]}
 	if globals.DebugActive {
 		fmt.Printf("sensor setID to be done %v:%x\n", id, cmd)
 
@@ -54,16 +54,16 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 		//mainLoop:
 		for i := 0; i < eepromResetTries; i++ {
 			time.Sleep(time.Duration(globals.SensorEEPROMResetStep) * time.Second)
-			if v, ok := cmdAPI[command]; ok {
-				cmd := []byte{v.cmd}
+			if v, ok := CmdAPI[command]; ok {
+				cmd := []byte{v.Cmd}
 				bs := make([]byte, 4)
 				//binary.BigEndian.PutUint32(bs, uint32(specs.srate))
 				binary.BigEndian.PutUint32(bs, value)
-				cmd = append(cmd, bs[4-v.lgt:4]...)
+				cmd = append(cmd, bs[4-v.Lgt:4]...)
 				cmd = append(cmd, codings.Crc8(cmd))
 				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
 					if _, e := conn.Write(cmd); e == nil {
-						//log.Printf("Sent %x on device %v\n", cmd, mac)
+						//log.Printf("Sent %x on device %v\n", Cmd, mac)
 					readLoop:
 						// we give it a maximum of max (4, eepromResetTries) for the sensor to answer to the command
 						for j := 0; j < int(math.Max(float64(4), float64(eepromResetTries))); j++ {
@@ -86,21 +86,21 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 										if globals.CRCused {
 											_, _ = conn.Read(make([]byte, 1))
 										}
-										//log.Printf("Confirmation execution of command %x on device %v\n", cmd, mac)
+										//log.Printf("Confirmation execution of command %x on device %v\n", Cmd, mac)
 										//break mainLoop
 										return nil
 									default:
-										//log.Printf("Illegal answer %v for command %x on device %v\n", ans, cmd, mac)
+										//log.Printf("Illegal answer %v for command %x on device %v\n", ans, Cmd, mac)
 										// illegal answer
 										break readLoop
 									}
 								} else {
-									//log.Printf("Timeout read for command %x on device %v\n", cmd, mac)
+									//log.Printf("Timeout read for command %x on device %v\n", Cmd, mac)
 								}
 							}
 						}
 					} else {
-						//log.Printf("Timeout write for command %x on device %v\n", cmd, mac)
+						//log.Printf("Timeout write for command %x on device %v\n", Cmd, mac)
 					}
 				}
 				// reset the all deadlines

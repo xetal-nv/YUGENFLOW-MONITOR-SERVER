@@ -99,4 +99,17 @@ func Start() {
 	if APIport == "" {
 		fmt.Printf("*** WARNING: API server is disabled ***\n")
 	}
+
+	ExportActualCommand = AccessData.Section("export").Key("actual_command").MustString("")
+	ExportActualArgument = AccessData.Section("export").Key("actual_argument").MustString("")
+	if ExportActualCommand != "" {
+		fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportActualCommand,
+			ExportActualArgument)
+	}
+	ExportReferenceCommand = AccessData.Section("export").Key("reference_command").MustString("")
+	ExportReferenceArgument = AccessData.Section("export").Key("reference_argument").MustString("")
+	if ExportReferenceCommand != "" {
+		fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportReferenceCommand,
+			ExportReferenceArgument)
+	}
 }

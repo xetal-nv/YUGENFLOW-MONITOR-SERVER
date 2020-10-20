@@ -28,7 +28,7 @@ var ActiveSensors struct {
 }
 
 // provides length for legal server2gate commands
-var cmdAnswerLen = map[byte]int{
+var CmdAnswerLen = map[byte]int{
 	2:  1,
 	3:  1,
 	4:  1,
@@ -48,8 +48,8 @@ var cmdAnswerLen = map[byte]int{
 // server also has commands
 // list : lists all commands
 // macid " assigns the id at the device with mac specified in val
-// lgt is max 4 (bytes)
-var cmdAPI = map[string]cmdSpecs{
+// Lgt is max 4 (bytes)
+var CmdAPI = map[string]CmdSpecs{
 	"srate":     {2, 1},
 	"savg":      {3, 1},
 	"bgth":      {4, 2},

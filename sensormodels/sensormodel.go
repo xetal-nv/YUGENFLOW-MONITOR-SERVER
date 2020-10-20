@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"gateserver/codings"
+	"gateserver/sensorManager"
 	"gateserver/support/globals"
 	"math/rand"
 	"net"
@@ -48,7 +49,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 				cmd := make([]byte, 1)
 				ll := 1
 				if _, e = conn.Read(cmd); e == nil {
-					if l, ok := cmdArgs[cmd[0]]; ok {
+					if l, ok := sensorManager.CmdAnswerLen[cmd[0]]; ok {
 						ll += l
 					}
 					cmde := make([]byte, ll)
@@ -59,8 +60,8 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 						fmt.Printf("Sensor %v has received data %v\n", mach, cmd)
 						select {
 						case c <- cmd:
-						case <-time.After(40 * time.Second):
-							//fmt.Printf("sensor %v timeout\n", mach)
+						case <-time.After(2 * time.Second):
+							fmt.Printf("sensor %v timeout\n", mach)
 						}
 					}
 				}
@@ -101,9 +102,12 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 						}()
 						return
 					}
+				} else {
+					fmt.Printf("sensor %v command wrong CRC\n", mach)
 				}
 			case <-time.After(time.Duration(del+5) * 1000 * time.Millisecond):
 				// continue to send data
+				//fmt.Println(string(mac), msg)
 				_, e = conn.Write(msg)
 			}
 			//}

@@ -45,18 +45,14 @@ External services:
 /presence?x0?x1                         -> return true or false if there was a person in the given interval for all spaces
 /presence/{name}?x0?x1                  -> return true or false if there was a person in the given interval for space {name}   
 /presence/{[name0, ...]}?x0?x1          -> return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
+/command/{cd}?id=y?mac=w?val=z?async=0/1-> execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
 
-**API:(TBD)**  
-/command?cmd=x?id=y?mac=w?val=z -> execute command x on sensor y or w with data (if necessary) z when z is an array. If both y and w are specified it returns error    
-/command?cmd=macid?id=y?val=z -> assigns the id y to device with mac z of the device has currently id 0xff, mac must be passed given as a sequence if hex values like 1a:62:63:ef:32:36  
-/command?cmd=list -> lists all available commands  
-/command?pin=xyz -> sends debug pin xyz, answer true is accepted, nothing otherwise  
-
-these needs to be done better (if at all)  
+**API:(TBD)**
+these needs to be done bas a tool mode !!!
 /dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
 /dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
 
-missing in this list but needed?    
+missing in this list but needed for webapp    
 /plan/{name}  
 /plan/logo  
 
@@ -75,6 +71,7 @@ See gateserver.ini and configuration.ini  file for configuration example
 -env                    : enable development mode
 -db path                : set database path  
 -dc path                : set disk cache path  
+-echo                   : server enter in echo mode and data is not processed  
 -user username          : set username   
 -pwd password           : set password       
 -eeprom                 : enables refresh of device eeprom at every connection   
@@ -88,8 +85,9 @@ Configuration files: gateserver.ini, configuration.ini, measurement.ini, access.
 Resource folders: 
 
 **TO BE DONE (in priority order)**  
- - API and webpage  
  - add script on new data (all new data?)  
+ - API  
  - clean code  
+ - Webpage  
 
 

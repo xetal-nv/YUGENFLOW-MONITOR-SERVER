@@ -13,4 +13,5 @@ var cmdArgs = map[byte]int{
 	[]byte("\x04")[0]: 2,
 	[]byte("\x05")[0]: 2,
 	[]byte("\x0e")[0]: 2,
+	[]byte("\x0b")[0]: 2,
 }

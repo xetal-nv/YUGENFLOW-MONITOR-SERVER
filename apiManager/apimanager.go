@@ -28,6 +28,7 @@ func ApiManager(rst chan bool) {
 	r.Handle("/series/reference", latestData(true, false, true, 2))
 	r.Handle("/presence/{space}", latestData(false, false, true, 3))
 	r.Handle("/presence", latestData(true, false, true, 3))
+	r.Handle("/command/{command}", command())
 
 	//r.Handle("/register/{id}", register())
 	//r.Handle("/dropdevice/{id}", deviceCommandLink("resetIdentifier"))
@@ -61,7 +62,7 @@ func ApiManager(rst chan bool) {
 
 	// setting up closure and shutdown
 	<-rst
-	fmt.Println("Closing ApiManager")
+	fmt.Println("Closing apiManager.ApiManager")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(globals.ServerTimeout))
 	defer cancel()
 	// Doesn't block if no connections, but will otherwise wait

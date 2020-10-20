@@ -14,9 +14,9 @@ type SensorChannel struct {
 }
 
 // device commands describer for conversion from/to binary to/from param execution
-type cmdSpecs struct {
-	cmd byte // command binary value
-	lgt int  // number of bytes of arguments excluding cmd (1 byte) and the id (2 bytes)
+type CmdSpecs struct {
+	Cmd byte // command binary value
+	Lgt int  // number of bytes of arguments excluding Cmd (1 byte) and the id (2 bytes)
 }
 
 // type for current sensor configuration

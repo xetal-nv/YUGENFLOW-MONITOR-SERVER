@@ -52,3 +52,8 @@ type JsonPresence struct {
 	Space    string `json:"space"`
 	Presence bool   `json:"presence"`
 }
+
+type JsonCmdRt struct {
+	Answer string `json:"answer"`
+	Error  string `json:"error"`
+}

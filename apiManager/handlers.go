@@ -76,10 +76,12 @@ func info() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		_ = json.NewEncoder(w).Encode(installationInfo)
 		gateManager.GateStructure.RUnlock()
 		entryManager.EntryStructure.RUnlock()
 		spaceManager.SpaceStructure.RUnlock()
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(installationInfo)
 
 	})
 }
@@ -447,206 +449,51 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 	})
 }
 
-//func register() http.Handler {
-//
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		defer func() {
-//			if e := recover(); e != nil {
-//				//fmt.Println(e)
-//				mlogger.Recovered(globals.ApiManager,
-//					mlogger.LoggerData{"clientManager.register",
-//						"route terminated and recovered unexpectedly",
-//						[]int{1}, true})
-//			}
-//		}()
-//
-//		//Allow CORS here By * or specific origin
-//		if globals.DisableCORS {
-//			w.Header().Set("Access-Control-Allow-Origin", "*")
-//		}
-//
-//		vars := mux.Vars(r)
-//
-//		mac, err := verifyDevice(vars["id"])
-//		for i := 2; i < len(mac); i += 3 {
-//			mac = mac[:i] + ":" + mac[i:]
-//		}
-//		if err == nil {
-//			_, err = getRegistrantEmail(mac)
-//		}
-//
-//		w.WriteHeader(http.StatusOK)
-//		rt := dataformats.ApiResponse{
-//			Result: mac,
-//		}
-//		if err != nil {
-//			rt.Error = err.Error()
-//		}
-//		_ = json.NewEncoder(w).Encode(rt)
-//		return
-//	})
-//}
-//
+func command() http.Handler {
 
-//func executeLink() http.Handler {
-//
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		defer func() {
-//			if e := recover(); e != nil {
-//				mlogger.Recovered(globals.ApiManager,
-//					mlogger.LoggerData{"clientManager.executeLink",
-//						"route terminated unexpectedly",
-//						[]int{1}, true})
-//			}
-//		}()
-//		//Allow CORS here By * or specific origin
-//		if globals.DisableCORS {
-//			w.Header().Set("Access-Control-Allow-Origin", "*")
-//		}
-//
-//		vars := mux.Vars(r)
-//		if _, err := verifyDevice(vars["id"]); err == nil {
-//			if cm, err := cache.TemporaryLinks.Get(vars["cmd"]); err == nil {
-//				//fmt.Println("ok", string(cm))
-//				if res, err := http.Get(string(cm)); err == nil {
-//					var rv dataformats.ApiResponse
-//					data, _ := ioutil.ReadAll(res.Body)
-//					_ = json.Unmarshal(data, &rv)
-//					//fmt.Println(rv)
-//					_ = cache.TemporaryLinks.Delete(vars["cmd"])
-//					w.WriteHeader(http.StatusOK)
-//					_ = json.NewEncoder(w).Encode(rv)
-//					return
-//				}
-//			}
-//		}
-//		w.WriteHeader(http.StatusOK)
-//		_ = json.NewEncoder(w).Encode(dataformats.ApiResponse{
-//			Error: globals.ApiError.Error(),
-//		})
-//	})
-//}
-//
-//func deviceCommandLink(cm string) http.Handler {
-//
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		defer func() {
-//			if e := recover(); e != nil {
-//				mlogger.Recovered(globals.ApiManager,
-//					mlogger.LoggerData{"clientManager.deviceCommandLink",
-//						"route terminated unexpectedly",
-//						[]int{1}, true})
-//				fmt.Println(e)
-//
-//			}
-//		}()
-//
-//		//Allow CORS here By * or specific origin
-//		if globals.DisableCORS {
-//			w.Header().Set("Access-Control-Allow-Origin", "*")
-//		}
-//
-//		vars := mux.Vars(r)
-//		var rt dataformats.ApiResponse
-//		if mac, err := verifyDevice(vars["id"]); err == nil && mac != "" {
-//			// bypassed for development
-//			if email, err := getRegistrantEmail(mac); err == nil || globals.DebugActive {
-//				if globals.DebugActive {
-//					email = globals.SupportEmail
-//				}
-//				command := cm
-//				switch cm {
-//				case "block":
-//					command += "/" + mac
-//				case "reset":
-//					command += "/" + mac
-//				case "resetIdentifier":
-//					command += "/" + mac
-//				case "mode":
-//					command += "/" + mac + "/" + vars["mode"]
-//				case "localadaptation":
-//					command += "/" + mac + "/" + vars["mode"]
-//				default:
-//					mlogger.Warning(globals.ApiManager,
-//						mlogger.LoggerData{"clientManager.deviceCommandLink",
-//							"illegal API command for device " + mac,
-//							[]int{1}, true})
-//				}
-//				linkId, err := generateLink(command)
-//				if err != nil {
-//					rt.Error = err.Error()
-//				} else {
-//					err = sendLink(email, globals.CommandServer+"/yugenface/"+vars["id"]+"/"+linkId, mac, cm)
-//					if err != nil {
-//						rt.Error = globals.EmailFailed.Error()
-//					}
-//				}
-//			} else {
-//				rt.Error = err.Error()
-//			}
-//		} else {
-//			rt.Error = globals.ApiError.Error()
-//		}
-//
-//		w.WriteHeader(http.StatusOK)
-//		_ = json.NewEncoder(w).Encode(rt)
-//		return
-//	})
-//}
-//
-//func deviceCommand(cm string) http.Handler {
-//
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		defer func() {
-//			if e := recover(); e != nil {
-//				mlogger.Recovered(globals.ApiManager,
-//					mlogger.LoggerData{"clientManager.deviceCommand",
-//						"route terminated unexpectedly",
-//						[]int{1}, true})
-//				fmt.Println(e)
-//
-//			}
-//		}()
-//
-//		//Allow CORS here By * or specific origin
-//		if globals.DisableCORS {
-//			w.Header().Set("Access-Control-Allow-Origin", "*")
-//		}
-//
-//		vars := mux.Vars(r)
-//		var rt dataformats.ApiResponse
-//		if mac, err := verifyDevice(vars["id"]); err == nil {
-//			if _, err := getRegistrantEmail(mac); err == nil || globals.DebugActive {
-//				command := cm
-//				switch cm {
-//				case "configuration":
-//					command += "/" + mac
-//				case "result":
-//					command += "/" + mac + "/" + vars["howmany"]
-//				default:
-//					mlogger.Warning(globals.ApiManager,
-//						mlogger.LoggerData{"clientManager.deviceCommand",
-//							"illegal API command for device " + mac,
-//							[]int{1}, true})
-//				}
-//				if res, err := http.Get(globals.APIServer + "/" + command); err == nil {
-//					var rv dataformats.ApiResponse
-//					data, _ := ioutil.ReadAll(res.Body)
-//					_ = json.Unmarshal(data, &rv)
-//					_ = cache.TemporaryLinks.Delete(vars["cmd"])
-//					w.WriteHeader(http.StatusOK)
-//					_ = json.NewEncoder(w).Encode(rv)
-//					return
-//				}
-//			} else {
-//				rt.Error = err.Error()
-//			}
-//		} else {
-//			rt.Error = err.Error()
-//		}
-//
-//		w.WriteHeader(http.StatusOK)
-//		_ = json.NewEncoder(w).Encode(rt)
-//		return
-//	})
-//}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				mlogger.Recovered(globals.ApiManager,
+					mlogger.LoggerData{"apiManager.info",
+						"route terminated and recovered unexpectedly",
+						[]int{1}, true})
+			}
+		}()
+
+		//Allow CORS here By * or specific origin
+		if globals.DisableCORS {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		vars := mux.Vars(r)
+
+		var answer JsonCmdRt
+
+		params := make(map[string]string)
+		params["cmd"] = vars["command"]
+
+		if options := strings.Split(r.URL.String(), "?"); len(options) != 0 {
+			for _, val := range options[1:] {
+				if option := strings.Split(val, "="); len(option) == 2 {
+					params[strings.ToLower(strings.Trim(option[0], " "))] = strings.ToLower(strings.Trim(option[1], " "))
+				} else {
+					answer.Error = "error parameter " + val
+					break
+				}
+			}
+			if async, ok := params["async"]; ok && async == "1" {
+				go executeCommand(params)
+				answer.Answer = "ok"
+			} else {
+				answer = executeCommand(params)
+			}
+		} else {
+			answer.Error = "syntax error"
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(answer)
+
+	})
+}

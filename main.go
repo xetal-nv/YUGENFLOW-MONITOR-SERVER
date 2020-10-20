@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"gateserver/apiManager"
 	"gateserver/avgsManager"
-	"gateserver/dataformats"
 	"gateserver/entryManager"
+	"gateserver/exportManager"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
 	"gateserver/sensormodels"
@@ -29,6 +29,7 @@ func main() {
 	//var de = flag.Bool("dumpentry", false, "dump all entry data to log files")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var dev = flag.Bool("dev", false, "to be removed")
+	var echo = flag.Bool("echo", false, "runs in echo mode")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
@@ -70,6 +71,7 @@ func main() {
 	globals.DBpath = *dbpath
 	globals.DBUser = *user
 	globals.DBUserPassword = *pwd
+	globals.EchoMode = *echo
 
 	//globals.LogToFileAll = *de
 
@@ -88,29 +90,18 @@ func main() {
 	//}
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 
+	globals.Start()
+	diskCache.Start()
 	if err := coredbs.Start(); err != nil {
 		fmt.Println("Failed top start the data database:", err.Error())
 		os.Exit(0)
 	}
-	globals.Start()
-	diskCache.Start()
 	sensorManager.LoadSensorEEPROMSettings()
-
-	a := dataformats.SpaceState{
-		Id:    "test",
-		Ts:    1234,
-		Count: 12,
-	}
-
-	if err := diskCache.SaveState(a); err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
-	}
 
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 6; i++ {
+	for i := 0; i < 7; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -167,11 +158,13 @@ func main() {
 	go gateManager.Start(sd[3])
 	//goland:noinspection ALL
 	go avgsManager.Start(sd[4])
+	//goland:noinspection ALL
+	go apiManager.Start(sd[5])
 
 	fmt.Printf("\nYugenFlow Server active on ports %v , %v\n\n", globals.TCPport, globals.APIport)
 
 	//goland:noinspection ALL
-	apiManager.Start(sd[5])
+	exportManager.Start(sd[6])
 
 	// for loop will be replaced with a final call to the API server
 	//for {

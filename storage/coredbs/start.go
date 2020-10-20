@@ -26,6 +26,7 @@ func Start() (err error) {
 	if globals.DisableDatabase {
 		return
 	}
+
 	if globals.DBSLog, err = mlogger.DeclareLog("yugenflow_DBS", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yugenflow_DBS logfile.")
 		os.Exit(0)
