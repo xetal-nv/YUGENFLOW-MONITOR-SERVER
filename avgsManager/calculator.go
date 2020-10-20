@@ -108,6 +108,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				if actualsAvailable {
 					select {
 					case regReference <- dataformats.MeasurementSample{
+						Space:     space,
 						Qualifier: "actual",
 						Ts:        newData.Ts / 1000000000,
 						Val:       float64(newData.Count),
@@ -120,6 +121,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				if globals.ExportActualCommand != "" {
 					select {
 					case exportManager.ExportActuals <- dataformats.MeasurementSample{
+						Space:     space,
 						Qualifier: "actual",
 						Ts:        newData.Ts / 1000000000,
 						Val:       float64(newData.Count),

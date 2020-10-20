@@ -5,45 +5,36 @@ import (
 	"fmt"
 	"gateserver/dataformats"
 	"gateserver/support/globals"
-	"github.com/fpessolano/mlogger"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
 )
 
 func customScripting(rst chan interface{}, chActuals, chReferences chan dataformats.MeasurementSample) {
-	//cmd := exec.Command("python", "test.py")
-	//cmd.Stdout = os.Stdout
-	//cmd.Stderr = os.Stderr
-	//err := cmd.Run()
-	//if err != nil {
-	//	fmt.Printf("cmd.Run() failed with %s\n", err)
-	//}
 finished:
 	for {
+		var data dataformats.MeasurementSample
 		select {
 		case <-rst:
-			mlogger.Info(globals.ExportManager,
-				mlogger.LoggerData{"exportManager.customScripting",
-					"service stopped",
-					[]int{0}, true})
 			fmt.Println("Closing exportManager.customScripting")
+			time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 			rst <- nil
 			break finished
-		case data := <-chActuals:
-			// TODO
-			if encodedData, err := json.Marshal(data); err == nil {
-				cmd := exec.Command("python", "test.py ", string(encodedData))
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				err := cmd.Run()
-				if err != nil {
-					fmt.Printf("cmd.Run() failed with %s\n", err)
-				}
-				//fmt.Printf("actual %+v\n", string(encodedData))
+		case data = <-chActuals:
+		case data = <-chReferences:
+		}
+		// TODO: add async, handle answer in debug, log error
+		if encodedData, err := json.Marshal(data); err == nil {
+			//stringedEncodedData := strings.Replace(string(encodedData),"\"", "'", -1)
+			cmd := exec.Command("python", "test.py ",
+				strings.Replace(string(encodedData), "\"", "'", -1))
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err := cmd.Run()
+			if err != nil {
+				fmt.Printf("cmd.Run() failed with %s\n", err)
 			}
-		case data := <-chReferences:
-			// TODO
-			fmt.Printf("reference %+v\n", data)
 		}
 	}
 }
