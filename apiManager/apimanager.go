@@ -55,14 +55,14 @@ func ApiManager(rst chan bool) {
 		}
 	}()
 
-	mlogger.Info(globals.ApiManager,
+	mlogger.Info(globals.ApiManagerLog,
 		mlogger.LoggerData{"apiManager.Start",
 			"service started",
 			[]int{1}, true})
 
 	// setting up closure and shutdown
 	<-rst
-	fmt.Println("Closing apiManager.ApiManager")
+	fmt.Println("Closing apiManager.ApiManagerLog")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(globals.ServerTimeout))
 	defer cancel()
 	// Doesn't block if no connections, but will otherwise wait

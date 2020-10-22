@@ -21,7 +21,7 @@ func Start() {
 	}
 	AccessData, err = ini.InsensitiveLoad("access.ini")
 	if err != nil {
-		fmt.Printf("Fail to read configuration.ini file: %v", err)
+		fmt.Printf("Fail to read access.ini file: %v", err)
 		os.Exit(1)
 	}
 
@@ -100,16 +100,24 @@ func Start() {
 		fmt.Printf("*** WARNING: API server is disabled ***\n")
 	}
 
-	ExportActualCommand = AccessData.Section("export").Key("actual_command").MustString("")
-	ExportActualArgument = AccessData.Section("export").Key("actual_argument").MustString("")
-	if ExportActualCommand != "" {
-		fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportActualCommand,
-			ExportActualArgument)
-	}
-	ExportReferenceCommand = AccessData.Section("export").Key("reference_command").MustString("")
-	ExportReferenceArgument = AccessData.Section("export").Key("reference_argument").MustString("")
-	if ExportReferenceCommand != "" {
-		fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportReferenceCommand,
-			ExportReferenceArgument)
+	if ExportEnabled {
+		ExportAsync = AccessData.Section("export").Key("async").MustBool(false)
+		ExportActualCommand = AccessData.Section("export").Key("actual_command").MustString("")
+		ExportActualArgument = AccessData.Section("export").Key("actual_argument").MustString("")
+		if ExportActualCommand != "" {
+			fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportActualCommand,
+				ExportActualArgument)
+		}
+		ExportReferenceCommand = AccessData.Section("export").Key("reference_command").MustString("")
+		ExportReferenceArgument = AccessData.Section("export").Key("reference_argument").MustString("")
+		if ExportReferenceCommand != "" {
+			fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportReferenceCommand,
+				ExportReferenceArgument)
+		}
+		if ExportAsync && (ExportActualCommand != "" || ExportReferenceCommand != "") {
+			fmt.Printf("*** INFO: Export is set to ASYNCHRONOUS ***\n")
+		} else {
+			fmt.Printf("*** INFO: Export is set to SYNCHRONOUS ***\n")
+		}
 	}
 }

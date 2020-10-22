@@ -3,7 +3,7 @@
 Copyright Xetal @ 2019  
 Author: F. Pessolano  
 
-**TO BE FULLY REDONE, VERSION BREAKS BACK COMPATIBILITY**
+**THIS VERSION BREAKS BACK COMPATIBILITY**
 
 **REQUIREMENTS**  
 GO 1.14 or newer  
@@ -21,13 +21,16 @@ External data:
   
 External services:
   - mongoDB database  
+  
+Detachable services:  
+  - webService  
 
 **API:** 
 /info                                   -> installation information  
 /connected                              -> list all connected device which have not been marked invalid and report if they are active or not  
 /invalid                                -> list all connected device which have  been marked invalid and report if the invalidity timestamp  
 /measurements                           -> returns the definition of all active measurement  
-/latestdata                                   -> return latest measurements for all spaces  
+/latestdata                             -> return latest measurements for all spaces  
 /latestdata/{name}                      -> return latest data for space {name}   
 /latestdata/{[name0, name1, ...]}       -> return latest data for spaces [name0, name1, ...]  
 /reference?n                            -> return the last n reference measurements for all spaces  
@@ -47,27 +50,20 @@ External services:
 /presence/{[name0, ...]}?x0?x1          -> return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
 /command/{cd}?id=y?mac=w?val=z?async=0/1-> execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
 
-**API:(TBD)**
-these needs to be done bas a tool mode !!!
-/dbs/retrieve/samples -> retrieve sample data from .recoverysamples if dbsupdate is set   
-/dbs/retrieve/presence -> retrieve sample data from .recoverypresence if dbsupdate is set   
-
-missing in this list but needed for webapp    
+To be added with webapp    
 /plan/{name}  
 /plan/logo  
-
-  
-NOTE: values in val are specified as x,y,n,..   
-NOTE: series API supports types: sample, entry (debug mode only). Data for the current day are only available in debug mode  
 
 **SYSTEM VARIABLES:**  
 n/a  
 
 **CONFIGURATION:**  
-See gateserver.ini and configuration.ini  file for configuration example  
+See *.ini files for details  
 
 **COMMAND LINE OPTIONS:**  
 -debug                  : enable debug mode 
+-dev                    : development mode
+-delogs                 : delete all logs
 -env                    : enable development mode
 -db path                : set database path  
 -dc path                : set disk cache path  
@@ -85,9 +81,8 @@ Configuration files: gateserver.ini, configuration.ini, measurement.ini, access.
 Resource folders: 
 
 **TO BE DONE (in priority order)**  
- - add script on new data (all new data?)  
- - API  
- - clean code  
- - Webpage  
+ - WebService  
+ - Add database management tools  
+ - Code Cleaning    
 
 

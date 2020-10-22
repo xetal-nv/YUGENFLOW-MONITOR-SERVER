@@ -12,16 +12,16 @@ import (
 func Start(sd chan bool) {
 	var err error
 
-	if globals.ApiManager, err = mlogger.DeclareLog("yugenflow_apiManager", false); err != nil {
+	if globals.ApiManagerLog, err = mlogger.DeclareLog("yugenflow_apiManager", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yugenflow_apiManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.ApiManager, 80, 30, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.ApiManagerLog, 80, 30, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
 
-	mlogger.Info(globals.ApiManager,
+	mlogger.Info(globals.ApiManagerLog,
 		mlogger.LoggerData{"apiManager.Start",
 			"service started",
 			[]int{1}, true})
@@ -42,7 +42,7 @@ func Start(sd chan bool) {
 			case <-time.After(2 * time.Second):
 			}
 		}
-		mlogger.Info(globals.ApiManager,
+		mlogger.Info(globals.ApiManagerLog,
 			mlogger.LoggerData{"apiManager.Start",
 				"service stopped",
 				[]int{1}, true})
@@ -53,9 +53,9 @@ func Start(sd chan bool) {
 	recovery.RunWith(
 		func() { ApiManager(rstC[0]) },
 		func() {
-			mlogger.Recovered(globals.ApiManager,
-				mlogger.LoggerData{"clientManager.ApiManager",
-					"ApiManager service terminated and recovered unexpectedly",
+			mlogger.Recovered(globals.ApiManagerLog,
+				mlogger.LoggerData{"clientManager.ApiManagerLog",
+					"ApiManagerLog service terminated and recovered unexpectedly",
 					[]int{1}, true})
 		})
 }

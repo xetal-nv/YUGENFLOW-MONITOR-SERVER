@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"gateserver/dataformats"
 	"gateserver/support/globals"
-	"os"
+	"github.com/fpessolano/mlogger"
 	"os/exec"
 	"strings"
 	"time"
 )
 
-func customScripting(rst chan interface{}, chActuals, chReferences chan dataformats.MeasurementSample) {
+func customScripting(rst chan interface{}, chActual, chReferences chan dataformats.MeasurementSample) {
 finished:
 	for {
 		var data dataformats.MeasurementSample
@@ -21,19 +21,41 @@ finished:
 			time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 			rst <- nil
 			break finished
-		case data = <-chActuals:
+		case data = <-chActual:
 		case data = <-chReferences:
 		}
-		// TODO: add async, handle answer in debug, log error
 		if encodedData, err := json.Marshal(data); err == nil {
-			//stringedEncodedData := strings.Replace(string(encodedData),"\"", "'", -1)
-			cmd := exec.Command("python", "test.py ",
-				strings.Replace(string(encodedData), "\"", "'", -1))
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err := cmd.Run()
-			if err != nil {
-				fmt.Printf("cmd.Run() failed with %s\n", err)
+			if globals.ExportAsync {
+				cmd := exec.Command(globals.ExportActualCommand, globals.ExportActualArgument,
+					strings.Replace(string(encodedData), "\"", "'", -1))
+				err := cmd.Start()
+				if err != nil {
+					// script report error
+					if globals.DebugActive {
+						fmt.Println("Export script has failed:", err.Error())
+					}
+					mlogger.Error(globals.ExportManagerLog,
+						mlogger.LoggerData{Id: "exportManager.customScripting",
+							Message: "error exporting data ",
+							Data:    []int{1}, Aggregate: true})
+				}
+			} else {
+				cmd, err := exec.Command(globals.ExportActualCommand, globals.ExportActualArgument,
+					strings.Replace(string(encodedData), "\"", "'", -1)).Output()
+				if err != nil || len(cmd) != 0 {
+					// script report error
+					if globals.DebugActive {
+						if err != nil {
+							fmt.Println("Export script has failed:", err.Error())
+						} else {
+							fmt.Println("Export script reported failure:", string(cmd))
+						}
+					}
+					mlogger.Error(globals.ExportManagerLog,
+						mlogger.LoggerData{Id: "exportManager.customScripting",
+							Message: "error exporting data ",
+							Data:    []int{1}, Aggregate: true})
+				}
 			}
 		}
 	}

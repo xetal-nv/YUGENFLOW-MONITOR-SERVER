@@ -14,16 +14,16 @@ func Start(sd chan bool) {
 
 	var err error
 
-	if globals.ExportManager, err = mlogger.DeclareLog("yugenflow_exportManager", false); err != nil {
+	if globals.ExportManagerLog, err = mlogger.DeclareLog("yugenflow_exportManager", false); err != nil {
 		fmt.Println("Fatal Error: Unable to set yugenflow_exportManager logfile.")
 		os.Exit(0)
 	}
-	if e := mlogger.SetTextLimit(globals.ExportManager, 50, 50, 12); e != nil {
+	if e := mlogger.SetTextLimit(globals.ExportManagerLog, 50, 50, 12); e != nil {
 		fmt.Println(e)
 		os.Exit(0)
 	}
 
-	mlogger.Info(globals.ExportManager,
+	mlogger.Info(globals.ExportManagerLog,
 		mlogger.LoggerData{"exportManager.Start",
 			"service started",
 			[]int{0}, true})
@@ -44,7 +44,7 @@ func Start(sd chan bool) {
 			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 			}
 		}
-		mlogger.Info(globals.ExportManager,
+		mlogger.Info(globals.ExportManagerLog,
 			mlogger.LoggerData{"exportManager.Start",
 				"service stopped",
 				[]int{0}, true})
@@ -60,7 +60,7 @@ func Start(sd chan bool) {
 			customScripting(rstC[0], ExportActuals, ExportReference)
 		},
 		func() {
-			mlogger.Recovered(globals.ExportManager,
+			mlogger.Recovered(globals.ExportManagerLog,
 				mlogger.LoggerData{"exportManager.customScripting",
 					"service terminated and recovered unexpectedly",
 					[]int{1}, true})

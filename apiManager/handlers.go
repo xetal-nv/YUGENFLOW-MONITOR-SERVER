@@ -26,7 +26,7 @@ func info() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ApiManager,
+				mlogger.Recovered(globals.ApiManagerLog,
 					mlogger.LoggerData{"apiManager.info",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
@@ -91,7 +91,7 @@ func connectedSensors() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ApiManager,
+				mlogger.Recovered(globals.ApiManagerLog,
 					mlogger.LoggerData{"apiManager.connectedSensors",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
@@ -126,7 +126,7 @@ func invalidSensors() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ApiManager,
+				mlogger.Recovered(globals.ApiManagerLog,
 					mlogger.LoggerData{"apiManager.invalidSensors",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
@@ -204,7 +204,7 @@ func measurementDefinitions() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ApiManager,
+				mlogger.Recovered(globals.ApiManagerLog,
 					mlogger.LoggerData{"apiManager.measurementDefinitions",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
@@ -231,7 +231,7 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ApiManager,
+				mlogger.Recovered(globals.ApiManagerLog,
 					mlogger.LoggerData{"apiManager.latestData",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
@@ -239,7 +239,7 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 		}()
 
 		if nonSeriesUseDB && seriesUseDB {
-			mlogger.Error(globals.ApiManager,
+			mlogger.Error(globals.ApiManagerLog,
 				mlogger.LoggerData{"apiManager.latestData",
 					"internal error nonSeriesUseDB && seriesUseDB true",
 					[]int{1}, true})
@@ -454,7 +454,7 @@ func command() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if e := recover(); e != nil {
-				mlogger.Recovered(globals.ApiManager,
+				mlogger.Recovered(globals.ApiManagerLog,
 					mlogger.LoggerData{"apiManager.info",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})

@@ -15,8 +15,10 @@ import (
 	"gateserver/storage/diskCache"
 	"gateserver/supp"
 	"gateserver/support/globals"
+	"gateserver/webService"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -26,11 +28,12 @@ import (
 func main() {
 	var dbpath = flag.String("db", "mongodb://localhost:27017", "database path")
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
-	//var de = flag.Bool("dumpentry", false, "dump all entry data to log files")
 	var debug = flag.Bool("debug", false, "enable debug mode")
-	var dev = flag.Bool("dev", false, "to be removed")
+	var delogs = flag.Bool("delogs", false, "delete all logs")
+	var dev = flag.Bool("dev", false, "development mode")
 	var echo = flag.Bool("echo", false, "runs in echo mode")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
+	var export = flag.Bool("export", false, "enable export scripting")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 	var user = flag.String("user", "", "user name")
@@ -38,6 +41,19 @@ func main() {
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 
 	flag.Parse()
+
+	if *delogs {
+		files, err := filepath.Glob(filepath.Join("log", "*"))
+		if err != nil {
+			fmt.Printf("*** ERROR: Error while removing logs %v ***\n", err.Error())
+		}
+		for _, file := range files {
+			err = os.RemoveAll(file)
+			if err != nil {
+				fmt.Printf("*** ERROR: Error while removing logs %v ***\n", err.Error())
+			}
+		}
+	}
 
 	if *st != "" {
 		if ns, err := time.Parse(globals.TimeLayout, *st); err != nil {
@@ -72,6 +88,7 @@ func main() {
 	globals.DBUser = *user
 	globals.DBUserPassword = *pwd
 	globals.EchoMode = *echo
+	globals.ExportEnabled = *export
 
 	//globals.LogToFileAll = *de
 
@@ -85,9 +102,9 @@ func main() {
 	if *eeprom {
 		fmt.Printf("*** WARNING: sensor EEPROM refresh enabled ***\n")
 	}
-	//if *de {
-	//	log.Printf("*** WARNING: dump all data is enabled ***\n")
-	//}
+	if *export {
+		fmt.Println("*** WARNING: Export mode enabled ***")
+	}
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 
 	globals.Start()
@@ -101,7 +118,7 @@ func main() {
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 7; i++ {
+	for i := 0; i < 8; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -163,11 +180,11 @@ func main() {
 
 	fmt.Printf("\nYugenFlow Server active on ports %v , %v\n\n", globals.TCPport, globals.APIport)
 
+	// this can be eventually split into another server
+	//goland:noinspection ALL
+	go webService.Start(sd[7])
+
 	//goland:noinspection ALL
 	exportManager.Start(sd[6])
 
-	// for loop will be replaced with a final call to the API server
-	//for {
-	//	time.Sleep(6000 * time.Hour)
-	//}
 }
