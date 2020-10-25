@@ -81,7 +81,8 @@ Configuration files: gateserver.ini, configuration.ini, measurement.ini, access.
 Resource folders: 
 
 **TO BE DONE (in priority order)**  
- - WebService  
+ - Move WebService  out  
+ - Add conditional compiling  
  - Add database management tools  
  - Code Cleaning    
 
