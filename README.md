@@ -89,7 +89,6 @@ The following tags can be used for specific build:
 For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
 
 **TO BE DONE (in priority order)**  
- - Add conditional compiling  
  - Move WebService out  
  - Add database management tools  
  - Code Cleaning    

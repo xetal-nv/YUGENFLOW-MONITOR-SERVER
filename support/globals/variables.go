@@ -5,9 +5,8 @@ import "gopkg.in/ini.v1"
 // hardcoded parameters
 
 const (
-	VERSION       = "2.0.0"
-	SEVERE        = 2
-	NORMAL        = 1
+	//SEVERE        = 2
+	//NORMAL        = 1
 	OFF           = 0
 	TimeLayout    = "15:04" // time layout used to read the configuration file
 	TimeLayoutDot = "15.04" // time layout used to read the configuration file
