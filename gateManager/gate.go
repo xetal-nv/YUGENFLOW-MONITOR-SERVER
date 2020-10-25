@@ -5,8 +5,8 @@ import (
 	"gateserver/dataformats"
 	"gateserver/entryManager"
 	"gateserver/storage/diskCache"
-	"gateserver/supp"
 	"gateserver/support/globals"
+	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
 	"math"
 	"os"
@@ -52,8 +52,8 @@ func detectTransition(id string, gateSensorsOrdered []int, sensorLatestData map[
 	} else {
 		if scratchPad.unusedSampleSumIn[gateSensorsOrdered[0]] > 0 && scratchPad.unusedSampleSumIn[gateSensorsOrdered[1]] > 0 {
 			//in
-			tmp := supp.Min(supp.Abs(scratchPad.unusedSampleSumIn[gateSensorsOrdered[0]]),
-				supp.Abs(scratchPad.unusedSampleSumIn[gateSensorsOrdered[1]]))
+			tmp := others.Min(others.Abs(scratchPad.unusedSampleSumIn[gateSensorsOrdered[0]]),
+				others.Abs(scratchPad.unusedSampleSumIn[gateSensorsOrdered[1]]))
 			rt += tmp
 			scratchPad.unusedSampleSumIn[gateSensorsOrdered[0]] -= tmp
 			scratchPad.unusedSampleSumIn[gateSensorsOrdered[1]] -= tmp
@@ -66,8 +66,8 @@ func detectTransition(id string, gateSensorsOrdered []int, sensorLatestData map[
 		}
 		if scratchPad.unusedSampleSumOut[gateSensorsOrdered[0]] < 0 && scratchPad.unusedSampleSumOut[gateSensorsOrdered[1]] < 0 {
 			//out
-			tmp := supp.Min(supp.Abs(scratchPad.unusedSampleSumOut[gateSensorsOrdered[0]]),
-				supp.Abs(scratchPad.unusedSampleSumOut[gateSensorsOrdered[1]]))
+			tmp := others.Min(others.Abs(scratchPad.unusedSampleSumOut[gateSensorsOrdered[0]]),
+				others.Abs(scratchPad.unusedSampleSumOut[gateSensorsOrdered[1]]))
 			rt -= tmp
 			scratchPad.unusedSampleSumOut[gateSensorsOrdered[0]] += tmp
 			scratchPad.unusedSampleSumOut[gateSensorsOrdered[1]] += tmp

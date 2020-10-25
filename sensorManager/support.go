@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"gateserver/storage/diskCache"
-	"gateserver/supp"
 	"gateserver/support/globals"
 	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
@@ -61,7 +60,7 @@ func maliciousSetIdDOS(ipc, mac string) bool {
 func LoadSensorEEPROMSettings() {
 
 	if globals.SensorEEPROMResetEnabled {
-		if supp.FileExists(globals.SensorSettingsFile) {
+		if others.FileExists(globals.SensorSettingsFile) {
 
 			fmt.Printf("*** INFO: EEPROM refresh rate is set at %v with delay %v ***\n", globals.SensorEEPROMResetStep, globals.SensorEEPROMResetDelay)
 			fmt.Printf("*** INFO: Setting sensor settings from file %v ***\n", globals.SensorSettingsFile)

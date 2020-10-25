@@ -13,7 +13,6 @@ import (
 	"gateserver/spaceManager"
 	"gateserver/storage/coredbs"
 	"gateserver/storage/diskCache"
-	"gateserver/supp"
 	"gateserver/support/globals"
 	"gateserver/webService"
 	"os"
@@ -64,7 +63,7 @@ func main() {
 			nows := strconv.Itoa(now.Hour()) + ":"
 			mins := "00" + strconv.Itoa(now.Minute())
 			nows += mins[len(mins)-2:]
-			if ne, err := time.Parse(supp.TimeLayout, nows); err != nil {
+			if ne, err := time.Parse(globals.TimeLayout, nows); err != nil {
 				fmt.Println("Syntax error retrieving system current time")
 				os.Exit(1)
 			} else {

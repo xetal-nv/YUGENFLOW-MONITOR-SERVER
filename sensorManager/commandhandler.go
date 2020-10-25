@@ -2,7 +2,7 @@ package sensorManager
 
 import (
 	"fmt"
-	"gateserver/codings"
+	codings "gateserver/codings"
 	"gateserver/dataformats"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
