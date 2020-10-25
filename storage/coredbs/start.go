@@ -1,3 +1,5 @@
+// +build !embedded
+
 package coredbs
 
 import (

@@ -80,9 +80,17 @@ Executable file: gateserver(.exe)
 Configuration files: gateserver.ini, configuration.ini, measurement.ini, access.ini    
 Resource folders: 
 
+**BUILD OPTION**  
+The following tags can be used for specific build:  
+ - (notags)     : complete server build  
+ - "embedded"   : build without database support  
+ - "notest"     : build without testing support 
+ 
+For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
+
 **TO BE DONE (in priority order)**  
- - Move WebService  out  
  - Add conditional compiling  
+ - Move WebService out  
  - Add database management tools  
  - Code Cleaning    
 
