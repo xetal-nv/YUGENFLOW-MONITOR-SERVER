@@ -1,4 +1,4 @@
-// +build !dev
+// +build dev
 
 package main
 
@@ -11,6 +11,7 @@ import (
 	"gateserver/exportManager"
 	"gateserver/gateManager"
 	"gateserver/sensorManager"
+	"gateserver/sensormodels"
 	"gateserver/spaceManager"
 	"gateserver/storage/coredbs"
 	"gateserver/storage/diskCache"
@@ -30,6 +31,8 @@ func main() {
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var delogs = flag.Bool("delogs", false, "delete all logs")
+	var dev = flag.Bool("dev", false, "development mode")
+	var echo = flag.Bool("echo", false, "runs in echo mode")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var export = flag.Bool("export", false, "enable export scripting")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
@@ -85,12 +88,12 @@ func main() {
 	globals.DBpath = *dbpath
 	globals.DBUser = *user
 	globals.DBUserPassword = *pwd
-	globals.EchoMode = false
+	globals.EchoMode = *echo
 	globals.ExportEnabled = *export
 
 	//globals.LogToFileAll = *de
 
-	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
+	fmt.Printf("\nStarting server YugenFlow Server %s-development \n\n", globals.VERSION)
 	if *debug {
 		fmt.Println("*** WARNING: Debug mode enabled ***")
 	}
@@ -157,6 +160,18 @@ func main() {
 	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	//goland:noinspection ALL
 	go sensorManager.Start(sd[2])
+
+	//if globals.DebugActive {
+	if *dev {
+		fmt.Println("*** WARNING: Development mode enabled ***")
+		go sensormodels.SensorModel(0, 7000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
+		go sensormodels.SensorModel(1, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
+		go sensormodels.SensorModel(2, 7000, 15, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x07})
+		go sensormodels.SensorModel(3, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x08})
+		//go sensormodels.SensorModel(65535, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0a, 0x01, 0x02, 0x08})
+		//time.Sleep(3*time.Second)
+		//go sensormodels.SensorModel(4, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
+	}
 
 	//goland:noinspection ALL
 	go gateManager.Start(sd[3])

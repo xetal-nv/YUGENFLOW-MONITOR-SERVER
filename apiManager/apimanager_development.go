@@ -1,4 +1,4 @@
-// +build !dev
+// +build dev
 
 package apiManager
 
@@ -22,10 +22,10 @@ func ApiManager(rst chan bool) {
 	r.Handle("/latestdata", latestData(true, false, false, 0))
 	r.Handle("/reference/{space}", latestData(false, true, false, 2))
 	r.Handle("/reference", latestData(true, true, false, 2))
-	//r.Handle("/delta/{space}", latestData(false, true, false, 1))
-	//r.Handle("/delta", latestData(true, true, false, 1))
-	//r.Handle("/series/delta/{space}", latestData(false, false, true, 1))
-	//r.Handle("/series/delta", latestData(true, false, true, 1))
+	r.Handle("/delta/{space}", latestData(false, true, false, 1))
+	r.Handle("/delta", latestData(true, true, false, 1))
+	r.Handle("/series/delta/{space}", latestData(false, false, true, 1))
+	r.Handle("/series/delta", latestData(true, false, true, 1))
 	r.Handle("/series/reference/{space}", latestData(false, false, true, 2))
 	r.Handle("/series/reference", latestData(true, false, true, 2))
 	r.Handle("/presence/{space}", latestData(false, false, true, 3))

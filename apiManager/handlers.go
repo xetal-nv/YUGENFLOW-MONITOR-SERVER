@@ -293,7 +293,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 							newData.Results[measure] = []dataformats.MeasurementSample{measurement}
 						}
 						results = append(results, newData)
-						results = append(results, newData)
 					default:
 						// we do not wait for the channel to be ready
 						//fmt.Println("data not ready, get skipped")
