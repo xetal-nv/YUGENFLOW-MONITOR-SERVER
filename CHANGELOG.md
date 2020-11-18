@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
  - Possibility to export data via external script  
  - Option to remove all logs  
- - Build contrains  
+ - Build constraints  
 
 ### Changed
  - Server architecture has been changed  

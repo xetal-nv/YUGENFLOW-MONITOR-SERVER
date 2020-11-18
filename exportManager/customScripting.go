@@ -25,6 +25,9 @@ finished:
 		case data = <-chReferences:
 		}
 		if encodedData, err := json.Marshal(data); err == nil {
+			if globals.DebugActive {
+				fmt.Printf("Export JSON: %v\n", strings.Replace(string(encodedData), "\"", "'", -1))
+			}
 			if globals.ExportAsync {
 				cmd := exec.Command(globals.ExportActualCommand, globals.ExportActualArgument,
 					strings.Replace(string(encodedData), "\"", "'", -1))

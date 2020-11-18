@@ -61,19 +61,19 @@ n/a
 See *.ini files for details  
 
 **COMMAND LINE OPTIONS:**  
--debug                  : enable debug mode 
--dev                    : development mode
--delogs                 : delete all logs
--env                    : enable development mode
 -db path                : set database path  
 -dc path                : set disk cache path  
+-debug                  : enable debug mode 
+-delogs                 : delete all logs
+-dev                    : development mode
 -echo                   : server enter in echo mode and data is not processed  
--user username          : set username   
--pwd password           : set password       
 -eeprom                 : enables refresh of device eeprom at every connection   
--tdl int                : TCP read deadline in hours (default 24)   
+-export                 : enable export mode
 -fth int                : set failure threshold in severe mode (default 3)   
+-pwd password           : set database password       
+-tdl int                : TCP read deadline in hours (default 24)   
 -st string              : set start time, time specified as HH:MM   
+-user username          : set database username   
 
 **INSTALLATION**  
 Executable file: gateserver(.exe)  
@@ -89,6 +89,9 @@ The following tags can be used for specific build:
 For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
 
 **TO BE DONE (in priority order)**  
+ - Check the API for reading latest values !!  
+ - Check export manager as it seems that fields have \r\n characters in them  
+ - Turn all non commands into GET and adjust the way request data is retrieved (r.URL.Query())  
  - Move WebService out  
  - Add database management tools  
  - Code Cleaning    
