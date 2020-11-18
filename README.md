@@ -3,8 +3,8 @@
 ## 1. Specifications
 
 Copyright Xetal @ 2020  
-Author: F. Pessolano  
-Version: 2.0.0 Alpha
+Version: 2.0.0
+Status: Alpha
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**
 
