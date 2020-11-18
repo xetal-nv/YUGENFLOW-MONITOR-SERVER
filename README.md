@@ -347,7 +347,7 @@ The answer the API provides follows this JSON format:
         "error" : ""
     }
     
-In case of error the 'error' fiels is not empty, otherwise the answer of the device is transparently p;aced by the server in the fiels 'answer'.  
+In case of error the 'error' field is not empty, otherwise the answer of the device is transparently p;aced by the server in the fiels 'answer'.  
 
 ## 3. External scripting    
 The server support external scripting triggered by new in- or out-flow data caming from individual gates. This option needs to be enabled at server launch with option '-export'
@@ -357,7 +357,7 @@ will then execute the line 'command argument {JSONDATA}' every time there is a n
 executables (e.g. command.exe JSONDATA) as pure scripting (e.g. python example.py JSONDATA).  
 The command can be executed asynchronously, the server does not wait for the command to return a result, or synchronously, the server wait for the command to return a result. 
 In synchronous mode anything non null returned by the command is considered error and reported as such in the log file.  
-The JSONDATA fiels is a JSON string such as:
+The JSONDATA field is a JSON string where 'actual' data is passed (see measurement.ini file for explanation of data types). The JSON format is as follows:
 
     example
 
@@ -379,7 +379,6 @@ For further information refer to https://github.com/fpessolano/mlogger
 This build is currently in alpha, therefore several bugs are still present  
 
 **5.2 Feature Roadmap**  
- - Comment ini files  
  - Check API under nodatabase built  
  - Remove webservice
  - Verify the API for reading latest values goves latest and not first values  
