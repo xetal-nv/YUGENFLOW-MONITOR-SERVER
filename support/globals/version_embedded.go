@@ -1,4 +1,4 @@
-// +build embedded,!notest
+// +build embedded
 
 package globals
 

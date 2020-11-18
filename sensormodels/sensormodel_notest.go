@@ -1,4 +1,4 @@
-// +build notest
+// +build !dev
 
 package sensormodels
 
