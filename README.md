@@ -11,7 +11,7 @@ Status: Alpha
 **1.1 REQUIREMENTS**  
 
 **REQUIREMENTS**  
-GO 1.14 or newer  
+GO 1.15 or newer  
 64-bit architecture  
 Golang Packages (to be revised):
  - go.etcd.io/bbolt/  
@@ -48,8 +48,9 @@ Detachable services:
     /command/{cd}?id=y?mac=w?val=z?async=0/1: execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
 
 _To be added with webapp:_    
-/plan/{name}  
-/plan/logo  
+
+    /plan/{name}                            : to be removed?  
+    /plan/logo                              : to be removed?  
 
 _For development only:_   
  
