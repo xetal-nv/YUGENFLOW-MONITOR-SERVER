@@ -69,7 +69,7 @@ The following tags can be used for specific build:
 
      - (notags)     : complete server build  
      - embedded     : build without database support  
-     - test         : build with development support  
+     - dev          : build with development support  
  
 For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
 
