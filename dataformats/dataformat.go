@@ -24,8 +24,8 @@ type GateState struct {
 
 // generic flow
 type Flow struct {
-	Id        string `json:"id"`
-	Variation int    `json:"variation"`
+	Id      string `json:"id"`
+	Netflow int    `json:"netflow"`
 }
 
 // entry flow data model used for database storage

@@ -22,7 +22,7 @@ func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.Entry
 		if key != data.Id {
 			entry.Count = 0
 			for i, val := range entry.Flows {
-				val.Variation = 0
+				val.Netflow = 0
 				entry.Flows[i] = val
 			}
 			//entry.Flows = make(map[string]dataformats.Flow)
@@ -33,7 +33,7 @@ func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.Entry
 			entry.State = data.State
 			entry.Ts = data.Ts
 			for i, val := range entry.Flows {
-				val.Variation = data.Flows[i].Variation
+				val.Netflow = data.Flows[i].Netflow
 				entry.Flows[i] = val
 			}
 		}
@@ -253,12 +253,12 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 										for i := range entry.Flows {
 											if delta < 0 {
 												flow := entry.Flows[i]
-												flow.Variation += 1
+												flow.Netflow += 1
 												entry.Flows[i] = flow
 												delta += 1
 											} else if delta > 0 {
 												flow := entry.Flows[i]
-												flow.Variation -= 1
+												flow.Netflow -= 1
 												entry.Flows[i] = flow
 												delta -= 1
 											} else {

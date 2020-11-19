@@ -37,6 +37,7 @@ func main() {
 	var user = flag.String("user", "", "user name")
 	var pwd = flag.String("pwd", "", "user password")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
+	var us = flag.Bool("us", false, "enable unsafe shutdown")
 
 	flag.Parse()
 
@@ -104,6 +105,9 @@ func main() {
 		fmt.Println("*** WARNING: Export mode enabled ***")
 	}
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
+	if *us {
+		fmt.Println("*** WARNING: Enabled unsafe shutdown on user signals ***")
+	}
 
 	globals.Start()
 	diskCache.Start()
@@ -123,28 +127,30 @@ func main() {
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func(c chan os.Signal, sd []chan bool) {
 		<-c
-		fmt.Println("\nClosing YugenFlow Server")
-		//var wg sync.WaitGroup
-		for _, ch := range sd {
-			//wg.Add(1)
-			//go func(ch chan bool) {
-			ch <- true
-			//<-ch
-			select {
-			case <-ch:
-			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+		if !*us {
+			fmt.Println("\nClosing YugenFlow Server")
+			//var wg sync.WaitGroup
+			for _, ch := range sd {
+				//wg.Add(1)
+				//go func(ch chan bool) {
+				ch <- true
+				//<-ch
+				select {
+				case <-ch:
+				case <-time.After(time.Duration(globals.SettleTime) * time.Second):
+				}
+				//	wg.Done()
+				//}(ch)
 			}
-			//	wg.Done()
-			//}(ch)
+			//wg.Wait()
+			diskCache.Close()
+			if err := coredbs.Disconnect(); err != nil {
+				fmt.Println("Error in disconnecting from the YugenFlow Database")
+			} else {
+				fmt.Println("Disconnected from YugenFlow Database")
+			}
+			time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 		}
-		//wg.Wait()
-		diskCache.Close()
-		if err := coredbs.Disconnect(); err != nil {
-			fmt.Println("Error in disconnecting from the YugenFlow Database")
-		} else {
-			fmt.Println("Disconnected from YugenFlow Database")
-		}
-		time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 		fmt.Println("Closing YugenFlow Server completed")
 		os.Exit(0)
 	}(c, sd)

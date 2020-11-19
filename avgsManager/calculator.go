@@ -98,8 +98,8 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 					for gn, gv := range ev.Flows {
 						newData.Flows[en].Flows[gn] = dataformats.Flow{
-							Id:        gv.Id,
-							Variation: gv.Variation,
+							Id:      gv.Id,
+							Netflow: gv.Netflow,
 						}
 					}
 				}
@@ -183,13 +183,13 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 									entry.Count += sampleEntry.Count
 									for gateSampleName, gateSampleCurrent := range sampleEntry.Flows {
 										if gate, found := entry.Flows[gateSampleName]; found {
-											gate.Variation += gateSampleCurrent.Variation
+											gate.Netflow += gateSampleCurrent.Netflow
 											entry.Flows[gateSampleName] = gate
 										} else {
 											// new gate flow, we deep copy it
 											entry.Flows[gateSampleName] = dataformats.Flow{
-												Id:        gateSampleCurrent.Id,
-												Variation: gateSampleCurrent.Variation,
+												Id:      gateSampleCurrent.Id,
+												Netflow: gateSampleCurrent.Netflow,
 											}
 										}
 									}
@@ -206,8 +206,8 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 									}
 									for i, val := range sampleEntry.Flows {
 										flows[sampleEntryName].Flows[i] = dataformats.Flow{
-											Id:        val.Id,
-											Variation: val.Variation,
+											Id:      val.Id,
+											Netflow: val.Netflow,
 										}
 									}
 								}
@@ -266,13 +266,13 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 										entry.Count += sampleEntry.Count
 										for gateSampleName, gateSampleCurrent := range sampleEntry.Flows {
 											if gate, found := entry.Flows[gateSampleName]; found {
-												gate.Variation += gateSampleCurrent.Variation
+												gate.Netflow += gateSampleCurrent.Netflow
 												entry.Flows[gateSampleName] = gate
 											} else {
 												// new gate flow, we deep copy it
 												entry.Flows[gateSampleName] = dataformats.Flow{
-													Id:        gateSampleCurrent.Id,
-													Variation: gateSampleCurrent.Variation,
+													Id:      gateSampleCurrent.Id,
+													Netflow: gateSampleCurrent.Netflow,
 												}
 											}
 										}
@@ -289,8 +289,8 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 										}
 										for i, val := range sampleEntry.Flows {
 											flows[sampleEntryName].Flows[i] = dataformats.Flow{
-												Id:        val.Id,
-												Variation: val.Variation,
+												Id:      val.Id,
+												Netflow: val.Netflow,
 											}
 										}
 									}

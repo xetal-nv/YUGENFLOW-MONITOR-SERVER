@@ -105,14 +105,14 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 				}
 				entryRegister.Count = data.Netflow
 				tempRegister := dataformats.Flow{
-					Id:        data.Name,
-					Variation: data.Netflow,
+					Id:      data.Name,
+					Netflow: data.Netflow,
 				}
 				entryRegister.Flows[data.Name] = tempRegister
 				for key := range entryRegister.Flows {
 					if key != data.Name {
 						tmp := entryRegister.Flows[key]
-						tmp.Variation = 0
+						tmp.Netflow = 0
 						entryRegister.Flows[key] = tmp
 					}
 				}
@@ -133,8 +133,8 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 					}
 					for key, el := range entryRegister.Flows {
 						tmp := dataformats.Flow{
-							Id:        el.Id,
-							Variation: el.Variation,
+							Id:      el.Id,
+							Netflow: el.Netflow,
 						}
 						copyState.Flows[key] = tmp
 					}
