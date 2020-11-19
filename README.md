@@ -421,7 +421,6 @@ For further information refer to https://github.com/fpessolano/mlogger
 This build is currently in alpha, therefore several bugs are still present  
 
 **5.2 Feature Roadmap**  
- - Add calculated flows to exported data  
  - Add database management tools  
  - API for custom reports in excel/CVS format send per email  
 
@@ -433,5 +432,6 @@ This build is currently in alpha, therefore several bugs are still present
  - Add non-GET rejection
  - Remove body string manipulation with r.URL.Query()  
  - Code Cleaning    
+ - Add calculated flows to exported data?  
 
 
