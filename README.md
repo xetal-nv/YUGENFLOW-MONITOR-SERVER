@@ -408,6 +408,7 @@ In Python3 this can be achieved by means of a code such as:
     
     jsonData = json.loads(sys.argv[1].replace("'", '"'))
     
+Refer to the example script example.py  
 
 ## 4. Logs  
 The logs file are contained in the './log' folder which is created by the server (if not already present).  
