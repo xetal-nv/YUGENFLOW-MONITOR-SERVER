@@ -8,4 +8,4 @@ main.exe
 /html/js/dat.js
 /html/js/def.js
 gateserver
-gateserver.exe
+gateserver_embedded_nodb.exe

@@ -60,7 +60,7 @@ _For development only:_
 
 
 **1.5 INSTALLATION**  
-Executable file: gateserver(.exe)  
+Executable file: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database  
 Configuration files: see 1.4 in the same folder as the executable  
 Resource folders: 
 
