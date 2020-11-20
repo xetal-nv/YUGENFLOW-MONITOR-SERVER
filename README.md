@@ -403,12 +403,7 @@ Where:
  - 'value' is the count value  
  - 'flows' is the flow data per entry and respective devices which format is the same as the equivalent field in the JSON produced by the LATEST API  
  
-Please refer to the language documentation on how to transform the JSON string into a JSON struct value in the external command/script.
-In Python3 this can be achieved by means of a code such as:  
-    
-    jsonData = json.loads(sys.argv[1].replace("'", '"'))
-    
-Refer to the example script example.py  
+Please refer to the files example.xyz as example for language xyz (if present).    
 
 ## 4. Logs  
 The logs file are contained in the './log' folder which is created by the server (if not already present).  
