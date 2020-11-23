@@ -66,7 +66,4 @@ func Start(sd chan bool) {
 					[]int{1}, true})
 		})
 
-	//for {
-	//	time.Sleep(36 * time.Hour)
-	//}
 }

@@ -57,7 +57,6 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 			if v, ok := CmdAPI[command]; ok {
 				cmd := []byte{v.Cmd}
 				bs := make([]byte, 4)
-				//binary.BigEndian.PutUint32(bs, uint32(specs.srate))
 				binary.BigEndian.PutUint32(bs, value)
 				cmd = append(cmd, bs[4-v.Lgt:4]...)
 				cmd = append(cmd, codings.Crc8(cmd))
@@ -86,11 +85,8 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 										if globals.CRCused {
 											_, _ = conn.Read(make([]byte, 1))
 										}
-										//log.Printf("Confirmation execution of command %x on device %v\n", Cmd, mac)
-										//break mainLoop
 										return nil
 									default:
-										//log.Printf("Illegal answer %v for command %x on device %v\n", ans, Cmd, mac)
 										// illegal answer
 										break readLoop
 									}
@@ -112,42 +108,31 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 
 	time.Sleep(time.Duration(globals.SensorEEPROMResetDelay) * time.Second)
 	if specs, ok := sensorData[mac]; ok || commonSensorSpecs.savg != 0 {
-		//fmt.Println("found")
-		//os.Exit(1)
 		if !ok {
 			specs = commonSensorSpecs
 		}
 		eLab := "("
 		if e := sendCommand("srate", uint32(specs.srate)); e != nil {
-			//log.Println(e)
 			eLab += "srate "
 		}
 		if e := sendCommand("savg", uint32(specs.savg)); e != nil {
-			//log.Println(e)
 			eLab += "savg "
 		}
 		if e := sendCommand("bgth", uint32(math.Round(specs.bgth*16))); e != nil {
-			//log.Println(e)
 			eLab += "bgth "
 		}
 		if e := sendCommand("occth", uint32(math.Round(specs.occth*16))); e != nil {
-			//log.Println(e)
 			eLab += "occth "
 		}
 		if eLab != "(" {
 			err = errors.New("Failed to execute commands " + eLab + ") for device " + mac)
 		}
 	} else {
-		//fmt.Println("not found")
 		mlogger.Warning(globals.SensorManagerLog,
 			mlogger.LoggerData{"sensorManager.SensorEEPROMResetEnabled mac: " + mac,
 				"sensorData cache is corrupted",
 				[]int{1}, true})
-		//os.Exit(1)
 		err = errors.New("servers.SensorEEPROMResetEnabled: sensorData cache is corrupted for device " + mac)
 	}
-	//fmt.Println(err)
-	//os.Exit(1)
 	return
-	//}
 }

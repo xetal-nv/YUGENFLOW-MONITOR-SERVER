@@ -36,7 +36,6 @@ access.ini : it sets access to the server by configuring and enabling database, 
 configuration.ini : it sets the installation in terms of gates, entries and spaces  
 gateserver.ini : it contains all settings of the server itself  
 measurement.ini : it contains the definitions of all emasureemnts the server needs to precomputer and provide apart form the real time data  
-webservice.ini : sets the web service (incomoplete and will be separated into a separate client server)    
 
 **1.4 COMMAND LINE OPTIONS:**  
 
@@ -421,13 +420,6 @@ This build is currently in alpha, therefore several bugs are still present
  - API for custom reports in excel/CVS format send per email  
 
 **5.3 Development TODOs**  
- - Check API under nodatabase built  
- - Remove webservice
- - Verify the API for reading latest values gives latest and not first values  
- - Check export manager as it seems that fields have \r\n characters in them  
- - Add non-GET rejection
- - Remove body string manipulation with r.URL.Query()  
- - Code Cleaning    
  - Add calculated flows to exported data?  
 
 

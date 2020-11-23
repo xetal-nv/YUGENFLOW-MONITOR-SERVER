@@ -34,6 +34,12 @@ func info() http.Handler {
 		}()
 		var installationInfo []JsonSpace
 
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(installationInfo)
+			return
+		}
+
 		// we need to set installationInfo every time to account for dunamic changes
 		gateManager.GateStructure.RLock()
 		entryManager.EntryStructure.RLock()
@@ -99,6 +105,12 @@ func connectedSensors() http.Handler {
 		}()
 		var connectedSensors []JsonConnectedDevice
 
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(connectedSensors)
+			return
+		}
+
 		//Allow CORS here By * or specific origin
 		if globals.DisableCORS {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -133,6 +145,12 @@ func invalidSensors() http.Handler {
 			}
 		}()
 		var invalidSensorsList []JsonInvalidDevice
+
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(invalidSensorsList)
+			return
+		}
 
 		//Allow CORS here By * or specific origin
 		if globals.DisableCORS {
@@ -216,6 +234,12 @@ func measurementDefinitions() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+
 		_ = json.NewEncoder(w).Encode(measurements)
 
 	})
@@ -254,6 +278,12 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 
 		var spaces []string
 		spaceManager.SpaceStructure.RLock()
+
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(spaces)
+			return
+		}
 
 		if all {
 			for name := range spaceManager.SpaceStructure.EntryList {
@@ -468,6 +498,12 @@ func command() http.Handler {
 		vars := mux.Vars(r)
 
 		var answer JsonCmdRt
+
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(answer)
+			return
+		}
 
 		params := make(map[string]string)
 		params["cmd"] = vars["command"]

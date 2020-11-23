@@ -158,38 +158,23 @@ func Start(sd chan bool) {
 	EntryStructure.Unlock()
 	SpaceStructure.Unlock()
 
-	//fmt.Println(EntryStructure)
-	//fmt.Println(SpaceStructure)
-	//time.Sleep(3*time.Second)
-	//os.Exit(0)
-
 	// setting up closure and shutdown
 	<-sd
 	fmt.Println("Closing spaceManager")
-	//var wg sync.WaitGroup
 	SpaceStructure.Lock()
 	for _, ch := range SpaceStructure.StopChannel {
-		//wg.Add(1)
-		//go func(ch chan interface{}) {
 		ch <- nil
 		select {
 		case <-ch:
 		case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 		}
-		//wg.Done()
-		//}(ch)
 	}
 	SpaceStructure.Unlock()
-	//wg.Wait()
 	mlogger.Info(globals.SpaceManagerLog,
 		mlogger.LoggerData{"spaceManager.Start",
 			"service stopped",
 			[]int{0}, true})
 	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	sd <- true
-
-	//for _, current := range globals.Config.Section("spaces").KeyStrings() {
-	//	fmt.Println(current, globals.Config.Section("spaces").Key(current))
-	//}
 
 }

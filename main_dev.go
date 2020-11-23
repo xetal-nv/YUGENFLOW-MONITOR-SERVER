@@ -16,7 +16,6 @@ import (
 	"gateserver/storage/coredbs"
 	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
-	"gateserver/webService"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -122,7 +121,7 @@ func main() {
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 7; i++ {
 		sd = append(sd, make(chan bool))
 	}
 
@@ -186,10 +185,6 @@ func main() {
 	go apiManager.Start(sd[5])
 
 	fmt.Printf("\nYugenFlow Server active on ports %v , %v\n\n", globals.TCPport, globals.APIport)
-
-	// this can be eventually split into another server
-	//goland:noinspection ALL
-	go webService.Start(sd[7])
 
 	//goland:noinspection ALL
 	exportManager.Start(sd[6])

@@ -60,8 +60,6 @@ func Start() (err error) {
 		dataDB = client.Database(DB).Collection("dataDB")
 		referenceDB = client.Database(DB).Collection("referenceDB")
 		shadowDataDB = client.Database(DB).Collection("shadowDataDB")
-		//stateDB = client.Database(DB).Collection("stateDB")
-		//shadowStateDB = client.Database(DB).Collection("shadowStateDB")
 	}
 	mlogger.Info(globals.DBSLog,
 		mlogger.LoggerData{"coreDBS.Start", "service started",

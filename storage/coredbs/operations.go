@@ -15,7 +15,6 @@ func SaveSpaceData(nd dataformats.SpaceState) error {
 	if globals.DisableDatabase {
 		return nil
 	}
-	//fmt.Printf("TBD: Store space data %+v\n\n", nd)
 	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
 	if _, err := dataDB.InsertOne(ctx, nd); err != nil {
 		return err

@@ -108,37 +108,23 @@ func Start(sd chan bool) {
 	GateStructure.Unlock()
 	EntryStructure.Unlock()
 
-	//fmt.Println(GateStructure)
-	//fmt.Println(EntryStructure)
-	//os.Exit(0)
-
 	// setting up closure and shutdown
 	<-sd
 	fmt.Println("Closing entryManager")
-	//var wg sync.WaitGroup
 	EntryStructure.Lock()
 	for _, ch := range EntryStructure.StopChannel {
-		//wg.Add(1)
-		//go func(ch chan interface{}) {
 		ch <- nil
 		select {
 		case <-ch:
 		case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 		}
-		//wg.Done()
-		//}(ch)
 	}
 	EntryStructure.Unlock()
-	//wg.Wait()
 	mlogger.Info(globals.EntryManagerLog,
 		mlogger.LoggerData{"entryManager.Start",
 			"service stopped",
 			[]int{0}, true})
 	time.Sleep(time.Duration(globals.SettleTime) * time.Second)
 	sd <- true
-
-	//for _, current := range globals.Config.Section("spaces").KeyStrings() {
-	//	fmt.Println(current, globals.Config.Section("spaces").Key(current))
-	//}
 
 }

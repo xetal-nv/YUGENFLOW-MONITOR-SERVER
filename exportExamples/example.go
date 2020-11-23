@@ -1,4 +1,4 @@
-package main
+package exportExamples
 
 import (
 	"encoding/json"

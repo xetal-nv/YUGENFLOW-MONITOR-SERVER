@@ -48,19 +48,13 @@ func Start(sd chan bool) {
 	go func(sd chan bool, rstC []chan interface{}) {
 		<-sd
 		fmt.Println("Closing avgsManager")
-		//var wg sync.WaitGroup
 		for _, ch := range rstC {
-			//wg.Add(1)
-			//go func(ch chan interface{}) {
 			ch <- nil
 			select {
 			case <-ch:
 			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 			}
-			//wg.Done()
-			//}(ch)
 		}
-		//wg.Wait()
 		mlogger.Info(globals.AvgsManagerLog,
 			mlogger.LoggerData{"avgsManager.Start",
 				"service stopped",
@@ -176,7 +170,4 @@ func Start(sd chan bool) {
 					[]int{1}, true})
 		})
 
-	//for {
-	//	time.Sleep(36 * time.Hour)
-	//}
 }

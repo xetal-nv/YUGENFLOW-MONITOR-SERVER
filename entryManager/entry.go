@@ -14,19 +14,6 @@ import (
 
 func entry(entryname string, entryRegister dataformats.EntryState, in chan dataformats.FlowData, stop chan interface{},
 	setReset chan bool, gates map[string]dataformats.GateState) {
-
-	//once.Do(func() {
-	//	if globals.SaveState {
-	//		if state, err := coredbs.LoadEntryState(entryname); err == nil {
-	//			if state.Id == entryname {
-	//				entryRegister = state
-	//			} else {
-	//				fmt.Println("Error reading state for entry:", entryname)
-	//			}
-	//		}
-	//	}
-	//})
-
 	defer func() {
 		println("a")
 		if e := recover(); e != nil {
@@ -82,13 +69,6 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 						[]int{0}, true})
 			}
 		case <-stop:
-			//if globals.SaveState {
-			//	if err := coredbs.SaveEntryState(entryname, entryRegister); err != nil {
-			//		fmt.Println("Error saving state for entry:", entryname)
-			//	} else {
-			//		fmt.Println("Successful saving state for entry:", entryname)
-			//	}
-			//}
 			fmt.Println("Closing entryManager.entry:", entryname)
 			mlogger.Info(globals.EntryManagerLog,
 				mlogger.LoggerData{"entryManager.entry: " + entryname,
