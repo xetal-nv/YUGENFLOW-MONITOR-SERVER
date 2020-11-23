@@ -56,7 +56,7 @@ func Start(sd chan bool) {
 
 				// semantics check of the gate definitions (reject sensor and !sensor in the same gate)
 				illegal := false
-				if len(sensors) == 2 {
+				if len(sensors) == 2 || len(sensors) == 1 {
 					for i, s := range sensors {
 						sensors[i] = strings.Trim(strings.Replace(s, "!", "", -1), "")
 						if val, err := strconv.Atoi(sensors[i]); err == nil {

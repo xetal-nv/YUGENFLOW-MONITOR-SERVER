@@ -160,6 +160,7 @@ func handler(conn net.Conn) {
 			_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
 			return
 		} else {
+
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", "", -1), " ")
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"device " + ipc,
@@ -175,6 +176,9 @@ func handler(conn net.Conn) {
 						[]int{0}, true})
 				return
 			}
+
+			// TODO: report and bypass declaration are unsafe !!!!
+			// TODO: there is no protection in case of two devices with the same mac (attack)
 
 			// read sensor definition form the sensor DB and store it locally
 			def, erDB := diskCache.ReadDefinition([]byte(mach))

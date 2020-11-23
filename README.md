@@ -142,7 +142,7 @@ It returns a JSON ARRAY of the following format:
       ...
     ]
     
-It is am array of JSON elements each describing a defined space as a name and a list of entries.  
+It is an array of JSON elements each describing a defined space as a name and a list of entries.  
 
     "spacename": "h0",
     "entries": [
@@ -414,10 +414,13 @@ For further information refer to https://github.com/fpessolano/mlogger
 
 **5.1 Known bugs**  
 This build is currently in alpha, therefore several bugs are still present  
+BUG list:  
+ - using bypass and report in the configuration does not force the single sensor per ID constraint  
+ - system unsafe vs same mac attack  
 
 **5.2 Feature Roadmap**  
  - Add database management tools  
- - API for custom reports in excel/CVS format send per email  
+ - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
  - Add calculated flows to exported data?  
