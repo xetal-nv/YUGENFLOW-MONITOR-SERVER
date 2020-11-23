@@ -415,8 +415,7 @@ For further information refer to https://github.com/fpessolano/mlogger
 **5.1 Known bugs**  
 This build is currently in alpha, therefore several bugs are still present  
 BUG list:  
- - using bypass and report in the configuration does not force the single sensor per ID constraint  
- - system unsafe vs same mac attack  
+
 
 **5.2 Feature Roadmap**  
  - Add database management tools  

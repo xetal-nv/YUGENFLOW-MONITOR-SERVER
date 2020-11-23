@@ -29,9 +29,9 @@ func handler(conn net.Conn) {
 		if globals.DebugActive {
 			fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
 		}
-		mlogger.Info(globals.SensorManagerLog,
+		mlogger.Error(globals.SensorManagerLog,
 			mlogger.LoggerData{"sensor " + ipc,
-				"error on setting deadline: " + e.Error(),
+				"setting deadline: " + e.Error(),
 				[]int{0}, false})
 	}
 	failedRead := func(mach, ipc string, e error) {
@@ -176,9 +176,6 @@ func handler(conn net.Conn) {
 						[]int{0}, true})
 				return
 			}
-
-			// TODO: report and bypass declaration are unsafe !!!!
-			// TODO: there is no protection in case of two devices with the same mac (attack)
 
 			// read sensor definition form the sensor DB and store it locally
 			def, erDB := diskCache.ReadDefinition([]byte(mach))
@@ -373,23 +370,30 @@ func handler(conn net.Conn) {
 							if !sensorDef.active {
 
 								// check for possible attack on duplicated ID
+								// which ID is used depends on the possible sensor definition
+								var idTobeChecked int
 								if sensorDef.id == -1 {
-									ActiveSensors.RLock()
-									if _, alreadyInUse := ActiveSensors.Id[sensorDef.idSent]; alreadyInUse {
-										if globals.DebugActive {
-											fmt.Printf("Potential malicious device using ID %v with mac %v and ip %v\n",
-												sensorDef.idSent, mach, ipc)
-										}
-										// potential malicious attack, IP and MAc are marked
-										ActiveSensors.RUnlock()
-										_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
-										_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
-										// A delay is inserted in case this is a malicious attempt
-										others.WaitRandom(globals.MaliciousTimeout)
-										return
-									}
-									ActiveSensors.RUnlock()
+									idTobeChecked = sensorDef.idSent
+								} else {
+									idTobeChecked = sensorDef.id
 								}
+								//if sensorDef.id == -1 {
+								ActiveSensors.RLock()
+								if _, alreadyInUse := ActiveSensors.Id[idTobeChecked]; alreadyInUse {
+									if globals.DebugActive {
+										fmt.Printf("Potential malicious device using ID %v with mac %v and ip %v\n",
+											sensorDef.idSent, mach, ipc)
+									}
+									// potential malicious attack, IP and MAc are marked
+									ActiveSensors.RUnlock()
+									_, _ = diskCache.MarkIP([]byte(ipc), globals.MaliciousTriesIP)
+									_, _ = diskCache.MarkMAC([]byte(mach), globals.MaliciousTriesMac)
+									// A delay is inserted in case this is a malicious attempt
+									others.WaitRandom(globals.MaliciousTimeout)
+									return
+								}
+								ActiveSensors.RUnlock()
+								//}
 								if globals.DebugActive {
 									fmt.Printf("New Sensor with Definition: %+v\n", sensorDef)
 								}
