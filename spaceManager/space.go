@@ -282,6 +282,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 							//fmt.Println(spacename,"sending data", spaceRegister)
 							//fmt.Println(spaceRegister)
 							//fmt.Println(shadowSpaceRegister)
+							//continue
 
 							go func(nd dataformats.SpaceState) {
 								_ = coredbs.SaveSpaceData(nd)

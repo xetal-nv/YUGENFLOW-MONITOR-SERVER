@@ -399,7 +399,7 @@ Where:
  - 'qualifier' specifies the data type and can be 'actual' or 'reference' (see measurement.ini for data type explanation)  
  - 'space' is the space name  
  - 'timestamp' is the sampling time in Epoch Unix format  
- - 'value' is the count value  
+ - 'value' is the value of the latest count change (actual) or the value of the counter (reference)  
  - 'flows' is the flow data per entry and respective devices which format is the same as the equivalent field in the JSON produced by the LATEST API  
  
 Please refer to the files example.xyz as example for language xyz (if present).    
@@ -418,10 +418,12 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
+ - Add/Remove/Read sensor declaration via API  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
+ - Clean code  
  - Add calculated flows to exported data?  
 
 

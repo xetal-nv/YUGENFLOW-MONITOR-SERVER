@@ -64,6 +64,7 @@ func Start(sd chan bool) {
 	}(sd, rstC)
 
 	var maxTick int = 0
+	var tick int = 15
 	realTimeDefinitions := make(map[string]int)
 	referenceDefinitions := make(map[string]int)
 
@@ -74,7 +75,7 @@ func Start(sd chan bool) {
 		os.Exit(0)
 	}
 
-	tick := definitions.Section("system").Key("tick").MustInt(5)
+	//tick := definitions.Section("system").Key("tick").MustInt(5)
 	actualsAvailable := definitions.Section("system").Key("actuals").MustBool(false)
 
 	for _, def := range definitions.Section("realtime").KeyStrings() {
@@ -84,10 +85,15 @@ func Start(sd chan bool) {
 			if duration > maxTick {
 				maxTick = duration
 			}
+			if duration < tick {
+				tick = duration
+			}
 		} else {
 			fmt.Printf("Measurement definition for %v is invalid\n", def)
 		}
 	}
+
+	tick = int(tick / 3)
 
 	for _, def := range definitions.Section("reference").KeyStrings() {
 		duration := definitions.Section("reference").Key(def).MustInt(0)
