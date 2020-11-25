@@ -443,6 +443,7 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
+ - Save added device definition to additional ini file  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
 

@@ -537,7 +537,6 @@ func command() http.Handler {
 	})
 }
 
-// TODO
 func devicedefinitions() http.Handler {
 
 	fn := func(a string, list []string) bool {
