@@ -47,3 +47,24 @@ func DeleteDefinition(mac []byte) (err error) {
 	})
 	return
 }
+
+func ReadAllDefinitions() (dr []dataformats.SensorDefinition, err error) {
+	_ = main.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket([]byte(definitions)).Cursor()
+		for key, def := c.First(); key != nil; key, def = c.Next() {
+			var definition dataformats.SensorDefinition
+			if e := json.Unmarshal(def, &definition); e != nil && err == nil {
+				err = globals.PartialError
+			} else {
+				mac := string(key)
+				for i := 2; i < len(mac); i += 3 {
+					mac = mac[:i] + ":" + mac[i:]
+				}
+				definition.Mac = mac
+				dr = append(dr, definition)
+			}
+		}
+		return nil
+	})
+	return
+}

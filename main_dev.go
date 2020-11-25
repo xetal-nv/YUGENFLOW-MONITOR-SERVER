@@ -89,8 +89,7 @@ func main() {
 	globals.DBUserPassword = *pwd
 	globals.EchoMode = *echo
 	globals.ExportEnabled = *export
-
-	//globals.LogToFileAll = *de
+	globals.LimitedApi = false
 
 	fmt.Printf("\nStarting server YugenFlow Server %s-development \n\n", globals.VERSION)
 	if *debug {

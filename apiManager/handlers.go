@@ -103,7 +103,7 @@ func connectedSensors() http.Handler {
 						[]int{1}, true})
 			}
 		}()
-		var connectedSensors []JsonConnectedDevice
+		var connSensors []JsonConnectedDevice
 
 		if r.Method != "GET" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -119,7 +119,7 @@ func connectedSensors() http.Handler {
 		if macs, status, err := diskCache.ListActiveDevices(); err == nil {
 			if len(macs) == len(status) {
 				for i, mac := range macs {
-					connectedSensors = append(connectedSensors,
+					connSensors = append(connSensors,
 						JsonConnectedDevice{
 							Mac:    mac,
 							Active: status[i],
@@ -128,7 +128,8 @@ func connectedSensors() http.Handler {
 			}
 		}
 
-		_ = json.NewEncoder(w).Encode(connectedSensors)
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(connSensors)
 
 	})
 }
@@ -169,6 +170,7 @@ func invalidSensors() http.Handler {
 			}
 		}
 
+		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(invalidSensorsList)
 
 	})
@@ -236,10 +238,11 @@ func measurementDefinitions() http.Handler {
 
 		if r.Method != "GET" {
 			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(measurements)
+			return
 		}
 
+		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(measurements)
 
 	})
@@ -505,6 +508,7 @@ func command() http.Handler {
 			return
 		}
 
+		// INFO: instead of using URL.string this could be done also with URL.Query, performance is the same
 		params := make(map[string]string)
 		params["cmd"] = vars["command"]
 
@@ -529,6 +533,107 @@ func command() http.Handler {
 
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(answer)
+
+	})
+}
+
+// TODO
+func devicedefinitions() http.Handler {
+
+	fn := func(a string, list []string) bool {
+		for _, b := range list {
+			if b == a {
+				return true
+			}
+		}
+		return false
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				mlogger.Recovered(globals.ApiManagerLog,
+					mlogger.LoggerData{"apiManager.connectedSensors",
+						"route terminated and recovered unexpectedly",
+						[]int{1}, true})
+			}
+		}()
+		var rt JsonDefinitions
+
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			rt.Error = globals.InvalidOperation.Error()
+			_ = json.NewEncoder(w).Encode(connectedSensors)
+			return
+		}
+
+		//Allow CORS here By * or specific origin
+		if globals.DisableCORS {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		query := r.URL.Query()
+		if cmd, ok := query["cmd"]; ok && len(cmd) == 1 {
+			switch strings.ToLower(cmd[0]) {
+			case "readall":
+				var e error
+				if rt.Definitions, e = diskCache.ReadAllDefinitions(); e != nil {
+					rt.Error = e.Error()
+				}
+			case "read":
+				if macQuery, ok := query["mac"]; ok {
+					mac := macQuery[0]
+					mac = strings.Replace(mac, ":", "", -1)
+					if def, err := diskCache.ReadDefinition([]byte(mac)); err != nil {
+						rt.Error = err.Error()
+					} else {
+						rt.Definitions = []dataformats.SensorDefinition{def}
+					}
+				}
+			case "delete":
+				if macQuery, ok := query["mac"]; ok {
+					mac := macQuery[0]
+					mac = strings.Replace(mac, ":", "", -1)
+					if err := diskCache.DeleteDefinition([]byte(mac)); err != nil {
+						rt.Error = err.Error()
+					}
+				} else {
+					rt.Error = globals.InvalidOperation.Error()
+				}
+			case "add":
+				rt.Error = globals.InvalidOperation.Error()
+				if macQuery, ok := query["mac"]; ok {
+					mac := macQuery[0]
+					mac = strings.Replace(mac, ":", "", -1)
+					if ids, ok := query["id"]; ok {
+						if id, err := strconv.Atoi(ids[0]); err == nil {
+							params := query["params"]
+							definition := dataformats.SensorDefinition{
+								Id:      id,
+								Bypass:  fn("bypass", params),
+								Report:  fn("report", params),
+								Enforce: fn("enforce", params),
+								Strict:  fn("strict", params),
+							}
+							// bypass has priority on strict
+							definition.Strict = definition.Strict && !definition.Bypass
+							// enforce does nothing if strict is given
+							definition.Enforce = definition.Enforce && !definition.Strict
+							if err := diskCache.WriteDefinition([]byte(mac), definition); err != nil {
+								rt.Error = globals.Error.Error()
+							} else {
+								rt.Error = ""
+							}
+						}
+					}
+				}
+			default:
+				rt.Error = globals.InvalidOperation.Error()
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(rt)
 
 	})
 }

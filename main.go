@@ -30,6 +30,7 @@ func main() {
 	var delogs = flag.Bool("delogs", false, "delete all logs")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var export = flag.Bool("export", false, "enable export scripting")
+	var limitedApi = flag.Bool("la", false, "disable data API")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 	var user = flag.String("user", "", "user name")
@@ -86,8 +87,7 @@ func main() {
 	globals.DBUserPassword = *pwd
 	globals.EchoMode = false
 	globals.ExportEnabled = *export
-
-	//globals.LogToFileAll = *de
+	globals.LimitedApi = *limitedApi
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *debug {
@@ -105,6 +105,9 @@ func main() {
 	fmt.Printf("*** INFO: failure threshold set to %v ***\n", *failTh)
 	if *us {
 		fmt.Println("*** WARNING: Enabled unsafe shutdown on user signals ***")
+	}
+	if *limitedApi {
+		fmt.Println("*** WARNING: Data API paths are disabled ***")
 	}
 
 	globals.Start()

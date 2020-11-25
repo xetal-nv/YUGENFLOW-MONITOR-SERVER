@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Status: Alpha
+Status: Alpha-2020_11_25
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**
 
@@ -46,6 +46,7 @@ measurement.ini : it contains the definitions of all emasureemnts the server nee
     -eeprom                 : enables refresh of device eeprom at every connection   
     -export                 : enable export mode  
     -fth int                : set failure threshold in severe mode (default 3)   
+    -la                     : data API are disabled, only control API are active  
     -pwd password           : database password       
     -tdl int                : TCP read deadline in hours (default 24)   
     -st string              : set start time, time specified as HH:MM   
@@ -56,6 +57,7 @@ _For development only:_
 
     -dev                    : development mode  
     -echo                   : server enter in echo mode and data is not processed  
+    -la                     : not available    
 
 
 **1.5 INSTALLATION**  
@@ -94,6 +96,7 @@ The API accepts only GET requests.
     /presence/{name}?x0?x1                  : return true or false if there was a person in the given interval for space {name}   
     /presence/{[name0, ...]}?x0?x1          : return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
     /command/{cd}?id=y?mac=w?val=z?async=0/1: execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
+    /devicedefinitions?cmd=x?mac=w?def=z    : manipulate device definitions (read, delete, add)
 
 _To be added with webapp:_    
 
@@ -347,7 +350,29 @@ The answer the API provides follows this JSON format:
         "error" : ""
     }
     
-In case of error the 'error' field is not empty, otherwise the answer of the device is transparently p;aced by the server in the fiels 'answer'.  
+In case of error the 'error' field is not empty, otherwise the answer of the device is transparently placed by the server in the field 'answer'.  
+
+**2.11 DEVICEDEFINITIONS**  
+The DEVICEDEFINITIONS API is used to read, delete and add sensor definitions. The operations are defined as follows:  
+
+    /devicedefinitions?cmd=readall
+
+The command _readall_ will return all current definitions.  
+
+    /devicedefinitions?cmd=read&mac=xyz
+
+The command _read_ reads the definition (if present) for the device with mac _xyz_. Mac is accepted with and without ':'.  
+
+    /devicedefinitions?cmd=delete&mac=xyz
+
+The command _delete_ removes the definition (if present) for the device with mac _xyz_. Mac is accepted with and without ':'  
+
+    /devicedefinitions?cmd=add&mac=xyz&id=i{&params=bypass|report|enforce|strict}
+
+The command _add_ add the definition for a device with mac _xyz_ and id _i_ and parameters _params_.  
+Please note that parameters given are set according to priority. Bypass has priority on strict and strict on enforce.  
+Mac is accepted with and without ':'.   
+
 
 ## 3. External scripting    
 The server support external scripting triggered by new in- or out-flow data caming from individual gates. This option needs to be enabled at server launch with option '-export'
@@ -418,7 +443,6 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
- - Add/Remove/Read sensor declaration via API  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
 

@@ -18,15 +18,18 @@ func ApiManager(rst chan bool) {
 	r.Handle("/connected", connectedSensors())
 	r.Handle("/invalid", invalidSensors())
 	r.Handle("/measurements", measurementDefinitions())
-	r.Handle("/latestdata/{space}", latestData(false, false, false, 0))
-	r.Handle("/latestdata", latestData(true, false, false, 0))
-	r.Handle("/reference/{space}", latestData(false, true, false, 2))
-	r.Handle("/reference", latestData(true, true, false, 2))
-	r.Handle("/series/reference/{space}", latestData(false, false, true, 2))
-	r.Handle("/series/reference", latestData(true, false, true, 2))
-	r.Handle("/presence/{space}", latestData(false, false, true, 3))
-	r.Handle("/presence", latestData(true, false, true, 3))
 	r.Handle("/command/{command}", command())
+	r.Handle("/devicedefinitions", devicedefinitions())
+	if !globals.LimitedApi {
+		r.Handle("/latestdata/{space}", latestData(false, false, false, 0))
+		r.Handle("/latestdata", latestData(true, false, false, 0))
+		r.Handle("/reference/{space}", latestData(false, true, false, 2))
+		r.Handle("/reference", latestData(true, true, false, 2))
+		r.Handle("/series/reference/{space}", latestData(false, false, true, 2))
+		r.Handle("/series/reference", latestData(true, false, true, 2))
+		r.Handle("/presence/{space}", latestData(false, false, true, 3))
+		r.Handle("/presence", latestData(true, false, true, 3))
+	}
 
 	http.Handle("/", r)
 

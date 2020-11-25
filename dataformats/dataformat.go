@@ -4,14 +4,18 @@ type Commanding []byte
 
 // sensor data model
 type SensorDefinition struct {
-	Id        int  `json:"id"`
-	Bypass    bool `json:"bypass"`
-	Report    bool `json:"report"`
-	Enforce   bool `json:"enforce"`
-	Strict    bool `json:"strict"`
-	Reversed  bool `json:"reversed"`
-	Suspected int  `json:"numberMarkings"`
-	Disabled  bool `json:"disabled"`
+	Mac     string `json:"mac,omitempty"`
+	Id      int    `json:"id"`
+	Bypass  bool   `json:"bypass"`
+	Report  bool   `json:"report"`
+	Enforce bool   `json:"enforce"`
+	Strict  bool   `json:"strict"`
+	//Reversed  bool   `json:"reversed"`
+	Reversed bool `json:"-"`
+	//Suspected int    `json:"numberMarkings"`
+	Suspected int `json:"-"`
+	//Disabled  bool   `json:"disabled"`
+	Disabled bool `json:"-"`
 }
 
 // gate data model

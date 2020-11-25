@@ -31,6 +31,7 @@ func ApiManager(rst chan bool) {
 	r.Handle("/presence/{space}", latestData(false, false, true, 3))
 	r.Handle("/presence", latestData(true, false, true, 3))
 	r.Handle("/command/{command}", command())
+	r.Handle("/devicedefinitions", devicedefinitions())
 
 	http.Handle("/", r)
 

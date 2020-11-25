@@ -57,3 +57,8 @@ type JsonCmdRt struct {
 	Answer string `json:"answer"`
 	Error  string `json:"error"`
 }
+
+type JsonDefinitions struct {
+	Definitions []dataformats.SensorDefinition `json:"definitions"`
+	Error       string                         `json:"error"`
+}
