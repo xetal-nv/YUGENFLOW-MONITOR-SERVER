@@ -10,7 +10,6 @@ Status: Alpha-2020_11_25
 
 **1.1 REQUIREMENTS**  
 GO 1.15 or newer  
-64-bit architecture  
 Golang Packages (to be revised):
  - go.etcd.io/bbolt/  
  - xetal.ddns.net/supportservices  
@@ -448,6 +447,8 @@ BUG list:
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
+ - count is wrong on the pi  
+ - make debug a build option  
  - Clean code  
  - Add calculated flows to exported data?  
 

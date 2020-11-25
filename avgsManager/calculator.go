@@ -67,7 +67,9 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				if len(samples) != 0 {
 					data = samples[len(samples)-1]
 				}
-				data.Ts = refTs
+				data.Ts = refTs + int64(tick)*1000000000
+				data.Flows = make(map[string]dataformats.EntryState)
+				//fmt.Printf("calculator %v ticked %v\n", space, data)
 				samples = append(samples, data)
 				for (samples[0].Ts < refTs-int64(maxTick)*1000000000) && len(samples) > 1 {
 					if samples[1].Ts <= refTs-int64(maxTick)*1000000000 {
@@ -104,6 +106,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 					}
 				}
+				//fmt.Printf("calculator %v received %v\n\n", space, newData)
 
 				// the current data is sent immediately
 				if actualsAvailable {
@@ -147,6 +150,11 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			}
 
+			//for _, el := range samples {
+			//	fmt.Printf("sliding window %+v\n", el)
+			//}
+			//fmt.Println()
+
 			// real time measurements
 			for measurementName, period := range realTimeDefinitions {
 				var selectedSamples []dataformats.MeasurementSample
@@ -172,10 +180,19 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 
-				//for _, el := range selectedSamples {
-				//	fmt.Print(time.Unix(el.Ts/1000000000, 0),  " ")
+				fmt.Printf("interval %v to %v\n", samples[len(samples)-1].Ts-adjPeriod, samples[len(samples)-1].Ts)
+				//for _, el := range samples {
+				//	fmt.Printf("selected sample %v at %v\n", el.Count, el.Ts)
 				//}
 				//fmt.Println()
+				//continue
+
+				for _, el := range selectedSamples {
+					//fmt.Print(time.Unix(el.Ts/1000000000, 0),  " ")
+					//fmt.Printf("selected sample %v at %v\n", el.Val, el.Ts)
+					fmt.Printf("selected sample %+v\n", el)
+				}
+				fmt.Println()
 				//continue
 
 				// the selectedSamples slice starts with the latest entry value (at [0])
@@ -185,12 +202,13 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					// both flow and counter can be calculated
 					var tot float64 = 0
 					flows := make(map[string]dataformats.EntryState)
-					length := int(selectedSamples[0].Ts - selectedSamples[len(selectedSamples)-1].Ts)
+					length := float64(selectedSamples[0].Ts - selectedSamples[len(selectedSamples)-1].Ts)
 					for i := len(selectedSamples) - 1; i >= 0; i-- {
 						if i > 0 {
 							// we update the total count as for the second most recent sample
-							tot += selectedSamples[i].Val * float64(int(selectedSamples[i-1].Ts-selectedSamples[i].Ts))
+							tot += selectedSamples[i].Val * float64(selectedSamples[i-1].Ts-selectedSamples[i].Ts)
 						}
+						//fmt.Println(tot)
 						for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
 							if entry, ok := flows[sampleEntryName]; ok {
 								// adjust values and gates
@@ -228,15 +246,21 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 					}
 
-					// result is limited to two digits
-					tot = float64(int64((tot*100)/float64(length))) / 100
+					// TODO check counters and (especially) flows
 
-					//fmt.Printf("%+v\n", dataformats.MeasurementSample{
-					//	Qualifier: measurementName,
-					//	Ts:        selectedSamples[0].Ts / 1000000000,
-					//	Val:       tot,
-					//	Flows:     flows,
-					//})
+					//fmt.Println()
+
+					// result is limited to two digits
+					tot = float64(int64((tot*100)/length)) / 100
+					//fmt.Println(tot)
+					//fmt.Println()
+
+					fmt.Printf("%+v\n\n", dataformats.MeasurementSample{
+						Qualifier: measurementName,
+						Ts:        selectedSamples[0].Ts / 1000000000,
+						Val:       tot,
+						Flows:     flows,
+					})
 
 					// we give it little time to transmit the data, it too late data is thrown away
 					select {
@@ -259,10 +283,13 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			}
 
+			//continue
+
 			//reference measurements
 			for measurementName, period := range referenceDefinitions {
 				adjPeriod := int64(period) * 1000000000
-				if lastReferenceMeasurement[measurementName]+int64(adjPeriod) < samples[len(samples)-1].Ts {
+				if lastReferenceMeasurement[measurementName]+adjPeriod < samples[len(samples)-1].Ts {
+					fmt.Println("new period", time.Now())
 					// time for a new reference measurement
 					var selectedSamples []dataformats.MeasurementSample
 				foundall2:
@@ -279,15 +306,25 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 					}
 
+					for _, el := range selectedSamples {
+						//fmt.Printf("selected sample %v at %v\n", el.Val, el.Ts)
+						fmt.Printf("selected sample %v\n", el)
+					}
+					//fmt.Println()
+					//lastReferenceMeasurement[measurementName] = samples[len(samples)-1].Ts
+					//continue
+
 					// measurement calculation
 					if len(selectedSamples) > 1 {
 						var tot float64 = 0
 						flows := make(map[string]dataformats.EntryState)
-						length := int(selectedSamples[0].Ts - selectedSamples[len(selectedSamples)-1].Ts)
+						length := float64(selectedSamples[0].Ts - selectedSamples[len(selectedSamples)-1].Ts)
 						for i := len(selectedSamples) - 1; i >= 0; i-- {
 							if i > 0 {
-								tot += selectedSamples[i].Val * float64(int(selectedSamples[i-1].Ts-selectedSamples[i].Ts))
+								tot += selectedSamples[i].Val * float64(selectedSamples[i-1].Ts-selectedSamples[i].Ts)
 							}
+							//fmt.Println(tot)
+							//fmt.Println()
 							for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
 								if entry, ok := flows[sampleEntryName]; ok {
 									// adjust values and gates
@@ -325,7 +362,9 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							}
 
 						}
-						tot = float64(int64((tot*100)/float64(length))) / 100
+						tot = float64(int64((tot*100)/length)) / 100
+						//fmt.Println(tot)
+						fmt.Println()
 						newSample := dataformats.MeasurementSample{
 							Qualifier: measurementName,
 							Space:     space,
@@ -333,6 +372,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							Val:       tot,
 							Flows:     flows,
 						}
+						fmt.Printf("Reference result %+v\n\n", newSample)
 
 						// we give it little time to transmit the data, it too late data is thrown away
 						select {

@@ -600,6 +600,8 @@ func handler(conn net.Conn) {
 								flow := int(data[2])
 								if flow == 255 {
 									flow = -1
+								} else if flow != 1 {
+									flow = 0
 								}
 								for _, ch := range sensorDef.channels.gateChannel {
 									//flow := int(data[2])
