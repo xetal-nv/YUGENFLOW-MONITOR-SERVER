@@ -34,6 +34,7 @@ type JsonSpace struct {
 
 type JsonConnectedDevice struct {
 	Mac    string `json:"mac"`
+	Id     int    `json:"id"`
 	Active bool   `json:"active"`
 }
 

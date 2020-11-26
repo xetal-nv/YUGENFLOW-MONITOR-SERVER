@@ -1,4 +1,4 @@
-// +build dev
+// +build dev,!debug
 
 package main
 

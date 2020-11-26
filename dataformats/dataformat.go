@@ -6,6 +6,7 @@ type Commanding []byte
 type SensorDefinition struct {
 	Mac     string `json:"mac,omitempty"`
 	Id      int    `json:"id"`
+	MaxRate int64  `json:"sampleMaximumRateNS"`
 	Bypass  bool   `json:"bypass"`
 	Report  bool   `json:"report"`
 	Enforce bool   `json:"enforce"`

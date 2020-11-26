@@ -17,6 +17,7 @@ func tcpServer(rst chan interface{}) {
 		fmt.Println("sensorManager.tcpServer: fatal error:", e)
 		os.Exit(0)
 	}
+	//goland:noinspection GoUnhandledErrorResult
 	defer srv.Close()
 
 	tokens = make(chan interface{}, MAXTCP)
@@ -86,7 +87,7 @@ func tcpServer(rst chan interface{}) {
 			// we stop all running sensor processes
 			ActiveSensors.Lock()
 			for _, el := range ActiveSensors.Mac {
-				_ = el.tcp.Close()
+				_ = el.Tcp.Close()
 				el.reset <- true
 				<-el.reset
 			}

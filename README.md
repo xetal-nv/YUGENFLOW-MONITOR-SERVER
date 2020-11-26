@@ -4,9 +4,9 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Status: Alpha-2020_11_25
+Built: 2.0.0-alpha2020_11_26  
 
-**THIS VERSION BREAKS BACK COMPATIBILITY**
+**THIS VERSION BREAKS BACK COMPATIBILITY**  
 
 **1.1 REQUIREMENTS**  
 GO 1.15 or newer  
@@ -69,7 +69,8 @@ The following tags can be used for specific build:
 
      - (notags)     : complete server build  
      - embedded     : build without database support  
-     - dev          : build with development support  
+     - debug        : build with debug support  
+     - dev          : build with development and debug support  
  
 For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
 
@@ -96,6 +97,7 @@ The API accepts only GET requests.
     /presence/{[name0, ...]}?x0?x1          : return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
     /command/{cd}?id=y?mac=w?val=z?async=0/1: execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
     /devicedefinitions?cmd=x?mac=w?def=z    : manipulate device definitions (read, delete, add)
+    /disconnect?mac=w                       : disconnect device with mac w
 
 _To be added with webapp:_    
 
@@ -178,11 +180,13 @@ Each device is described with its ID, a flag indicating if it is reversed, a fla
     },
       
 **2.3 CONNECTED**  
-The CONNECTED API return a JSON ARRAY containing data about all connected devices. Each device is described by means of its mac address (without : symbol) and a flag indicating of the sensor is active (sending data) or not.  
+The CONNECTED API return a JSON ARRAY containing data about all connected devices. Each device is described by means of 
+its _mac_ address (without : symbol), it _id_ and the _active_ flag indicating of the sensor is active (sending data) or not.  
 
     [
       {
         "mac": "0a0b0c010201",
+        "id": 1,
         "active": true
       },
       ...
@@ -354,23 +358,67 @@ In case of error the 'error' field is not empty, otherwise the answer of the dev
 **2.11 DEVICEDEFINITIONS**  
 The DEVICEDEFINITIONS API is used to read, delete and add sensor definitions. The operations are defined as follows:  
 
+***2.11.1 readall command***
+
     /devicedefinitions?cmd=readall
 
-The command _readall_ will return all current definitions.  
+The command _readall_ will return all current definitions. The answer of the command is as follows:
+
+    {
+    "definitions": [
+      {
+        "mac": "50:02:91:d5:f2:f6",
+        "id": 0,
+        "sampleMaximumRateNS": 0,
+        "bypass": true,
+        "report": false,
+        "enforce": false,
+        "strict": false
+      },
+      ...
+    ],
+    "error": ""
+    }
+  
+Where definitions is an array of definitions providing as data the mac address (_mac_), the id (_id_), the maximum sampling rate 
+(_sampleMaximumRateNS_) in ns and its behavioral flags (_bypass, report, enforce, strict_).  
+
+***2.11.2 read command***
 
     /devicedefinitions?cmd=read&mac=xyz
 
 The command _read_ reads the definition (if present) for the device with mac _xyz_. Mac is accepted with and without ':'.  
+The command answer follows the same format as the _readall_ command except the definition array has only one element.  
+
+***2.11.3 delete command***
 
     /devicedefinitions?cmd=delete&mac=xyz
 
 The command _delete_ removes the definition (if present) for the device with mac _xyz_. Mac is accepted with and without ':'  
+The command answer follows the same format as the _readall_ command except the definition array is empty and only the eventual error is reported.  
+
+***2.11.4 add command***
 
     /devicedefinitions?cmd=add&mac=xyz&id=i{&params=bypass|report|enforce|strict}
 
 The command _add_ add the definition for a device with mac _xyz_ and id _i_ and parameters _params_.  
 Please note that parameters given are set according to priority. Bypass has priority on strict and strict on enforce.  
 Mac is accepted with and without ':'.   
+The command answer follows the same format as the _readall_ command except the definition array is empty and only the eventual error is reported.  
+
+**2.12 DISCONNECT**  
+The DISCONNECT API is used to disconnect a device from the server given. The api is used as follows:  
+
+    /disconnect?max=xyz
+    
+Where _yxz_ is the mac of the device to eb disconnected. The answer is of format:
+
+    {
+        "answer" : ""
+        "error" : "failed"
+    }
+    
+With _answer_ always empty and _error_ not empty in case of errors.
 
 
 ## 3. External scripting    
@@ -430,7 +478,7 @@ Please refer to the files example.xyz as example for language xyz (if present).
 
 ## 4. Logs  
 The logs file are contained in the './log' folder which is created by the server (if not already present).  
-These files are to be used when cpomunicating with support in case of problems.  
+These files are to be used when contacting with support in case of problems.  
 The logs are a multi-file aggregating level log files that split information according to the relative microservice and provide information about type in a condensed matter.  
 For further information refer to https://github.com/fpessolano/mlogger  
 
@@ -447,9 +495,5 @@ BUG list:
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
- - count is wrong on the pi  
- - make debug a build option  
  - Clean code  
- - Add calculated flows to exported data?  
-
 

@@ -80,6 +80,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 			case data := <-latestData:
+				//fmt.Println(data) // TODO remove
 				//fmt.Printf("calculator %v received %v\n", space, data)
 				// first we make a deep copy of data
 				newData := dataformats.SpaceState{
@@ -149,6 +150,8 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 			}
+
+			//continue // TODO remove
 
 			//for _, el := range samples {
 			//	fmt.Printf("sliding window %+v\n", el)
@@ -245,8 +248,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							}
 						}
 					}
-
-					// TODO check counters and (especially) flows
 
 					//fmt.Println()
 

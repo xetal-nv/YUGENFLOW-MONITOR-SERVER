@@ -20,6 +20,7 @@ func ApiManager(rst chan bool) {
 	r.Handle("/measurements", measurementDefinitions())
 	r.Handle("/command/{command}", command())
 	r.Handle("/devicedefinitions", devicedefinitions())
+	r.Handle("/disconnect", disconnectDevice())
 	if !globals.LimitedApi {
 		r.Handle("/latestdata/{space}", latestData(false, false, false, 0))
 		r.Handle("/latestdata", latestData(true, false, false, 0))

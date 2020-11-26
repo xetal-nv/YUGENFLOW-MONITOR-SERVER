@@ -49,3 +49,16 @@ func DeleteLookUp(id []byte) (err error) {
 	})
 	return
 }
+
+func GenerateIdLookUp() (table map[string]int, err error) {
+	table = make(map[string]int)
+	err = main.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(lookup))
+		c := b.Cursor()
+		for id, mac := c.First(); id != nil; id, mac = c.Next() {
+			table[string(mac)] = int(id[0])
+		}
+		return nil
+	})
+	return
+}

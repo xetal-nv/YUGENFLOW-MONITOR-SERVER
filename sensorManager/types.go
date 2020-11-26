@@ -6,7 +6,7 @@ import (
 )
 
 type SensorChannel struct {
-	tcp         net.Conn
+	Tcp         net.Conn
 	CmdAnswer   chan dataformats.Commanding
 	Commands    chan dataformats.Commanding
 	gateChannel []chan dataformats.FlowData
@@ -24,6 +24,7 @@ type sensorDefinition struct {
 	mac      string
 	id       int
 	idSent   int
+	maxRate  int64
 	bypass   bool
 	report   bool
 	enforce  bool

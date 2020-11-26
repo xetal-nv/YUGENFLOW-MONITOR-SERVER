@@ -34,18 +34,18 @@ finished:
 						"service killed due to zombie timeout",
 						[]int{0}, true})
 				// closing the channel causes the TCP handler also to close
-				if chs.tcp != nil {
-					_ = chs.tcp.Close()
+				if chs.Tcp != nil {
+					_ = chs.Tcp.Close()
 				}
 				return
-			} else if newChs.tcp != chs.tcp || chs.tcp == nil {
+			} else if newChs.Tcp != chs.Tcp || chs.Tcp == nil {
 				mlogger.Info(globals.SensorManagerLog,
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to zombie timeout",
 						[]int{0}, true})
 				// closing the channel causes the TCP handler also to close
-				if chs.tcp != nil {
-					_ = chs.tcp.Close()
+				if chs.Tcp != nil {
+					_ = chs.Tcp.Close()
 				}
 				return
 			}
@@ -62,7 +62,7 @@ finished:
 						"too many unexpected data, connection closed",
 						[]int{1}, true})
 				// closing the channel causes the TCP handler also to close
-				_ = chs.tcp.Close()
+				_ = chs.Tcp.Close()
 				return
 			}
 			// this is an unsolicited command answer, we report error
@@ -77,7 +77,7 @@ finished:
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to sensor timeout",
 						[]int{0}, true})
-				//_ = chs.tcp.Close()
+				//_ = chs.Tcp.Close()
 				return
 			case <-chs.reset:
 				break finished
@@ -101,8 +101,8 @@ finished:
 				ready := make(chan bool)
 				go func(ba []byte) {
 					ret := false
-					if e := chs.tcp.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
-						if _, e := chs.tcp.Write(ba); e == nil {
+					if e := chs.Tcp.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
+						if _, e := chs.Tcp.Write(ba); e == nil {
 							ret = true
 						}
 					}
@@ -127,7 +127,7 @@ finished:
 						// make optional
 						if cmd[0] == CmdAPI["rstbg"].Cmd && globals.ResetCloseTCP {
 							//println("bye")
-							_ = chs.tcp.Close()
+							_ = chs.Tcp.Close()
 						}
 					}
 				case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):

@@ -7,6 +7,7 @@ import (
 	"gateserver/dataformats"
 	"gateserver/entryManager"
 	"gateserver/gateManager"
+	"gateserver/sensorManager"
 	"gateserver/spaceManager"
 	"gateserver/storage/coredbs"
 	"gateserver/storage/diskCache"
@@ -116,14 +117,21 @@ func connectedSensors() http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		if macs, status, err := diskCache.ListActiveDevices(); err == nil {
-			if len(macs) == len(status) {
-				for i, mac := range macs {
-					connSensors = append(connSensors,
-						JsonConnectedDevice{
-							Mac:    mac,
-							Active: status[i],
-						})
+		if macIdTable, err := diskCache.GenerateIdLookUp(); err == nil {
+			if macs, status, err := diskCache.ListActiveDevices(); err == nil {
+				if len(macs) == len(status) {
+					for i, mac := range macs {
+						id, ok := macIdTable[mac]
+						if !ok {
+							id = -1
+						}
+						connSensors = append(connSensors,
+							JsonConnectedDevice{
+								Mac:    mac,
+								Id:     id,
+								Active: status[i],
+							})
+					}
 				}
 			}
 		}
@@ -508,7 +516,7 @@ func command() http.Handler {
 			return
 		}
 
-		// INFO: instead of using URL.string this could be done also with URL.Query, performance is the same
+		// INFO: instead of using URL.string this could be done also with URL.Query, performance is the same but it breaks compatibility
 		params := make(map[string]string)
 		params["cmd"] = vars["command"]
 
@@ -552,7 +560,7 @@ func devicedefinitions() http.Handler {
 		defer func() {
 			if e := recover(); e != nil {
 				mlogger.Recovered(globals.ApiManagerLog,
-					mlogger.LoggerData{"apiManager.connectedSensors",
+					mlogger.LoggerData{"apiManager.devicedefinitions",
 						"route terminated and recovered unexpectedly",
 						[]int{1}, true})
 			}
@@ -629,6 +637,51 @@ func devicedefinitions() http.Handler {
 			default:
 				rt.Error = globals.InvalidOperation.Error()
 			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(rt)
+
+	})
+}
+
+func disconnectDevice() http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e := recover(); e != nil {
+				mlogger.Recovered(globals.ApiManagerLog,
+					mlogger.LoggerData{"apiManager.disconnectDevice",
+						"route terminated and recovered unexpectedly",
+						[]int{1}, true})
+			}
+		}()
+		var rt JsonCmdRt
+
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusBadRequest)
+			rt.Error = globals.InvalidOperation.Error()
+			_ = json.NewEncoder(w).Encode(connectedSensors)
+			return
+		}
+
+		//Allow CORS here By * or specific origin
+		if globals.DisableCORS {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		query := r.URL.Query()
+
+		if macQuery, ok := query["mac"]; ok {
+			mac := macQuery[0]
+			mac = strings.Replace(mac, ":", "", -1)
+			sensorManager.ActiveSensors.Lock()
+			if chs, ok := sensorManager.ActiveSensors.Mac[mac]; ok {
+				if chs.Tcp.Close() != nil {
+					rt.Error = globals.Error.Error()
+				}
+			}
+			sensorManager.ActiveSensors.Unlock()
 		}
 
 		w.WriteHeader(http.StatusOK)

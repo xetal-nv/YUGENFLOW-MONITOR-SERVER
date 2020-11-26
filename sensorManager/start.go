@@ -82,18 +82,29 @@ func Start(sd chan bool) {
 				}
 
 				//if err := diskCache.AddLookUp([]byte(strconv.Itoa(id)), mac); err == nil {
-				if len(sensorDeclaration) > 1 {
+				if len(sensorDeclaration) > 2 {
 					definition := dataformats.SensorDefinition{
 						Id:      id,
-						Bypass:  fn("bypass", sensorDeclaration[1:]),
-						Report:  fn("report", sensorDeclaration[1:]),
-						Enforce: fn("enforce", sensorDeclaration[1:]),
-						Strict:  fn("strict", sensorDeclaration[1:]),
+						Bypass:  fn("bypass", sensorDeclaration[2:]),
+						Report:  fn("report", sensorDeclaration[2:]),
+						Enforce: fn("enforce", sensorDeclaration[2:]),
+						Strict:  fn("strict", sensorDeclaration[2:]),
 					}
 					// bypass has priority on strict
 					definition.Strict = definition.Strict && !definition.Bypass
 					// enforce does nothing if strict is given
 					definition.Enforce = definition.Enforce && !definition.Strict
+
+					if rate, err := strconv.Atoi(sensorDeclaration[1]); err == nil {
+						definition.MaxRate = int64(rate) * 1000000
+					} else {
+						mlogger.Panic(globals.SensorManagerLog,
+							mlogger.LoggerData{"sensorManager.Start",
+								"failed to load declaration for " + mac, []int{0}, false}, true)
+						time.Sleep(time.Duration(globals.SettleTime) * time.Second)
+						os.Exit(0)
+					}
+
 					if err = diskCache.WriteDefinition([]byte(mac), definition); err != nil {
 						_ = diskCache.DeleteLookUp([]byte(sensorDeclaration[0]))
 						mlogger.Panic(globals.SensorManagerLog,

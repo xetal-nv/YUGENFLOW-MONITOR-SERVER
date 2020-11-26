@@ -183,6 +183,7 @@ func handler(conn net.Conn) {
 				// the sensor has no definition
 				def = dataformats.SensorDefinition{
 					Id:      -1,
+					MaxRate: def.MaxRate,
 					Bypass:  false,
 					Report:  false,
 					Enforce: false,
@@ -192,6 +193,7 @@ func handler(conn net.Conn) {
 			sensorDef = sensorDefinition{
 				mac:      mach,
 				id:       def.Id,
+				maxRate:  def.MaxRate,
 				bypass:   def.Bypass,
 				report:   def.Report,
 				enforce:  def.Enforce,
@@ -235,7 +237,7 @@ func handler(conn net.Conn) {
 				}
 			}()
 			sensorDef.channels = SensorChannel{
-				tcp:       conn,
+				Tcp:       conn,
 				CmdAnswer: make(chan dataformats.Commanding, globals.ChannellingLength),
 				Commands:  make(chan dataformats.Commanding, globals.ChannellingLength),
 				reset:     make(chan bool, 1),
@@ -285,6 +287,8 @@ func handler(conn net.Conn) {
 			if e := conn.SetDeadline(time.Time{}); e != nil {
 				deadlineFailed(ipc, e)
 			}
+
+			var lastSampleTS int64 = 0
 
 			for {
 				cmd := make([]byte, 1)
@@ -604,18 +608,30 @@ func handler(conn net.Conn) {
 									flow = 0
 								}
 								for _, ch := range sensorDef.channels.gateChannel {
-									//flow := int(data[2])
-									//if flow == 255 {
-									//	flow = -1
-									//}
-									//fmt.Println(sensorDef.id, "sending data", ch, flow)
-									ch <- dataformats.FlowData{
-										Type:    "sensor",
-										Name:    mach,
-										Id:      sensorDef.id,
-										Ts:      time.Now().UnixNano(),
-										Netflow: flow,
+									//for _ = range sensorDef.channels.gateChannel {
+									sampleTS := time.Now().UnixNano()
+									//fmt.Println("SAMPLE OK ==", lastSampleTS, sensorDef.maxRate, sampleTS, lastSampleTS+sensorDef.maxRate-sampleTS)
+									record := sensorDef.maxRate == 0 || lastSampleTS+sensorDef.maxRate < sampleTS
+									//fmt.Println("SAMPLE OK ==", record)
+									if record {
+										lastSampleTS = sampleTS
+										ch <- dataformats.FlowData{
+											Type:    "sensor",
+											Name:    mach,
+											Id:      sensorDef.id,
+											Ts:      sampleTS,
+											Netflow: flow,
+										}
 									}
+									//lastSampleTS = time.Now().UnixNano()
+
+									//ch <- dataformats.FlowData{
+									//	Type:    "sensor",
+									//	Name:    mach,
+									//	Id:      sensorDef.id,
+									//	Ts:      sampleTS,
+									//	Netflow: flow,
+									//}
 								}
 							}
 							//gateManager.DistributeData(sensorDef.id, int(data[2]))
