@@ -60,9 +60,9 @@ _For development only:_
 
 
 **1.5 INSTALLATION**  
-Executable file: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database  
-Configuration files: see 1.4 in the same folder as the executable  
-Resource folders: 
+_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database  
+_Configuration files_: see 1.4 in the same folder as the executable  
+_Resource folders_: n/a  
 
 **1.6 BUILD OPTION**  
 The following tags can be used for specific build:  
@@ -87,6 +87,12 @@ The API accepts only GET requests.
     /latestdata/{name}                      : return latest data for space {name}   
     /latestdata/{[name0, name1, ...]}       : return latest data for spaces [name0, name1, ...]  
     /reference?n                            : return the last n reference measurements for all spaces  
+    /command/{cd}?id=y?mac=w?val=z?async=0/1: execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
+    /devicedefinitions?cmd=x?mac=w?def=z    : manipulate device definitions (read, delete, add)
+    /disconnect?mac=w                       : disconnect device with mac w
+    
+_Not available for embedded builds:_  
+
     /reference/{name}?n                     : return oly the last n reference measurements for space {name}   
     /reference/{[name0, ...]}?n             : return the last n reference measurements for spaces [name0, name1, ...]  
     /series/reference?x0?x1                 : return reference data for all spaces in an interval (time is epoch time in seconds)  
@@ -95,16 +101,8 @@ The API accepts only GET requests.
     /presence?x0?x1                         : return true or false if there was a person in the given interval for all spaces
     /presence/{name}?x0?x1                  : return true or false if there was a person in the given interval for space {name}   
     /presence/{[name0, ...]}?x0?x1          : return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
-    /command/{cd}?id=y?mac=w?val=z?async=0/1: execute command cd with specified id, mac and/or data val. If async is given and set to 1, it will not wait for execution to be completed  
-    /devicedefinitions?cmd=x?mac=w?def=z    : manipulate device definitions (read, delete, add)
-    /disconnect?mac=w                       : disconnect device with mac w
 
-_To be added with webapp:_    
-
-    /plan/{name}                            : to be removed?  
-    /plan/logo                              : to be removed?  
-
-_For development only:_   
+_For development not embedded builds only:_   
  
     /delta?n                                : return the last n raw data points for all spaces  
     /delta/{name}?n                         : return oly the last n raw data points for space {name}   
@@ -496,4 +494,5 @@ BUG list:
 
 **5.3 Development TODOs**  
  - Clean code  
+ - Add flow accumulation to export?  
 
