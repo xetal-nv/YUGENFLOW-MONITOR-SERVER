@@ -8,8 +8,6 @@ gate message
 sensor to server
 0x01 id(2) value(1) CRC(1)
 
-
-
 sampling rate default 64
 server to sensor
 0x02 rate(1) CRC(1)
@@ -22,13 +20,11 @@ server to sensor
 sensor to server
 0x03 CRC(1)
 
-
 BG threshold default 1.7 (*16)
 server to sensor
 0x04 bg_threshold(2) CRC(1)
 sensor to server
 0x04 CRC(1)
-
 
 Occ threshold default 1.8 (*16)
 server to sensor
@@ -36,14 +32,11 @@ server to sensor
 sensor to server
 0x05 CRC(1)
 
-
-
 Reset BG
 server to sensor
 0x06 CRC(1)
 sensor to server
 0x06 CRC(1)
-
 
 Read diff counter
 server to sensor
@@ -51,13 +44,11 @@ server to sensor
 sensor to server
 0x07 counter(2) CRC(1)
 
-
 Reset diff counter
 server to sensor
 0x08 CRC(1)
 sensor to server
 0x08 CRC(1)
-
 
 Read IN counter
 server to sensor
@@ -65,13 +56,11 @@ server to sensor
 sensor to server
 0x09 counter(2) CRC8(1)
 
-
 Reset IN counter
 server to sensor
 0x0A CRC(1)
 sensor to server
 0x0A CRC(1)
-
 
 Read OUT counter
 server to sensor
@@ -79,20 +68,17 @@ server to sensor
 sensor to server
 0x0B counter(2) CRC(1)
 
-
 Reset OUT counter
 server to sensor
 0x0C CRC(1)
 sensor to server
 0x0C CRC(1)
 
-
 Read ID
 server to sensor
 0x0D CRC(1)
 sensor to server
 0x0D id(2) CRC(1)
-
 
 Set ID
 server to sensor

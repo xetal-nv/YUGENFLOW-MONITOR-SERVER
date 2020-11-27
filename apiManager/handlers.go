@@ -1,6 +1,7 @@
 package apiManager
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"gateserver/avgsManager"
@@ -19,6 +20,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // returns the installation information
@@ -536,7 +538,7 @@ func command() http.Handler {
 				answer = executeCommand(params)
 			}
 		} else {
-			answer.Error = "syntax error"
+			answer.Error = globals.Error.Error()
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -582,6 +584,82 @@ func devicedefinitions() http.Handler {
 		query := r.URL.Query()
 		if cmd, ok := query["cmd"]; ok && len(cmd) == 1 {
 			switch strings.ToLower(cmd[0]) {
+			case "save":
+				configFile, err := os.Open("./configuration.ini")
+				if err != nil {
+					rt.Error = globals.Error.Error()
+					break
+				}
+				newConfigFile, err := os.Create("./temp.ini")
+				if err != nil {
+					rt.Error = globals.Error.Error()
+					break
+				}
+				newSection := false
+				sensorSection := false
+				updated := false
+				var writeError error
+
+				scanner := bufio.NewScanner(configFile)
+				for scanner.Scan() {
+					newLine := scanner.Text()
+					newSection = strings.Contains(newLine, "[")
+					if newSection {
+						sensorSection = strings.Contains(newLine, "[sensors]")
+					}
+					if !sensorSection && !strings.Contains(newLine, ";") {
+						_, writeError = newConfigFile.WriteString(newLine + "\n")
+					} else if !updated {
+						_, writeError = newConfigFile.WriteString("[sensors]\n")
+						updated = true
+						if definitions, e := diskCache.ReadAllDefinitions(); e != nil {
+							rt.Error = e.Error()
+							break
+						} else {
+							for _, device := range definitions {
+								var def string
+								def = strings.Replace(device.Mac, ":", "", -1) + " : "
+								def += strconv.Itoa(device.Id) + " "
+								def += strconv.Itoa(int(device.MaxRate/1000000)) + " "
+								if device.Bypass {
+									def += "bypass "
+								}
+								if device.Report {
+									def += "report "
+								}
+								if device.Enforce {
+									def += "enforce "
+								}
+								if device.Strict {
+									def += "strict "
+								}
+								def = strings.Trim(def, " ") + "\n"
+								_, writeError = newConfigFile.WriteString(def)
+							}
+							_, writeError = newConfigFile.WriteString("\n")
+
+						}
+					}
+					if writeError != nil {
+						break
+					}
+				}
+				if writeError != nil {
+					_ = configFile.Close()
+					_ = newConfigFile.Close()
+					_ = os.Remove("temp.ini")
+					rt.Error = globals.Error.Error()
+				} else if err := scanner.Err(); err != nil {
+					_ = configFile.Close()
+					_ = newConfigFile.Close()
+					_ = os.Remove("temp.ini")
+					rt.Error = globals.Error.Error()
+				} else {
+					_ = configFile.Close()
+					_ = newConfigFile.Close()
+					_ = os.Rename("configuration.ini", "configuration_"+strconv.Itoa(int(time.Now().Unix()))+".ini")
+					_ = os.Rename("temp.ini", "configuration.ini")
+				}
 			case "readall":
 				var e error
 				if rt.Definitions, e = diskCache.ReadAllDefinitions(); e != nil {

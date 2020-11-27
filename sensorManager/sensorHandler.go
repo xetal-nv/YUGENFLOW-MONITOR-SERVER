@@ -22,12 +22,12 @@ import (
 	send data using gateManager to the proper gates
 */
 
-func handler(conn net.Conn) {
+func sensorHandler(conn net.Conn) {
 
 	// support methods
 	deadlineFailed := func(ipc string, e error) {
 		if globals.DebugActive {
-			fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
+			fmt.Printf("sensorManager.sensorHandler: error on setting deadline for %v : %v\n", ipc, e)
 		}
 		mlogger.Error(globals.SensorManagerLog,
 			mlogger.LoggerData{"sensor " + ipc,
@@ -36,7 +36,7 @@ func handler(conn net.Conn) {
 	}
 	failedRead := func(mach, ipc string, e error) {
 		if globals.DebugActive {
-			fmt.Printf("sensorManager.handler: error reading from %v//%v : %v\n", ipc, mach, e)
+			fmt.Printf("sensorManager.sensorHandler: error reading from %v//%v : %v\n", ipc, mach, e)
 		}
 		mlogger.Info(globals.SensorManagerLog,
 			mlogger.LoggerData{"sensor " + mach,
@@ -57,11 +57,11 @@ func handler(conn net.Conn) {
 		mac := make([]byte, 6)
 		ipc := strings.Split(conn.RemoteAddr().String(), ":")[0]
 		if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
-			fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
+			fmt.Printf("sensorManager.sensorHandler: error on setting deadline for %v : %v\n", ipc, e)
 			return
 		}
 		if _, e := conn.Read(mac); e != nil {
-			fmt.Printf("sensorManager.handler: error reading MAC from device with IP %v : %v\n", ipc, e)
+			fmt.Printf("sensorManager.sensorHandler: error reading MAC from device with IP %v : %v\n", ipc, e)
 			return
 		} else {
 			mach := strings.Trim(strings.Replace(fmt.Sprintf("% x ", mac), " ", ":", -1), " ")
@@ -70,11 +70,11 @@ func handler(conn net.Conn) {
 			for {
 				data := make([]byte, 8)
 				if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
-					fmt.Printf("sensorManager.handler: error on setting deadline for %v : %v\n", ipc, e)
+					fmt.Printf("sensorManager.sensorHandler: error on setting deadline for %v : %v\n", ipc, e)
 					return
 				}
 				if n, e := conn.Read(data); e != nil {
-					fmt.Printf("sensorManager.handler: error reading MAC from device with IP %v : %v\n", ipc, e)
+					fmt.Printf("sensorManager.sensorHandler: error reading MAC from device with IP %v : %v\n", ipc, e)
 					return
 				} else if n > 0 {
 					fmt.Printf("Device with mac %v has sent % x\n", mach, data)
@@ -149,7 +149,7 @@ func handler(conn net.Conn) {
 		}
 		if _, e := conn.Read(mac); e != nil {
 			if globals.DebugActive {
-				fmt.Printf("sensorManager.handler: error reading MAC from device with IP %v : %v\n", ipc, e)
+				fmt.Printf("sensorManager.sensorHandler: error reading MAC from device with IP %v : %v\n", ipc, e)
 			}
 			mlogger.Info(globals.SensorManagerLog,
 				mlogger.LoggerData{"device " + ipc,
@@ -257,7 +257,7 @@ func handler(conn net.Conn) {
 			if globals.SensorEEPROMResetEnabled {
 				if e := refreshEEPROM(conn, mach); e != nil {
 					if globals.DebugActive {
-						fmt.Printf("sensorManager.handler: closing TCP channel to %v//%v on "+
+						fmt.Printf("sensorManager.sensorHandler: closing TCP channel to %v//%v on "+
 							"EEPROM refresh error : %v\n", ipc, mach, e)
 					}
 					mlogger.Info(globals.SensorManagerLog,
@@ -298,9 +298,9 @@ func handler(conn net.Conn) {
 				}
 				if _, e := conn.Read(cmd); e != nil {
 					if e == io.EOF {
-						// in case of channel closed (EOF) it gets logged and the handler terminated
+						// in case of channel closed (EOF) it gets logged and the sensorHandler terminated
 						if globals.DebugActive {
-							fmt.Printf("sensorManager.handler: connection lost with device %v//%v\n", ipc, mach)
+							fmt.Printf("sensorManager.sensorHandler: connection lost with device %v//%v\n", ipc, mach)
 						}
 						mlogger.Info(globals.SensorManagerLog,
 							mlogger.LoggerData{"sensor " + mach,
@@ -648,10 +648,10 @@ func handler(conn net.Conn) {
 						if sensorDef.channels.CmdAnswer == nil {
 							// process is corrupted, we must terminate it
 							if globals.DebugActive {
-								fmt.Printf("sensorManager.handler: sensor commands channel found invalid\n")
+								fmt.Printf("sensorManager.sensorHandler: sensor commands channel found invalid\n")
 							}
 							mlogger.Error(globals.SensorManagerLog,
-								mlogger.LoggerData{"sensorManager.handler",
+								mlogger.LoggerData{"sensorManager.sensorHandler",
 									"critical error, sensor commands channel found invalid",
 									[]int{0}, false})
 							return
@@ -660,15 +660,16 @@ func handler(conn net.Conn) {
 						// only the answer to setid can be allowed when the sensor is not active and id!=idSent
 						if sensorDef.active ||
 							sensorDef.id != sensorDef.idSent && cmd[0] == CmdAPI["setid"].Cmd {
+
 							//(sensorDef.id == -1 && sensorDef.idSent == 65535) && Cmd[0] == CmdAPI["setid"].Cmd {
 							// we verify that we received a command answer from an active device
-							if v, ok := CmdAnswerLen[cmd[0]]; ok {
+							if cmdLength, ok := CmdAnswerLen[cmd[0]]; ok {
 								// in case if no CRC the length needs to be decrease
 								if !globals.CRCused {
-									v -= 1
+									cmdLength -= 1
 								}
 								// check if command answer is fully correct and forward it to the command process
-								if v == 0 {
+								if cmdLength == 0 {
 									//this can only happen when CRC is not used
 									select {
 									case sensorDef.channels.CmdAnswer <- cmd:
@@ -687,20 +688,20 @@ func handler(conn net.Conn) {
 											}
 										case <-time.After(time.Duration(globals.SensorTimeout*3) * time.Second):
 											if globals.DebugActive {
-												fmt.Printf("sensorManager.handler: hanging operation in receiving command answer\n")
+												fmt.Printf("sensorManager.sensorHandler: hanging operation in receiving command answer\n")
 											}
 											return
 										}
 
 									case <-time.After(time.Duration(globals.SensorTimeout*3) * time.Second):
 										if globals.DebugActive {
-											fmt.Printf("sensorManager.handler: hanging operation in sending "+
-												"command answer %v\n", cmd)
+											fmt.Printf("sensorManager.sensorHandler: hanging operation in sending "+
+												"command answer %cmdLength\n", cmd)
 										}
 										return
 									}
 								} else {
-									cmdd := make([]byte, v)
+									cmdd := make([]byte, cmdLength)
 									if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
 										deadlineFailed(mach, e)
 										return
@@ -724,7 +725,7 @@ func handler(conn net.Conn) {
 											crc := codings.Crc8(cmd[:len(cmd)-1])
 											if crc != cmd[len(cmd)-1] {
 												if globals.DebugActive {
-													fmt.Print("sensorManager.handler: wrong CRC on received command answer\n")
+													fmt.Print("sensorManager.sensorHandler: wrong CRC on received command answer\n")
 												}
 												mlogger.Info(globals.SensorManagerLog,
 													mlogger.LoggerData{"sensor " + mach,
@@ -771,15 +772,15 @@ func handler(conn net.Conn) {
 												}
 											case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 												if globals.DebugActive {
-													fmt.Printf("sensorManager.handler: hanging operation in receiving command answer\n")
+													fmt.Printf("sensorManager.sensorHandler: hanging operation in receiving command answer\n")
 												}
 												return
 											}
 										case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
 											// internal issue, all goroutines will close on time out including the channel
 											if globals.DebugActive {
-												fmt.Printf("sensorManager.handler: hanging operation in sending "+
-													"command answer %v\n", cmd)
+												fmt.Printf("sensorManager.sensorHandler: hanging operation in sending "+
+													"command answer %cmdLength\n", cmd)
 											}
 										}
 									}
@@ -800,7 +801,7 @@ func handler(conn net.Conn) {
 						} else {
 							// command answer received from a non valid device
 							if globals.DebugActive {
-								fmt.Printf("sensorManager.handler: device %v//%v not active and sending non-data packages\n", ipc, mach)
+								fmt.Printf("sensorManager.sensorHandler: device %v//%v not active and sending non-data packages\n", ipc, mach)
 							}
 							if globals.MalicioudMode > globals.OFF {
 								sensorDef.failures += 1

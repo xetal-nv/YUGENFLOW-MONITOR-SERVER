@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 2.0.0-alpha2020_11_26  
+Built: 20000a20201127  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -49,7 +49,7 @@ measurement.ini : it contains the definitions of all emasureemnts the server nee
     -pwd password           : database password       
     -tdl int                : TCP read deadline in hours (default 24)   
     -st string              : set start time, time specified as HH:MM   
-    -us                     : enable unsafe shutdown when initiated by the user (e.g. with CTRL-C)  
+    -us                     : enable unsafe shutdown when initiated by the user (e.g. with CTRL-C), this can cause data loss and will prevent state save from working    
     -user username          : database username   
 
 _For development only:_    
@@ -62,7 +62,7 @@ _For development only:_
 **1.5 INSTALLATION**  
 _Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database  
 _Configuration files_: see 1.4 in the same folder as the executable  
-_Resource folders_: n/a  
+_Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.  
 
 **1.6 BUILD OPTION**  
 The following tags can be used for specific build:  
@@ -189,6 +189,8 @@ its _mac_ address (without : symbol), it _id_ and the _active_ flag indicating o
       },
       ...
     ]
+    
+When a device _id_ is not known it is indicated as -1.  
     
 **2.4 INVALID**  
 The INVALID API return a JSON ARRAY containing data about all connected invalid devices. Each device is described by means of its mac address (without : symbol) and a the timestamp (unix Epoch format) when it was marked as invalid.  
@@ -404,6 +406,14 @@ Please note that parameters given are set according to priority. Bypass has prio
 Mac is accepted with and without ':'.   
 The command answer follows the same format as the _readall_ command except the definition array is empty and only the eventual error is reported.  
 
+***2.11.5 save command***
+
+    /devicedefinitions?cmd=save
+
+The command _save_ saves the configuration in a new _configuration.ini_ file (the current one is renamed with a timestamp).  
+The command answer follows the same format as the _readall_ command except the definition array is empty and only the eventual error is reported.  
+
+
 **2.12 DISCONNECT**  
 The DISCONNECT API is used to disconnect a device from the server given. The api is used as follows:  
 
@@ -488,11 +498,10 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
- - Save added device definition to additional ini file  
+ - Add flow accumulation to export with daily reset  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
  - Clean code  
- - Add flow accumulation to export?  
 

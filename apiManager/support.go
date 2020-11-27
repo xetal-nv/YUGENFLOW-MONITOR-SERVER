@@ -6,6 +6,7 @@ import (
 	"gateserver/sensorManager"
 	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
+	"github.com/fpessolano/mlogger"
 	"strconv"
 	"strings"
 	"time"
@@ -14,8 +15,21 @@ import (
 // execute a command towards a sensor as specified by the params map
 // see commandNames definition for what parameters are allowed
 func executeCommand(params map[string]string) (rv JsonCmdRt) {
+	var locked bool = false // used toi make sure lock is removed in all possible paths
+	defer func() {
+		if locked {
+			sensorManager.ActiveSensors.RUnlock()
+		}
+		if r := recover(); r != nil {
+			rv.Error = globals.SyntaxError.Error()
+			mlogger.Recovered(globals.SensorManagerLog,
+				mlogger.LoggerData{"sensorManager.executeCommand",
+					"service terminated unexpectedly",
+					[]int{1}, true})
+		}
+	}()
 	if params["cmd"] == "" {
-		rv.Error = "syntax error"
+		rv.Error = globals.SyntaxError.Error()
 		return
 	}
 	if params["cmd"] == "list" {
@@ -35,10 +49,16 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 		if mac, ok = params["mac"]; ok {
 			mac = strings.Trim(strings.Replace(mac, ":", "", -1), ":")
 		}
-		if !ok && eid != nil {
-			rv.Error = "syntax error"
+		if params["cmd"] == "setid" && (!ok || eid != nil) {
+			rv.Error = globals.SyntaxError.Error()
 			return
-		} else if !ok {
+		}
+		if params["cmd"] != "setid" && ok && eid == nil {
+			rv.Error = globals.SyntaxError.Error()
+			return
+		}
+
+		if !ok {
 			if cMac, err := diskCache.LookUpMac([]byte{byte(id)}); err != nil {
 				rv.Error = "error: sensor with id " + strconv.Itoa(id) + " not connected"
 				return
@@ -48,12 +68,24 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 			}
 		}
 
+		cmdSpecs, valid := sensorManager.CmdAPI[params["cmd"]]
+		if !valid {
+			rv.Error = globals.SyntaxError.Error()
+			return
+		}
+		param, paramFound := strconv.Atoi(params["val"])
+		if cmdSpecs.Lgt != 0 && paramFound != nil {
+			rv.Error = globals.SyntaxError.Error()
+			return
+		}
+
 		if active, err := diskCache.ReadDeviceStatus([]byte(mac)); err == nil && active {
 			sensorManager.ActiveSensors.RLock()
+			locked = true
 			channels, ok := sensorManager.ActiveSensors.Mac[string(mac)]
 			if !ok {
 				rv.Error = "sensor in guru meditation"
-				sensorManager.ActiveSensors.RUnlock()
+				//sensorManager.ActiveSensors.RUnlock()
 				return
 			}
 			if params["cmd"] == "setid" {
@@ -61,46 +93,65 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 				if ok && eid == nil {
 					if cMac, err := diskCache.LookUpMac([]byte{byte(id)}); err == nil {
 						rv.Error = "error: sensor id " + strconv.Itoa(id) + " already assigned to " + cMac
-						sensorManager.ActiveSensors.RUnlock()
+						//sensorManager.ActiveSensors.RUnlock()
 						return
 					}
 				} else {
-					rv.Error = "syntax error"
-					sensorManager.ActiveSensors.RUnlock()
+					rv.Error = globals.SyntaxError.Error()
+					//sensorManager.ActiveSensors.RUnlock()
 					return
 				}
 			}
-			//fmt.Println(params["cmd"], id, mac, params["val"])
+			cmd := []byte{cmdSpecs.Cmd}
 
-			v, valid := sensorManager.CmdAPI[params["cmd"]]
-			if !valid {
-				rv.Error = "syntax error"
-				sensorManager.ActiveSensors.RUnlock()
-				return
+			switch cmdSpecs.Lgt {
+			case 2:
+				if paramFound != nil {
+					rv.Error = globals.SyntaxError.Error()
+					//sensorManager.ActiveSensors.RUnlock()
+					return
+				}
+				data := make([]byte, 2)
+				binary.BigEndian.PutUint16(data, uint16(param))
+				cmd = append(cmd, data...)
+			case 1:
+				par, err := strconv.Atoi(params["val"])
+				if err != nil {
+					rv.Error = globals.SyntaxError.Error()
+					//sensorManager.ActiveSensors.RUnlock()
+					return
+				}
+				cmd = append(cmd, byte(par))
+			default:
 			}
-			cmd := []byte{v.Cmd}
-			bs := make([]byte, 2)
-			binary.BigEndian.PutUint16(bs, uint16(id))
-			cmd = append(cmd, bs...)
+
+			//sensorManager.ActiveSensors.RUnlock()
+			//fmt.Printf("% x\n", cmd)
+			//return
+
 			select {
 			case channels.Commands <- cmd:
 				select {
 				case ans := <-channels.Commands:
-					rv.Answer = fmt.Sprintf("% x", ans)
-					if ans[0] == sensorManager.CmdAPI[params["cmd"]].Cmd {
-						rv.Error = ""
+					if ans != nil {
+						rv.Answer = fmt.Sprintf("% x", ans)
+						if ans[0] == sensorManager.CmdAPI[params["cmd"]].Cmd {
+							rv.Error = ""
+						} else {
+							rv.Error = globals.Error.Error()
+						}
 					} else {
-						rv.Error = "failed"
+						rv.Error = globals.Error.Error()
 					}
 				case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-					rv.Error = "failed to receive command answer"
+					rv.Error = globals.Error.Error()
 				}
 			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
-				rv.Error = "failed to send command"
+				rv.Error = globals.Error.Error()
 			}
-			sensorManager.ActiveSensors.RUnlock()
+			//sensorManager.ActiveSensors.RUnlock()
 		} else {
-			rv.Error = "error: sensor " + mac + " not active"
+			rv.Error = "error: sensor with mac " + mac + " not active"
 			return
 		}
 	}

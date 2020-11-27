@@ -37,7 +37,7 @@ var CmdAnswerLen = map[byte]int{
 	8:  1,
 	10: 1,
 	12: 1,
-	13: 1,
+	13: 3,
 	14: 1,
 	7:  3,
 	9:  3,
@@ -47,7 +47,6 @@ var CmdAnswerLen = map[byte]int{
 // provides length for legal server2gate commands
 // server also has commands
 // list : lists all commands
-// macid " assigns the id at the device with mac specified in val
 // Lgt is max 4 (bytes)
 var CmdAPI = map[string]CmdSpecs{
 	"srate":     {2, 1},
@@ -57,10 +56,10 @@ var CmdAPI = map[string]CmdSpecs{
 	"rstbg":     {6, 0},
 	"readdiff":  {7, 0},
 	"resetdiff": {8, 0},
-	"readinc":   {9, 0},
-	"rstinc":    {10, 0},
-	"readoutc":  {11, 0},
-	"rstoutc":   {12, 0},
+	"readin":    {9, 0},
+	"rstin":     {10, 0},
+	"readout":   {11, 0},
+	"rstout":    {12, 0},
 	"readid":    {13, 0},
 	"setid":     {14, 2},
 }

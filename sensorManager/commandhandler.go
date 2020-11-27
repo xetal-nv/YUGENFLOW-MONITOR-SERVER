@@ -33,7 +33,7 @@ finished:
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to zombie timeout",
 						[]int{0}, true})
-				// closing the channel causes the TCP handler also to close
+				// closing the channel causes the TCP sensorHandler also to close
 				if chs.Tcp != nil {
 					_ = chs.Tcp.Close()
 				}
@@ -43,7 +43,7 @@ finished:
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to zombie timeout",
 						[]int{0}, true})
-				// closing the channel causes the TCP handler also to close
+				// closing the channel causes the TCP sensorHandler also to close
 				if chs.Tcp != nil {
 					_ = chs.Tcp.Close()
 				}
@@ -61,7 +61,7 @@ finished:
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"too many unexpected data, connection closed",
 						[]int{1}, true})
-				// closing the channel causes the TCP handler also to close
+				// closing the channel causes the TCP sensorHandler also to close
 				_ = chs.Tcp.Close()
 				return
 			}
@@ -89,6 +89,17 @@ finished:
 			// responder in case of error
 			var rtIssuer []byte
 			rtResponder := []byte("e")
+
+			//fmt.Printf("% x\n", cmd)
+			//a := func(ch chan dataformats.Commanding, msg dataformats.Commanding) {
+			//	select {
+			//	case ch <- msg:
+			//	case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
+			//	}
+			//}
+			//go a(chs.Commands, rtIssuer)
+			//continue
+
 			// verify if the command exists and send it to the device
 			if _, ok := CmdAnswerLen[cmd[0]]; ok {
 				if globals.DebugActive {
@@ -98,6 +109,7 @@ finished:
 					}
 				}
 				cmd = append(cmd, codings.Crc8(cmd))
+
 				ready := make(chan bool)
 				go func(ba []byte) {
 					ret := false
@@ -135,6 +147,7 @@ finished:
 					break finished
 				}
 			}
+
 			// in case of timeout, the receiving party will timeout and the TCP responder will force a reset
 			var wg sync.WaitGroup
 			wg.Add(2)

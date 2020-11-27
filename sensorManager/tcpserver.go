@@ -76,7 +76,7 @@ func tcpServer(rst chan interface{}) {
 				fmt.Printf("sensorManager.tcpServer: device connected\n")
 			}
 			go recovery.CleanPanic(
-				func() { handler(nc) },
+				func() { sensorHandler(nc) },
 				func() {
 					// this is redundant
 					//goland:noinspection GoUnhandledErrorResult

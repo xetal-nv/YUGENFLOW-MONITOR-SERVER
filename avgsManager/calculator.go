@@ -80,7 +80,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 			case data := <-latestData:
-				//fmt.Println(data) // TODO remove
 				//fmt.Printf("calculator %v received %v\n", space, data)
 				// first we make a deep copy of data
 				newData := dataformats.SpaceState{
@@ -151,8 +150,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			}
 
-			//continue // TODO remove
-
 			//for _, el := range samples {
 			//	fmt.Printf("sliding window %+v\n", el)
 			//}
@@ -183,19 +180,19 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 
-				fmt.Printf("interval %v to %v\n", samples[len(samples)-1].Ts-adjPeriod, samples[len(samples)-1].Ts)
+				//fmt.Printf("interval %v to %v\n", samples[len(samples)-1].Ts-adjPeriod, samples[len(samples)-1].Ts)
 				//for _, el := range samples {
 				//	fmt.Printf("selected sample %v at %v\n", el.Count, el.Ts)
 				//}
 				//fmt.Println()
 				//continue
 
-				for _, el := range selectedSamples {
-					//fmt.Print(time.Unix(el.Ts/1000000000, 0),  " ")
-					//fmt.Printf("selected sample %v at %v\n", el.Val, el.Ts)
-					fmt.Printf("selected sample %+v\n", el)
-				}
-				fmt.Println()
+				//for _, el := range selectedSamples {
+				//	//fmt.Print(time.Unix(el.Ts/1000000000, 0),  " ")
+				//	//fmt.Printf("selected sample %v at %v\n", el.Val, el.Ts)
+				//	fmt.Printf("selected sample %+v\n", el)
+				//}
+				//fmt.Println()
 				//continue
 
 				// the selectedSamples slice starts with the latest entry value (at [0])
@@ -256,12 +253,12 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					//fmt.Println(tot)
 					//fmt.Println()
 
-					fmt.Printf("%+v\n\n", dataformats.MeasurementSample{
-						Qualifier: measurementName,
-						Ts:        selectedSamples[0].Ts / 1000000000,
-						Val:       tot,
-						Flows:     flows,
-					})
+					//fmt.Printf("%+v\n\n", dataformats.MeasurementSample{
+					//	Qualifier: measurementName,
+					//	Ts:        selectedSamples[0].Ts / 1000000000,
+					//	Val:       tot,
+					//	Flows:     flows,
+					//})
 
 					// we give it little time to transmit the data, it too late data is thrown away
 					select {
@@ -290,7 +287,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 			for measurementName, period := range referenceDefinitions {
 				adjPeriod := int64(period) * 1000000000
 				if lastReferenceMeasurement[measurementName]+adjPeriod < samples[len(samples)-1].Ts {
-					fmt.Println("new period", time.Now())
+					//fmt.Println("new period", time.Now())
 					// time for a new reference measurement
 					var selectedSamples []dataformats.MeasurementSample
 				foundall2:
@@ -307,10 +304,10 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 					}
 
-					for _, el := range selectedSamples {
-						//fmt.Printf("selected sample %v at %v\n", el.Val, el.Ts)
-						fmt.Printf("selected sample %v\n", el)
-					}
+					//for _, el := range selectedSamples {
+					//	//fmt.Printf("selected sample %v at %v\n", el.Val, el.Ts)
+					//	fmt.Printf("selected sample %v\n", el)
+					//}
 					//fmt.Println()
 					//lastReferenceMeasurement[measurementName] = samples[len(samples)-1].Ts
 					//continue
@@ -365,7 +362,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 						tot = float64(int64((tot*100)/length)) / 100
 						//fmt.Println(tot)
-						fmt.Println()
+						//fmt.Println()
 						newSample := dataformats.MeasurementSample{
 							Qualifier: measurementName,
 							Space:     space,
@@ -373,7 +370,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							Val:       tot,
 							Flows:     flows,
 						}
-						fmt.Printf("Reference result %+v\n\n", newSample)
+						//fmt.Printf("Reference result %+v\n\n", newSample)
 
 						// we give it little time to transmit the data, it too late data is thrown away
 						select {
