@@ -12,6 +12,8 @@ import (
 )
 
 func customScripting(rst chan interface{}, chActual, chReferences chan dataformats.MeasurementSample) {
+	var actualData = false
+	snapshots := make(map[string]dataformats.MeasurementSample)
 finished:
 	for {
 		var data dataformats.MeasurementSample
@@ -22,7 +24,25 @@ finished:
 			rst <- nil
 			break finished
 		case data = <-chActual:
+			actualData = true
 		case data = <-chReferences:
+			actualData = false
+		}
+		// TODO adding flow accumulation for actual data only
+		if actualData {
+			// in and out flows are accumulated only for actual data
+			if pertinentSnapshot, ok := snapshots[data.Qualifier]; !ok {
+				// we need to copy the data
+				pertinentSnapshot.Ts = data.Ts
+				pertinentSnapshot.Val = data.Val
+				pertinentSnapshot.Qualifier = data.Qualifier
+				pertinentSnapshot.Space = data.Space
+				// TODO duplicate all flows
+				snapshots[data.Qualifier] = pertinentSnapshot
+			} else {
+				//we need to update all values and accumulate flows
+				// in case of overflow we mark the timestamp and rebase the in/out floes numbers
+			}
 		}
 		if encodedData, err := json.Marshal(data); err == nil {
 			if globals.DebugActive {

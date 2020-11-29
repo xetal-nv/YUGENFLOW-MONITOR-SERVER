@@ -35,6 +35,7 @@ func main() {
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 	var user = flag.String("user", "", "user name")
 	var pwd = flag.String("pwd", "", "user password")
+	var raw = flag.Bool("raw", false, "enable raw mode")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
 
@@ -88,6 +89,7 @@ func main() {
 	globals.EchoMode = *echo
 	globals.ExportEnabled = *export
 	globals.LimitedApi = false
+	globals.RawMode = *raw
 
 	fmt.Printf("\nStarting server YugenFlow Server %s-debug \n\n", globals.VERSION)
 	if *debug {
@@ -106,7 +108,9 @@ func main() {
 	if *us {
 		fmt.Println("*** WARNING: Enabled unsafe shutdown on user signals ***")
 	}
-
+	if *raw {
+		fmt.Println("*** INFO: RAW mode enabled ***")
+	}
 	globals.Start()
 	diskCache.Start()
 	if err := coredbs.Start(); err != nil {

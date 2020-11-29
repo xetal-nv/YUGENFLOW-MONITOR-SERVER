@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20201127  
+Built: 20000a20201130  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -57,6 +57,7 @@ _For development only:_
     -dev                    : development mode  
     -echo                   : server enter in echo mode and data is not processed  
     -la                     : not available    
+    -raw                    : this is a special debug mode showing only the accumulated resultrs and the samping window  
 
 
 **1.5 INSTALLATION**  
@@ -498,7 +499,7 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
- - Add flow accumulation to export with daily reset  
+ - Add flow accumulation to export with automatic overflow management  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
 

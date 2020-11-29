@@ -14,14 +14,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 	tick, maxTick int, realTimeDefinitions, referenceDefinitions map[string]int,
 	regRealTime, regReference chan dataformats.MeasurementSample, actualsAvailable bool) {
 
-	// for development only, comment afterwards
-	//defer func() {
-	//	if err := recover(); err != nil {
-	//		_, _ = fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
-	//		os.Exit(1)
-	//	}
-	//}()
-
 	var samples []dataformats.SpaceState
 	lastReferenceMeasurement := make(map[string]int64)
 
@@ -44,8 +36,10 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 		fmt.Println("closing calculator")
 		rst <- nil
 	} else {
-		//fmt.Printf("%+v\n", realTimeDefinitions)
-		//fmt.Printf("%+v\n", referenceDefinitions)
+		if globals.DebugActive {
+			fmt.Printf("Calculator %+v\n", realTimeDefinitions)
+			fmt.Printf("Calculator %+v\n", referenceDefinitions)
+		}
 
 	finished:
 		for {
@@ -150,10 +144,15 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			}
 
-			//for _, el := range samples {
-			//	fmt.Printf("sliding window %+v\n", el)
-			//}
-			//fmt.Println()
+			if globals.RawMode {
+				fmt.Printf("Sliding window from %v to %v\n",
+					samples[len(samples)-1].Ts-int64(maxTick)*1000000000, samples[len(samples)-1].Ts)
+				for _, el := range samples {
+					//fmt.Printf("sliding window %+v\n", el)
+					fmt.Printf("\tsample %v at %v\n", el.Count, el.Ts)
+				}
+				fmt.Println()
+			}
 
 			// real time measurements
 			for measurementName, period := range realTimeDefinitions {
@@ -252,6 +251,15 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					tot = float64(int64((tot*100)/length)) / 100
 					//fmt.Println(tot)
 					//fmt.Println()
+
+					if globals.RawMode {
+						fmt.Printf("Measurement result: \n\t %+v\n\n", dataformats.MeasurementSample{
+							Qualifier: measurementName,
+							Ts:        selectedSamples[0].Ts / 1000000000,
+							Val:       tot,
+							Flows:     flows,
+						})
+					}
 
 					//fmt.Printf("%+v\n\n", dataformats.MeasurementSample{
 					//	Qualifier: measurementName,
@@ -370,7 +378,10 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							Val:       tot,
 							Flows:     flows,
 						}
-						//fmt.Printf("Reference result %+v\n\n", newSample)
+
+						if globals.RawMode {
+							fmt.Printf("Reference result:\n\t %+v\n\n", newSample)
+						}
 
 						// we give it little time to transmit the data, it too late data is thrown away
 						select {

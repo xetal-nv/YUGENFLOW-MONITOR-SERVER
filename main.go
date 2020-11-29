@@ -87,6 +87,7 @@ func main() {
 	globals.EchoMode = false
 	globals.ExportEnabled = *export
 	globals.LimitedApi = *limitedApi
+	globals.RawMode = false
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *tcpdeadline != 24 {
