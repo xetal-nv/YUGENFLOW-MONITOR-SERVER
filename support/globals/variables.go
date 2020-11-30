@@ -24,7 +24,7 @@ var SevereFailureThreshold, SensorManagerLog, GateManagerLog, SensorDBLog, Entry
 //noinspection GoExportedOwnDeclaration
 var DebugActive, CRCused, SensorEEPROMResetEnabled, CRCMaliciousCount, EnforceStrict, AsymmetricNull,
 	SaveState, Shadowing, AcceptNegatives, ResetCloseTCP, DisableDatabase, DisableCORS, EchoMode, ExportEnabled,
-	ExportAsync, LimitedApi, RawMode bool
+	ExportAsync, LimitedApi, GateMode, SpaceMode bool
 
 var ChannellingLength, SettleTime, SensorTimeout, TCPdeadline, MaliciousTimeout, MaliciousTriesIP, ServerTimeout,
 	MaliciousTriesMac, MalicioudMode, FailureThreshold, MaximumInvalidIDInternal, ZombieTimeout,

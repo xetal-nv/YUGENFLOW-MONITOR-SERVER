@@ -144,7 +144,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			}
 
-			if globals.RawMode {
+			if globals.SpaceMode {
 				fmt.Printf("Sliding window from %v to %v\n",
 					samples[len(samples)-1].Ts-int64(maxTick)*1000000000, samples[len(samples)-1].Ts)
 				for _, el := range samples {
@@ -252,7 +252,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					//fmt.Println(tot)
 					//fmt.Println()
 
-					if globals.RawMode {
+					if globals.SpaceMode {
 						fmt.Printf("Measurement result: \n\t %+v\n\n", dataformats.MeasurementSample{
 							Qualifier: measurementName,
 							Ts:        selectedSamples[0].Ts / 1000000000,
@@ -379,7 +379,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							Flows:     flows,
 						}
 
-						if globals.RawMode {
+						if globals.SpaceMode {
 							fmt.Printf("Reference result:\n\t %+v\n\n", newSample)
 						}
 

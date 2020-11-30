@@ -20,7 +20,7 @@ func ApiManager(rst chan bool) {
 	r.Handle("/measurements", measurementDefinitions())
 	r.Handle("/latestdata/{space}", latestData(false, false, false, 0))
 	r.Handle("/latestdata", latestData(true, false, false, 0))
-	if globals.DBOPS {
+	if globals.DBOPS && !globals.DisableDatabase {
 		r.Handle("/reference/{space}", latestData(false, true, false, 2))
 		r.Handle("/reference", latestData(true, true, false, 2))
 		r.Handle("/delta/{space}", latestData(false, true, false, 1))

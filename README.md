@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20201130  
+Built: 20000a20201201  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -52,13 +52,11 @@ measurement.ini : it contains the definitions of all emasureemnts the server nee
     -us                     : enable unsafe shutdown when initiated by the user (e.g. with CTRL-C), this can cause data loss and will prevent state save from working    
     -user username          : database username   
 
-_For development only:_    
+_For development and debug only:_    
 
     -dev                    : development mode  
-    -echo                   : server enter in echo mode and data is not processed  
+    -echo                   : server enables echo mode (0: off, 1: raw with not processing, 2: gate values, 3: space values)
     -la                     : not available    
-    -raw                    : this is a special debug mode showing only the accumulated resultrs and the samping window  
-
 
 **1.5 INSTALLATION**  
 _Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database  
@@ -504,5 +502,6 @@ BUG list:
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
+ - Gates seems not to include the reverse spec (dataformats.Flow), is this a bug or just an omission?  
  - Clean code  
 

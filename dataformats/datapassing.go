@@ -14,5 +14,7 @@ type MeasurementSample struct {
 	Space     string                `json:"space"`
 	Ts        int64                 `json:"timestamp"`
 	Val       float64               `json:"value"`
+	FlowIn    int                   `json:"in,omitempty"`
+	FlowOut   int                   `json:"out,omitempty"`
 	Flows     map[string]EntryState `json:"flows"`
 }

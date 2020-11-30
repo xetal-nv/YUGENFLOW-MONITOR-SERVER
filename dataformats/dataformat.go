@@ -32,6 +32,7 @@ type Flow struct {
 	Id         string `json:"id"`
 	Netflow    int    `json:"netflow"`
 	TsOverflow int64  `json:"flowOverlowTs,omitempty"`
+	Reversed   bool   `json:"reversed,omitempty"`
 	FlowIn     int    `json:"in,omitempty"`
 	FlowOut    int    `json:"out,omitempty"`
 }

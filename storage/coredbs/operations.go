@@ -49,6 +49,9 @@ func SaveShadowSpaceData(nd dataformats.SpaceState) error {
 }
 
 func ReadSpaceData(spacename string, howMany int) (result []dataformats.MeasurementSample, err error) {
+	if globals.DisableDatabase {
+		return
+	}
 	if howMany == 0 {
 		return
 	}
@@ -67,6 +70,9 @@ func ReadSpaceData(spacename string, howMany int) (result []dataformats.Measurem
 }
 
 func ReadReferenceData(spacename string, howMany int) (result []dataformats.MeasurementSample, err error) {
+	if globals.DisableDatabase {
+		return
+	}
 	if howMany == 0 {
 		return
 	}
@@ -85,6 +91,9 @@ func ReadReferenceData(spacename string, howMany int) (result []dataformats.Meas
 }
 
 func ReadReferenceDataSeries(spacename string, ts0, ts1 int) (result []dataformats.MeasurementSample, err error) {
+	if globals.DisableDatabase {
+		return
+	}
 	if ts1 <= ts0 {
 		return
 	}
@@ -104,6 +113,9 @@ func ReadReferenceDataSeries(spacename string, ts0, ts1 int) (result []dataforma
 }
 
 func ReadSpaceDataSeries(spacename string, ts0, ts1 int) (result []dataformats.MeasurementSample, err error) {
+	if globals.DisableDatabase {
+		return
+	}
 	if ts1 <= ts0 {
 		return
 	}
@@ -123,6 +135,9 @@ func ReadSpaceDataSeries(spacename string, ts0, ts1 int) (result []dataformats.M
 }
 
 func VerifyPresence(spacename string, ts0, ts1 int) (present bool, err error) {
+	if globals.DisableDatabase {
+		return
+	}
 	if ts1 <= ts0 {
 		return
 	}

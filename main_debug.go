@@ -28,14 +28,14 @@ func main() {
 	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var delogs = flag.Bool("delogs", false, "delete all logs")
-	var echo = flag.Bool("echo", false, "runs in echo mode")
+	var echo = flag.Int("echo", 0, "enables echo mode (0: off, 1: raw, 2: gates, 3: spaces)")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var export = flag.Bool("export", false, "enable export scripting")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 	var user = flag.String("user", "", "user name")
 	var pwd = flag.String("pwd", "", "user password")
-	var raw = flag.Bool("raw", false, "enable raw mode")
+	//var raw = flag.Bool("raw", false, "enable raw mode")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
 
@@ -86,12 +86,13 @@ func main() {
 	globals.DBpath = *dbpath
 	globals.DBUser = *user
 	globals.DBUserPassword = *pwd
-	globals.EchoMode = *echo
+	globals.EchoMode = *echo == 1
+	globals.GateMode = *echo == 2
+	globals.SpaceMode = *echo == 3
 	globals.ExportEnabled = *export
 	globals.LimitedApi = false
-	globals.RawMode = *raw
 
-	fmt.Printf("\nStarting server YugenFlow Server %s-debug \n\n", globals.VERSION)
+	fmt.Printf("\nStarting server YugenFlow Server %s-development \n\n", globals.VERSION)
 	if *debug {
 		fmt.Println("*** WARNING: Debug mode enabled ***")
 	}
@@ -108,9 +109,10 @@ func main() {
 	if *us {
 		fmt.Println("*** WARNING: Enabled unsafe shutdown on user signals ***")
 	}
-	if *raw {
-		fmt.Println("*** INFO: RAW mode enabled ***")
+	if *echo != 0 {
+		fmt.Printf("*** INFO: Echo mode %v enabled ***\n", *echo)
 	}
+
 	globals.Start()
 	diskCache.Start()
 	if err := coredbs.Start(); err != nil {

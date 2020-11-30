@@ -607,14 +607,28 @@ func sensorHandler(conn net.Conn) {
 								} else if flow != 1 {
 									flow = 0
 								}
-								for _, ch := range sensorDef.channels.gateChannel {
-									//for _ = range sensorDef.channels.gateChannel {
-									sampleTS := time.Now().UnixNano()
-									//fmt.Println("SAMPLE OK ==", lastSampleTS, sensorDef.maxRate, sampleTS, lastSampleTS+sensorDef.maxRate-sampleTS)
-									record := sensorDef.maxRate == 0 || lastSampleTS+sensorDef.maxRate < sampleTS
-									//fmt.Println("SAMPLE OK ==", record)
-									if record {
-										lastSampleTS = sampleTS
+								sampleTS := time.Now().UnixNano()
+								record := sensorDef.maxRate == 0 || lastSampleTS+sensorDef.maxRate < sampleTS
+								if globals.GateMode {
+									if !record {
+										fmt.Printf("Sample arrived faster then %v ms and is skipped\n", sensorDef.maxRate/1000000)
+									} else {
+										if flow == 0 {
+											fmt.Print("0")
+										}
+										fmt.Printf("\nSensor %v with id %v has sent %v at %v\n", mach, sensorDef.id, flow, sampleTS)
+									}
+								}
+								if record {
+									lastSampleTS = sampleTS
+									for _, ch := range sensorDef.channels.gateChannel {
+										//for _ = range sensorDef.channels.gateChannel {
+										//sampleTS := time.Now().UnixNano()
+										//fmt.Println("SAMPLE OK ==", lastSampleTS, sensorDef.maxRate, sampleTS, lastSampleTS+sensorDef.maxRate-sampleTS)
+										//record := sensorDef.maxRate == 0 || lastSampleTS+sensorDef.maxRate < sampleTS
+										//fmt.Println("SAMPLE OK ==", record)
+										//if record {
+										//	lastSampleTS = sampleTS
 										ch <- dataformats.FlowData{
 											Type:    "sensor",
 											Name:    mach,
