@@ -16,35 +16,51 @@ import (
 
 var once sync.Once
 
+// updateRegister accumulates the count at space level and passes forth vairations only
 func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.EntryState) dataformats.SpaceState {
-	spaceRegister.Flows[data.Id] = data
+	//spaceRegister.Flows[data.Id] = data
+	spaceRegister.Flows[data.Id] = dataformats.EntryState{
+		Id:        data.Id,
+		Ts:        data.Ts,
+		Variation: data.Variation,
+		State:     data.State,
+		Reversed:  data.Reversed,
+		Flows:     make(map[string]dataformats.Flow),
+	}
+	for name, val := range data.Flows {
+		spaceRegister.Flows[data.Id].Flows[name] = dataformats.Flow{
+			Id:        val.Id,
+			Variation: val.Variation,
+			Reversed:  val.Reversed,
+		}
+	}
 	for key, entry := range spaceRegister.Flows {
 		if key != data.Id {
-			entry.Count = 0
+			entry.Variation = 0
 			for i, val := range entry.Flows {
-				val.Netflow = 0
+				val.Variation = 0
 				entry.Flows[i] = val
 			}
 			//entry.Flows = make(map[string]dataformats.Flow)
 			spaceRegister.Flows[key] = entry
 		} else {
-			entry.Count = data.Count
+			entry.Variation = data.Variation
 			entry.Reversed = data.Reversed
 			entry.State = data.State
 			entry.Ts = data.Ts
 			for i, val := range entry.Flows {
-				val.Netflow = data.Flows[i].Netflow
+				val.Variation = data.Flows[i].Variation
 				entry.Flows[i] = val
 			}
 		}
 	}
 	spaceRegister.Ts = data.Ts
-	//spaceRegister.Count = 0
+	//spaceRegister.Variation = 0
 	for _, entry := range spaceRegister.Flows {
 		if entry.Reversed {
-			spaceRegister.Count -= entry.Count
+			spaceRegister.Count -= entry.Variation
 		} else {
-			spaceRegister.Count += entry.Count
+			spaceRegister.Count += entry.Variation
 		}
 	}
 	return spaceRegister
@@ -54,7 +70,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 	setReset chan bool, entries map[string]dataformats.EntryState, resetSlot []time.Time) {
 
 	// spaceRegister contains the data to be shared with the clients
-	// shadowSpaceRegister is a register copy without reset form debugging. It might overflow
+	// shadowSpaceRegister is a register copy without adjustments
 	once.Do(func() {
 		if resetSlot != nil {
 			fmt.Printf("*** INFO: Space %v has reset slot set from %v:%v to %v:%v Server Time ***\n",
@@ -184,7 +200,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 						spaceRegister.Count = 0
 						spaceRegister.Ts = time.Now().UnixNano()
 						for i, entry := range spaceRegister.Flows {
-							entry.Count = 0
+							entry.Variation = 0
 							entry.Flows = make(map[string]dataformats.Flow)
 							spaceRegister.Flows[i] = entry
 						}
@@ -203,7 +219,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 
 				} else {
 					resetDone = false
-					if data.Count != 0 {
+					if data.Variation != 0 {
 						// data is significant
 						// we are in a activity slot
 						if _, ok := entries[data.Id]; ok {
@@ -215,7 +231,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 
 							// the data is updated in case it leads to a negative count if the option is enabled
 							if !globals.AcceptNegatives {
-								newData := data.Count
+								newData := data.Variation
 								if data.Reversed {
 									newData = -newData
 								}
@@ -225,19 +241,19 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 
 									// the total count is updated according to the reversed flag
 									if data.Reversed {
-										data.Count = spaceRegister.Count
+										data.Variation = spaceRegister.Count
 									} else {
-										data.Count = -spaceRegister.Count
+										data.Variation = -spaceRegister.Count
 									}
 
 									// the gate flows are updated according to the delta and the reversed flag
 									entry := dataformats.EntryState{
-										Id:       data.Id,
-										Ts:       data.Ts,
-										Count:    data.Count,
-										State:    data.State,
-										Reversed: data.Reversed,
-										Flows:    make(map[string]dataformats.Flow),
+										Id:        data.Id,
+										Ts:        data.Ts,
+										Variation: data.Variation,
+										State:     data.State,
+										Reversed:  data.Reversed,
+										Flows:     make(map[string]dataformats.Flow),
 									}
 									for key, value := range data.Flows {
 										// since data was duplicated before being sent, we can use a shallow copy
@@ -253,12 +269,12 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 										for i := range entry.Flows {
 											if delta < 0 {
 												flow := entry.Flows[i]
-												flow.Netflow += 1
+												flow.Variation += 1
 												entry.Flows[i] = flow
 												delta += 1
 											} else if delta > 0 {
 												flow := entry.Flows[i]
-												flow.Netflow -= 1
+												flow.Variation -= 1
 												entry.Flows[i] = flow
 												delta -= 1
 											} else {

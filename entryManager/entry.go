@@ -83,16 +83,18 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 						data.Netflow *= -1
 					}
 				}
-				entryRegister.Count = data.Netflow
+				// the data variation is sent, accumulation is done somewhere else
+				entryRegister.Variation = data.Netflow
 				tempRegister := dataformats.Flow{
-					Id:      data.Name,
-					Netflow: data.Netflow,
+					Id:        data.Name,
+					Variation: data.Netflow,
+					Reversed:  gates[data.Name].Reversed,
 				}
 				entryRegister.Flows[data.Name] = tempRegister
 				for key := range entryRegister.Flows {
 					if key != data.Name {
 						tmp := entryRegister.Flows[key]
-						tmp.Netflow = 0
+						tmp.Variation = 0
 						entryRegister.Flows[key] = tmp
 					}
 				}
@@ -102,22 +104,24 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 				}
 				ts := time.Now().UnixNano()
 				for _, ch := range entrySpaceChannels {
-					// to avoid pointer issues we make a deep copy of the register to send
+					// to avoid pointer issues we make identical deep copies instead of one
 					copyState := dataformats.EntryState{
-						Id:       entryRegister.Id,
-						Ts:       ts,
-						Count:    entryRegister.Count,
-						State:    entryRegister.State,
-						Reversed: entryRegister.Reversed,
-						Flows:    make(map[string]dataformats.Flow),
+						Id:        entryRegister.Id,
+						Ts:        ts,
+						Variation: entryRegister.Variation,
+						State:     entryRegister.State,
+						Reversed:  entryRegister.Reversed,
+						Flows:     make(map[string]dataformats.Flow),
 					}
 					for key, el := range entryRegister.Flows {
 						tmp := dataformats.Flow{
-							Id:      el.Id,
-							Netflow: el.Netflow,
+							Id:        el.Id,
+							Variation: el.Variation,
+							Reversed:  el.Reversed,
 						}
 						copyState.Flows[key] = tmp
 					}
+					//fmt.Printf("%+v\n", copyState)
 					ch <- copyState
 				}
 			}

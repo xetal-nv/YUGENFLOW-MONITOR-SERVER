@@ -74,7 +74,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					}
 				}
 			case data := <-latestData:
-				//fmt.Printf("calculator %v received %v\n", space, data)
+				//fmt.Printf("calculator %v received %+v\n", space, data)
 				// first we make a deep copy of data
 				newData := dataformats.SpaceState{
 					Id:    data.Id,
@@ -86,21 +86,22 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				for en, ev := range data.Flows {
 					newData.Flows[en] = dataformats.EntryState{
-						Id:       ev.Id,
-						Ts:       ev.Ts,
-						Count:    ev.Count,
-						State:    ev.State,
-						Reversed: ev.Reversed,
-						Flows:    make(map[string]dataformats.Flow),
+						Id:        ev.Id,
+						Ts:        ev.Ts,
+						Variation: ev.Variation,
+						State:     ev.State,
+						Reversed:  ev.Reversed,
+						Flows:     make(map[string]dataformats.Flow),
 					}
 					for gn, gv := range ev.Flows {
 						newData.Flows[en].Flows[gn] = dataformats.Flow{
-							Id:      gv.Id,
-							Netflow: gv.Netflow,
+							Id:        gv.Id,
+							Variation: gv.Variation,
+							Reversed:  gv.Reversed,
 						}
 					}
 				}
-				//fmt.Printf("calculator %v received %v\n\n", space, newData)
+				//fmt.Printf("calculator %v received %+v\n\n", space, newData)
 
 				// the current data is sent immediately
 				if actualsAvailable {
@@ -167,7 +168,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				for i := len(samples) - 1; i >= 0; i-- {
 					if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
 						selectedSamples = append(selectedSamples, dataformats.MeasurementSample{Ts: samples[i].Ts,
-							//Val: float64(samples[i].Count)})
+							//Val: float64(samples[i].Variation)})
 							Val: float64(samples[i].Count), Flows: samples[i].Flows})
 					} else {
 						// we need to properly close the interval
@@ -181,7 +182,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				//fmt.Printf("interval %v to %v\n", samples[len(samples)-1].Ts-adjPeriod, samples[len(samples)-1].Ts)
 				//for _, el := range samples {
-				//	fmt.Printf("selected sample %v at %v\n", el.Count, el.Ts)
+				//	fmt.Printf("selected sample %v at %v\n", el.Variation, el.Ts)
 				//}
 				//fmt.Println()
 				//continue
@@ -211,16 +212,16 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
 							if entry, ok := flows[sampleEntryName]; ok {
 								// adjust values and gates
-								entry.Count += sampleEntry.Count
+								entry.Variation += sampleEntry.Variation
 								for gateSampleName, gateSampleCurrent := range sampleEntry.Flows {
 									if gate, found := entry.Flows[gateSampleName]; found {
-										gate.Netflow += gateSampleCurrent.Netflow
+										gate.Variation += gateSampleCurrent.Variation
 										entry.Flows[gateSampleName] = gate
 									} else {
 										// new gate flow, we deep copy it
 										entry.Flows[gateSampleName] = dataformats.Flow{
-											Id:      gateSampleCurrent.Id,
-											Netflow: gateSampleCurrent.Netflow,
+											Id:        gateSampleCurrent.Id,
+											Variation: gateSampleCurrent.Variation,
 										}
 									}
 								}
@@ -228,17 +229,18 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							} else {
 								// new entry, we make a deep copy
 								flows[sampleEntryName] = dataformats.EntryState{
-									Id:       sampleEntry.Id,
-									Ts:       sampleEntry.Ts,
-									Count:    sampleEntry.Count,
-									State:    sampleEntry.State,
-									Reversed: sampleEntry.Reversed,
-									Flows:    make(map[string]dataformats.Flow),
+									Id:        sampleEntry.Id,
+									Ts:        sampleEntry.Ts,
+									Variation: sampleEntry.Variation,
+									State:     sampleEntry.State,
+									Reversed:  sampleEntry.Reversed,
+									Flows:     make(map[string]dataformats.Flow),
 								}
 								for i, val := range sampleEntry.Flows {
 									flows[sampleEntryName].Flows[i] = dataformats.Flow{
-										Id:      val.Id,
-										Netflow: val.Netflow,
+										Id:        val.Id,
+										Variation: val.Variation,
+										Reversed:  val.Reversed,
 									}
 								}
 							}
@@ -334,16 +336,16 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
 								if entry, ok := flows[sampleEntryName]; ok {
 									// adjust values and gates
-									entry.Count += sampleEntry.Count
+									entry.Variation += sampleEntry.Variation
 									for gateSampleName, gateSampleCurrent := range sampleEntry.Flows {
 										if gate, found := entry.Flows[gateSampleName]; found {
-											gate.Netflow += gateSampleCurrent.Netflow
+											gate.Variation += gateSampleCurrent.Variation
 											entry.Flows[gateSampleName] = gate
 										} else {
 											// new gate flow, we deep copy it
 											entry.Flows[gateSampleName] = dataformats.Flow{
-												Id:      gateSampleCurrent.Id,
-												Netflow: gateSampleCurrent.Netflow,
+												Id:        gateSampleCurrent.Id,
+												Variation: gateSampleCurrent.Variation,
 											}
 										}
 									}
@@ -351,17 +353,18 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 								} else {
 									// new entry, we make a deep copy
 									flows[sampleEntryName] = dataformats.EntryState{
-										Id:       sampleEntry.Id,
-										Ts:       sampleEntry.Ts,
-										Count:    sampleEntry.Count,
-										State:    sampleEntry.State,
-										Reversed: sampleEntry.Reversed,
-										Flows:    make(map[string]dataformats.Flow),
+										Id:        sampleEntry.Id,
+										Ts:        sampleEntry.Ts,
+										Variation: sampleEntry.Variation,
+										State:     sampleEntry.State,
+										Reversed:  sampleEntry.Reversed,
+										Flows:     make(map[string]dataformats.Flow),
 									}
 									for i, val := range sampleEntry.Flows {
 										flows[sampleEntryName].Flows[i] = dataformats.Flow{
-											Id:      val.Id,
-											Netflow: val.Netflow,
+											Id:        val.Id,
+											Variation: val.Variation,
+											Reversed:  val.Reversed,
 										}
 									}
 								}

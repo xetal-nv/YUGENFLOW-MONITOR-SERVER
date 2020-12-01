@@ -34,7 +34,7 @@ The configuration uses several ini files as follows (refer to the ini itself for
 access.ini : it sets access to the server by configuring and enabling database, tcp connection, external scripting and alike  
 configuration.ini : it sets the installation in terms of gates, entries and spaces  
 gateserver.ini : it contains all settings of the server itself  
-measurement.ini : it contains the definitions of all emasureemnts the server needs to precomputer and provide apart form the real time data  
+measurement.ini : it contains the definitions of all measurements the server needs to precompute and provide.  
 
 **1.4 COMMAND LINE OPTIONS:**  
 
@@ -59,8 +59,8 @@ _For development and debug only:_
     -la                     : not available    
 
 **1.5 INSTALLATION**  
-_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database  
-_Configuration files_: see 1.4 in the same folder as the executable  
+_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database.  
+_Configuration files_: see 1.4 in the same folder as the executable.  
 _Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.  
 
 **1.6 BUILD OPTION**  
@@ -204,7 +204,7 @@ The INVALID API return a JSON ARRAY containing data about all connected invalid 
     
 **2.5 MEASUREMENT**  
 The MEASUREMENT API return a JSON ARRAY describing all defined measurements.  
-Each measurement is given by means of its name, its type and the predicity in seconds.  
+Each measurement is given by means of its name, its type and the period in seconds.  
 
     [
       {
@@ -220,7 +220,7 @@ Each measurement is given by means of its name, its type and the predicity in se
       }
     ]
 
-The type can be 'realtime' when the measurement is done as a sliding window of 'period' seconds, or 'reference' and the measurement is taken periodically every 'perdiod' seconds.  
+The type can be 'realtime' when the measurement is done as a sliding window of 'period' seconds, or 'reference' and the measurement is taken periodically every 'period' seconds.  
     
 **2.6 LATEST**  
 The LATEST API return a JSON ARRAY containing data of all latest measurement for all spaces (if no space is indicated) or for a given list of spaces.  
@@ -255,7 +255,7 @@ it is associated to an array of measurement data. This data is expressed as foll
     ]
     
 In this example the measurement name is 'twenty' referring to a measurement of this name as provided in the measurement.ini file. 
-In a real situation thje name will depend on what the user has provided at installation time.   
+In a real situation the name will depend on what the user has provided at installation time.   
 The array of data contains for this API only one value (the latest one), where 'qualifier' is the measurement name (it can be also empty), 'space' is the space name (it can be also empty),
 'timestamp' is the timestamp expressed as Unix Epoch time and 'value' is the measurement value.  
 Furthermore, the measurement provides the a list with all flows reported by each entry belonging to the space.  
@@ -264,24 +264,25 @@ Each element of this list is as follows:
     "e1": {
       "id": "e1",
       "Ts": 1605712842503580600,
-      "netflow": 1,
+      "variation": 1,
       "reversed": false,
       "flows": {
         "kit1": {
           "id": "kit1",
-          "netflow": 1
-        }
+          "variation": 1
+        },
+        ...
       }
     }
     
-It has a field of name equal to the entry name (as form configuration.ini) and as value a JSON with field 'id' repeting the entry name, 'Ts' the measurement timestamp in Unix Epoch format, 
-'netflow' that is the current difference in in- and outflow measured by the entry and 'flows' that provdes a list of flows from all gates composing the entry.  
-Per gate a field is included in such list of name equal to the gate name (as form configuration.ini) and values 'id' (the gate name) and 'netflow' (the different between
-in- and out-flow measured by the gate).   
+It has a field of name equal to the entry name (as form configuration.ini) and as value a JSON with field 'id' repeating the entry name, 'Ts' the measurement timestamp in Unix Epoch format, 
+'variation' that is the current variation in the in- and outflow measured by the entry (in the observation window) and 'flows' that provides a list of flows from all gates composing the entry.  
+Per gate a field is included in such list of name equal to the gate name (as form configuration.ini) and values 'id' (the gate name) and 'variation' (the different between
+in- and out-flow measured by the gate in the observation window).   
 
 **2.7 REFERENCE**  
 The REFERENCE API reference returns  a number of results for one or more spaces according to how it is called.  
-It answers with a JSON identicaly to the one described in section 2.4 except that the 'type' field is always equal to 'reference' and multiple measurement data are given in the data array:  
+It answers with a JSON identical to the one described in section 2.4 except that the 'type' field is always equal to 'reference' and multiple measurement data are given in the data array:  
 
     [
       {
@@ -299,11 +300,11 @@ It answers with a JSON identicaly to the one described in section 2.4 except tha
     ]
 
 **2.8 SERIES/REFERENCE**  
-Like for the 'REFERENCE' API the SERIES/REFERENC API return several measurement data and specifically the data for one or more spaces in the given time interval with reference times expressed in Epoch Unix format.  
+Like for the 'REFERENCE' API the SERIES/REFERENCE API return several measurement data and specifically the data for one or more spaces in the given time interval with reference times expressed in Epoch Unix format.  
 The JSON is identical as the one described in section 2.5.  
 
 **2.9 PRESENCE**  
-The PRESENCE API is used to check if thgere was somebody in a given space in the given time internal. Start and end times must be expressed in Epoch Unix format.  
+The PRESENCE API is used to check if there was somebody in a given space in the given time internal. Start and end times must be expressed in Epoch Unix format.  
 The answer is a JSON array including data for one or more spaces and expressed as follows:  
 
     [
@@ -321,14 +322,14 @@ The COMMAND API is used to manipulate the state and configuration of a device wh
 For security reasons, devices that are invalid cannot be subjects of commands via this API.  
 The API requires upto four argument:  
 
- - a comamnd 'cd' which is part of the API path  
+ - a command 'cd' which is part of the API path  
  - a device identifier 'id'  
  - the mac of the device 'mac'  
- - a value to be apssed to the command 'val'
+ - a value to be passed to the command 'val'
  
 When already properly configured a device can be specified by 'id' or 'mac', otherwise only by 'mac'.  
 Optionally the command can be executed asynchronously by setting the 'async' field to 0 or synchronously. It is highly advised to use asynchronous execution to avoid possible system slow down.  
-Using of commands might severily impact system operation, thus it is advised only for advance users. The following commands are available:  
+Using of commands might severely impact system operation, thus it is advised only for advance users. The following commands are available:  
 
     list                    : return an array listing of all available command. Please note that the command is useful also for manual API usage as the answer is not a valid JSON response.  
     srate id|mac val        : sets the device sampling rate  
@@ -429,8 +430,7 @@ With _answer_ always empty and _error_ not empty in case of errors.
 
 
 ## 3. External scripting    
-The server support external scripting triggered by new in- or out-flow data caming from individual gates. This option needs to be enabled at server launch with option '-export'
-and it can be configured bie the access.ini.  
+The server support external scripting triggered by new in- or out-flow data generated by individual gates. This option needs to be enabled at server launch with option '-export' and it can be configured bie the access.ini.  
 The script can be any command which can be executed from the root path of the server and can be specified(in the access.ini) as a 'command' and an 'argument'. The server 
 will then execute the line 'command argument {JSONDATA}' every time there is a new data from any of the active devices. Please note that 'argument' can be empty as the convention supports both 
 executables (e.g. command.exe JSONDATA) as pure scripting (e.g. python example.py JSONDATA).  
@@ -439,8 +439,8 @@ In synchronous mode anything non null returned by the command is considered erro
 The JSONDATA field is a JSON string where 'actual' data is passed (see measurement.ini file for explanation of data types). The JSON format is as follows:
 
     {'qualifier':'actual','space':'h0','timestamp':1605772874,'value':2,'flows':{'e0':{'id':'e0','Ts':1605772874158902200,
-    'netflow':-1,'reversed':false,'flows':{'kit0':{'id':'kit0','netflow':-1}}},'e1':{'id':'e1','Ts':16057728
-    70146409600,'netflow':0,'reversed':false,'flows':{'kit1':{'id':'kit1','netflow':0}}}}}
+    'variation':-1,'reversed':false,'flows':{'kit0':{'id':'kit0','variation':-1}}},'e1':{'id':'e1','Ts':16057728
+    70146409600,'variation':0,'reversed':false,'flows':{'kit1':{'id':'kit1','variation':0}}}}}
 
 
 that is equivalent to the JSON message:  
@@ -454,19 +454,19 @@ that is equivalent to the JSON message:
         "e0": {
           "id": "e0",
           "Ts": 1605772864149408500,
-          "netflow": 1,
+          "variation": 1,
           "reversed": false,
           "flows": {
             "kit0": {
               "id": "kit0",
-              "netflow": 1
+              "variation": 1
             }
           }
         },
         "e1": {
           "id": "e1",
           "Ts": 0,
-          "netflow": 0,
+          "variation": 0,
           "reversed": false,
           "flows": {}
         }
@@ -487,7 +487,7 @@ Please refer to the files example.xyz as example for language xyz (if present).
 The logs file are contained in the './log' folder which is created by the server (if not already present).  
 These files are to be used when contacting with support in case of problems.  
 The logs are a multi-file aggregating level log files that split information according to the relative microservice and provide information about type in a condensed matter.  
-For further information refer to https://github.com/fpessolano/mlogger  
+For further information refer to https://github.com/fpessolano/mlogger.  
 
 ## 5. Release Notes  
 
@@ -502,6 +502,5 @@ BUG list:
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
- - Gates seems not to include the reverse spec (dataformats.Flow), is this a bug or just an omission?  
  - Clean code  
 

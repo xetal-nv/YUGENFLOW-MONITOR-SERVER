@@ -30,7 +30,8 @@ type GateState struct {
 // generic flow
 type Flow struct {
 	Id         string `json:"id"`
-	Netflow    int    `json:"netflow"`
+	Variation  int    `json:"variation,omitempty"`
+	Netflow    int    `json:"netflow,omitempty"`
 	TsOverflow int64  `json:"flowOverlowTs,omitempty"`
 	Reversed   bool   `json:"reversed,omitempty"`
 	FlowIn     int    `json:"in,omitempty"`
@@ -41,7 +42,8 @@ type Flow struct {
 type EntryState struct {
 	Id         string          `json:"id"`
 	Ts         int64           `json:"Ts"`
-	Count      int             `json:"netflow"`
+	Variation  int             `json:"variation,omitempty"`
+	Netflow    int             `json:"netlflow,omitempty"`
 	TsOverflow int64           `json:"flowOverlowTs,omitempty"`
 	FlowIn     int             `json:"in,omitempty"`
 	FlowOut    int             `json:"out,omitempty"`

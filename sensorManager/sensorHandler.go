@@ -644,7 +644,7 @@ func sensorHandler(conn net.Conn) {
 									//	Name:    mach,
 									//	Id:      sensorDef.id,
 									//	Ts:      sampleTS,
-									//	Netflow: flow,
+									//	Variation: flow,
 									//}
 								}
 							}

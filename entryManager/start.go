@@ -85,11 +85,11 @@ func Start(sd chan bool) {
 					EntryStructure.SetReset[currentEntry] = make(chan bool, globals.ChannellingLength)
 					EntryStructure.StopChannel[currentEntry] = make(chan interface{}, 1)
 					entryRegister := dataformats.EntryState{
-						Id:    currentEntry,
-						Ts:    time.Now().UnixNano(),
-						Count: 0,
-						Flows: nil,
-						State: true,
+						Id:        currentEntry,
+						Ts:        time.Now().UnixNano(),
+						Variation: 0,
+						Flows:     nil,
+						State:     true,
 					}
 					entryRegister.Flows = make(map[string]dataformats.Flow)
 					for gate := range EntryStructure.GateList[currentEntry] {
