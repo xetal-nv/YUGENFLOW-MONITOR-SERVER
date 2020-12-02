@@ -110,28 +110,34 @@ func Start(sd chan bool) {
 	LatestData.Lock()
 	RegRealTimeChannels.Lock()
 	RegReferenceChannels.Lock()
+	RegActualChannels.Lock()
 	LatestData.Channel = make(map[string]chan dataformats.SpaceState)
 	RegRealTimeChannels.channelIn = make(map[string]chan dataformats.MeasurementSample)
 	RegRealTimeChannels.ChannelOut = make(map[string]chan map[string]dataformats.MeasurementSample)
 	RegReferenceChannels.channelIn = make(map[string]chan dataformats.MeasurementSample)
 	RegReferenceChannels.ChannelOut = make(map[string]chan map[string]dataformats.MeasurementSample)
+	RegActualChannels.channelIn = make(map[string]chan dataformats.MeasurementSampleWithFlows)
+	RegActualChannels.ChannelOut = make(map[string]chan dataformats.MeasurementSampleWithFlows)
 
 	for i := 0; i < len(listSpaces)-1; i++ {
 		name := listSpaces[i]
-		ldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
+		ldChan := make(chan dataformats.SpaceState)
 		LatestData.Channel[name] = ldChan
-		regRTIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
-		regRTOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
+		regRTIn := make(chan dataformats.MeasurementSample)
+		regRTOut := make(chan map[string]dataformats.MeasurementSample)
 		RegRealTimeChannels.channelIn[name] = regRTIn
 		RegRealTimeChannels.ChannelOut[name] = regRTOut
-		regRfIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
-		regRfOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
+		regRfIn := make(chan dataformats.MeasurementSample)
+		regRfOut := make(chan map[string]dataformats.MeasurementSample)
 		RegReferenceChannels.channelIn[name] = regRfIn
 		RegReferenceChannels.ChannelOut[name] = regRfOut
+		regAcIn := make(chan dataformats.MeasurementSampleWithFlows)
+		regAcOut := make(chan dataformats.MeasurementSampleWithFlows)
+		RegActualChannels.channelIn[name] = regAcIn
+		RegActualChannels.ChannelOut[name] = regAcOut
 		go recovery.RunWith(
 			func() {
-				calculator(name, ldChan, rstC[i], tick, maxTick, realTimeDefinitions, referenceDefinitions,
-					regRTIn, regRfIn, actualsAvailable)
+				calculator(name, ldChan, rstC[i], tick, maxTick, realTimeDefinitions, referenceDefinitions, regRTIn, regRfIn, regAcIn, actualsAvailable)
 			},
 			func() {
 				mlogger.Recovered(globals.AvgsManagerLog,
@@ -140,34 +146,39 @@ func Start(sd chan bool) {
 						[]int{1}, true})
 			})
 		go LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, nil)
-
 		go LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, nil)
+		go LatestMeasurementRegisterActuals(name+"_actuals", regAcIn, regAcOut)
 
 	}
+	// the last process cannot be a go routine
 	last := len(listSpaces) - 1
 	name := listSpaces[last]
-	LldChan := make(chan dataformats.SpaceState, globals.ChannellingLength)
+	LldChan := make(chan dataformats.SpaceState)
 	LatestData.Channel[name] = LldChan
-	regRTIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
-	regRTOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
+	regRTIn := make(chan dataformats.MeasurementSample)
+	regRTOut := make(chan map[string]dataformats.MeasurementSample)
 	RegRealTimeChannels.channelIn[name] = regRTIn
 	RegRealTimeChannels.ChannelOut[name] = regRTOut
-	regRfIn := make(chan dataformats.MeasurementSample, globals.ChannellingLength)
-	regRfOut := make(chan map[string]dataformats.MeasurementSample, globals.ChannellingLength)
+	regRfIn := make(chan dataformats.MeasurementSample)
+	regRfOut := make(chan map[string]dataformats.MeasurementSample)
 	RegReferenceChannels.channelIn[name] = regRfIn
 	RegReferenceChannels.ChannelOut[name] = regRfOut
+	regAcIn := make(chan dataformats.MeasurementSampleWithFlows)
+	regAcOut := make(chan dataformats.MeasurementSampleWithFlows)
+	RegActualChannels.channelIn[name] = regAcIn
+	RegActualChannels.ChannelOut[name] = regAcOut
+	RegActualChannels.Unlock()
 	RegReferenceChannels.Unlock()
 	RegRealTimeChannels.Unlock()
 	LatestData.Unlock()
 
 	go LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, nil)
-
 	go LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, nil)
+	go LatestMeasurementRegisterActuals(name+"_actuals", regAcIn, regAcOut)
 
 	recovery.RunWith(
 		func() {
-			calculator(name, LldChan, rstC[last], tick, maxTick, realTimeDefinitions, referenceDefinitions,
-				regRTIn, regRfIn, actualsAvailable)
+			calculator(name, LldChan, rstC[last], tick, maxTick, realTimeDefinitions, referenceDefinitions, regRTIn, regRfIn, regAcIn, actualsAvailable)
 		},
 		func() {
 			mlogger.Recovered(globals.AvgsManagerLog,

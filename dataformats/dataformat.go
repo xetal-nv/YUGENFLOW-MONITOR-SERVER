@@ -29,37 +29,60 @@ type GateState struct {
 
 // generic flow
 type Flow struct {
+	Id        string `json:"id"`
+	Variation int    `json:"variation"`
+	//Netflow    int    `json:"netflow,omitempty"`
+	//TsOverflow int64  `json:"flowOverlowTs,omitempty"`
+	Reversed bool `json:"-"`
+	//FlowIn     int    `json:"in,omitempty"`
+	//FlowOut    int    `json:"out,omitempty"`
+}
+
+type FlowWithFlows struct {
 	Id         string `json:"id"`
-	Variation  int    `json:"variation,omitempty"`
-	Netflow    int    `json:"netflow,omitempty"`
-	TsOverflow int64  `json:"flowOverlowTs,omitempty"`
-	Reversed   bool   `json:"reversed,omitempty"`
-	FlowIn     int    `json:"in,omitempty"`
-	FlowOut    int    `json:"out,omitempty"`
+	Variation  int    `json:"-"`
+	Netflow    int    `json:"netflow"`
+	TsOverflow int64  `json:"overflowTs"`
+	//Reversed   bool   `json:"-"`
+	FlowIn  int `json:"in"`
+	FlowOut int `json:"out"`
 }
 
 // entry flow data model used for database storage
 type EntryState struct {
-	Id         string          `json:"id"`
-	Ts         int64           `json:"Ts"`
-	Variation  int             `json:"variation,omitempty"`
-	Netflow    int             `json:"netlflow,omitempty"`
-	TsOverflow int64           `json:"flowOverlowTs,omitempty"`
-	FlowIn     int             `json:"in,omitempty"`
-	FlowOut    int             `json:"out,omitempty"`
-	State      bool            `json:"-"`
-	Reversed   bool            `json:"reversed"`
-	Flows      map[string]Flow `json:"flows"`
+	Id        string `json:"id"`
+	Ts        int64  `json:"Ts"`
+	Variation int    `json:"variation"`
+	//Netflow    int             `json:"netlflow,omitempty"`
+	//TsOverflow int64           `json:"flowOverlowTs,omitempty"`
+	//FlowIn     int             `json:"in,omitempty"`
+	//FlowOut    int             `json:"out,omitempty"`
+	State    bool            `json:"-"`
+	Reversed bool            `json:"-"`
+	Flows    map[string]Flow `json:"flows"`
+}
+
+type EntryStateWithFlows struct {
+	Id         string `json:"id"`
+	Ts         int64  `json:"Ts"`
+	Variation  int    `json:"-"`
+	Netflow    int    `json:"netflow"`
+	TsOverflow int64  `json:"overflowTs"`
+	FlowIn     int    `json:"in"`
+	FlowOut    int    `json:"out"`
+	State      bool   `json:"-"`
+	//Reversed   bool                     `json:"-"`
+	Flows map[string]FlowWithFlows `json:"flows"`
 }
 
 // space flow data model used for database storage
 type SpaceState struct {
-	Id         string                `json:"id"`
-	Ts         int64                 `json:"Ts"`
-	Count      int                   `json:"netflow"`
-	TsOverflow int64                 `json:"flowOverlowTs,omitempty"`
-	FlowIn     int                   `json:"in,omitempty"`
-	FlowOut    int                   `json:"out,omitempty"`
-	State      bool                  `json:"-"`
-	Flows      map[string]EntryState `json:"flows"`
+	Id    string `json:"id"`
+	Ts    int64  `json:"Ts"`
+	Count int    `json:"netflow"`
+	//TsOverflow int64                 `json:"flowOverlowTs,omitempty"`
+	//FlowIn     int                   `json:"in,omitempty"`
+	//FlowOut    int                   `json:"out,omitempty"`
+	State bool                  `json:"-"`
+	Flows map[string]EntryState `json:"flows"`
 }

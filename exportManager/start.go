@@ -52,7 +52,7 @@ func Start(sd chan bool) {
 		sd <- true
 	}(sd, rstC)
 
-	ExportActuals = make(chan dataformats.MeasurementSample, globals.ChannellingLength)
+	ExportActuals = make(chan dataformats.MeasurementSampleWithFlows, globals.ChannellingLength)
 	ExportReference = make(chan dataformats.MeasurementSample, globals.ChannellingLength)
 
 	recovery.RunWith(

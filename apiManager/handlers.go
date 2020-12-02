@@ -260,7 +260,7 @@ func measurementDefinitions() http.Handler {
 
 func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 	// which :
-	// 0 - all
+	// 0 - all (includes actuals if enabled)
 	// 1 - real time / delta
 	// 2 - reference
 	// 3 - presence
@@ -321,6 +321,7 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 		spaceManager.SpaceStructure.RUnlock()
 
 		var results []JsonData
+		// TODO check what it does and add actuals if valid (when not enabled it si empty data)
 		if !nonSeriesUseDB && !seriesUseDB {
 			if which == 0 || which == 1 {
 				avgsManager.RegRealTimeChannels.RLock()
@@ -364,6 +365,23 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 					}
 				}
 				avgsManager.RegReferenceChannels.RUnlock()
+			}
+
+			// TODO here
+			if which == 0 {
+				avgsManager.RegActualChannels.RLock()
+				for _, name := range spaces {
+					select {
+					case data := <-avgsManager.RegActualChannels.ChannelOut[name]:
+						fmt.Printf("%v gets %+v\n", name, data)
+						//fmt.Printf("%+v\n", data)
+					default:
+						// we do not wait for the channel to be ready
+						//fmt.Println("data not ready, get skipped")
+					}
+				}
+				avgsManager.RegActualChannels.RUnlock()
+
 			}
 
 		} else if nonSeriesUseDB {

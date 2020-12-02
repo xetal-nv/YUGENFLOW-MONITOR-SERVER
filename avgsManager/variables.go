@@ -21,3 +21,9 @@ var RegReferenceChannels struct {
 	channelIn  map[string]chan dataformats.MeasurementSample
 	ChannelOut map[string]chan map[string]dataformats.MeasurementSample
 }
+
+var RegActualChannels struct {
+	sync.RWMutex
+	channelIn  map[string]chan dataformats.MeasurementSampleWithFlows
+	ChannelOut map[string]chan dataformats.MeasurementSampleWithFlows
+}

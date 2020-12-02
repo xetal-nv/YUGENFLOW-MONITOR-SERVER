@@ -16,52 +16,62 @@ import (
 
 var once sync.Once
 
-// updateRegister accumulates the count at space level and passes forth vairations only
+// updateRegister accumulates the count at space level and passes forth variations only for the rest adjusting for reversed
 func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.EntryState) dataformats.SpaceState {
-	//spaceRegister.Flows[data.Id] = data
-	spaceRegister.Flows[data.Id] = dataformats.EntryState{
-		Id:        data.Id,
-		Ts:        data.Ts,
-		Variation: data.Variation,
-		State:     data.State,
-		Reversed:  data.Reversed,
-		Flows:     make(map[string]dataformats.Flow),
-	}
-	for name, val := range data.Flows {
-		spaceRegister.Flows[data.Id].Flows[name] = dataformats.Flow{
-			Id:        val.Id,
-			Variation: val.Variation,
-			Reversed:  val.Reversed,
-		}
-	}
+	//defer func() {
+	//	if v := recover(); v != nil {
+	//		log.Println("capture a panic:", v)
+	//		os.Exit(0)
+	//	}
+	//}()
+
+	// all space entries and relative gates are reset
 	for key, entry := range spaceRegister.Flows {
-		if key != data.Id {
-			entry.Variation = 0
-			for i, val := range entry.Flows {
-				val.Variation = 0
-				entry.Flows[i] = val
-			}
-			//entry.Flows = make(map[string]dataformats.Flow)
-			spaceRegister.Flows[key] = entry
-		} else {
-			entry.Variation = data.Variation
-			entry.Reversed = data.Reversed
-			entry.State = data.State
-			entry.Ts = data.Ts
-			for i, val := range entry.Flows {
-				val.Variation = data.Flows[i].Variation
-				entry.Flows[i] = val
-			}
+		entry.Variation = 0
+		entry.Ts = data.Ts
+		for i, val := range entry.Flows {
+			val.Variation = 0
+			entry.Flows[i] = val
 		}
+		spaceRegister.Flows[key] = entry
+	}
+
+	// we set the entry/gate variation from the new data (they are received one entry at a time)
+	newEntryData := dataformats.EntryState{
+		Id:       data.Id,
+		Ts:       data.Ts,
+		State:    data.State,
+		Reversed: data.Reversed,
+		Flows:    make(map[string]dataformats.Flow),
+	}
+	if data.Reversed {
+		newEntryData.Variation = -data.Variation
+	} else {
+		newEntryData.Variation = data.Variation
+	}
+	spaceRegister.Flows[data.Id] = newEntryData
+	for name, val := range data.Flows {
+		newGateData := dataformats.Flow{
+			Id:       val.Id,
+			Reversed: val.Reversed,
+		}
+		if data.Reversed {
+			newGateData.Variation = -val.Variation
+		} else {
+			newGateData.Variation = val.Variation
+		}
+		spaceRegister.Flows[data.Id].Flows[name] = newGateData
 	}
 	spaceRegister.Ts = data.Ts
-	//spaceRegister.Variation = 0
+
+	// the space count is updated
 	for _, entry := range spaceRegister.Flows {
-		if entry.Reversed {
-			spaceRegister.Count -= entry.Variation
-		} else {
-			spaceRegister.Count += entry.Variation
-		}
+		spaceRegister.Count += entry.Variation
+		//if entry.Reversed {
+		//	spaceRegister.Count -= entry.Variation
+		//} else {
+		//	spaceRegister.Count += entry.Variation
+		//}
 	}
 	return spaceRegister
 }
@@ -222,12 +232,24 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 					if data.Variation != 0 {
 						// data is significant
 						// we are in a activity slot
+
 						if _, ok := entries[data.Id]; ok {
+							//fmt.Printf("%+v\n", data)
+							//fmt.Printf("%+v\n\n", entries[data.Id])
 							// entry sending data is in the configuration
 							data.Reversed = entries[data.Id].Reversed
+							timestamp := time.Now().UnixNano()
+
+							//fmt.Printf("%+v\n", shadowSpaceRegister)
+							//fmt.Printf("%+v\n", data)
 
 							// the shadow register is updated with the received data
 							shadowSpaceRegister = updateRegister(shadowSpaceRegister, data)
+							shadowSpaceRegister.Ts = timestamp
+
+							//fmt.Printf("%+v\n\n", shadowSpaceRegister)
+
+							//continue
 
 							// the data is updated in case it leads to a negative count if the option is enabled
 							if !globals.AcceptNegatives {
@@ -237,16 +259,17 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 								}
 								delta := newData + spaceRegister.Count
 								if delta < 0 {
+									//println("negative check triggered")
 									// the new data brings the final count below zero
 
-									// the total count is updated according to the reversed flag
+									// the total count is updated according to the reversed flag in order to have final count zero
 									if data.Reversed {
 										data.Variation = spaceRegister.Count
 									} else {
 										data.Variation = -spaceRegister.Count
 									}
 
-									// the gate flows are updated according to the delta and the reversed flag
+									// the new data gate flows are updated according to the delta and the reversed flag
 									entry := dataformats.EntryState{
 										Id:        data.Id,
 										Ts:        data.Ts,
@@ -259,22 +282,33 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 										// since data was duplicated before being sent, we can use a shallow copy
 										entry.Flows[key] = value
 									}
-									if entry.Reversed {
-										delta *= -1
+
+									//if entry.Reversed {
+									//	delta *= -1
+									//}
+
+									// all variations are removed
+									for i := range entry.Flows {
+										flow := entry.Flows[i]
+										flow.Variation = 0
+										entry.Flows[i] = flow
 									}
 
-									// the error is distributed among all flows
+									delta = data.Variation
+									//fmt.Println(delta)
+
+									// the new variation is distributed among all gates in the original data
 								finished:
 									for delta != 0 {
 										for i := range entry.Flows {
 											if delta < 0 {
 												flow := entry.Flows[i]
-												flow.Variation += 1
+												flow.Variation -= 1
 												entry.Flows[i] = flow
 												delta += 1
 											} else if delta > 0 {
 												flow := entry.Flows[i]
-												flow.Variation -= 1
+												flow.Variation += 1
 												entry.Flows[i] = flow
 												delta -= 1
 											} else {
@@ -282,14 +316,21 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 											}
 										}
 									}
+
 									data = entry
 								}
 							}
 
+							//fmt.Printf("%+v\n", spaceRegister)
+							//fmt.Printf("%+v\n", data)
+
 							// register is updated with an inspected received data
 							spaceRegister = updateRegister(spaceRegister, data)
 							// space gets its own timestamp
-							spaceRegister.Ts = time.Now().UnixNano()
+							spaceRegister.Ts = timestamp
+
+							//fmt.Printf("%+v\n\n", spaceRegister)
+							//continue
 
 							if globals.DebugActive {
 								fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)

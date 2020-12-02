@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-//var once sync.Once
-
+// entry receives the gate data and includes in an entry data adjusting all values based on the reversed flag
+// it transmitts only variations (already adjusted for the reversed flag)
 func entry(entryname string, entryRegister dataformats.EntryState, in chan dataformats.FlowData, stop chan interface{},
 	setReset chan bool, gates map[string]dataformats.GateState) {
 	defer func() {
@@ -77,14 +77,18 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 			stop <- nil
 			break
 		case data := <-in:
-			if data.Netflow != 0 && entryRegister.State {
-				if _, ok := gates[data.Name]; ok {
-					if gates[data.Name].Reversed {
-						data.Netflow *= -1
-					}
-				}
-				// the data variation is sent, accumulation is done somewhere else
+			//fmt.Printf("%+v\n", data)
+			if _, ok := gates[data.Name]; data.Netflow != 0 && entryRegister.State && ok {
 				entryRegister.Variation = data.Netflow
+				reversed := gates[data.Name].Reversed
+				//if _, ok := gates[data.Name]; ok {
+				//	reverse = gates[data.Name].Reversed
+				if reversed {
+					entryRegister.Variation = -data.Netflow
+				}
+				//}
+				// the data variation is sent, accumulation is done somewhere else
+				//entryRegister.Variation = data.Netflow
 				tempRegister := dataformats.Flow{
 					Id:        data.Name,
 					Variation: data.Netflow,
@@ -119,9 +123,13 @@ func entry(entryname string, entryRegister dataformats.EntryState, in chan dataf
 							Variation: el.Variation,
 							Reversed:  el.Reversed,
 						}
+						if reversed {
+							tmp.Variation = -tmp.Variation
+						}
 						copyState.Flows[key] = tmp
 					}
 					//fmt.Printf("%+v\n", copyState)
+					//break
 					ch <- copyState
 				}
 			}

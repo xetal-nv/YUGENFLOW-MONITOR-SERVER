@@ -2,4 +2,5 @@ package exportManager
 
 import "gateserver/dataformats"
 
-var ExportActuals, ExportReference chan dataformats.MeasurementSample
+var ExportActuals chan dataformats.MeasurementSampleWithFlows
+var ExportReference chan dataformats.MeasurementSample
