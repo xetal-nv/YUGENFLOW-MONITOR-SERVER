@@ -76,7 +76,7 @@ func Start(sd chan bool) {
 	}
 
 	//tick := definitions.Section("system").Key("tick").MustInt(5)
-	actualsAvailable := definitions.Section("system").Key("actuals").MustBool(false)
+	currentAvailable := definitions.Section("system").Key("current").MustBool(false)
 
 	for _, def := range definitions.Section("realtime").KeyStrings() {
 		duration := definitions.Section("realtime").Key(def).MustInt(0)
@@ -137,7 +137,7 @@ func Start(sd chan bool) {
 		RegActualChannels.ChannelOut[name] = regAcOut
 		go recovery.RunWith(
 			func() {
-				calculator(name, ldChan, rstC[i], tick, maxTick, realTimeDefinitions, referenceDefinitions, regRTIn, regRfIn, regAcIn, actualsAvailable)
+				calculator(name, ldChan, rstC[i], tick, maxTick, realTimeDefinitions, referenceDefinitions, regRTIn, regRfIn, regAcIn, currentAvailable)
 			},
 			func() {
 				mlogger.Recovered(globals.AvgsManagerLog,
@@ -147,7 +147,7 @@ func Start(sd chan bool) {
 			})
 		go LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, nil)
 		go LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, nil)
-		go LatestMeasurementRegisterActuals(name+"_actuals", regAcIn, regAcOut)
+		go LatestMeasurementRegisterActuals(name+"_current", regAcIn, regAcOut)
 
 	}
 	// the last process cannot be a go routine
@@ -174,13 +174,14 @@ func Start(sd chan bool) {
 
 	go LatestMeasurementRegister(name+"_realtime", regRTIn, regRTOut, nil)
 	go LatestMeasurementRegister(name+"_reference", regRfIn, regRfOut, nil)
-	go LatestMeasurementRegisterActuals(name+"_actuals", regAcIn, regAcOut)
+	go LatestMeasurementRegisterActuals(name+"_current", regAcIn, regAcOut)
 
 	recovery.RunWith(
 		func() {
-			calculator(name, LldChan, rstC[last], tick, maxTick, realTimeDefinitions, referenceDefinitions, regRTIn, regRfIn, regAcIn, actualsAvailable)
+			calculator(name, LldChan, rstC[last], tick, maxTick, realTimeDefinitions, referenceDefinitions, regRTIn, regRfIn, regAcIn, currentAvailable)
 		},
 		func() {
+			//println("died")
 			mlogger.Recovered(globals.AvgsManagerLog,
 				mlogger.LoggerData{"avgsManager.calculator for space: " + listSpaces[len(listSpaces)-1],
 					"service terminated and recovered unexpectedly",

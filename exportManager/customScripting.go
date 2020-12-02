@@ -13,7 +13,7 @@ import (
 
 func customScripting(rst chan interface{}, chActual chan dataformats.MeasurementSampleWithFlows, chReferences chan dataformats.MeasurementSample) {
 
-	//var actualData = false
+	//var currentData = false
 	//snapshots := make(map[string]dataformats.MeasurementSampleWithFlows)
 finished:
 	for {
@@ -34,10 +34,10 @@ finished:
 		case data := <-chReferences:
 			encodedData, err = json.Marshal(data)
 		}
-		// snapshots are managed only for actual data
-		//if actualData {
+		// snapshots are managed only for current data
+		//if currentData {
 		//	//fmt.Printf("data -> %+v\n", data)
-		//	// in and out flows are accumulated only for actual data
+		//	// in and out flows are accumulated only for current data
 		//	snapshotSpace := snapshots[data.Space]
 		//	snapshots[data.Space] = calculateAbsoluteFlows(snapshotSpace, data)
 		//}

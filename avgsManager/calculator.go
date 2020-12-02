@@ -190,7 +190,18 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 
 func calculator(space string, latestData chan dataformats.SpaceState, rst chan interface{}, tick, maxTick int, realTimeDefinitions,
 	referenceDefinitions map[string]int, regRealTime, regReference chan dataformats.MeasurementSample,
-	regActuals chan dataformats.MeasurementSampleWithFlows, actualsAvailable bool) {
+	regActuals chan dataformats.MeasurementSampleWithFlows, currentAvailable bool) {
+
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		fmt.Println("captured")
+	//		panic("ciao")
+	//	}
+	//}()
+	//println("started")
+	//
+	//time.Sleep(2*time.Second)
+	//panic("ciao")
 
 	var samples []dataformats.SpaceState
 	lastReferenceMeasurement := make(map[string]int64)
@@ -255,7 +266,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			case data := <-latestData:
 
-				// TODO move here the accumulation of flows for actuals only
 				//fmt.Printf("calculator %v received %+v\n", space, data)
 				// first we make a deep copy of data
 				newData := dataformats.SpaceState{
@@ -287,18 +297,18 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				snapshot = calculateAbsoluteFlows(snapshot, dataformats.MeasurementSample{
 					Space:     space,
-					Qualifier: "actual",
+					Qualifier: "current",
 					Ts:        newData.Ts,
 					Val:       float64(newData.Count),
 					Flows:     newData.Flows})
 
 				// the current data is sent immediately
-				if actualsAvailable {
+				if currentAvailable {
 					select {
 					case regActuals <- snapshot:
 					//case regReference <- dataformats.MeasurementSample{
 					//	Space:     space,
-					//	Qualifier: "actual",
+					//	Qualifier: "current",
 					//	Ts:        newData.Ts,
 					//	Val:       float64(newData.Count),
 					//	Flows:     newData.Flows}:
@@ -312,7 +322,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 					case exportManager.ExportActuals <- snapshot:
 					//case exportManager.ExportActuals <- dataformats.MeasurementSample{
 					//	Space:     space,
-					//	Qualifier: "actual",
+					//	Qualifier: "current",
 					//	Ts:        newData.Ts,
 					//	Val:       float64(newData.Count),
 					//	Flows:     newData.Flows}:
@@ -474,7 +484,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				} else {
 					// ATTENTION since tick is 1/3 of the minimum measure
-					//  this should never happen, if it does we have a bug somewhere
+					//  this should never happen, if it does we have an error somewhere
 					mlogger.Error(globals.AvgsManagerLog,
 						mlogger.LoggerData{"avgsManager.calculator for space: " + space,
 							"tick size error",

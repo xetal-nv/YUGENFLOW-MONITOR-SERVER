@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20201202  
+Built: 20000a20201203  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -238,7 +238,7 @@ The JSON array is as follows:
       ...
     ]
 
-The field space is the space name and the type can be of value 'realtime' or 'reference' as defined in section 2.3.  
+The field space is the space name and the type can be of value 'realtime' or 'reference' as defined in section 2.5.  
 The results are given in the 'measurements' list, where each element is named according to the measurement name and
 it is associated to an array of measurement data. This data is expressed as follows:  
 
@@ -276,10 +276,54 @@ Each element of this list is as follows:
     }
     
 It has a field of name equal to the entry name (as form configuration.ini) and as value a JSON with field 'id' repeating the entry name, 'Ts' the measurement timestamp in Unix Epoch format (nanoseconds), 
-'variation' that is the current variation in the in- and outflow measured by the entry (in the observation window) and 'flows' that provides a list of flows from all gates composing the entry.  
+'variation' that is the variation in the in- and outflow measured by the entry (in the observation window) and 'flows' that provides a list of flows from all gates composing the entry.  
 Per gate a field is included in such list of name equal to the gate name (as form configuration.ini) and values 'id' (the gate name) and 'variation' (the different between
 in- and out-flow measured by the gate in the observation window).   
 
+When enabled in the _measurement.ini_ file, the data can also be of type "current". This is real time instantaneous data including also accumulating in and out flows for each element.  
+This data is expressed by a single JSON array element composed as follows:  
+    
+    {
+      "qualifier": "current",
+      "space": "h0",
+      "timestamp": 1606919957009922100,
+      "count": 0,
+      "in": 0,
+      "out": 0,
+      "startTimeFlows": :1606919957009922100,
+      "overflowTs": 0,
+      "flows": {
+        "e0": {
+          "id": "e0",
+          "Ts": :1606919957009922100,
+          "netflow": 0,
+          "overflowTs": 0,
+          "in": 0,
+          "out": 0,
+          "flows": {
+            "kit0": {
+              "id": "kit0",
+              "netflow": 0,
+              "overflowTs": 0,
+              "in": 0,
+              "out": 0
+            }
+          }
+        }
+      }
+    }
+    
+Where:
+ 
+ - 'qualifier' specifies the data type and can be 'current' or 'reference' (see measurement.ini for data type explanation)  
+ - 'space' is the space name  
+ - 'timestamp' is the sampling time in Epoch Unix format (ns)  
+ - 'count' is the value of the latest count  
+ - 'in' and 'out' are the calculated in and out flows taken starting at time 'startTimeFlows' (in Epoch Unix format, ns)  
+ - 'overflowTs' indicates when (in Epoch Unix format, ns) the in/out flow counter have overflow (64-but integer values)  
+ - 'startTimeFlows' is the time the accumulation has started. This is either when the server has started or the later (in case the calculating process as died somehow)  
+ - 'flows' is the flow data per entry and respective devices which format is the same as the equivalent field as the ones just described  
+ 
 **2.7 REFERENCE**  
 The REFERENCE API reference returns  a number of results for one or more spaces according to how it is called.  
 It answers with a JSON identical to the one described in section 2.4 except that the 'type' field is always equal to 'reference' and multiple measurement data are given in the data array:  
@@ -436,58 +480,15 @@ will then execute the line 'command argument {JSONDATA}' every time there is a n
 executables (e.g. command.exe JSONDATA) as pure scripting (e.g. python example.py JSONDATA).  
 The command can be executed asynchronously, the server does not wait for the command to return a result, or synchronously, the server wait for the command to return a result. 
 In synchronous mode anything _non null_ returned by the command is considered error and reported as such in the log file.  
-Scripting supports only 'actual' and 'reference' data (see measurements.ini for their definition). For 'actual' data the JSON format is as follows:  
+Scripting supports only 'current' and 'reference' data (see measurements.ini for their definition). For 'current' data the JSON format is as follows:  
 
-    {"qualifier":"actual","space":"h0","timestamp"::1606919957009922100,"count":0,"in":0,"out":0,"startTimeFlows"::1606919957009922100,
+    {"qualifier":"current","space":"h0","timestamp"::1606919957009922100,"count":0,"in":0,"out":0,"startTimeFlows"::1606919957009922100,
     "overflowTs":0,"flows":{"e0":{"id":"e0","Ts"::1606919957009922100,"netflow":0,"overflowTs":0,"in":0,"out":0,"flows":
     {"kit0":{"id":"kit0","netflow":0,"overflowTs":0,"in":0,"out":0}}}}}
 
 
-that is equivalent to the JSON message:  
-    
-    {
-      "qualifier": "actual",
-      "space": "h0",
-      "timestamp": 1606919957009922100,
-      "count": 0,
-      "in": 0,
-      "out": 0,
-      "startTimeFlows": :1606919957009922100,
-      "overflowTs": 0,
-      "flows": {
-        "e0": {
-          "id": "e0",
-          "Ts": :1606919957009922100,
-          "netflow": 0,
-          "overflowTs": 0,
-          "in": 0,
-          "out": 0,
-          "flows": {
-            "kit0": {
-              "id": "kit0",
-              "netflow": 0,
-              "overflowTs": 0,
-              "in": 0,
-              "out": 0
-            }
-          }
-        }
-      }
-    }
-    
-Where:
- 
- - 'qualifier' specifies the data type and can be 'actual' or 'reference' (see measurement.ini for data type explanation)  
- - 'space' is the space name  
- - 'timestamp' is the sampling time in Epoch Unix format (ns)  
- - 'count' is the value of the latest count  
- - 'in' and 'out' are the calculated in and out flows taken starting at time 'startTimeFlows' (in Epoch Unix format, ns)  
- - 'overflowTs' indicates when (in Epoch Unix format, ns) the in/out flow counter have overlflow (64-but integer values)  
- - 'flows' is the flow data per entry and respective devices which format is the same as the equivalent field as the ones just described  
- 
-For 'reference' data the JSON format is the same as for the REFERENCE API and it is presented as a JSON string similarly to the 'actual' data.  
- 
-Please refer to the files example.xyz as example for language xyz (if present).    
+That is equivalent to a JSON message in the same format as described in section 2.6.   
+For how to extract and use this JSON string, please refer to the files example.xyz as example for language xyz.    
 
 
 ## 4. Logs  
@@ -504,11 +505,10 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
- - Add accumulation to an API  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
- - Save flow calculation state?  
+ - Manager accumulation snapshot in case or server stop or process crash (capture panic, save state, generate panic and capture state at reset)    
  - Clean code  
 

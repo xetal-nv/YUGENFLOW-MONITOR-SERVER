@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// example exporting actual data
+// example exporting current data
 
 // generic flow
 type FlowWithFlows struct {

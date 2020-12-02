@@ -102,8 +102,8 @@ func Start() {
 
 	if ExportEnabled {
 		ExportAsync = AccessData.Section("export").Key("async").MustBool(false)
-		ExportActualCommand = AccessData.Section("export").Key("actual_command").MustString("")
-		ExportActualArgument = AccessData.Section("export").Key("actual_argument").MustString("")
+		ExportActualCommand = AccessData.Section("export").Key("current_command").MustString("")
+		ExportActualArgument = AccessData.Section("export").Key("current_argument").MustString("")
 		if ExportActualCommand != "" {
 			fmt.Printf("*** WARNING: Actual data export enabled with command %v %v ***\n", ExportActualCommand,
 				ExportActualArgument)

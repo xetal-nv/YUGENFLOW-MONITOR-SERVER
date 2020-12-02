@@ -1,6 +1,6 @@
 import sys, json
 
-# example exporting 'actual' data
+# example exporting 'current' data
 
 if len(sys.argv) == 2:
     try:
