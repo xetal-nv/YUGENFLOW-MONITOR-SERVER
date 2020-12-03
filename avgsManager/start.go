@@ -63,8 +63,8 @@ func Start(sd chan bool) {
 		sd <- true
 	}(sd, rstC)
 
-	var maxTick int = 0
-	var tick int = 15
+	var maxTick = 0
+	var tick = 15
 	realTimeDefinitions := make(map[string]int)
 	referenceDefinitions := make(map[string]int)
 

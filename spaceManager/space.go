@@ -205,6 +205,21 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 				}
 				if resetTime {
 					if !resetDone {
+						select {
+						case calculator <- dataformats.SpaceState{
+							Reset: true,
+						}:
+						case <-time.After(time.Duration(2*globals.SettleTime) * time.Second):
+							if globals.DebugActive {
+								fmt.Println("entryManager.entry:", spacename, "failed to reset flows")
+								os.Exit(0)
+							}
+							mlogger.Warning(globals.SpaceManagerLog,
+								mlogger.LoggerData{Id: "entryManager.entry: " + spacename,
+									Message: "failed to reset flows",
+									Data:    []int{1}, Aggregate: true})
+						}
+
 						//println("reset")
 						resetDone = true
 						spaceRegister.Count = 0

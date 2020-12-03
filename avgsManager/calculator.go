@@ -5,6 +5,7 @@ import (
 	"gateserver/dataformats"
 	"gateserver/exportManager"
 	"gateserver/storage/coredbs"
+	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
 	"github.com/fpessolano/mlogger"
 	"time"
@@ -21,7 +22,7 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 		newSnapshotSpace.Flows = make(map[string]dataformats.EntryStateWithFlows)
 		//newSnapshotSpace.FlowIn = 0
 		//newSnapshotSpace.FlowOut = 0
-		newSnapshotSpace.StartTimeFlows = time.Now().UnixNano()
+		newSnapshotSpace.ResetTime = time.Now().UnixNano()
 		for entry, entryFlow := range data.Flows {
 			entryFlowSnapshot := dataformats.EntryStateWithFlows{
 				Id:        entryFlow.Id,
@@ -73,7 +74,7 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 		newSnapshotSpace.FlowIn = snapshotSpace.FlowIn
 		newSnapshotSpace.FlowOut = snapshotSpace.FlowOut
 		newSnapshotSpace.TsOverflow = snapshotSpace.TsOverflow
-		newSnapshotSpace.StartTimeFlows = snapshotSpace.StartTimeFlows
+		newSnapshotSpace.ResetTime = snapshotSpace.ResetTime
 		// each entryName si updated in its flow, variation and count based on the received data
 		for entryName, entry := range data.Flows {
 			newEntrySnapshot := dataformats.EntryStateWithFlows{
@@ -192,16 +193,15 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 	referenceDefinitions map[string]int, regRealTime, regReference chan dataformats.MeasurementSample,
 	regActuals chan dataformats.MeasurementSampleWithFlows, currentAvailable bool) {
 
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		fmt.Println("captured")
-	//		panic("ciao")
-	//	}
-	//}()
-	//println("started")
-	//
-	//time.Sleep(2*time.Second)
-	//panic("ciao")
+	var snapshot dataformats.MeasurementSampleWithFlows
+
+	// the panic situation is trapped to save the snapshot and then propagate it to teh recovery handle
+	defer func() {
+		if r := recover(); r != nil {
+			_ = diskCache.SaveSnapshot(snapshot)
+			panic("")
+		}
+	}()
 
 	var samples []dataformats.SpaceState
 	lastReferenceMeasurement := make(map[string]int64)
@@ -230,12 +230,23 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 			fmt.Printf("Calculator %+v\n", referenceDefinitions)
 		}
 
-		var snapshot dataformats.MeasurementSampleWithFlows
+		// load the snapshot is previously saved and not too old
+		if candidateSnapshot, err := diskCache.ReadSnapshot(space); err == nil {
+			age := candidateSnapshot.Ts / 1000000000
+			refTS := time.Now().Unix() - int64(globals.MaxStateAge)
+			fmt.Println(age, refTS)
+			if age > refTS {
+				snapshot = candidateSnapshot
+			} else {
+				_ = diskCache.DeleteSnapshot(space)
+			}
+		}
 
 	finished:
 		for {
 			select {
 			case <-rst:
+				_ = diskCache.SaveSnapshot(snapshot)
 				mlogger.Info(globals.AvgsManagerLog,
 					mlogger.LoggerData{"avgsManager.calculator for space: " + space,
 						"service stopped",
@@ -245,26 +256,34 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				break finished
 			case <-time.After(time.Duration(tick) * time.Second):
 				//fmt.Printf("calculator %v ticked\n", space)
-				// we add a sample that is the same as the last one but with a different time stamp
+				// if there are already samples, we add a sample that is the same as the last one but with a different time stamp
 				// the sliding window is also shifted to make sure it contains only relevant samples
-				refTs := time.Now().UnixNano()
-				var data dataformats.SpaceState
 				if len(samples) != 0 {
+					refTs := time.Now().UnixNano()
+					var data dataformats.SpaceState
 					data = samples[len(samples)-1]
-				}
-				data.Ts = refTs + int64(tick)*1000000000
-				data.Flows = make(map[string]dataformats.EntryState)
-				//fmt.Printf("calculator %v ticked %v\n", space, data)
-				samples = append(samples, data)
-				for (samples[0].Ts < refTs-int64(maxTick)*1000000000) && len(samples) > 1 {
-					if samples[1].Ts <= refTs-int64(maxTick)*1000000000 {
-						samples = samples[1:]
-					} else {
-						samples[0].Ts = refTs - int64(maxTick)*1000000000
-						break
+					//}
+					data.Ts = refTs + int64(tick)*1000000000
+					data.Flows = make(map[string]dataformats.EntryState)
+					//fmt.Printf("calculator %v ticked %v\n", space, data)
+					samples = append(samples, data)
+					for (samples[0].Ts < refTs-int64(maxTick)*1000000000) && len(samples) > 1 {
+						if samples[1].Ts <= refTs-int64(maxTick)*1000000000 {
+							samples = samples[1:]
+						} else {
+							samples[0].Ts = refTs - int64(maxTick)*1000000000
+							break
+						}
 					}
 				}
 			case data := <-latestData:
+				if data.Reset {
+					//println("reset")
+					// system is in reset time, snapshot needs to be reset and a zero sample needs to be added
+					snapshot = dataformats.MeasurementSampleWithFlows{}
+					data.Count = 0
+					data.Flows = make(map[string]dataformats.EntryState)
+				}
 
 				//fmt.Printf("calculator %v received %+v\n", space, data)
 				// first we make a deep copy of data
@@ -344,6 +363,14 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						break
 					}
 				}
+			}
+
+			//fmt.Printf("\nSamples %+v\n", samples)
+			//fmt.Printf("Snapshot %+v\n", snapshot)
+
+			// in case of no stored samples, the cycle is stopped here
+			if len(samples) == 0 {
+				continue
 			}
 
 			if globals.SpaceMode {

@@ -84,5 +84,6 @@ type SpaceState struct {
 	//FlowIn     int                   `json:"in,omitempty"`
 	//FlowOut    int                   `json:"out,omitempty"`
 	State bool                  `json:"-"`
+	Reset bool                  `json:"-"`
 	Flows map[string]EntryState `json:"flows"`
 }

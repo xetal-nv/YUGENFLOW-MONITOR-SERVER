@@ -13,14 +13,14 @@ import (
 var main *bolt.DB
 
 const (
-	definitions       = "definitions"       // sensor definitions
-	lookup            = "lookup"            // id to mac table
-	activeDevices     = "activeDevices"     // active devices
-	invalidDevices    = "invalidDevices"    // active devices
-	maliciousMac      = "maliciousMac"      // mac of malicious devices
-	maliciousIp       = "maliciousIp"       // ip of malicious devices
-	savedStates       = "savedStates"       // saved states
-	savedShadowStates = "savedShadowStates" // saved states
+	definitions    = "definitions"    // sensor definitions
+	lookup         = "lookup"         // id to mac table
+	activeDevices  = "activeDevices"  // active devices
+	invalidDevices = "invalidDevices" // active devices
+	maliciousMac   = "maliciousMac"   // mac of malicious devices
+	maliciousIp    = "maliciousIp"    // ip of malicious devices
+	recovery       = "recovery"       // saved recovery data
+	shadowRecovery = "shadowRecovery" // saved shadow recovery data
 )
 
 func Start() {
@@ -70,13 +70,13 @@ func Start() {
 		if err != nil {
 			return errors.New("could not create " + maliciousIp + " bucket: " + err.Error())
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(savedStates))
+		_, err = tx.CreateBucketIfNotExists([]byte(recovery))
 		if err != nil {
-			return errors.New("could not create " + savedStates + " bucket: " + err.Error())
+			return errors.New("could not create " + recovery + " bucket: " + err.Error())
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(savedShadowStates))
+		_, err = tx.CreateBucketIfNotExists([]byte(shadowRecovery))
 		if err != nil {
-			return errors.New("could not create " + savedShadowStates + " bucket: " + err.Error())
+			return errors.New("could not create " + shadowRecovery + " bucket: " + err.Error())
 		}
 		return nil
 	}); err != nil {

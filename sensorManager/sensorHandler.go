@@ -68,17 +68,51 @@ func sensorHandler(conn net.Conn) {
 			mach = strings.Trim(mach, ":")
 			fmt.Printf("Device with mac %v connected\n", mach)
 			for {
-				data := make([]byte, 8)
+				cmd := make([]byte, 1)
 				if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
 					fmt.Printf("sensorManager.sensorHandler: error on setting deadline for %v : %v\n", ipc, e)
 					return
 				}
-				if n, e := conn.Read(data); e != nil {
-					fmt.Printf("sensorManager.sensorHandler: error reading MAC from device with IP %v : %v\n", ipc, e)
+				if _, e := conn.Read(cmd); e != nil {
+					fmt.Printf("sensorManager.sensorHandler: error reading from device %v : %v\n", ipc, mach)
 					return
-				} else if n > 0 {
-					fmt.Printf("Device with mac %v has sent % x\n", mach, data)
 				}
+				var data []byte
+				var ll int
+				switch cmd[0] {
+				case 1:
+					// data
+					ll = 4
+				default:
+					// command
+					ll = CmdAnswerLen[cmd[0]]
+				}
+				if !globals.CRCused {
+					ll -= 1
+				}
+				data = make([]byte, ll)
+				if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
+					deadlineFailed(mach, e)
+					return
+				}
+				if _, e := conn.Read(data); e != nil {
+					fmt.Printf("sensorManager.sensorHandler: error reading from device %v : %v\n", ipc, mach)
+					return
+				} else {
+					cmd = append(cmd, data...)
+					fmt.Printf("Trace device %v -> % x\n", mach, cmd)
+				}
+				//data := make([]byte, 6)
+				//if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
+				//	fmt.Printf("sensorManager.sensorHandler: error on setting deadline for %v : %v\n", ipc, e)
+				//	return
+				//}
+				//if n, e := conn.Read(data); e != nil {
+				//	fmt.Printf("sensorManager.sensorHandler: error reading MAC from device with IP %v : %v\n", ipc, e)
+				//	return
+				//} else if n > 0 {
+				//	fmt.Printf("Trace mac %v : % x\n", mach, data)
+				//}
 			}
 		}
 	} else {
@@ -601,6 +635,9 @@ func sensorHandler(conn net.Conn) {
 										[]int{0}, true})
 								return
 							} else {
+								// ATTENTION change this filtering in case the sensor sends more than just 255,1,-1
+								//  can be done with flow := int(int8(data[2]))
+								//  if math.Abs(float64(flow)) > maxValue then flow = 0
 								flow := int(data[2])
 								if flow == 255 {
 									flow = -1

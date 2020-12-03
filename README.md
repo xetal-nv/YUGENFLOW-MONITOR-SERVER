@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20201203  
+Built: 20000a20201204  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -290,7 +290,7 @@ This data is expressed by a single JSON array element composed as follows:
       "count": 0,
       "in": 0,
       "out": 0,
-      "startTimeFlows": :1606919957009922100,
+      "resetTime": :1606919957009922100,
       "overflowTs": 0,
       "flows": {
         "e0": {
@@ -321,7 +321,7 @@ Where:
  - 'count' is the value of the latest count  
  - 'in' and 'out' are the calculated in and out flows taken starting at time 'startTimeFlows' (in Epoch Unix format, ns)  
  - 'overflowTs' indicates when (in Epoch Unix format, ns) the in/out flow counter have overflow (64-but integer values)  
- - 'startTimeFlows' is the time the accumulation has started. This is either when the server has started or the later (in case the calculating process as died somehow)  
+ - 'resetTime' indicate when the actual in/out floes have been reset. This is either server initial start or reset time as defined in the file configuration.ini. If 0, the data is not valid or empty.  
  - 'flows' is the flow data per entry and respective devices which format is the same as the equivalent field as the ones just described  
  
 **2.7 REFERENCE**  
@@ -509,6 +509,6 @@ BUG list:
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
- - Manager accumulation snapshot in case or server stop or process crash (capture panic, save state, generate panic and capture state at reset)    
+ - Support viariable sensor response instead of only 1,-1,255  
  - Clean code  
 
