@@ -53,6 +53,10 @@ finished:
 			if globals.ExportAsync {
 				cmd := exec.Command(globals.ExportActualCommand, globals.ExportActualArgument,
 					strings.Replace(string(encodedData), "\"", "'", -1))
+				if globals.ExportActualArgument == "" {
+					cmd = exec.Command(globals.ExportActualCommand, strings.Replace(string(encodedData), "\"", "'", -1))
+				}
+				fmt.Println(cmd)
 				err := cmd.Start()
 				if err != nil {
 					// script report error

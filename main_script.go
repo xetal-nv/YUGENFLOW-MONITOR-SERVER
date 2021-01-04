@@ -1,4 +1,6 @@
-package exportExamples
+// +build !dev,!debug,script
+
+package main
 
 import (
 	"encoding/json"
@@ -47,7 +49,7 @@ type MeasurementSample struct {
 	Flows          map[string]EntryStateWithFlows `json:"flows"`
 }
 
-func _example() {
+func main() {
 	if len(os.Args) > 1 {
 		var receivedData MeasurementSample
 		str := strings.Replace(os.Args[1], "'", "\"", -1)

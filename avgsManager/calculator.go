@@ -234,7 +234,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 		if candidateSnapshot, err := diskCache.ReadSnapshot(space); err == nil {
 			age := candidateSnapshot.Ts / 1000000000
 			refTS := time.Now().Unix() - int64(globals.MaxStateAge)
-			fmt.Println(age, refTS)
+			//fmt.Println(age, refTS)
 			if age > refTS {
 				snapshot = candidateSnapshot
 			} else {

@@ -1,11 +1,9 @@
 main.exe
 *.raw
-/.recoveryavg
-/.recoverypres
-/storage/
 /.idea/
 /log/
-/html/js/dat.js
-/html/js/def.js
 gateserver
 gateserver_embedded_nodb.exe
+test.exe
+gateserver.exe
+tables/devicetable.db

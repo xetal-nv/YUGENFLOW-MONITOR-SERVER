@@ -15,7 +15,7 @@ import (
 func entry(entryname string, entryRegister dataformats.EntryState, in chan dataformats.FlowData, stop chan interface{},
 	setReset chan bool, gates map[string]dataformats.GateState) {
 	defer func() {
-		println("a")
+		//println("a")
 		if e := recover(); e != nil {
 			mlogger.Recovered(globals.EntryManagerLog,
 				mlogger.LoggerData{"entryManager.entry: " + entryname,

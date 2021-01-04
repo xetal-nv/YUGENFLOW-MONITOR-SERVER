@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20201204  
+Built: 20000a20210105  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -70,6 +70,7 @@ The following tags can be used for specific build:
      - embedded     : build without database support  
      - debug        : build with debug support  
      - dev          : build with development and debug support  
+     - script       : compiles only main_script for compilation of external scripts or other test code    
  
 For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
 
@@ -509,6 +510,8 @@ BUG list:
  - API for custom reports in excel/CVS format to be sent per email  
 
 **5.3 Development TODOs**  
+ - Check export scripts with executables
+ - Remove prints of timestamps    
  - Support viariable sensor response instead of only 1,-1,255  
  - Clean code  
 
