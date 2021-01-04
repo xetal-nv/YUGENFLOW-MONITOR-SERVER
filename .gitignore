@@ -3,7 +3,9 @@ main.exe
 /.idea/
 /log/
 gateserver
-gateserver_embedded_nodb.exe
-test.exe
+gateserver_embedded
 gateserver.exe
+gateserver_embedded.exe
+test.exe
 tables/devicetable.db
+exportedData.txt
