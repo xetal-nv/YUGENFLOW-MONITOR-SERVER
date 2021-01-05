@@ -1,0 +1,18 @@
+# tested on Raspbian,
+
+[Unit]
+Description=XetalFlow
+After=network.target
+
+[Service]
+# please set the executable with the suitable options, this is only an example
+ExecStart=/home/pi/gateflow/gateserver -dev -export
+# Set the directory to the one where the server has been copied
+WorkingDirectory=/home/pi/gateflow
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

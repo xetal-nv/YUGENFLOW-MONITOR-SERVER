@@ -56,7 +56,9 @@ finished:
 				if globals.ExportActualArgument == "" {
 					cmd = exec.Command(globals.ExportActualCommand, strings.Replace(string(encodedData), "\"", "'", -1))
 				}
-				fmt.Println(cmd)
+				if globals.DebugActive {
+					fmt.Println(cmd)
+				}
 				err := cmd.Start()
 				if err != nil {
 					// script report error

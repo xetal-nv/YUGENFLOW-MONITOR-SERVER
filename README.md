@@ -508,6 +508,7 @@ BUG list:
 **5.2 Feature Roadmap**  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
+ - Add option for export format (' or ")  
 
 **5.3 Development TODOs**  
  - Check export scripts with executables
