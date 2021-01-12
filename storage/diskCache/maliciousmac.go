@@ -1,3 +1,5 @@
+// +build !newcache
+
 package diskCache
 
 import (
@@ -39,6 +41,7 @@ func MarkMAC(mac []byte, threshold int) (danger bool, err error) {
 	if tx, err = main.Begin(true); err != nil {
 		return
 	}
+	//goland:noinspection GoUnhandledErrorResult
 	defer tx.Rollback()
 
 	if val := tx.Bucket([]byte(maliciousMac)).Get(mac); val != nil {

@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20210105  
+Built: 20000a20210112  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -19,14 +19,14 @@ Golang Packages (to be revised):
  - gopkg.in/ini.v1  
  
 External services:
-  - mongoDB database  
+  - mongoDB database (for full server only)  
   
 Detachable services:  
   - webService  
 
 
 **1.2 SYSTEM VARIABLES:**  
-n/a  
+YUGENFLOW : specifies the path to the executable and configuration files, when the OS cannot handle services running from a fixed location      
 
 **1.3 CONFIGURATION:**  
 The configuration uses several ini files as follows (refer to the ini itself for a detailed description):  
@@ -35,12 +35,12 @@ access.ini : it sets access to the server by configuring and enabling database, 
 configuration.ini : it sets the installation in terms of gates, entries and spaces  
 gateserver.ini : it contains all settings of the server itself  
 measurement.ini : it contains the definitions of all measurements the server needs to precompute and provide.  
+cache.ini : it sets the working cache (mipsle binaries only).  
 
 **1.4 COMMAND LINE OPTIONS:**  
 
     -db path                : set database path  
-    -dc path                : set disk cache path  
-    -debug                  : enable debug mode 
+    -dc path                : set disk cache path, if set it will override the environment variable for the cache    
     -delogs                 : delete all logs  
     -eeprom                 : enables refresh of device eeprom at every connection   
     -export                 : enable export mode  
@@ -54,14 +54,16 @@ measurement.ini : it contains the definitions of all measurements the server nee
 
 _For development and debug only:_    
 
+    -debug                  : enable debug mode 
     -dev                    : development mode  
+    -stress                 : number of stress cycles (overrides dev)
     -echo                   : server enables echo mode (0: off, 1: raw with not processing, 2: gate values, 3: space values)
     -la                     : not available    
 
 **1.5 INSTALLATION**  
 _Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database.  
-_Configuration files_: see 1.4 in the same folder as the executable.  
-_Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.  
+_Configuration files_: see 1.3 in the same folder as the executable.  
+_Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.
 
 **1.6 BUILD OPTION**  
 The following tags can be used for specific build:  
@@ -71,8 +73,10 @@ The following tags can be used for specific build:
      - debug        : build with debug support  
      - dev          : build with development and debug support  
      - script       : compiles only main_script for compilation of external scripts or other test code    
+     - nc           : new cache (experimental)
  
-For minimum build size use also -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"  
+Please refer to the nmake file for what compiler options are advicedc for which built.  
+Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are used.  
 
 ## 2. API
 **2.1 Summary and format**  
@@ -511,8 +515,9 @@ BUG list:
  - Add option for export format (' or ")  
 
 **5.3 Development TODOs**  
- - Check export scripts with executables
+ - Remove bboltDB from all builts  
+ - Check lifetime cache malicious attacks (vs DoS)  
  - Remove prints of timestamps    
- - Support viariable sensor response instead of only 1,-1,255  
+ - Support variable sensor response instead of only 1,-1,255  
  - Clean code  
 

@@ -1,3 +1,5 @@
+// +build !newcache
+
 package diskCache
 
 import (

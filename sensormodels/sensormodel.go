@@ -116,7 +116,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 				}
 			case <-time.After(time.Duration(del+5) * 1000 * time.Millisecond):
 				// continue to send data
-				//fmt.Println(string(mac), msg)
+				//fmt.Println(string(mac), "sent", msg)
 				_, e = conn.Write(msg)
 			}
 			//}

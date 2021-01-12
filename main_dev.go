@@ -26,7 +26,7 @@ import (
 
 func main() {
 	var dbpath = flag.String("db", "mongodb://localhost:27017", "database path")
-	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
+	var dcpath = flag.String("dc", "", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var delogs = flag.Bool("delogs", false, "delete all logs")
 	var dev = flag.Bool("dev", false, "development mode")
@@ -37,6 +37,7 @@ func main() {
 	var failTh = flag.Int("fth", 3, "failure threshold in severe mode (default 3)")
 	var user = flag.String("user", "", "user name")
 	var pwd = flag.String("pwd", "", "user password")
+	var stress = flag.Int("stress", -1, "stress test cycles (override dev)")
 	//var raw = flag.Bool("raw", false, "enable raw mode")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
@@ -171,15 +172,20 @@ func main() {
 	go sensorManager.Start(sd[2])
 
 	//if globals.DebugActive {
-	if *dev {
+	if *dev && *stress == -1 {
 		fmt.Println("*** WARNING: Development mode enabled ***")
-		go sensormodels.SensorModel(1, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
-		//go sensormodels.SensorModel(65535, 7000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
-		//go sensormodels.SensorModel(2, 7000, 15, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x07})
-		//go sensormodels.SensorModel(3, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x08})
-		//go sensormodels.SensorModel(65535, 7000, 5, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0a, 0x01, 0x02, 0x08})
-		time.Sleep(1 * time.Second)
-		go sensormodels.SensorModel(0, 5000, 3, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x09})
+		go sensormodels.SensorModel(0, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
+		go sensormodels.SensorModel(1, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
+		go sensormodels.SensorModel(2, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
+		go sensormodels.SensorModel(3, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x04})
+		//go sensormodels.SensorModel(17, 50, 50, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x05})
+	}
+	if *stress > 0 {
+		fmt.Println("*** WARNING: Stress test mode enabled, make sure the correct configuration.ini is used ***")
+		for id := 0; id < *stress; id++ {
+			go sensormodels.SensorModel(id, 1, 10, []int{-1, 1}, []byte(fmt.Sprintf("%6d", id)))
+			time.Sleep(200 * time.Millisecond)
+		}
 	}
 
 	//goland:noinspection ALL

@@ -9,17 +9,23 @@ import (
 
 func Start() {
 
-	internalConfig, err := ini.InsensitiveLoad("gateserver.ini")
+	WorkPath = os.Getenv("YUGENFLOW")
+	if WorkPath != "" {
+		fmt.Printf("*** INFO: working folder set to %v ***\n", WorkPath)
+		WorkPath += "/"
+	}
+
+	internalConfig, err := ini.InsensitiveLoad(WorkPath + "gateserver.ini")
 	if err != nil {
 		fmt.Printf("Fail to read gateserver.ini file: %v", err)
 		os.Exit(1)
 	}
-	Config, err = ini.InsensitiveLoad("configuration.ini")
+	Config, err = ini.InsensitiveLoad(WorkPath + "configuration.ini")
 	if err != nil {
 		fmt.Printf("Fail to read configuration.ini file: %v", err)
 		os.Exit(1)
 	}
-	AccessData, err = ini.InsensitiveLoad("access.ini")
+	AccessData, err = ini.InsensitiveLoad(WorkPath + "access.ini")
 	if err != nil {
 		fmt.Printf("Fail to read access.ini file: %v", err)
 		os.Exit(1)

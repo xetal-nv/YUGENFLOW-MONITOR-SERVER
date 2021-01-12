@@ -69,7 +69,7 @@ func Start(sd chan bool) {
 	referenceDefinitions := make(map[string]int)
 
 	// load definitions of measurements from measurements.ini
-	definitions, err := ini.InsensitiveLoad("measurements.ini")
+	definitions, err := ini.InsensitiveLoad(globals.WorkPath + "measurements.ini")
 	if err != nil {
 		fmt.Printf("Fail to read measurements.ini file: %v\n", err)
 		os.Exit(0)

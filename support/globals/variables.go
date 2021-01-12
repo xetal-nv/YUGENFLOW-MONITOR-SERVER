@@ -31,5 +31,5 @@ var ChannellingLength, SettleTime, SensorTimeout, TCPdeadline, MaliciousTimeout,
 	RepetitiveTimeout, SecurityLength, SensorEEPROMResetDelay, SensorEEPROMResetStep,
 	AsymmetryMax, AsymmetryIter, ResetPeriod, AsymmetryReset, MaxStateAge int
 
-var APIport, TCPport, DiskCachePath, SensorSettingsFile, ResetSlot, DBpath, DBUser, DBUserPassword,
+var WorkPath, APIport, TCPport, DiskCachePath, SensorSettingsFile, ResetSlot, DBpath, DBUser, DBUserPassword,
 	ExportActualCommand, ExportActualArgument, ExportReferenceCommand, ExportReferenceArgument string

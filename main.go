@@ -25,7 +25,7 @@ import (
 
 func main() {
 	var dbpath = flag.String("db", "mongodb://localhost:27017", "database path")
-	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
+	var dcpath = flag.String("dc", "", "2nd level cache disk path")
 	var delogs = flag.Bool("delogs", false, "delete all logs")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var export = flag.Bool("export", false, "enable export scripting")
@@ -114,7 +114,6 @@ func main() {
 		os.Exit(0)
 	}
 	sensorManager.LoadSensorEEPROMSettings()
-
 	// setup shutdown procedure
 	c := make(chan os.Signal, 0)
 	var sd []chan bool

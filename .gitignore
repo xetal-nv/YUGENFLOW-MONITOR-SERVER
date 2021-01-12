@@ -9,3 +9,8 @@ gateserver_embedded.exe
 test.exe
 tables/devicetable.db
 exportedData.txt
+/bin/
+gateserver_dev.exe
+*.rec
+*.data
+/tables/

@@ -267,7 +267,7 @@ func sensorHandler(conn net.Conn) {
 			go func() {
 				err := globals.SensorDBError
 				for i := 0; i < 5 && err != nil; i++ {
-					err = diskCache.RemoveSuspecteIP([]byte(ipc))
+					err = diskCache.RemoveSuspectedIP([]byte(ipc))
 				}
 			}()
 			sensorDef.channels = SensorChannel{

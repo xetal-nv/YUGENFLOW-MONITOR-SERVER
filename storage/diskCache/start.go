@@ -1,3 +1,5 @@
+// +build !newcache
+
 package diskCache
 
 import (
@@ -34,16 +36,20 @@ func Start() {
 		os.Exit(0)
 	}
 
+	if globals.DiskCachePath == "" {
+		globals.DiskCachePath = globals.WorkPath + "tables"
+	}
+
 	if err = os.MkdirAll(globals.DiskCachePath, os.ModePerm); err != nil {
+		//if err = os.MkdirAll(globals.DiskCachePath, os.ModePerm); err != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
 
 	if main, err = bolt.Open(filepath.Join(globals.DiskCachePath, "devicetable.db"), 0600, nil); err != nil {
-		fmt.Println(err)
+		fmt.Println("a")
 		os.Exit(0)
 	}
-
 	//noinspection GoNilness
 	if err := main.Update(func(tx *bolt.Tx) error {
 		_, err = tx.CreateBucketIfNotExists([]byte(definitions))

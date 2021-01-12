@@ -1,3 +1,5 @@
+// +build !newcache
+
 package diskCache
 
 import (
@@ -16,6 +18,7 @@ func MarkInvalidDevice(mac []byte, maxInterval int) (reject, newDevice bool, err
 	if tx, err = main.Begin(true); err != nil {
 		return
 	}
+	//goland:noinspection GoUnhandledErrorResult
 	defer tx.Rollback()
 
 	if val := tx.Bucket([]byte(invalidDevices)).Get(mac); val != nil {

@@ -88,6 +88,7 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 		} else {
 			fmt.Printf("*** INFO: Space %v has not reset slot ***\n", spacename)
 		}
+		// TODO time check can be removed if a cache is used that has timed preserve of state
 		if globals.SaveState {
 			if state, err := diskCache.ReadState(spacename); err == nil {
 				if time.Now().UnixNano() < state.Ts+int64(globals.MaxStateAge)*1000000000 {

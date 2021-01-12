@@ -1,3 +1,5 @@
+// +build !newcache
+
 package diskCache
 
 import (
@@ -19,7 +21,7 @@ func CheckIP(ip []byte, threshold int) (danger bool, err error) {
 	return
 }
 
-func RemoveSuspecteIP(ip []byte) (err error) {
+func RemoveSuspectedIP(ip []byte) (err error) {
 	err = main.Update(func(tx *bolt.Tx) error {
 		err = tx.Bucket([]byte(maliciousIp)).Delete(ip)
 		if err != nil {
@@ -39,6 +41,7 @@ func MarkIP(ip []byte, threshold int) (danger bool, err error) {
 	if tx, err = main.Begin(true); err != nil {
 		return
 	}
+	//goland:noinspection GoUnhandledErrorResult
 	defer tx.Rollback()
 
 	if val := tx.Bucket([]byte(maliciousIp)).Get(ip); val != nil {

@@ -25,7 +25,7 @@ import (
 
 func main() {
 	var dbpath = flag.String("db", "mongodb://localhost:27017", "database path")
-	var dcpath = flag.String("dc", "tables", "2nd level cache disk path")
+	var dcpath = flag.String("dc", "", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var delogs = flag.Bool("delogs", false, "delete all logs")
 	var echo = flag.Int("echo", 0, "enables echo mode (0: off, 1: raw, 2: gates, 3: spaces)")
