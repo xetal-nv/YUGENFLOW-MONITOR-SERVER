@@ -99,9 +99,8 @@ mipsle:
 	set GOMIPS=softfloat
 	go build -a
 	go build -a -tags embedded,newcache -o gateserver_embedded
-#	go build -a -tags embedded -o gateserver_test
 	if exist "./bin/linux-mipsle" move gateserver "./bin/linux-mipsle/gateserver"
 	if exist "./bin/linux-mipsle" move gateserver_embedded "./bin/linux-mipsle/gateserver_embedded"
 	set GOMIPS=
 
-all: preparefolders arm32 arm64 amd64 windows
+all: preparefolders arm32 arm64 amd64 mips windows
