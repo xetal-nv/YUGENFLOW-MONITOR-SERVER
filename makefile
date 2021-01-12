@@ -4,7 +4,7 @@ preparefolders:
 	if not exist "bin/linux-amd64" mkdir "bin/linux-amd64"
 	if not exist "bin/linux-arm64" mkdir "bin/linux-arm64"
 	if not exist "bin/linux-arm32" mkdir "bin/linux-arm32"
-	if not exist "bin/linux-mipsle" mkdir "bin/linux-mips"
+	if not exist "bin/linux-mipsle" mkdir "bin/linux-mipsle"
 
 reset:
 	if exist "gateserver_dev.exe" del "gateserver_dev.exe"
