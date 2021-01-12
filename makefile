@@ -103,4 +103,4 @@ mipsle:
 	if exist "./bin/linux-mipsle" move gateserver_embedded "./bin/linux-mipsle/gateserver_embedded"
 	set GOMIPS=
 
-all: preparefolders arm32 arm64 amd64 mips windows
+all: preparefolders arm32 arm64 amd64 mipsle windows
