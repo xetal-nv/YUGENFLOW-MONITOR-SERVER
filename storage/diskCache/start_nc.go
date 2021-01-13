@@ -20,13 +20,13 @@ func loadSettings() (options *jac.Options) {
 		os.Exit(1)
 	} else {
 		options = &jac.Options{
-			ExpirationTime:        internalConfig.Section("data").Key("expirationTime").MustInt(10080) * 60,
-			IntervalConsolidation: internalConfig.Section("data").Key("intervalConsolidation").MustInt(1440) * 60,
-			InternalBuffering:     internalConfig.Section("system").Key("internalBuffering").MustInt(10),
-			LoadDelayMs:           internalConfig.Section("system").Key("loadDelayMs").MustInt(10),
-			MaximumAge:            int64(internalConfig.Section("data").Key("maximumAge").MustInt(5) * 60),
-			WorkingFolder:         internalConfig.Section("paths").Key("workingFolder").MustString(""),
-			RecoveryFolder:        internalConfig.Section("paths").Key("recoveryFolder").MustString(""),
+			ExpirationTime:     internalConfig.Section("data").Key("expirationTime").MustInt(10080) * 60,
+			IntervalCompacting: internalConfig.Section("data").Key("intervalConsolidation").MustInt(1440) * 60,
+			InternalBuffering:  internalConfig.Section("system").Key("internalBuffering").MustInt(10),
+			LoadDelayMs:        internalConfig.Section("system").Key("loadDelayMs").MustInt(10),
+			MaximumAge:         int64(internalConfig.Section("data").Key("maximumAge").MustInt(5) * 60),
+			WorkingFolder:      internalConfig.Section("paths").Key("workingFolder").MustString(""),
+			RecoveryFolder:     internalConfig.Section("paths").Key("recoveryFolder").MustString(""),
 		}
 		if err = os.MkdirAll(options.WorkingFolder, os.ModePerm); err != nil {
 			//if err = os.MkdirAll(globals.DiskCachePath, os.ModePerm); err != nil {

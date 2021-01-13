@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20210112  
+Built: 20000a20210113  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -515,8 +515,8 @@ BUG list:
  - Add option for export format (' or ")  
 
 **5.3 Development TODOs**  
- - Remove bboltDB from all builts  
- - Check lifetime cache malicious attacks (vs DoS)  
+ - Remove bboltDB from all builts
+ - Check lifetime cache malicious attacks (vs DoS)
  - Remove prints of timestamps    
  - Support variable sensor response instead of only 1,-1,255  
  - Clean code  

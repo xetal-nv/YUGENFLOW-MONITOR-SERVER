@@ -15,6 +15,7 @@ reset:
 	if exist "gateserver_embedded" del "gateserver_embedded"
 	set GOOS=windows
 	set GOARCH=amd64
+	go clean -cache
 
 windev:
 	set GOOS=windows

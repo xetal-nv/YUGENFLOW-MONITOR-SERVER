@@ -12,6 +12,8 @@ import (
 func ReadDefinition(mac []byte) (dr dataformats.SensorDefinition, err error) {
 	if msg, found := definitions.Get(string(mac)); found {
 		err = json.Unmarshal([]byte(msg), &dr)
+	} else {
+		err = globals.SensorDBError
 	}
 	return
 }
