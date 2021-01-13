@@ -367,7 +367,7 @@ The answer is a JSON array including data for one or more spaces and expressed a
 Where 'space' is the space name and 'presence' is true of there was a person in the space in the given interval, otherwise it is false.  
 
 **2.10 COMMAND**  
-The COMMAND API is used to manipulate the state and configuration of a device which is connected and valid in the system.  
+The COMMAND API is used to manipulate **the state and configuration of a device** which is connected and valid in the system.  
 For security reasons, devices that are invalid cannot be subjects of commands via this API.  
 The API requires upto four argument:  
 
@@ -517,7 +517,6 @@ BUG list:
 **5.3 Development TODOs**  
  - Remove bboltDB from all builts
  - Check lifetime cache malicious attacks (vs DoS)
- - Remove prints of timestamps    
  - Support variable sensor response instead of only 1,-1,255  
  - Clean code  
 
