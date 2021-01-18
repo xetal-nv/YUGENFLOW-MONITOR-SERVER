@@ -8,7 +8,9 @@ preparefolders:
 
 reset:
 	if exist "gateserver_dev.exe" del "gateserver_dev.exe"
+	if exist "gateserver_dev" del "gateserver_dev"
 	if exist "gateserver_debug.exe" del "gateserver_debug.exe"
+	if exist "gateserver_debug" del "gateserver_debug"
 	if exist "gateserver.exe" del "gateserver.exe"
 	if exist "gateserver_embedded.exe" del "gateserver_embedded.exe"
 	if exist "gateserver" del "gateserver"
@@ -30,17 +32,17 @@ windevnc:
 pidev:
 	set GOOS=linux
 	set GOARCH=arm
-	go build -tags embedded,dev -o gateserver
+	go build -tags embedded,dev -o gateserver_dev
 
 arm64dev:
 	set GOOS=linux
 	set GOARCH=arm64
-	go build -tags embedded,dev -o gateserver
+	go build -tags embedded,dev -o gateserver_dev
 
 arm64debug:
 	set GOOS=linux
 	set GOARCH=arm64
-	go build -tags embedded,debug -o gateserver
+	go build -tags embedded,debug -o gateserver_debug
 
 windebug:
 	set GOOS=windows
@@ -50,7 +52,21 @@ windebug:
 pidebug:
 	set GOOS=linux
 	set GOARCH=arm
-	go build -tags embedded,debug -o gateserver
+	go build -tags embedded,debug -o gateserver_debug
+
+mipsledebug:
+	set GOOS=linux
+	set GOARCH=mipsle
+	set GOMIPS=softfloat
+	go build -tags embedded,debug,newcache -o gateserver_debug
+	set GOMIPS=
+
+mipsledev:
+	set GOOS=linux
+	set GOARCH=mipsle
+	set GOMIPS=softfloat
+	go build -tags embedded,dev,newcache -o gateserver_dev
+	set GOMIPS=
 
 windows:
 	if exist "gateserver.exe" del "gateserver.exe"

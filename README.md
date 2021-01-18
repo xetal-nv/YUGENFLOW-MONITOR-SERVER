@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20210113  
+Built: 20000a20210118  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -513,6 +513,8 @@ BUG list:
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
  - Add option for export format (' or ")  
+ - Allow grouping of gates (and handling of replication)  
+ - Decoupled channels from TCP and add serial support  
 
 **5.3 Development TODOs**  
  - Remove bboltDB from all builts
