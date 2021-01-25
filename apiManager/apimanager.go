@@ -21,10 +21,10 @@ func ApiManager(rst chan bool) {
 	r.Handle("/command/{command}", command())
 	r.Handle("/devicedefinitions", devicedefinitions())
 	r.Handle("/disconnect", disconnectDevice())
-	if !globals.LimitedApi && !globals.DisableDatabase && globals.DBOPS {
+	if !globals.LimitedApi {
 		r.Handle("/latestdata/{space}", latestData(false, false, false, 0))
 		r.Handle("/latestdata", latestData(true, false, false, 0))
-		if globals.DBOPS {
+		if !globals.DisableDatabase && globals.DBOPS {
 			r.Handle("/reference/{space}", latestData(false, true, false, 2))
 			r.Handle("/reference", latestData(true, true, false, 2))
 			r.Handle("/series/reference/{space}", latestData(false, false, true, 2))

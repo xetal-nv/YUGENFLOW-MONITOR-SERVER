@@ -75,8 +75,8 @@ windows:
 	set GOARCH=amd64
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s" -tags embedded -o gateserver_embedded.exe
-	if exist "./bin/windows" move gateserver.exe "./bin/windows/gateserver.exe"
-	if exist "./bin/windows" move gateserver_embedded.exe "./bin/windows/gateserver_embedded.exe"
+	if exist "./bin/windows" move gateserver.exe "./bin/windows/gateserver_nightly.exe"
+	if exist "./bin/windows" move gateserver_embedded.exe "./bin/windows/gateserver_embedded_nightly.exe"
 
 arm32:
 	if exist "gateserver" del "gateserver"
@@ -85,8 +85,8 @@ arm32:
 	set GOARCH=arm
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s" -tags embedded -o gateserver_embedded
-	if exist "./bin/linux-arm32" move gateserver "./bin/linux-arm32/gateserver"
-	if exist "./bin/linux-arm32" move gateserver_embedded "./bin/linux-arm32/gateserver_embedded"
+	if exist "./bin/linux-arm32" move gateserver "./bin/linux-arm32/gateserver_nightly"
+	if exist "./bin/linux-arm32" move gateserver_embedded "./bin/linux-arm32/gateserver_embedded_nightly"
 
 arm64:
 	if exist "gateserver" del "gateserver"
@@ -95,8 +95,8 @@ arm64:
 	set GOARCH=arm64
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s" -tags embedded -o gateserver_embedded
-	if exist "./bin/linux-arm64" move gateserver "./bin/linux-arm64/gateserver"
-	if exist "./bin/linux-arm64" move gateserver_embedded "./bin/linux-arm64/gateserver_embedded"
+	if exist "./bin/linux-arm64" move gateserver "./bin/linux-arm64/gateserver_nightly"
+	if exist "./bin/linux-arm64" move gateserver_embedded "./bin/linux-arm64/gateserver_embedded_nightly"
 
 amd64:
 	if exist "gateserver" del "gateserver"
@@ -105,8 +105,8 @@ amd64:
 	set GOARCH=amd64
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s"
 	go build -a -gcflags=all="-l -B -wb=false" -ldflags="-w -s" -tags embedded -o gateserver_embedded
-	if exist "./bin/linux-amd64" move gateserver "./bin/linux-amd64/gateserver"
-	if exist "./bin/linux-amd64" move gateserver_embedded "./bin/linux-amd64/gateserver_embedded"
+	if exist "./bin/linux-amd64" move gateserver "./bin/linux-amd64/gateserver_nightly"
+	if exist "./bin/linux-amd64" move gateserver_embedded "./bin/linux-amd64/gateserver_embedded_nightly"
 
 mipsle:
 	if exist "gateserver" del "gateserver"
@@ -116,8 +116,8 @@ mipsle:
 	set GOMIPS=softfloat
 	go build -a
 	go build -a -tags embedded,newcache -o gateserver_embedded
-	if exist "./bin/linux-mipsle" move gateserver "./bin/linux-mipsle/gateserver"
-	if exist "./bin/linux-mipsle" move gateserver_embedded "./bin/linux-mipsle/gateserver_embedded"
+	if exist "./bin/linux-mipsle" move gateserver "./bin/linux-mipsle/gateserver_nightly"
+	if exist "./bin/linux-mipsle" move gateserver_embedded "./bin/linux-mipsle/gateserver_embedded_nightly"
 	set GOMIPS=
 
 all: preparefolders arm32 arm64 amd64 mipsle windows
