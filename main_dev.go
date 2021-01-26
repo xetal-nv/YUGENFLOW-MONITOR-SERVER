@@ -174,18 +174,11 @@ func main() {
 	//if globals.DebugActive {
 	if *dev && *stress == -1 {
 		fmt.Println("*** WARNING: Development mode enabled ***")
-		go sensormodels.SensorModel(0, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01})
-		go sensormodels.SensorModel(1, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02})
-		go sensormodels.SensorModel(2, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03})
-		go sensormodels.SensorModel(3, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x04})
+		go sensormodels.SensorModel(0, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01}, false)
+		go sensormodels.SensorModel(1, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x02}, false)
+		go sensormodels.SensorModel(2, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x03}, false)
+		go sensormodels.SensorModel(3, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x04}, false)
 		//go sensormodels.SensorModel(17, 50, 50, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x05})
-	}
-	if *stress > 0 {
-		fmt.Println("*** WARNING: Stress test mode enabled, make sure the correct configuration.ini is used ***")
-		for id := 0; id < *stress; id++ {
-			go sensormodels.SensorModel(id, 1, 10, []int{-1, 1}, []byte(fmt.Sprintf("%6d", id)))
-			time.Sleep(200 * time.Millisecond)
-		}
 	}
 
 	//goland:noinspection ALL
@@ -196,6 +189,14 @@ func main() {
 	go apiManager.Start(sd[5])
 
 	fmt.Printf("\nYugenFlow Server active on ports %v , %v\n\n", globals.TCPport, globals.APIport)
+
+	if *stress > 0 {
+		fmt.Println("*** WARNING: Stress test mode enabled, make sure the correct configuration.ini is used ***")
+		for id := 0; id < *stress; id++ {
+			go sensormodels.SensorModel(id, 1, 10, []int{-1, 1}, []byte(fmt.Sprintf("%6d", id)), true)
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
 
 	//goland:noinspection ALL
 	exportManager.Start(sd[6])

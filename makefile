@@ -22,50 +22,55 @@ reset:
 windev:
 	set GOOS=windows
 	set GOARCH=amd64
-	go build -tags embedded,dev -o gateserver_dev.exe
+	go build -tags embedded,dev -o gateserver_windows_dev.exe
 
 windevnc:
 	set GOOS=windows
 	set GOARCH=amd64
-	go build -tags embedded,dev,newcache -o gateserver_dev.exe
+	go build -tags embedded,dev,newcache -o gateserver_windows_dev_nv.exe
 
 pidev:
 	set GOOS=linux
 	set GOARCH=arm
-	go build -tags embedded,dev -o gateserver_dev
+	go build -tags embedded,dev -o gateserver_linux_arm_dev
 
 arm64dev:
 	set GOOS=linux
 	set GOARCH=arm64
-	go build -tags embedded,dev -o gateserver_dev
+	go build -tags embedded,dev -o gateserver_linux_arm64_dev
 
 arm64debug:
 	set GOOS=linux
 	set GOARCH=arm64
-	go build -tags embedded,debug -o gateserver_debug
+	go build -tags embedded,debug -o gateserver_linuex_arm64_debug
 
 windebug:
 	set GOOS=windows
 	set GOARCH=amd64
-	go build -tags embedded,debug -o gateserver_debug.exe
+	go build -tags embedded,debug -o gateserver_windows_debug.exe
 
 pidebug:
 	set GOOS=linux
 	set GOARCH=arm
-	go build -tags embedded,debug -o gateserver_debug
+	go build -tags embedded,debug -o gateserver_linux_arm_debug
+
+linuxamddebug:
+	set GOOS=linux
+	set GOARCH=amd64
+	go build -tags embedded,debug -o gateserver_linux_amd64_debug
 
 mipsledebug:
 	set GOOS=linux
 	set GOARCH=mipsle
 	set GOMIPS=softfloat
-	go build -tags embedded,debug,newcache -o gateserver_debug
+	go build -tags embedded,debug,newcache -o gateserver_linux_mipsle_debug
 	set GOMIPS=
 
 mipsledev:
 	set GOOS=linux
 	set GOARCH=mipsle
 	set GOMIPS=softfloat
-	go build -tags embedded,dev,newcache -o gateserver_dev
+	go build -tags embedded,dev,newcache -o gateserver_mipsle_dev
 	set GOMIPS=
 
 windows:

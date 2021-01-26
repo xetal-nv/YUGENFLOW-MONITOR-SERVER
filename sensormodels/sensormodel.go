@@ -23,7 +23,7 @@ var command = map[byte][]byte{
 
 // gate sensor model for testing purposes only
 
-func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
+func SensorModel(id, iter, mxdelay int, vals []int, mac []byte, stress bool) {
 
 	del := rand.Intn(mxdelay) + 1
 	time.Sleep(2 * time.Second)
@@ -50,6 +50,11 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 		//conn.Write(mac)
 
 		// test end
+
+		//println("end")
+		if stress {
+			return
+		}
 
 		c := make(chan []byte)
 		go func(c chan []byte) {
@@ -107,7 +112,7 @@ func SensorModel(id, iter, mxdelay int, vals []int, mac []byte) {
 						go func() {
 							time.Sleep(10 * time.Second)
 							id = int(v[2]) + int(v[1])*256
-							SensorModel(id, iter-i, mxdelay, vals, mac)
+							SensorModel(id, iter-i, mxdelay, vals, mac, false)
 						}()
 						return
 					}

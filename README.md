@@ -510,6 +510,8 @@ BUG list:
 
 
 **5.2 Feature Roadmap**  
+ - Make stress test with MIPSLE cache lib jac  
+ - Make an echo mode available to assist for installations reporting also errors differently  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
  - Add option for export format (' or ")  
