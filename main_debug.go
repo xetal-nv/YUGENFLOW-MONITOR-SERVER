@@ -38,6 +38,7 @@ func main() {
 	//var raw = flag.Bool("raw", false, "enable raw mode")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
+	var verbose = flag.Bool("v", false, "enable verbose mode")
 
 	flag.Parse()
 
@@ -91,6 +92,7 @@ func main() {
 	globals.SpaceMode = *echo == 3
 	globals.ExportEnabled = *export
 	globals.LimitedApi = false
+	mlogger.Verbose(*verbose)
 
 	fmt.Printf("\nStarting server YugenFlow Server %s-development \n\n", globals.VERSION)
 	if *debug {
@@ -111,6 +113,9 @@ func main() {
 	}
 	if *echo != 0 {
 		fmt.Printf("*** INFO: Echo mode %v enabled ***\n", *echo)
+	}
+	if *verbose {
+		fmt.Println("*** INFO: Running in Verbose mode ***")
 	}
 
 	globals.Start()

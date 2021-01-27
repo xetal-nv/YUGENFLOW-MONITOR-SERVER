@@ -15,6 +15,7 @@ import (
 	"gateserver/storage/coredbs"
 	"gateserver/storage/diskCache"
 	"gateserver/support/globals"
+	"github.com/fpessolano/mlogger"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -36,6 +37,7 @@ func main() {
 	var pwd = flag.String("pwd", "", "user password")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
+	var verbose = flag.Bool("v", false, "enable verbose mode")
 
 	flag.Parse()
 
@@ -88,6 +90,7 @@ func main() {
 	globals.ExportEnabled = *export
 	globals.LimitedApi = *limitedApi
 	globals.SpaceMode = false
+	mlogger.Verbose(*verbose)
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *tcpdeadline != 24 {
@@ -105,6 +108,9 @@ func main() {
 	}
 	if *limitedApi {
 		fmt.Println("*** WARNING: Data API paths are disabled ***")
+	}
+	if *verbose {
+		fmt.Println("*** INFO: Running in Verbose mode ***")
 	}
 
 	globals.Start()

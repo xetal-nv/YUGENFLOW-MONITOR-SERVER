@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20210125  
+Built: 20000a20210127  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -14,7 +14,7 @@ Golang Packages (to be revised):
  - go.etcd.io/bbolt/  
  - xetal.ddns.net/supportservices  
  - github.com/mongodb/mongo  
- - github.com/fpessolano/mlogger  (>=0.2.1)  
+ - github.com/fpessolano/mlogger  (>=0.3.2)  
  - github.com/gorilla/mux  
  - gopkg.in/ini.v1  
  
@@ -51,6 +51,7 @@ cache.ini : it sets the working cache (mipsle binaries only).
     -st string              : set start time, time specified as HH:MM   
     -us                     : enable unsafe shutdown when initiated by the user (e.g. with CTRL-C), this can cause data loss and will prevent state save from working    
     -user username          : database username   
+    -v                      : runs in verbose mode  
 
 _For development and debug only:_    
 
@@ -507,15 +508,17 @@ For further information refer to https://github.com/fpessolano/mlogger.
 **5.1 Known bugs**  
 This build is currently in alpha, therefore several bugs are still present  
 BUG list:  
+ - MIPSLE builts can suffer fatal crashes under rare circumstances such as several sensor connecting and 
+   disconnecting at the same time several times. It is adviced to use a daemon to ensure their restart.  
 
 
 **5.2 Feature Roadmap**  
- - Make stress test with MIPSLE cache lib jac  
+ - Clarifies some log message better  
  - Make an echo mode available to assist for installations reporting also errors differently  
+ - Make stress test with MIPSLE cache lib jac  
  - Add database management tools  
  - API for custom reports in excel/CVS format to be sent per email  
  - Add option for export format (' or ")  
- - Allow grouping of gates (and handling of replication)  
  - Decoupled channels from TCP and add serial support  
 
 **5.3 Development TODOs**  
