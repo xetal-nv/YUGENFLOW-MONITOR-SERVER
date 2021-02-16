@@ -38,6 +38,7 @@ func main() {
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
 	var verbose = flag.Bool("v", false, "enable verbose mode")
+	var ll = flag.Bool("ll", false, "legacy unrolled logging")
 
 	flag.Parse()
 
@@ -91,6 +92,7 @@ func main() {
 	globals.LimitedApi = *limitedApi
 	globals.SpaceMode = false
 	mlogger.Verbose(*verbose)
+	mlogger.Unroll(*ll, "log.txt")
 
 	fmt.Printf("\nStarting server YugenFlow Server %s \n\n", globals.VERSION)
 	if *tcpdeadline != 24 {

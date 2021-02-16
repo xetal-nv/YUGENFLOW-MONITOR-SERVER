@@ -4,7 +4,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20210127  
+Built: 20000a20210216  
 
 **THIS VERSION BREAKS BACK COMPATIBILITY**  
 
@@ -14,7 +14,7 @@ Golang Packages (to be revised):
  - go.etcd.io/bbolt/  
  - xetal.ddns.net/supportservices  
  - github.com/mongodb/mongo  
- - github.com/fpessolano/mlogger  (>=0.3.2)  
+ - github.com/fpessolano/mlogger  (>=0.4.2)  
  - github.com/gorilla/mux  
  - gopkg.in/ini.v1  
  
@@ -45,7 +45,8 @@ cache.ini : it sets the working cache (mipsle binaries only).
     -eeprom                 : enables refresh of device eeprom at every connection   
     -export                 : enable export mode  
     -fth int                : set failure threshold in severe mode (default 3)   
-    -la                     : data API are disabled, only control API are active  
+    -la                     : data API are disabled, only control API are active
+    -ll                     : legacy logs (logs are also stored unrolled in file log.txt)
     -pwd password           : database password       
     -tdl int                : TCP read deadline in hours (default 24)   
     -st string              : set start time, time specified as HH:MM   
