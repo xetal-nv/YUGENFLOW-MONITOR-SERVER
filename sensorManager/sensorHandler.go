@@ -102,17 +102,6 @@ func sensorHandler(conn net.Conn) {
 					cmd = append(cmd, data...)
 					fmt.Printf("Trace device %v -> % x\n", mach, cmd)
 				}
-				//data := make([]byte, 6)
-				//if e := conn.SetDeadline(time.Now().Add(time.Duration(globals.TCPdeadline) * time.Hour)); e != nil {
-				//	fmt.Printf("sensorManager.sensorHandler: error on setting deadline for %v : %v\n", ipc, e)
-				//	return
-				//}
-				//if n, e := conn.Read(data); e != nil {
-				//	fmt.Printf("sensorManager.sensorHandler: error reading MAC from device with IP %v : %v\n", ipc, e)
-				//	return
-				//} else if n > 0 {
-				//	fmt.Printf("Trace mac %v : % x\n", mach, data)
-				//}
 			}
 		}
 	} else {

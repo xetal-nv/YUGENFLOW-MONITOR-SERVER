@@ -29,7 +29,8 @@ func main() {
 	var dcpath = flag.String("dc", "", "2nd level cache disk path")
 	var debug = flag.Bool("debug", false, "enable debug mode")
 	var delogs = flag.Bool("delogs", false, "delete all logs")
-	var echo = flag.Int("echo", 0, "enables echo mode (0: off, 1: raw, 2: gates, 3: spaces)")
+	//var echo = flag.Int("echo", 0, "enables echo mode (0: off, 1: raw, 2: gates, 3: spaces)")
+	var echo = flag.Bool("echo", false, "enables echo mode")
 	var eeprom = flag.Bool("eeprom", false, "enable sensor eeprom refresh at every connection")
 	var export = flag.Bool("export", false, "enable export scripting")
 	var tcpdeadline = flag.Int("tdl", 24, "TCP read deadline in hours (default 24)")
@@ -89,15 +90,15 @@ func main() {
 	globals.DBpath = *dbpath
 	globals.DBUser = *user
 	globals.DBUserPassword = *pwd
-	globals.EchoMode = *echo == 1
-	globals.GateMode = *echo == 2
-	globals.SpaceMode = *echo == 3
+	globals.EchoMode = *echo
+	globals.GateMode = false
+	globals.SpaceMode = false
 	globals.ExportEnabled = *export
 	globals.LimitedApi = false
 	mlogger.Verbose(*verbose)
 	mlogger.Unroll(*ll, "log.txt")
 
-	fmt.Printf("\nStarting server YugenFlow Server %s-development \n\n", globals.VERSION)
+	fmt.Printf("\nStarting server YugenFlow Server %s-debug \n\n", globals.VERSION)
 	if *debug {
 		fmt.Println("*** WARNING: Debug mode enabled ***")
 	}
@@ -114,8 +115,8 @@ func main() {
 	if *us {
 		fmt.Println("*** WARNING: Enabled unsafe shutdown on user signals ***")
 	}
-	if *echo != 0 {
-		fmt.Printf("*** INFO: Echo mode %v enabled ***\n", *echo)
+	if *echo {
+		fmt.Printf("*** INFO: Echo mode enabled ***\n")
 	}
 	if *verbose {
 		fmt.Println("*** INFO: Running in Verbose mode ***")

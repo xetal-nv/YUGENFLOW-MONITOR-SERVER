@@ -1,31 +1,16 @@
 # Xetal Flow Monitoring GateServer
 
-## 1. Specifications
-
 Copyright Xetal @ 2020  
 Version: 2.0.0  
 Built: 20000a20210303  
 
-**THIS VERSION BREAKS BACK COMPATIBILITY**  
+## 1. Usage
+**1.1 REQUIRED FILES/FOLDERS**
+_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database.  
+_Configuration files_: see 1.3 in the same folder as the executable.  
+_Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.
 
-**1.1 REQUIREMENTS**  
-GO 1.15 or newer  
-Golang Packages (to be revised):
- - go.etcd.io/bbolt/  
- - xetal.ddns.net/supportservices  
- - github.com/mongodb/mongo  
- - github.com/fpessolano/mlogger  (>=0.4.2)  
- - github.com/gorilla/mux  
- - gopkg.in/ini.v1  
- 
-External services:
-  - mongoDB database (for full server only)  
-  
-Detachable services:  
-  - webService  
-
-
-**1.2 SYSTEM VARIABLES:**  
+**1.2 REQUIRED SYSTEM VARIABLES:**  
 YUGENFLOW : specifies the path to the executable and configuration files, when the OS cannot handle services running from a fixed location      
 
 **1.3 CONFIGURATION:**  
@@ -52,33 +37,7 @@ cache.ini : it sets the working cache (mipsle binaries only).
     -st string              : set start time, time specified as HH:MM   
     -us                     : enable unsafe shutdown when initiated by the user (e.g. with CTRL-C), this can cause data loss and will prevent state save from working    
     -user username          : database username   
-    -v                      : runs in verbose mode  
-
-_For development and debug only:_    
-
-    -debug                  : enable debug mode 
-    -dev                    : development mode  
-    -stress                 : number of stress cycles (overrides dev)
-    -echo                   : server enables echo mode (0: off, 1: raw with not processing, 2: gate values, 3: space values)
-    -la                     : not available    
-
-**1.5 INSTALLATION**  
-_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database.  
-_Configuration files_: see 1.3 in the same folder as the executable.  
-_Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.
-
-**1.6 BUILD OPTION**  
-The following tags can be used for specific build:  
-
-     - (notags)     : complete server build  
-     - embedded     : build without database support  
-     - debug        : build with debug support  
-     - dev          : build with development and debug support  
-     - script       : compiles only main_script for compilation of external scripts or other test code    
-     - nc           : new cache (experimental)
- 
-Please refer to the nmake file for what compiler options are advicedc for which built.  
-Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are used.  
+    -v                      : runs in verbose mode   
 
 ## 2. API
 **2.1 Summary and format**  
@@ -502,29 +461,83 @@ For how to extract and use this JSON string, please refer to the files example.x
 The logs file are contained in the './log' folder which is created by the server (if not already present).  
 These files are to be used when contacting with support in case of problems.  
 The logs are a multi-file aggregating level log files that split information according to the relative microservice and provide information about type in a condensed matter.  
-For further information refer to https://github.com/fpessolano/mlogger.  
+This means that for repetitive messages (e.g. sensor connection) or errors (e.g. TCP read error) the log will report the first date, the latest date and the cumulative number of messages received.  
+Read the messages and their repetitiov to isolate possible issues. When this does not help, please refer to the debug mode section.  
+For further information on the standard log format refer to https://github.com/fpessolano/mlogger.  
+  
+Please note that a traditional log is available with option '-ll'. However, the server does not control the log file size and this is to be used only during installation or troubleshooting.  
 
-## 5. Release Notes  
+## 5. Debug built
+Any build ending with __debug_ is a debug built. It comes with two additional options that can be used to isolate possible problems.  
 
-**5.1 Known bugs**  
+    -debug                  : enable debug mode 
+    -echo                   : server enables echo mode
+
+The _-debug_ option write in consoles data from the server state. It is advised to use this modality together with a person from support.  
+The _-echo_ option turns the server into an echo server that only reports if a sensors is connected and writes to console its trace as:
+
+      Trace device {mac} -> {message_hex_trace}
+
+This version can be used to check if a sensor is connected and is sending data. Debug built do not support database operations.  
+
+## 6. Release Notes
+**6.1 Known bugs**  
 This build is currently in alpha, therefore several bugs are still present  
 BUG list:  
  - MIPSLE builts can suffer fatal crashes under rare circumstances such as several sensor connecting and 
-   disconnecting at the same time several times. It is adviced to use a daemon to ensure their restart.  
+   disconnecting at the same time several times. It is advised to use a daemon to ensure their restart.  
+   
 
+## 7. Development Notes  
+**7.1 REQUIREMENTS**  
+GO 1.15 or newer  
+Golang Packages (to be revised):
+- go.etcd.io/bbolt/
+- xetal.ddns.net/supportservices
+- github.com/mongodb/mongo
+- github.com/fpessolano/mlogger  (>=0.4.2)
+- github.com/gorilla/mux
+- gopkg.in/ini.v1
 
-**5.2 Feature Roadmap**  
- - Clarifies some log message better  
- - Make an echo mode available to assist for installations reporting also errors differently  
- - Make stress test with MIPSLE cache lib jac  
- - Add database management tools  
- - API for custom reports in excel/CVS format to be sent per email  
- - Add option for export format (' or ")  
- - Decoupled channels from TCP and add serial support  
+External services:
+- mongoDB database (for full server only)
 
-**5.3 Development TODOs**  
- - Remove bboltDB from all builts
- - Check lifetime cache malicious attacks (vs DoS)
- - Support variable sensor response instead of only 1,-1,255  
- - Clean code  
+Detachable services:
+- webService  
+
+**7.2 BUILD OPTION**  
+The following tags can be used for specific build:
+
+     - (notags)     : complete server build  
+     - embedded     : build without database support  
+     - debug        : build with debug support  
+     - dev          : build with development and debug support  
+     - script       : compiles only main_script for compilation of external scripts or other test code    
+     - nc           : new cache (experimental)
+
+Please refer to the nmake file for what compiler options are advicedc for which built.  
+Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are used.
+
+**7.3 Development modes**
+    -debug                  : enable debug mode 
+    -dev                    : development mode  
+    -stress                 : number of stress cycles (overrides dev)
+    -echo                   : server enables echo mode (0: off, 1: raw with not processing, 2: gate values, 3: space values)
+    -la                     : not available   
+
+**7.4 Feature Roadmap**
+- Clarifies some log message better
+- Make an echo mode available to assist for installations reporting also errors differently
+- Make stress test with MIPSLE cache lib jac
+- Add database management tools
+- API for custom reports in excel/CVS format to be sent per email
+- Add option for export format (' or ")
+- Decoupled channels from TCP and add serial support
+
+**7.5 Development TODOs**
+- Remove bboltDB from all builts
+- Check lifetime cache malicious attacks (vs DoS)
+- Support variable sensor response instead of only 1,-1,255
+- Clean code  
+
 
