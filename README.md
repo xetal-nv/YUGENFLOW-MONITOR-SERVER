@@ -5,7 +5,7 @@ Version: 2.0.0
 Built: 20000a20210303  
 
 ## 1. Usage
-**1.1 REQUIRED FILES/FOLDERS**
+**1.1 REQUIRED FILES/FOLDERS**  
 _Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database.  
 _Configuration files_: see 1.3 in the same folder as the executable.  
 _Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.
