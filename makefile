@@ -126,3 +126,5 @@ mipsle:
 	set GOMIPS=
 
 all: preparefolders arm32 arm64 amd64 mipsle windows
+
+debug: arm64debug windebug pidebug linuxamddebug
