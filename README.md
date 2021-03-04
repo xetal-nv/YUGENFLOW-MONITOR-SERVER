@@ -527,12 +527,10 @@ Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are us
 
 **7.4 Feature Roadmap**
 - Clarifies some log message better
-- Make an echo mode available to assist for installations reporting also errors differently
 - Make stress test with MIPSLE cache lib jac
 - Add database management tools
 - API for custom reports in excel/CVS format to be sent per email
 - Add option for export format (' or ")
-- Decoupled channels from TCP and add serial support
 
 **7.5 Development TODOs**
 - Remove bboltDB from all builts
