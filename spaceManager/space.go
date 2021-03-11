@@ -187,7 +187,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 					"service stopped",
 					[]int{0}, true})
 			stop <- nil
-
 		case data := <-in:
 			if spaceRegister.State {
 				// space is enabled
@@ -386,6 +385,56 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 									Message: "data from entry " + data.Id + " not in configuration",
 									Data:    []int{0}, Aggregate: true})
 						}
+					}
+				}
+			}
+		case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
+			// TODO clean code and use function to avoid code repetition
+			if spaceRegister.State {
+				// space is enabled
+				// check if it is a reset interval and act accordingly
+				resetTime := resetSlot != nil
+				if resetTime {
+					if inTime, err := others.InClosureTime(resetSlot[0], resetSlot[1]); err != nil {
+						mlogger.Warning(globals.SpaceManagerLog,
+							mlogger.LoggerData{"entryManager.entry: " + spacename,
+								"failed to check reset time",
+								[]int{0}, true})
+						continue
+					} else {
+						resetTime = resetTime && inTime
+					}
+				}
+				if resetTime {
+					if !resetDone {
+						select {
+						case calculator <- dataformats.SpaceState{
+							Reset: true,
+						}:
+						case <-time.After(time.Duration(2*globals.SettleTime) * time.Second):
+							if globals.DebugActive {
+								fmt.Println("entryManager.entry:", spacename, "failed to reset flows")
+								os.Exit(0)
+							}
+							mlogger.Warning(globals.SpaceManagerLog,
+								mlogger.LoggerData{Id: "entryManager.entry: " + spacename,
+									Message: "failed to reset flows",
+									Data:    []int{1}, Aggregate: true})
+						}
+
+						//println("reset")
+						resetDone = true
+						spaceRegister.Count = 0
+						spaceRegister.Ts = time.Now().UnixNano()
+						for i, entry := range spaceRegister.Flows {
+							entry.Variation = 0
+							entry.Flows = make(map[string]dataformats.Flow)
+							spaceRegister.Flows[i] = entry
+						}
+						go func(nd dataformats.SpaceState) {
+							_ = coredbs.SaveSpaceData(nd)
+						}(spaceRegister)
+
 					}
 				}
 			}

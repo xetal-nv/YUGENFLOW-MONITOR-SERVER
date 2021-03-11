@@ -3,6 +3,6 @@
 package globals
 
 const (
-	VERSION = "2.0.0-em"
+	VERSION = "2.0.1-em"
 	DBOPS   = false
 )

@@ -511,10 +511,10 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				} else {
 					// ATTENTION since tick is 1/3 of the minimum measure
-					//  this should never happen, if it does we have an error somewhere
-					mlogger.Error(globals.AvgsManagerLog,
+					//  this should ponly happen at start (or recover)
+					mlogger.Info(globals.AvgsManagerLog,
 						mlogger.LoggerData{"avgsManager.calculator for space: " + space,
-							"tick size error",
+							"tick size discrepancy",
 							[]int{0}, true})
 				}
 			}

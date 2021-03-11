@@ -2,7 +2,7 @@
 
 Copyright Xetal @ 2020  
 Version: 2.0.0  
-Built: 20000a20210303  
+Built: 20000a20210311  
 
 ## 1. Usage
 **1.1 REQUIRED FILES/FOLDERS**  
@@ -490,7 +490,7 @@ BUG list:
 
 ## 7. Development Notes  
 **7.1 REQUIREMENTS**  
-GO 1.15 or newer  
+GO 1.15
 Golang Packages (to be revised):
 - go.etcd.io/bbolt/
 - xetal.ddns.net/supportservices
@@ -526,6 +526,7 @@ Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are us
     -la                     : not available   
 
 **7.4 Feature Roadmap**
+- Check compatibility with go 1.6  
 - Clarifies some log message better
 - Make stress test with MIPSLE cache lib jac
 - Add database management tools

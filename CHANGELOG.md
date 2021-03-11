@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.1]
+### Changed
+- fixed a bug preventing the cou ter reset to take place without the sensors triggering the counter itself  
+
 ## [2.0.0]
 ### This new branch is a complete re-write of the server with no guarantee for back compatibility 
 

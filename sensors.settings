@@ -1,4 +1,5 @@
 # Sensor setting file
 # Format:
 # {mac} {srate} {savg} {bgth} {occth}
+# mac can be of form 0a0b0c010209 or 0a:0b:0c:01:02:09
 * 64 10 1.7 1.8
