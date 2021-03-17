@@ -42,7 +42,7 @@ arm64dev:
 arm64debug:
 	set GOOS=linux
 	set GOARCH=arm64
-	go build -tags embedded,debug -o gateserver_linuex_arm64_debug
+	go build -tags embedded,debug -o gateserver_linux_arm64_debug
 
 windebug:
 	set GOOS=windows
