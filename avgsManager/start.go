@@ -75,7 +75,6 @@ func Start(sd chan bool) {
 		os.Exit(0)
 	}
 
-	//tick := definitions.Section("system").Key("tick").MustInt(5)
 	currentAvailable := definitions.Section("system").Key("current").MustBool(false)
 
 	for _, def := range definitions.Section("realtime").KeyStrings() {

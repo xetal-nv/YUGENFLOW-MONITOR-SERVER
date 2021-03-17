@@ -128,7 +128,6 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 							}
 
 							if channelsLeft == nil {
-								//println("done BGreset")
 								done = true
 							}
 						} else {
@@ -187,21 +186,6 @@ func sensorBGReset(forceReset chan string, rst chan interface{}) {
 						"reset skipped as sensor not active",
 						[]int{0}, true})
 			}
-			//select {
-			//case forceReset <- mac:
-			//case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-			//	// we detach the answe with a zombie timeout
-			//	go func() {
-			//		select {
-			//		case forceReset <- mac:
-			//		case <-time.After(time.Duration(globals.ZombieTimeout) * time.Hour):
-			//			mlogger.Warning(globals.SensorManagerLog,
-			//				mlogger.LoggerData{"sensorManager.sensorBGReset",
-			//					"potential zombie",
-			//					[]int{1}, true})
-			//		}
-			//	}()
-			//}
 		}
 	}
 }

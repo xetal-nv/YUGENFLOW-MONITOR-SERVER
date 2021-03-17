@@ -90,16 +90,6 @@ finished:
 			var rtIssuer []byte
 			rtResponder := []byte("e")
 
-			//fmt.Printf("% x\n", cmd)
-			//a := func(ch chan dataformats.Commanding, msg dataformats.Commanding) {
-			//	select {
-			//	case ch <- msg:
-			//	case <-time.After(time.Duration(globals.SensorTimeout) * time.Second):
-			//	}
-			//}
-			//go a(chs.Commands, rtIssuer)
-			//continue
-
 			// verify if the command exists and send it to the device
 			if _, ok := CmdAnswerLen[cmd[0]]; ok {
 				if globals.DebugActive {
@@ -138,7 +128,6 @@ finished:
 						}
 						// make optional
 						if cmd[0] == CmdAPI["rstbg"].Cmd && globals.ResetCloseTCP {
-							//println("bye")
 							_ = chs.Tcp.Close()
 						}
 					}

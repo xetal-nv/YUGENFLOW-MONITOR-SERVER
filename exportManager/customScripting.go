@@ -13,11 +13,8 @@ import (
 
 func customScripting(rst chan interface{}, chActual chan dataformats.MeasurementSampleWithFlows, chReferences chan dataformats.MeasurementSample) {
 
-	//var currentData = false
-	//snapshots := make(map[string]dataformats.MeasurementSampleWithFlows)
 finished:
 	for {
-		//var data dataformats.MeasurementSample
 		var err error
 		var encodedData []byte
 		select {
@@ -27,29 +24,16 @@ finished:
 			rst <- nil
 			break finished
 		case data := <-chActual:
-			//snapshotSpace := snapshots[data.Space]
-			//snapshots[data.Space] = calculateAbsoluteFlows(snapshotSpace, data)
-			//encodedData, err = json.Marshal(snapshots[data.Space])
 			encodedData, err = json.Marshal(data)
 		case data := <-chReferences:
 			encodedData, err = json.Marshal(data)
 		}
-		// snapshots are managed only for current data
-		//if currentData {
-		//	//fmt.Printf("data -> %+v\n", data)
-		//	// in and out flows are accumulated only for current data
-		//	snapshotSpace := snapshots[data.Space]
-		//	snapshots[data.Space] = calculateAbsoluteFlows(snapshotSpace, data)
-		//}
-		//fmt.Printf("%+v\n\n", snapshots[data.Space])
 
-		//if encodedData, err := json.Marshal(snapshots[data.Space]); err == nil {
 		if err == nil {
 			if globals.DebugActive {
 				fmt.Printf("Export JSON: %v\n", strings.Replace(string(encodedData), "\"", "'", -1))
 			}
-			//fmt.Println(string(encodedData))
-			//continue
+
 			if globals.ExportAsync {
 				cmd := exec.Command(globals.ExportActualCommand, globals.ExportActualArgument,
 					strings.Replace(string(encodedData), "\"", "'", -1))

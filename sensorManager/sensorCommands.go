@@ -50,8 +50,6 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 	// sends the command for a maximum of eepromResetTries times before reporting error
 	sendCommand := func(command string, value uint32) (e error) {
 		e = errors.New("server.setSensorParameters: Failed to execute command " + command)
-		//timeout := 1
-		//mainLoop:
 		for i := 0; i < eepromResetTries; i++ {
 			time.Sleep(time.Duration(globals.SensorEEPROMResetStep) * time.Second)
 			if v, ok := CmdAPI[command]; ok {
@@ -62,7 +60,6 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 				cmd = append(cmd, codings.Crc8(cmd))
 				if e := conn.SetWriteDeadline(time.Now().Add(time.Duration(globals.SensorTimeout) * time.Second)); e == nil {
 					if _, e := conn.Write(cmd); e == nil {
-						//log.Printf("Sent %x on device %v\n", Cmd, mac)
 					readLoop:
 						// we give it a maximum of max (4, eepromResetTries) for the sensor to answer to the command
 						for j := 0; j < int(math.Max(float64(4), float64(eepromResetTries))); j++ {
@@ -90,13 +87,9 @@ func refreshEEPROM(conn net.Conn, mac string) (err error) {
 										// illegal answer
 										break readLoop
 									}
-								} else {
-									//log.Printf("Timeout read for command %x on device %v\n", Cmd, mac)
 								}
 							}
 						}
-					} else {
-						//log.Printf("Timeout write for command %x on device %v\n", Cmd, mac)
 					}
 				}
 				// reset the all deadlines

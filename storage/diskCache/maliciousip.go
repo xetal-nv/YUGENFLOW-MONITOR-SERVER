@@ -58,3 +58,33 @@ func MarkIP(ip []byte, threshold int) (danger bool, err error) {
 	err = tx.Commit()
 	return
 }
+
+func UnarkAllip(threshold int) (err error) {
+	var tx *bolt.Tx
+	var warnings uint32 = 0
+	if tx, err = main.Begin(true); err != nil {
+		return
+	}
+	//goland:noinspection GoUnhandledErrorResult
+	defer tx.Rollback()
+
+	b := tx.Bucket([]byte(maliciousIp))
+	if err = b.ForEach(func(key, val []byte) error {
+		warnings = binary.LittleEndian.Uint32(val)
+		if warnings > 0 {
+			if warnings > uint32(threshold) {
+				warnings = uint32(threshold)
+			} else {
+				warnings -= 1
+			}
+			val := make([]byte, 4)
+			binary.LittleEndian.PutUint32(val, warnings)
+			_ = tx.Bucket([]byte(maliciousIp)).Put(key, val)
+		}
+		return nil
+	}); err == nil {
+		// Commit the transaction and check for error.
+		err = tx.Commit()
+	}
+	return
+}

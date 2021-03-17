@@ -57,7 +57,6 @@ func Start(sd chan bool) {
 						SpaceStructure.ResetTime = make(map[string][]time.Time)
 					}
 					SpaceStructure.ResetTime[currentSpace] = []time.Time{start, stop}
-					//fmt.Println(currentSpace,start,stop)
 				}
 			}
 		}

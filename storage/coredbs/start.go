@@ -15,8 +15,6 @@ import (
 
 var client *mongo.Client
 
-//var keysCol, dataCol, modelCol, latestCol, refreshCol, geoExternalsDB, geoDB, correctionDB *mongo.Collection
-//var dataDB, referenceDB, shadowDataDB, stateDB, shadowStateDB *mongo.Collection
 var dataDB, referenceDB, shadowDataDB *mongo.Collection
 
 const (
@@ -48,12 +46,15 @@ func Start() (err error) {
 		clientOptions = options.Client().ApplyURI(globals.DBpath)
 	}
 	if client, err = mongo.NewClient(clientOptions); err == nil {
-		ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+		defer cancel()
 		if err = client.Connect(ctx); err != nil {
 			return
 		}
-		ctx, _ = context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
-		if err = client.Ping(ctx, nil); err != nil {
+		ctx2, cancel2 := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+		defer cancel2()
+
+		if err = client.Ping(ctx2, nil); err != nil {
 			return
 		}
 		// Create/load collections
@@ -68,7 +69,8 @@ func Start() (err error) {
 }
 
 func Disconnect() error {
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	mlogger.Info(globals.DBSLog,
 		mlogger.LoggerData{"coreDBS.Start", "service stopped",
 			[]int{0}, true})

@@ -47,7 +47,7 @@ type JsonData struct {
 	Space   string                                     `json:"space"`
 	Type    string                                     `json:"type"`
 	Results map[string][]dataformats.MeasurementSample `json:"measurements,omitempty"`
-	Actuals *dataformats.MeasurementSampleWithFlows    `json:"current,omitempty"`
+	Actual  *dataformats.MeasurementSampleWithFlows    `json:"current,omitempty"`
 }
 
 type JsonPresence struct {

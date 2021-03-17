@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"gateserver/support/globals"
+	"gateserver/support/others"
 	"github.com/fpessolano/mlogger"
 	bolt "go.etcd.io/bbolt"
 	"os"
@@ -93,6 +94,12 @@ func Start() {
 	mlogger.Info(globals.SensorDBLog,
 		mlogger.LoggerData{"diskCache.Start", "service started",
 			[]int{1}, true})
+
+	// perform some sort of malicious gradual reset as bboltDB does not support record end of life
+	if globals.MalicioudMode > 0 {
+		go others.Cronos(func() { _ = UnarkAllip(globals.MaliciousTriesIP) }, 1, 12, nil)
+		go others.Cronos(func() { _ = UnarkAllMac(globals.MaliciousTriesIP) }, 2, 12, nil)
+	}
 
 	fmt.Println("*** INFO: SensorDB initialised ***")
 }

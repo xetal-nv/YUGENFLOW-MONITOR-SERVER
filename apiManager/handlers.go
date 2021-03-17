@@ -48,10 +48,6 @@ func info() http.Handler {
 		entryManager.EntryStructure.RLock()
 		spaceManager.SpaceStructure.RLock()
 
-		//fmt.Println(gateManager.GateStructure.SensorList)
-		//fmt.Println(entryManager.EntryStructure.GateList)
-		//fmt.Println(spaceManager.SpaceStructure.EntryList)
-
 		for spaceName, entryList := range spaceManager.SpaceStructure.EntryList {
 			newSpace := JsonSpace{Id: spaceName}
 			for entryName, entry := range entryList {
@@ -374,9 +370,9 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 						//fmt.Printf("%v gets %+v\n", name, data)
 						//fmt.Printf("%+v\n", data)
 						newData := JsonData{
-							Space:   name,
-							Type:    "current",
-							Actuals: &data,
+							Space:  name,
+							Type:   "current",
+							Actual: &data,
 						}
 						results = append(results, newData)
 					default:
@@ -397,12 +393,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 						numberSamples = val
 					}
 				}
-				//}
-				//for _, rp := range strings.Split(r.URL.String(), "?")[1:] {
-				//	if val, err := strconv.Atoi(rp); err == nil {
-				//		numberSamples = val
-				//	}
-				//}
 				switch which {
 				case 2:
 					for _, name := range spaces {
@@ -447,11 +437,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 								t1 = t0
 								t0 = tmp
 							}
-							//if which ==1 || which ==3 {
-							//	t0 *= 1000000000
-							//	t1 *= 1000000000
-							//}
-							//for _, name := range spaces {
 							switch which {
 							case 1:
 								t0 *= 1000000000

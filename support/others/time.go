@@ -49,3 +49,34 @@ func InClosureTime(start, end time.Time) (rt bool, err error) {
 	}
 	return
 }
+
+type fn func()
+
+func Cronos(f fn, hour int, interval int, rst chan interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			Cronos(f, hour, interval, rst)
+		}
+	}()
+	waiting := true
+	for {
+		select {
+		case <-rst:
+			return
+		case <-time.After(time.Duration(interval) * time.Minute):
+			if waiting {
+				if time.Now().Hour() == hour {
+					f()
+					waiting = false
+				}
+			} else {
+				if time.Now().Hour() > hour {
+					waiting = true
+					println("waiting again")
+				} else {
+					println("not waiting")
+				}
+			}
+		}
+	}
+}

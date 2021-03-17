@@ -108,12 +108,10 @@ func LoadSensorEEPROMSettings() {
 					}
 
 					if specs.srate == 0 || specs.savg == 0 || specs.bgth == 0 || specs.occth == 0 {
-						//log.Println("Error illegal sensor settings:", line)
 						return sensorSpecs{}, "", ref, errors.New("Error illegal sensor setting values: " + line)
 					}
 
 					if el == "*" && (specs.srate == -1 || specs.savg == -1 || specs.bgth == -1 || specs.occth == -1) {
-						//log.Println("Error illegal sensor settings:", line)
 						return sensorSpecs{}, "", ref, errors.New("Error illegal sensor setting values: " + line)
 					}
 
@@ -123,7 +121,6 @@ func LoadSensorEEPROMSettings() {
 
 			expandSpecs := func() error {
 				if commonSensorSpecs.srate == 0 || commonSensorSpecs.savg == 0 || commonSensorSpecs.bgth == 0 || commonSensorSpecs.occth == 0 {
-					//log.Println("Error illegal sensor settings:", line)
 					return errors.New("error illegal global sensor setting values")
 				}
 

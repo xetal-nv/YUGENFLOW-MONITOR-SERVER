@@ -10,15 +10,11 @@ type FlowData struct {
 }
 
 type MeasurementSample struct {
-	Qualifier string  `json:"qualifier"`
-	Space     string  `json:"space"`
-	Ts        int64   `json:"timestamp"`
-	Val       float64 `json:"value"`
-	//FlowIn         int                   `json:"in,omitempty"`
-	//FlowOut        int                   `json:"out,omitempty"`
-	//ResetTime int64                 `json:"startTimeFlows,omitempty"`
-	//TsOverflow     int64                 `json:"flowOverlowTs,omitempty"`
-	Flows map[string]EntryState `json:"flows"`
+	Qualifier string                `json:"qualifier"`
+	Space     string                `json:"space"`
+	Ts        int64                 `json:"timestamp"`
+	Val       float64               `json:"value"`
+	Flows     map[string]EntryState `json:"flows"`
 }
 
 type MeasurementSampleWithFlows struct {

@@ -20,8 +20,6 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 		newSnapshotSpace.Qualifier = data.Qualifier
 		newSnapshotSpace.Space = data.Space
 		newSnapshotSpace.Flows = make(map[string]dataformats.EntryStateWithFlows)
-		//newSnapshotSpace.FlowIn = 0
-		//newSnapshotSpace.FlowOut = 0
 		newSnapshotSpace.ResetTime = time.Now().UnixNano()
 		for entry, entryFlow := range data.Flows {
 			entryFlowSnapshot := dataformats.EntryStateWithFlows{
@@ -29,10 +27,8 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 				Ts:        entryFlow.Ts,
 				Variation: entryFlow.Variation,
 				Netflow:   entryFlow.Variation,
-				//TsOverflow: 0,
-				State: entryFlow.State,
-				//Reversed: entryFlow.State,
-				Flows: make(map[string]dataformats.FlowWithFlows),
+				State:     entryFlow.State,
+				Flows:     make(map[string]dataformats.FlowWithFlows),
 			}
 			entryFlowSnapshot.FlowIn = 0
 			entryFlowSnapshot.FlowOut = 0
@@ -41,8 +37,6 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 					Id:        gateFlow.Id,
 					Variation: gateFlow.Variation,
 					Netflow:   gateFlow.Variation,
-					//TsOverflow: 0,
-					//Reversed: gateFlow.Reversed,
 				}
 				if gateFlow.Variation > 0 {
 					gateFlowSnapshot.FlowIn = gateFlow.Variation
@@ -53,13 +47,10 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 				}
 				entryFlowSnapshot.Flows[gate] = gateFlowSnapshot
 			}
-			//entryFlowSnapshot.FlowIn = EntryFlowIn
-			//entryFlowSnapshot.FlowOut = EntryFlowOut
 			newSnapshotSpace.FlowIn += entryFlowSnapshot.FlowIn
 			newSnapshotSpace.FlowOut += entryFlowSnapshot.FlowOut
 			newSnapshotSpace.Flows[entry] = entryFlowSnapshot
 		}
-		//snapshots[data.Space] = newSnapshotSpace
 	} else {
 		// the relevant snapshot needs to be updated
 		// in case of overflow, flows are reset and the overflow timestamp is updated
@@ -82,10 +73,8 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 				Ts:        entry.Ts,
 				Variation: entry.Variation,
 				Netflow:   entry.Variation,
-				//TsOverflow: 0,
-				State: entry.State,
-				//Reversed:   entry.Reversed,
-				Flows: make(map[string]dataformats.FlowWithFlows),
+				State:     entry.State,
+				Flows:     make(map[string]dataformats.FlowWithFlows),
 			}
 
 			temporaryGateMap := make(map[string]dataformats.FlowWithFlows)
@@ -105,15 +94,12 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 						TsOverflow: gate.TsOverflow,
 						FlowIn:     gate.FlowIn,
 						FlowOut:    gate.FlowOut,
-						//Reversed:   gate.Reversed,
 					}
 				}
-				//temporaryGateMap = newEntrySnapshot.Flows
 			} else {
 				newEntrySnapshot.FlowIn = 0
 				newEntrySnapshot.FlowOut = 0
 				newEntrySnapshot.TsOverflow = 0
-				//temporaryGateMap = nil
 			}
 
 			// new gate data is accumulated
@@ -122,8 +108,6 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 					Id:        gate.Id,
 					Variation: gate.Variation,
 					Netflow:   gate.Variation,
-					//Reversed:  gate.Reversed,
-					//TsOverflow: gate.TsOverflow,
 				}
 
 				if gate.Variation > 0 {
@@ -137,7 +121,6 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 				}
 				// verify if this gate is already being accumulated and update the new values
 				if oldGateData, found := temporaryGateMap[gateName]; found {
-					//gate.Netflow += oldGateData.Variation
 					newGateSnapshot.FlowOut += oldGateData.FlowOut
 					newGateSnapshot.FlowIn += oldGateData.FlowIn
 					newGateSnapshot.TsOverflow = oldGateData.TsOverflow
@@ -234,7 +217,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 		if candidateSnapshot, err := diskCache.ReadSnapshot(space); err == nil {
 			age := candidateSnapshot.Ts / 1000000000
 			refTS := time.Now().Unix() - int64(globals.MaxStateAge)
-			//fmt.Println(age, refTS)
 			if age > refTS {
 				snapshot = candidateSnapshot
 			} else {
@@ -255,17 +237,14 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				rst <- nil
 				break finished
 			case <-time.After(time.Duration(tick) * time.Second):
-				//fmt.Printf("calculator %v ticked\n", space)
 				// if there are already samples, we add a sample that is the same as the last one but with a different time stamp
 				// the sliding window is also shifted to make sure it contains only relevant samples
 				if len(samples) != 0 {
 					refTs := time.Now().UnixNano()
 					var data dataformats.SpaceState
 					data = samples[len(samples)-1]
-					//}
 					data.Ts = refTs + int64(tick)*1000000000
 					data.Flows = make(map[string]dataformats.EntryState)
-					//fmt.Printf("calculator %v ticked %v\n", space, data)
 					samples = append(samples, data)
 					for (samples[0].Ts < refTs-int64(maxTick)*1000000000) && len(samples) > 1 {
 						if samples[1].Ts <= refTs-int64(maxTick)*1000000000 {
@@ -278,14 +257,12 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			case data := <-latestData:
 				if data.Reset {
-					//println("reset")
 					// system is in reset time, snapshot needs to be reset and a zero sample needs to be added
 					snapshot = dataformats.MeasurementSampleWithFlows{}
 					data.Count = 0
 					data.Flows = make(map[string]dataformats.EntryState)
 				}
 
-				//fmt.Printf("calculator %v received %+v\n", space, data)
 				// first we make a deep copy of data
 				newData := dataformats.SpaceState{
 					Id:    data.Id,
@@ -325,12 +302,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				if currentAvailable {
 					select {
 					case regActuals <- snapshot:
-					//case regReference <- dataformats.MeasurementSample{
-					//	Space:     space,
-					//	Qualifier: "current",
-					//	Ts:        newData.Ts,
-					//	Val:       float64(newData.Count),
-					//	Flows:     newData.Flows}:
 					case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 					}
 				}
@@ -339,12 +310,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				if globals.ExportActualCommand != "" {
 					select {
 					case exportManager.ExportActuals <- snapshot:
-					//case exportManager.ExportActuals <- dataformats.MeasurementSample{
-					//	Space:     space,
-					//	Qualifier: "current",
-					//	Ts:        newData.Ts,
-					//	Val:       float64(newData.Count),
-					//	Flows:     newData.Flows}:
 					default:
 						// we do not wait as the delay might be related to an external script
 					}
@@ -365,9 +330,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				}
 			}
 
-			//fmt.Printf("\nSamples %+v\n", samples)
-			//fmt.Printf("Snapshot %+v\n", snapshot)
-
 			// in case of no stored samples, the cycle is stopped here
 			if len(samples) == 0 {
 				continue
@@ -377,7 +339,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				fmt.Printf("Sliding window from %v to %v\n",
 					samples[len(samples)-1].Ts-int64(maxTick)*1000000000, samples[len(samples)-1].Ts)
 				for _, el := range samples {
-					//fmt.Printf("sliding window %+v\n", el)
 					fmt.Printf("\tsample %v at %v\n", el.Count, el.Ts)
 				}
 				fmt.Println()
@@ -396,7 +357,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 				for i := len(samples) - 1; i >= 0; i-- {
 					if samples[i].Ts+adjPeriod >= samples[len(samples)-1].Ts {
 						selectedSamples = append(selectedSamples, dataformats.MeasurementSample{Ts: samples[i].Ts,
-							//Count: float64(samples[i].Variation)})
 							Val: float64(samples[i].Count), Flows: samples[i].Flows})
 					} else {
 						// we need to properly close the interval
@@ -407,21 +367,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						break foundall
 					}
 				}
-
-				//fmt.Printf("interval %v to %v\n", samples[len(samples)-1].Ts-adjPeriod, samples[len(samples)-1].Ts)
-				//for _, el := range samples {
-				//	fmt.Printf("selected sample %v at %v\n", el.Variation, el.Ts)
-				//}
-				//fmt.Println()
-				//continue
-
-				//for _, el := range selectedSamples {
-				//	//fmt.Print(time.Unix(el.Ts/1000000000, 0),  " ")
-				//	//fmt.Printf("selected sample %v at %v\n", el.Count, el.Ts)
-				//	fmt.Printf("selected sample %+v\n", el)
-				//}
-				//fmt.Println()
-				//continue
 
 				// the selectedSamples slice starts with the latest entry value (at [0])
 				// the ending sample is considered for the flow calculation but not for the average count
@@ -436,7 +381,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							// we update the total count as for the second most recent sample
 							tot += selectedSamples[i].Val * float64(selectedSamples[i-1].Ts-selectedSamples[i].Ts)
 						}
-						//fmt.Println(tot)
 						for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
 							if entry, ok := flows[sampleEntryName]; ok {
 								// adjust values and gates
@@ -475,12 +419,8 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 					}
 
-					//fmt.Println()
-
 					// result is limited to two digits
 					tot = float64(int64((tot*100)/length)) / 100
-					//fmt.Println(tot)
-					//fmt.Println()
 
 					if globals.SpaceMode {
 						fmt.Printf("Measurement result: \n\t %+v\n\n", dataformats.MeasurementSample{
@@ -490,13 +430,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							Flows:     flows,
 						})
 					}
-
-					//fmt.Printf("%+v\n\n", dataformats.MeasurementSample{
-					//	Qualifier: measurementName,
-					//	Ts:        selectedSamples[0].Ts / 1000000000,
-					//	Count:       tot,
-					//	Flows:     flows,
-					//})
 
 					// we give it little time to transmit the data, it too late data is thrown away
 					select {
@@ -511,7 +444,7 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 				} else {
 					// ATTENTION since tick is 1/3 of the minimum measure
-					//  this should ponly happen at start (or recover)
+					//  this should only happen at start (or recover)
 					mlogger.Info(globals.AvgsManagerLog,
 						mlogger.LoggerData{"avgsManager.calculator for space: " + space,
 							"tick size discrepancy",
@@ -525,7 +458,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 			for measurementName, period := range referenceDefinitions {
 				adjPeriod := int64(period) * 1000000000
 				if lastReferenceMeasurement[measurementName]+adjPeriod < samples[len(samples)-1].Ts {
-					//fmt.Println("new period", time.Now())
 					// time for a new reference measurement
 					var selectedSamples []dataformats.MeasurementSample
 				foundall2:
@@ -542,14 +474,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 						}
 					}
 
-					//for _, el := range selectedSamples {
-					//	//fmt.Printf("selected sample %v at %v\n", el.Count, el.Ts)
-					//	fmt.Printf("selected sample %v\n", el)
-					//}
-					//fmt.Println()
-					//lastReferenceMeasurement[measurementName] = samples[len(samples)-1].Ts
-					//continue
-
 					// measurement calculation
 					if len(selectedSamples) > 1 {
 						var tot float64 = 0
@@ -559,8 +483,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 							if i > 0 {
 								tot += selectedSamples[i].Val * float64(selectedSamples[i-1].Ts-selectedSamples[i].Ts)
 							}
-							//fmt.Println(tot)
-							//fmt.Println()
 							for sampleEntryName, sampleEntry := range selectedSamples[i].Flows {
 								if entry, ok := flows[sampleEntryName]; ok {
 									// adjust values and gates
@@ -600,8 +522,6 @@ func calculator(space string, latestData chan dataformats.SpaceState, rst chan i
 
 						}
 						tot = float64(int64((tot*100)/length)) / 100
-						//fmt.Println(tot)
-						//fmt.Println()
 						newSample := dataformats.MeasurementSample{
 							Qualifier: measurementName,
 							Space:     space,

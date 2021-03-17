@@ -1,8 +1,7 @@
 # Xetal Flow Monitoring GateServer
 
 Copyright Xetal @ 2020  
-Version: 2.0.0  
-Built: 20000a20210311  
+Built: 20000a20210317  
 
 ## 1. Usage
 **1.1 REQUIRED FILES/FOLDERS**  
@@ -21,6 +20,8 @@ configuration.ini : it sets the installation in terms of gates, entries and spac
 gateserver.ini : it contains all settings of the server itself  
 measurement.ini : it contains the definitions of all measurements the server needs to precompute and provide.  
 cache.ini : it sets the working cache (mipsle binaries only).  
+
+After modifying a configuration, it is always advisable to delete the disk cache folder (called 'tables').  
 
 **1.4 COMMAND LINE OPTIONS:**  
 
@@ -527,16 +528,12 @@ Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are us
 
 **7.4 Feature Roadmap**
 - Check compatibility with go 1.6  
-- Clarifies some log message better
-- Make stress test with MIPSLE cache lib jac
 - Add database management tools
 - API for custom reports in excel/CVS format to be sent per email
 - Add option for export format (' or ")
 
-**7.5 Development TODOs**
-- Remove bboltDB from all builts
-- Check lifetime cache malicious attacks (vs DoS)
-- Support variable sensor response instead of only 1,-1,255
-- Clean code  
+**7.5 Development TODOs**  
+- Remove bboltDB from all builts  
+- Support variable sensor response instead of only 1,-1,255  
 
 

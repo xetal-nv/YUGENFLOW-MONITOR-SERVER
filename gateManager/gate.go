@@ -156,9 +156,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 		scratchPadOriginal.unusedSampleSumOut[i] = 0
 	}
 
-	//fmt.Println(scratchPad)
-	//fmt.Println(sensorLatestData)
-
 	// we try to acquire the gate channels
 	// this will only fail if the server is corrupted therefore, the server should be closed
 	tries := 5
@@ -179,12 +176,9 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 		entryManager.GateStructure.RUnlock()
 	}
 
-	//fmt.Println(gateName, gateEntryChannels)
-
 	if globals.DebugActive {
 		fmt.Printf("Gate %v has been started\n", gateName)
 	}
-	//fmt.Println(in, stop, gateName, sensors)
 	for {
 		select {
 		case <-resetGate:
@@ -204,7 +198,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 			for i, el := range scratchPadOriginal.unusedSampleSumOut {
 				scratchPad.unusedSampleSumOut[i] = el
 				sensorDifferential[i] = 0
-				//sensorDifferentialFails[i] = 0
 				sensorDifferentialTimes[i] = 0
 			}
 			for i, el := range scratchPadOriginal.unusedSampleSumIn {
@@ -240,7 +233,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 						}
 					}
 					sensorDifferential[data.Id] += 1
-					//fmt.Println(gateName, ":", sensorDifferential)
 					var sensorID int
 					max := 0
 					min := math.MaxInt32
@@ -331,7 +323,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 					for i, el := range scratchPadOriginal.unusedSampleSumOut {
 						scratchPad.unusedSampleSumOut[i] = el
 						sensorDifferential[i] = 0
-						//sensorDifferentialFails[i] = 0
 						sensorDifferentialTimes[i] = 0
 						asymmetryResetCounter = globals.AsymmetryReset
 					}

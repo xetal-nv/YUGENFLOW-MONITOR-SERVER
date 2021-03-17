@@ -93,12 +93,10 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 				if ok && eid == nil {
 					if cMac, err := diskCache.LookUpMac([]byte{byte(id)}); err == nil {
 						rv.Error = "error: sensor id " + strconv.Itoa(id) + " already assigned to " + cMac
-						//sensorManager.ActiveSensors.RUnlock()
 						return
 					}
 				} else {
 					rv.Error = globals.SyntaxError.Error()
-					//sensorManager.ActiveSensors.RUnlock()
 					return
 				}
 			}
@@ -108,7 +106,6 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 			case 2:
 				if paramFound != nil {
 					rv.Error = globals.SyntaxError.Error()
-					//sensorManager.ActiveSensors.RUnlock()
 					return
 				}
 				data := make([]byte, 2)
@@ -118,16 +115,11 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 				par, err := strconv.Atoi(params["val"])
 				if err != nil {
 					rv.Error = globals.SyntaxError.Error()
-					//sensorManager.ActiveSensors.RUnlock()
 					return
 				}
 				cmd = append(cmd, byte(par))
 			default:
 			}
-
-			//sensorManager.ActiveSensors.RUnlock()
-			//fmt.Printf("% x\n", cmd)
-			//return
 
 			select {
 			case channels.Commands <- cmd:
@@ -149,7 +141,6 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 			case <-time.After(time.Duration(globals.SettleTime) * time.Second):
 				rv.Error = globals.Error.Error()
 			}
-			//sensorManager.ActiveSensors.RUnlock()
 		} else {
 			rv.Error = "error: sensor with mac " + mac + " not active"
 			return

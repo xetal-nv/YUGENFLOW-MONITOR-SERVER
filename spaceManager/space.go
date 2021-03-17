@@ -18,13 +18,6 @@ var once sync.Once
 
 // updateRegister accumulates the count at space level and passes forth variations only for the rest adjusting for reversed
 func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.EntryState) dataformats.SpaceState {
-	//defer func() {
-	//	if v := recover(); v != nil {
-	//		log.Println("capture a panic:", v)
-	//		os.Exit(0)
-	//	}
-	//}()
-
 	// all space entries and relative gates are reset
 	for key, entry := range spaceRegister.Flows {
 		entry.Variation = 0
@@ -67,11 +60,6 @@ func updateRegister(spaceRegister dataformats.SpaceState, data dataformats.Entry
 	// the space count is updated
 	for _, entry := range spaceRegister.Flows {
 		spaceRegister.Count += entry.Variation
-		//if entry.Reversed {
-		//	spaceRegister.Count -= entry.Variation
-		//} else {
-		//	spaceRegister.Count += entry.Variation
-		//}
 	}
 	return spaceRegister
 }
@@ -96,7 +84,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 						spaceRegister = state
 					} else {
 						fmt.Println("*** WARNING: Error reading state for space:", spacename, ". Will assume null state ***")
-						//os.Exit(0)
 					}
 				} else {
 					fmt.Println("*** WARNING: State is too old for space:", spacename, ". Will assume null state ***")
@@ -108,7 +95,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 						shadowSpaceRegister = state
 					} else {
 						fmt.Println("*** WARNING: Error reading shadow state for space:", spacename, ". Will assume null state ***")
-						//os.Exit(0)
 					}
 				} else {
 					fmt.Println("*** WARNING: Shadow state is too old for space:", spacename, ". Will assume null state ***")
@@ -220,7 +206,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 									Data:    []int{1}, Aggregate: true})
 						}
 
-						//println("reset")
 						resetDone = true
 						spaceRegister.Count = 0
 						spaceRegister.Ts = time.Now().UnixNano()
@@ -249,22 +234,13 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 						// we are in a activity slot
 
 						if _, ok := entries[data.Id]; ok {
-							//fmt.Printf("%+v\n", data)
-							//fmt.Printf("%+v\n\n", entries[data.Id])
 							// entry sending data is in the configuration
 							data.Reversed = entries[data.Id].Reversed
 							timestamp := time.Now().UnixNano()
 
-							//fmt.Printf("%+v\n", shadowSpaceRegister)
-							//fmt.Printf("%+v\n", data)
-
 							// the shadow register is updated with the received data
 							shadowSpaceRegister = updateRegister(shadowSpaceRegister, data)
 							shadowSpaceRegister.Ts = timestamp
-
-							//fmt.Printf("%+v\n\n", shadowSpaceRegister)
-
-							//continue
 
 							// the data is updated in case it leads to a negative count if the option is enabled
 							if !globals.AcceptNegatives {
@@ -274,7 +250,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 								}
 								delta := newData + spaceRegister.Count
 								if delta < 0 {
-									//println("negative check triggered")
 									// the new data brings the final count below zero
 
 									// the total count is updated according to the reversed flag in order to have final count zero
@@ -298,10 +273,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 										entry.Flows[key] = value
 									}
 
-									//if entry.Reversed {
-									//	delta *= -1
-									//}
-
 									// all variations are removed
 									for i := range entry.Flows {
 										flow := entry.Flows[i]
@@ -310,7 +281,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 									}
 
 									delta = data.Variation
-									//fmt.Println(delta)
 
 									// the new variation is distributed among all gates in the original data
 								finished:
@@ -336,25 +306,14 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 								}
 							}
 
-							//fmt.Printf("%+v\n", spaceRegister)
-							//fmt.Printf("%+v\n", data)
-
 							// register is updated with an inspected received data
 							spaceRegister = updateRegister(spaceRegister, data)
 							// space gets its own timestamp
 							spaceRegister.Ts = timestamp
 
-							//fmt.Printf("%+v\n\n", spaceRegister)
-							//continue
-
 							if globals.DebugActive {
 								fmt.Printf("Space %v registry data \n\t%+v\n", spacename, spaceRegister)
 							}
-
-							//fmt.Println(spacename,"sending data", spaceRegister)
-							//fmt.Println(spaceRegister)
-							//fmt.Println(shadowSpaceRegister)
-							//continue
 
 							go func(nd dataformats.SpaceState) {
 								_ = coredbs.SaveSpaceData(nd)
@@ -389,7 +348,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 				}
 			}
 		case <-time.After(time.Duration(globals.ResetPeriod) * time.Minute):
-			// TODO clean code and use function to avoid code repetition
 			if spaceRegister.State {
 				// space is enabled
 				// check if it is a reset interval and act accordingly
@@ -422,7 +380,6 @@ func space(spacename string, spaceRegister, shadowSpaceRegister dataformats.Spac
 									Data:    []int{1}, Aggregate: true})
 						}
 
-						//println("reset")
 						resetDone = true
 						spaceRegister.Count = 0
 						spaceRegister.Ts = time.Now().UnixNano()

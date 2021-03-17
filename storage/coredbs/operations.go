@@ -15,7 +15,8 @@ func SaveSpaceData(nd dataformats.SpaceState) error {
 	if globals.DisableDatabase {
 		return nil
 	}
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	if _, err := dataDB.InsertOne(ctx, nd); err != nil {
 		return err
 	} else {
@@ -27,7 +28,8 @@ func SaveReferenceData(nd dataformats.MeasurementSample) error {
 	if globals.DisableDatabase {
 		return nil
 	}
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	if _, err := referenceDB.InsertOne(ctx, nd); err != nil {
 		return err
 	} else {
@@ -40,7 +42,8 @@ func SaveShadowSpaceData(nd dataformats.SpaceState) error {
 		return nil
 	}
 	//fmt.Printf("TBD: Store shadow space data %+v\n", nd)
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	if _, err := shadowDataDB.InsertOne(ctx, nd); err != nil {
 		return err
 	} else {
@@ -59,7 +62,8 @@ func ReadSpaceData(spacename string, howMany int) (result []dataformats.Measurem
 	opt := options.Find()
 	opt.SetSort(bson.D{{"ts", -1}})
 	opt.SetLimit(int64(howMany))
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	cursor, er := dataDB.Find(ctx, filter, opt)
 	if er != nil {
 		err = er
@@ -80,7 +84,8 @@ func ReadReferenceData(spacename string, howMany int) (result []dataformats.Meas
 	opt := options.Find()
 	opt.SetSort(bson.D{{"ts", -1}})
 	opt.SetLimit(int64(howMany))
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	cursor, er := referenceDB.Find(ctx, filter, opt)
 	if er != nil {
 		err = er
@@ -102,7 +107,8 @@ func ReadReferenceDataSeries(spacename string, ts0, ts1 int) (result []dataforma
 	}
 	opt := options.Find()
 	opt.SetSort(bson.D{{"ts", -1}})
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	cursor, er := referenceDB.Find(ctx, filter, opt)
 	if er != nil {
 		err = er
@@ -124,7 +130,8 @@ func ReadSpaceDataSeries(spacename string, ts0, ts1 int) (result []dataformats.M
 	}
 	opt := options.Find()
 	opt.SetSort(bson.D{{"ts", -1}})
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	cursor, er := dataDB.Find(ctx, filter, opt)
 	if er != nil {
 		err = er
@@ -147,7 +154,8 @@ func VerifyPresence(spacename string, ts0, ts1 int) (present bool, err error) {
 	}
 	opt := options.Find()
 	opt.SetSort(bson.D{{"ts", -1}})
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TO)*time.Second)
+	defer cancel()
 	count, er := dataDB.CountDocuments(ctx, filter)
 	if er != nil {
 		err = er
