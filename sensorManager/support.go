@@ -103,7 +103,6 @@ func LoadSensorEEPROMSettings() {
 					}
 
 					if e1 != nil || e2 != nil || e3 != nil || e4 != nil {
-						//log.Println("Error illegal sensor settings:", line)
 						return sensorSpecs{}, "", ref, errors.New("Error illegal sensor settings: " + line)
 					}
 

@@ -1,4 +1,4 @@
-# tested on Raspbian,
+# tested on Raspbian only
 
 [Unit]
 Description=XetalFlow

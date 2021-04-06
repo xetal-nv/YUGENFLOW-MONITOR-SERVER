@@ -673,7 +673,6 @@ func sensorHandler(conn net.Conn) {
 						if sensorDef.active ||
 							sensorDef.id != sensorDef.idSent && cmd[0] == CmdAPI["setid"].Cmd {
 
-							//(sensorDef.id == -1 && sensorDef.idSent == 65535) && Cmd[0] == CmdAPI["setid"].Cmd {
 							// we verify that we received a command answer from an active device
 							if cmdLength, ok := CmdAnswerLen[cmd[0]]; ok {
 								// in case if no CRC the length needs to be decrease

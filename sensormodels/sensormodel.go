@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+// This code is dirty as it needs changing depending on the current test/development cycle
+
 var command = map[byte][]byte{
 	[]byte("\x07")[0]: []byte("\x07\x07"),
 	[]byte("\x09")[0]: []byte("\x09\x09"),

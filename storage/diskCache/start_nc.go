@@ -2,8 +2,6 @@
 
 package diskCache
 
-// fixme the malicious caches seems to behave differently marking everything a malicious !!!
-
 import (
 	"fmt"
 	"gateserver/support/globals"

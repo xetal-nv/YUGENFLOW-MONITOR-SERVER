@@ -85,7 +85,6 @@ func executeCommand(params map[string]string) (rv JsonCmdRt) {
 			channels, ok := sensorManager.ActiveSensors.Mac[string(mac)]
 			if !ok {
 				rv.Error = "sensor in guru meditation"
-				//sensorManager.ActiveSensors.RUnlock()
 				return
 			}
 			if params["cmd"] == "setid" {

@@ -1,13 +1,21 @@
-# Xetal Flow Monitoring GateServer
+# YugenFlow Monitor Server
 
 Copyright Xetal @ 2020  
-Built: 20000a20210317  
+Built: 20000a20210407  
+
+## 0. Description  
+The YugenFlow Monitor Server collects data from several YugenFlow sensors and calculate data such as people flow and presence for a given configuration.  
+Sensors can be groups in order to form a gate (oen or two sensors in a chain) to monitor (for example) a door.  
+Gates can be grouped to form an entry, for example representing several doors for a building entry point.  
+Entries can be grouped to form a space, for example an office or building.  
+The server behaviour can  be configured by means of configuration files, see the files themselves for further information.  
+The sensor piush data to the server via TCP, thus there must be a non-blocking network connection between the two.  
 
 ## 1. Usage
 **1.1 REQUIRED FILES/FOLDERS**  
-_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without database.  
+_Executable file_: gateserver(.exe) for complete server or gateserver_embedded(.exe) for sever without MongoDB connectivity.  
 _Configuration files_: see 1.3 in the same folder as the executable.  
-_Resource folders_: the folder log and tables are created by the server. Modifying them might cause the server to malfunction.
+_Resource folders_: the folder log and tables are created by the server. Modifying them during runtime might cause the server to malfunction.  
 
 **1.2 REQUIRED SYSTEM VARIABLES:**  
 YUGENFLOW : specifies the path to the executable and configuration files, when the OS cannot handle services running from a fixed location      
@@ -15,9 +23,9 @@ YUGENFLOW : specifies the path to the executable and configuration files, when t
 **1.3 CONFIGURATION:**  
 The configuration uses several ini files as follows (refer to the ini itself for a detailed description):  
 
-access.ini : it sets access to the server by configuring and enabling database, tcp connection, external scripting and alike  
-configuration.ini : it sets the installation in terms of gates, entries and spaces  
-gateserver.ini : it contains all settings of the server itself  
+access.ini : it sets access to the server by configuring and enabling database, tcp connection, external scripting and alike.  
+configuration.ini : it sets the installation in terms of gates, entries and spaces.  
+gateserver.ini : it contains all settings of the server itself.  
 measurement.ini : it contains the definitions of all measurements the server needs to precompute and provide.  
 cache.ini : it sets the working cache (mipsle binaries only).  
 
@@ -68,7 +76,7 @@ _Not available for embedded builds:_
     /presence/{name}?x0?x1                  : return true or false if there was a person in the given interval for space {name}   
     /presence/{[name0, ...]}?x0?x1          : return true or false if there was a person in the given interval for spaces [name0, name1, ...]  
 
-_For development not embedded builds only:_   
+_For development and not embedded builds only:_   
  
     /delta?n                                : return the last n raw data points for all spaces  
     /delta/{name}?n                         : return oly the last n raw data points for space {name}   
@@ -483,28 +491,28 @@ This version can be used to check if a sensor is connected and is sending data. 
 
 ## 6. Release Notes
 **6.1 Known bugs**  
-This build is currently in alpha, therefore several bugs are still present  
-BUG list:  
  - MIPSLE builts can suffer fatal crashes under rare circumstances such as several sensor connecting and 
    disconnecting at the same time several times. It is advised to use a daemon to ensure their restart.  
    
 
-## 7. Development Notes  
+## 7. Build Notes  
 **7.1 REQUIREMENTS**  
-GO 1.15
-Golang Packages (to be revised):
-- go.etcd.io/bbolt/
-- xetal.ddns.net/supportservices
-- github.com/mongodb/mongo
-- github.com/fpessolano/mlogger  (>=0.4.2)
-- github.com/gorilla/mux
-- gopkg.in/ini.v1
+_Compilation:_  
+GO 1.15 with the following Golang packages:  
 
-External services:
-- mongoDB database (for full server only)
+- go.etcd.io/bbolt/ (excl. for MIPS build)  
+- xetal.ddns.net/supportservices  
+- github.com/mongodb/mongo  
+- github.com/fpessolano/jac (MIPS build only)  
+- github.com/fpessolano/mlogger  (>=0.4.2)  
+- github.com/gorilla/mux  
+- gopkg.in/ini.v1  
 
-Detachable services:
-- webService  
+_External services:_  
+- mongoDB database (for full server only)  
+
+_Makefile format:_  
+- nmake windows10  
 
 **7.2 BUILD OPTION**  
 The following tags can be used for specific build:
@@ -514,26 +522,22 @@ The following tags can be used for specific build:
      - debug        : build with debug support  
      - dev          : build with development and debug support  
      - script       : compiles only main_script for compilation of external scripts or other test code    
-     - nc           : new cache (experimental)
+     - nc           : jac cache (experimental and required for MIPS cores)
 
-Please refer to the nmake file for what compiler options are advicedc for which built.  
-Note that mipsle/linux for OpwenWRT seems broken when some compiler flags are used.
+Please refer to the nmake file for what compiler options are needed for which built.  
+Note that compiling for mipsle/linux for OpwenWRT can be broken when some compiler flags are used.
 
-**7.3 Development modes**
+**7.3 Development mode**  
+The following server runtime options are available for a development build:  
+
     -debug                  : enable debug mode 
-    -dev                    : development mode  
-    -stress                 : number of stress cycles (overrides dev)
-    -echo                   : server enables echo mode (0: off, 1: raw with not processing, 2: gate values, 3: space values)
-    -la                     : not available   
+    -dev                    : development mode (runs using simulated sensors as specified in the main() method) 
+    -stress                 : enables stress mode and set the number of stress cycles (overrides -dev)
+    -echo                   : echo mode (0: off, 1: raw sensor traces, 2: gate computed values, 3: space computed values)
 
 **7.4 Feature Roadmap**
 - Check compatibility with go 1.6  
-- Add database management tools
-- API for custom reports in excel/CVS format to be sent per email
-- Add option for export format (' or ")
-
-**7.5 Development TODOs**  
-- Remove bboltDB from all builts  
-- Support variable sensor response instead of only 1,-1,255  
-
+- Phase out usage of bbolt  
+- API for custom reports in excel/CVS format  
+- Add option for JSON export using both ' and " formats  
 

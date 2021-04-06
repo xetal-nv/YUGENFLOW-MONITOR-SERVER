@@ -334,7 +334,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 						results = append(results, newData)
 					default:
 						// we do not wait for the channel to be ready
-						//fmt.Println("data not ready, get skipped")
 					}
 				}
 				avgsManager.RegRealTimeChannels.RUnlock()
@@ -356,7 +355,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 						results = append(results, newData)
 					default:
 						// we do not wait for the channel to be ready
-						//fmt.Println("data not ready, get skipped")
 					}
 				}
 				avgsManager.RegReferenceChannels.RUnlock()
@@ -367,8 +365,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 				for _, name := range spaces {
 					select {
 					case data := <-avgsManager.RegActualChannels.ChannelOut[name]:
-						//fmt.Printf("%v gets %+v\n", name, data)
-						//fmt.Printf("%+v\n", data)
 						newData := JsonData{
 							Space:  name,
 							Type:   "current",
@@ -377,7 +373,6 @@ func latestData(all, nonSeriesUseDB, seriesUseDB bool, which int) http.Handler {
 						results = append(results, newData)
 					default:
 						// we do not wait for the channel to be ready
-						//fmt.Println("data not ready, get skipped")
 					}
 				}
 				avgsManager.RegActualChannels.RUnlock()

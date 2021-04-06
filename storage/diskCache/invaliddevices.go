@@ -40,6 +40,7 @@ func MarkInvalidDevice(mac []byte, maxInterval int) (reject, newDevice bool, err
 	return
 }
 
+// method to be used eventually
 //func AddInvalidDevice(mac []byte) (err error) {
 //	err = main.Update(func(tx *bolt.Tx) error {
 //		ts := make([]byte, 8)

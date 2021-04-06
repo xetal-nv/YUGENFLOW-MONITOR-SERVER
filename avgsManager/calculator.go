@@ -139,8 +139,6 @@ func calculateAbsoluteFlows(snapshotSpace dataformats.MeasurementSampleWithFlows
 					}
 				}
 
-				//newGateSnapshot.Netflow = newGateSnapshot.FlowIn + newGateSnapshot.FlowOut
-
 				newEntrySnapshot.Flows[gateName] = newGateSnapshot
 			}
 			if newEntrySnapshot.FlowIn < 0 || newEntrySnapshot.FlowOut > 0 {

@@ -126,7 +126,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 	var scratchPad, scratchPadOriginal scratchData
 	gateSensorsOrderedOriginal := make([]int, len(gateSensorsOrdered))
 	sensorDifferential := make(map[int]int)
-	//sensorDifferentialFails := make(map[int]int)
 	sensorDifferentialTimes := make(map[int]int)
 	sensorLatestData := make(map[int]sensorData)
 	sensorLatestDataOriginal := make(map[int]sensorData)
@@ -146,7 +145,6 @@ func gate(gateName string, gateSensorsOrdered []int, in chan dataformats.FlowDat
 		sensorLatestData[i] = sensorData{i, 0, 0}
 		sensorLatestDataOriginal[i] = sensorData{i, 0, 0}
 		sensorDifferential[i] = 0
-		//sensorDifferentialFails[i] = 0
 		sensorDifferentialTimes[i] = 0
 	}
 	for i := range sensorLatestData {

@@ -39,7 +39,6 @@ func main() {
 	var user = flag.String("user", "", "user name")
 	var pwd = flag.String("pwd", "", "user password")
 	var stress = flag.Int("stress", -1, "stress test cycles (override dev)")
-	//var raw = flag.Bool("raw", false, "enable raw mode")
 	var st = flag.String("start", "", "set start time expressed as HH:MM")
 	var us = flag.Bool("us", false, "enable unsafe shutdown")
 	var verbose = flag.Bool("v", false, "enable verbose mode")
@@ -179,7 +178,8 @@ func main() {
 	//goland:noinspection ALL
 	go sensorManager.Start(sd[2])
 
-	//if globals.DebugActive {
+	//  this section is used to declare simulated sensors for development and stress modes
+	// please note that the sensors need to be also declared in the configuration.ini file or will be treated as unused or malicious devices
 	if *dev && *stress == -1 {
 		fmt.Println("*** WARNING: Development mode enabled ***")
 		go sensormodels.SensorModel(0, 5000, 10, []int{-1, 1}, []byte{0x0a, 0x0b, 0x0c, 0x01, 0x02, 0x01}, false)

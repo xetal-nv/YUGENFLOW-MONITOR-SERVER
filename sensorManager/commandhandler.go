@@ -77,7 +77,6 @@ finished:
 					mlogger.LoggerData{"sensorManager.sensorCommand: " + mac,
 						"service killed due to sensor timeout",
 						[]int{0}, true})
-				//_ = chs.Tcp.Close()
 				return
 			case <-chs.reset:
 				break finished

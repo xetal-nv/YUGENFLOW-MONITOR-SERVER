@@ -75,7 +75,6 @@ func ListActiveDevices() (macs []string, status []bool, err error) {
 			} else {
 				status = append(status, true)
 			}
-			//fmt.Printf("key=%s, value=%s\n", k, v)
 		}
 		return nil
 	})
