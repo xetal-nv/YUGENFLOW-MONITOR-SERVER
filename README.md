@@ -5,7 +5,7 @@ Built: 20000a20210407
 
 ## 0. Description  
 The YugenFlow Monitor Server collects data from several YugenFlow sensors and calculate data such as people flow and presence for a given configuration.  
-Sensors can be groups in order to form a gate (oen or two sensors in a chain) to monitor (for example) a door.  
+Sensors can be grouped to form a gate (one or two sensors phisically after each other) to monitor (for example) a door.  
 Gates can be grouped to form an entry, for example representing several doors for a building entry point.  
 Entries can be grouped to form a space, for example an office or building.  
 The server behaviour can  be configured by means of configuration files, see the files themselves for further information.  
