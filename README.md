@@ -1,7 +1,7 @@
 # YugenFlow Monitor Server
 
 Copyright Xetal @ 2020  
-Built: 20000a20210407  
+Built: 20000a20210407
 
 ## 0. Description  
 The YugenFlow Monitor Server collects data from several YugenFlow sensors and calculate data such as people flow and presence for a given configuration.  
@@ -497,6 +497,10 @@ This version can be used to check if a sensor is connected and is sending data. 
 
 ## 7. Build Notes  
 **7.1 REQUIREMENTS**  
+_Supported hardware:_  
+Yugen Flow v1
+YUgen Flow v2 (in progress)
+
 _Compilation:_  
 GO 1.15 with the following Golang packages:  
 
