@@ -498,8 +498,8 @@ This version can be used to check if a sensor is connected and is sending data. 
 ## 7. Build Notes  
 **7.1 REQUIREMENTS**  
 _Supported hardware:_  
-Yugen Flow v1
-YUgen Flow v2 (in progress)
+Yugen Flow v1  
+YUgen Flow v2 (in progress)  
 
 _Compilation:_  
 GO 1.15 with the following Golang packages:  
