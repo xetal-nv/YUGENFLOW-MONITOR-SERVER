@@ -59,7 +59,7 @@ func MarkIP(ip []byte, threshold int) (danger bool, err error) {
 	return
 }
 
-func UnarkAllip(threshold int) (err error) {
+func UnMarkAllip(threshold int) (err error) {
 	var tx *bolt.Tx
 	var warnings uint32 = 0
 	if tx, err = main.Begin(true); err != nil {

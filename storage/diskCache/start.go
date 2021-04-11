@@ -97,8 +97,8 @@ func Start() {
 
 	// perform some sort of malicious gradual reset as bboltDB does not support record end of life
 	if globals.MalicioudMode > 0 {
-		go others.Cronos(func() { _ = UnarkAllip(globals.MaliciousTriesIP) }, 1, 12, nil)
-		go others.Cronos(func() { _ = UnarkAllMac(globals.MaliciousTriesIP) }, 2, 12, nil)
+		go others.Cronos(func() { _ = UnMarkAllip(globals.MaliciousTriesIP) }, 1, 12, nil)
+		go others.Cronos(func() { _ = UnMarkAllMac(globals.MaliciousTriesIP) }, 2, 12, nil)
 	}
 
 	fmt.Println("*** INFO: SensorDB initialised ***")
